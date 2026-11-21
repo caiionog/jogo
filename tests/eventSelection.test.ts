@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { createRng, eligibleEvents, isEligible, selectEvents } from '../src/engine';
-import { makeEvent, makeGame, withAge } from './helpers';
+import { GAME_CONTENT } from '../src/content';
+import { advanceYear, autoEvents, conditionsMet, createRng, eligibleEvents, isEligible, selectEvents } from '../src/engine';
+import { enrolledGame, makeEvent, makeGame, withAge } from './helpers';
 
 describe('condições de evento', () => {
   const g = withAge(makeGame(), 8);
@@ -73,5 +74,62 @@ describe('selectEvents', () => {
     const events = 'abcdefgh'.split('').map((id) => makeEvent(id));
     const ids = (seed: number) => selectEvents(g, events, 2, createRng(seed)).map((e) => e.id);
     expect(ids(1234)).toEqual(ids(1234));
+  });
+});
+
+describe('condições escolares', () => {
+  const school = enrolledGame(12, { average: 75, discipline: 30, popularity: 60, club: 'judo' });
+  const out = withAge(makeGame(), 12);
+
+  it('enrolled', () => {
+    expect(isEligible(school, makeEvent('a', { conditions: { enrolled: true } }))).toBe(true);
+    expect(isEligible(out, makeEvent('a', { conditions: { enrolled: true } }))).toBe(false);
+    expect(isEligible(out, makeEvent('b', { conditions: { enrolled: false } }))).toBe(true);
+    expect(isEligible(school, makeEvent('b', { conditions: { enrolled: false } }))).toBe(false);
+  });
+
+  it('fase escolar', () => {
+    expect(isEligible(school, makeEvent('a', { conditions: { schoolStages: ['fund2'] } }))).toBe(true);
+    expect(isEligible(school, makeEvent('b', { conditions: { schoolStages: ['pre', 'medio'] } }))).toBe(false);
+    expect(isEligible(out, makeEvent('c', { conditions: { schoolStages: ['fund2'] } }))).toBe(false);
+  });
+
+  it('faixa de nota, disciplina e popularidade', () => {
+    expect(isEligible(school, makeEvent('a', { conditions: { school: { average: { min: 70 } } } }))).toBe(true);
+    expect(isEligible(school, makeEvent('b', { conditions: { school: { average: { min: 80 } } } }))).toBe(false);
+    expect(isEligible(school, makeEvent('c', { conditions: { school: { discipline: { max: 40 } } } }))).toBe(true);
+    expect(isEligible(school, makeEvent('d', { conditions: { school: { popularity: { max: 50 } } } }))).toBe(false);
+  });
+
+  it('clube', () => {
+    expect(isEligible(school, makeEvent('a', { conditions: { club: ['judo', 'wrestling'] } }))).toBe(true);
+    expect(isEligible(school, makeEvent('b', { conditions: { club: ['chess'] } }))).toBe(false);
+    expect(isEligible(school, makeEvent('c', { conditions: { club: 'any' } }))).toBe(true);
+    expect(isEligible(school, makeEvent('d', { conditions: { club: 'none' } }))).toBe(false);
+    const noClub = enrolledGame(12);
+    expect(isEligible(noClub, makeEvent('e', { conditions: { club: 'none' } }))).toBe(true);
+    expect(isEligible(noClub, makeEvent('f', { conditions: { club: 'any' } }))).toBe(false);
+  });
+
+  it('resultado do ano letivo', () => {
+    const failed = { ...school, education: { ...school.education, lastResult: { final: 30, passed: false, honors: false, graduated: false, expelled: true } } };
+    expect(conditionsMet(failed, makeEvent('a', { conditions: { schoolResult: ['failed'] } }))).toBe(true);
+    expect(conditionsMet(failed, makeEvent('b', { conditions: { schoolResult: ['expelled'] } }))).toBe(true);
+    expect(conditionsMet(failed, makeEvent('c', { conditions: { schoolResult: ['honors', 'graduated'] } }))).toBe(false);
+    expect(conditionsMet(school, makeEvent('d', { conditions: { schoolResult: ['passed'] } }))).toBe(false);
+  });
+
+  it("eventos 'auto' entram sempre que elegíveis e não são sorteados", () => {
+    const auto = makeEvent('marco', { trigger: 'auto', conditions: { minAge: 13 } });
+    expect(isEligible(school, auto)).toBe(false);
+    const content = { ...GAME_CONTENT, events: [auto, makeEvent('x', { conditions: { minAge: 99 } })] };
+    expect(autoEvents(withAge(school, 13), content.events).map((e) => e.id)).toEqual(['marco']);
+    const next = advanceYear(school, content);
+    expect(next.pendingEvents).toMatchObject([{ eventId: 'marco', source: 'auto' }]);
+  });
+
+  it('eventos antigos (sem campos novos) continuam funcionando', () => {
+    const child = GAME_CONTENT.events.find((e) => e.id === 'child_flu')!;
+    expect(isEligible(withAge(makeGame(), 5), child)).toBe(true);
   });
 });

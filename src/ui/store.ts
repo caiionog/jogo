@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { GAME_CONTENT } from '../content';
-import { advanceYear, newGame, performAction, resolveEvent } from '../engine';
+import { advanceYear, joinClub, leaveClub, newGame, performAction, resolveEvent } from '../engine';
 import type { GameState, Sex } from '../engine';
 import { clearGame, loadGame, saveGame } from '../save';
 
@@ -10,6 +10,8 @@ interface GameStore {
   init(): Promise<void>;
   startLife(name: string, sex: Sex): void;
   doAction(actionId: string): void;
+  joinClub(clubId: string): void;
+  leaveClub(): void;
   advance(): void;
   choose(eventId: string, choiceId: string): void;
   newLife(): Promise<void>;
@@ -35,6 +37,12 @@ export const useGameStore = create<GameStore>((setState, getState) => {
     },
     doAction(actionId) {
       update((g) => performAction(g, actionId, GAME_CONTENT));
+    },
+    joinClub(clubId) {
+      update((g) => joinClub(g, clubId, GAME_CONTENT));
+    },
+    leaveClub() {
+      update((g) => leaveClub(g, GAME_CONTENT));
     },
     advance() {
       update((g) => advanceYear(g, GAME_CONTENT));

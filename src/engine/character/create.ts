@@ -26,13 +26,16 @@ export function createCharacter(
 ): Character {
   const loc = rng.pick(locations);
   const name = input.name.trim() || 'Sem Nome';
-  return {
+  const character: Character = {
     name,
     sex: input.sex,
     age: 0,
     birthYear,
     country: loc.country,
     city: rng.pick(loc.cities),
+    familyWealth: 0,
     stats: randomStats(rng),
   };
+  // sorteado por último para não alterar a sequência dos demais sorteios
+  return { ...character, familyWealth: rng.int(0, 100) };
 }

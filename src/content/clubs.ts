@@ -1,0 +1,55 @@
+import type { ClubDef } from '../engine';
+
+/** Clubes e times escolares. Os de luta (`combat`) são o gancho para a carreira (Etapa 3). */
+export const CLUBS: readonly ClubDef[] = [
+  {
+    id: 'judo',
+    label: 'Judô',
+    emoji: '🥋',
+    minStage: 'fund1',
+    combat: true,
+    joinText: 'Você entrou no time de judô da escola.',
+    joinEffects: { stats: { happiness: 2 }, setFlags: { interesse_luta: true, gostaDeLuta: true } },
+    yearlyEffects: { stats: { strength: 3, fitness: 3, health: 1 }, school: { discipline: 2 } },
+  },
+  {
+    id: 'wrestling',
+    label: 'Luta olímpica',
+    emoji: '🤼',
+    minStage: 'fund2',
+    combat: true,
+    joinText: 'Você entrou na equipe de luta olímpica da escola.',
+    joinEffects: { stats: { happiness: 2 }, setFlags: { interesse_luta: true, gostaDeLuta: true } },
+    yearlyEffects: { stats: { strength: 4, fitness: 3 }, school: { discipline: 1 } },
+  },
+  {
+    id: 'soccer',
+    label: 'Futebol',
+    emoji: '⚽',
+    minStage: 'fund1',
+    combat: false,
+    joinText: 'Você entrou no time de futebol da escola.',
+    joinEffects: { stats: { happiness: 3 } },
+    yearlyEffects: { stats: { fitness: 4, happiness: 2 }, school: { popularity: 4 } },
+  },
+  {
+    id: 'chess',
+    label: 'Xadrez',
+    emoji: '♟️',
+    minStage: 'fund1',
+    combat: false,
+    joinText: 'Você entrou no clube de xadrez.',
+    joinEffects: { stats: { intelligence: 1 } },
+    yearlyEffects: { stats: { intelligence: 3 }, school: { average: 2 } },
+  },
+  {
+    id: 'theater',
+    label: 'Teatro',
+    emoji: '🎭',
+    minStage: 'fund1',
+    combat: false,
+    joinText: 'Você entrou no grupo de teatro da escola.',
+    joinEffects: { stats: { happiness: 2 } },
+    yearlyEffects: { stats: { happiness: 3, looks: 1 }, school: { popularity: 5 } },
+  },
+];

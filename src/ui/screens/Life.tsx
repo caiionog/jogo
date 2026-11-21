@@ -4,6 +4,7 @@ import ActionList from '../components/ActionList';
 import EnergyBar from '../components/EnergyBar';
 import EventModal from '../components/EventModal';
 import LifeLog from '../components/LifeLog';
+import SchoolPanel from '../components/SchoolPanel';
 import StatBars from '../components/StatBars';
 import { useGameStore } from '../store';
 
@@ -12,6 +13,8 @@ const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL
 export default function Life() {
   const game = useGameStore((s) => s.game);
   const doAction = useGameStore((s) => s.doAction);
+  const joinClub = useGameStore((s) => s.joinClub);
+  const leaveClub = useGameStore((s) => s.leaveClub);
   const advance = useGameStore((s) => s.advance);
   const choose = useGameStore((s) => s.choose);
   const newLife = useGameStore((s) => s.newLife);
@@ -49,10 +52,9 @@ export default function Life() {
       <main className="flex flex-1 flex-col gap-4 px-4 py-4 pb-28">
         <StatBars stats={c.stats} />
         {game.alive && <EnergyBar energy={game.energy} />}
-        {game.alive && <ActionList game={game} onAction={doAction} />}
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
-          <LifeLog log={game.log} />
-        </div>
+        {game.alive && <SchoolPanel education={game.education} age={c.age} />}
+        {game.alive && <ActionList game={game} onAction={doAction} onJoinClub={joinClub} onLeaveClub={leaveClub} />}
+        <LifeLog log={game.log} />
       </main>
 
       <footer className="fixed inset-x-0 bottom-0 z-10 mx-auto w-full max-w-md border-t border-slate-800 bg-slate-950/95 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur">
@@ -71,7 +73,7 @@ export default function Life() {
         )}
       </footer>
 
-      {pendingEvent && <EventModal game={game} event={pendingEvent} onChoose={choose} />}
+      {pending && pendingEvent && <EventModal game={game} event={pendingEvent} pending={pending} onChoose={choose} />}
     </>
   );
 }

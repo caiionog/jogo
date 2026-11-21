@@ -11,11 +11,11 @@ export const CHILDHOOD_EVENTS: readonly GameEvent[] = [
       {
         id: 'fight',
         label: 'Empurrar de volta',
-        effects: { stats: { happiness: 3 }, setFlags: { brigouNaEscola: true } },
+        effects: { stats: { happiness: 3 }, setFlags: { brigou_na_escola: true } },
         resultText: 'Você empurrou de volta e o colega recuou. A turma ficou impressionada.',
         risk: {
           chance: 0.4,
-          effects: { stats: { health: -5, happiness: -4 }, setFlags: { brigouNaEscola: true } },
+          effects: { stats: { health: -5, happiness: -4 }, setFlags: { brigou_na_escola: true } },
           resultText: 'Você revidou, mas levou a pior e voltou para casa com o olho roxo.',
         },
       },

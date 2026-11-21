@@ -21,6 +21,8 @@ export interface Character {
   birthYear: number;
   country: string;
   city: string;
+  /** Condição financeira da família (0–100). Influencia o tipo de escola. */
+  familyWealth: number;
   stats: Stats;
 }
 
@@ -37,8 +39,78 @@ export interface LogYear {
   entries: string[];
 }
 
+/** Variáveis de texto de um evento ({colega}, {professor}...), sorteadas na seleção. */
+export type EventVars = Record<string, string>;
+
+export type EventSource = 'random' | 'auto' | 'followUp' | 'action';
+
 export interface PendingEvent {
   eventId: string;
+  vars?: EventVars;
+  source?: EventSource;
+}
+
+/** Evento encadeado agendado para quando o personagem atingir `dueAge`. */
+export interface ScheduledEvent {
+  eventId: string;
+  dueAge: number;
+  vars?: EventVars;
+}
+
+// ---------------------------------------------------------------------------
+// Escola
+// ---------------------------------------------------------------------------
+
+export type SchoolStage = 'pre' | 'fund1' | 'fund2' | 'medio';
+export type SchoolType = 'publica' | 'particular';
+export type ClubId = string;
+
+export interface School {
+  name: string;
+  type: SchoolType;
+}
+
+export interface Enrollment {
+  school: School;
+  /** 0–14: Pré I–III (0–2), 1º–9º ano (3–11), 1º–3º EM (12–14). */
+  grade: number;
+  /** Nota média do ano letivo (0–100). */
+  average: number;
+  /** Disciplina/comportamento (0–100). */
+  discipline: number;
+  /** Faltas no ano letivo. */
+  absences: number;
+  popularity: number;
+  club: ClubId | null;
+  /** Suspensões acumuladas nesta escola. */
+  suspensions: number;
+}
+
+export interface SchoolYearRecord {
+  age: number;
+  year: number;
+  school: string;
+  gradeLabel: string;
+  final: number;
+  passed: boolean;
+}
+
+export interface SchoolYearResult {
+  final: number;
+  passed: boolean;
+  honors: boolean;
+  graduated: boolean;
+  expelled: boolean;
+}
+
+export interface Education {
+  current: Enrollment | null;
+  history: SchoolYearRecord[];
+  /** Resultado do último fim de ano letivo (null se não estudou no ano que passou). */
+  lastResult: SchoolYearResult | null;
+  repeats: number;
+  expulsions: number;
+  graduated: boolean;
 }
 
 export interface GameState {
@@ -55,9 +127,12 @@ export interface GameState {
   firedEvents: string[];
   /** Eventos sorteados aguardando decisão do jogador. */
   pendingEvents: PendingEvent[];
+  /** Eventos encadeados agendados para anos futuros. */
+  scheduledEvents: ScheduledEvent[];
+  education: Education;
   /** Histórico ano a ano. O último item é o ano atual. */
   log: LogYear[];
   alive: boolean;
 }
 
-export const STATE_VERSION = 1;
+export const STATE_VERSION = 2;

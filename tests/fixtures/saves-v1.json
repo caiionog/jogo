@@ -1,0 +1,594 @@
+{
+ "1": {
+  "version": 1,
+  "seed": "fixture-v1",
+  "rngState": 116109932,
+  "year": 2001,
+  "character": {
+   "name": "Ana Antiga",
+   "sex": "F",
+   "age": 1,
+   "birthYear": 2000,
+   "country": "Estados Unidos",
+   "city": "Miami",
+   "stats": {
+    "health": 84,
+    "happiness": 89,
+    "intelligence": 50,
+    "looks": 87,
+    "strength": 19,
+    "fitness": 6
+   }
+  },
+  "money": 0,
+  "energy": {
+   "current": 0,
+   "max": 0
+  },
+  "flags": {
+   "brigouNaEscola": true
+  },
+  "firedEvents": [],
+  "pendingEvents": [],
+  "log": [
+   {
+    "age": 0,
+    "year": 2000,
+    "entries": [
+     "Você nasceu uma menina em Miami, Estados Unidos. Seu nome é Ana Antiga."
+    ]
+   },
+   {
+    "age": 1,
+    "year": 2001,
+    "entries": [
+     "Você fez 1 ano."
+    ]
+   }
+  ],
+  "alive": true
+ },
+ "8": {
+  "version": 1,
+  "seed": "fixture-v1",
+  "rngState": 3395594376,
+  "year": 2008,
+  "character": {
+   "name": "Ana Antiga",
+   "sex": "F",
+   "age": 8,
+   "birthYear": 2000,
+   "country": "Estados Unidos",
+   "city": "Miami",
+   "stats": {
+    "health": 75,
+    "happiness": 73,
+    "intelligence": 55,
+    "looks": 87,
+    "strength": 21,
+    "fitness": 15
+   }
+  },
+  "money": 40,
+  "energy": {
+   "current": 5,
+   "max": 5
+  },
+  "flags": {
+   "brigouNaEscola": true,
+   "honesto": true
+  },
+  "firedEvents": [
+   "child_flu",
+   "child_stray_dog",
+   "child_birthday_party",
+   "child_found_money",
+   "child_flu",
+   "child_playground_fight",
+   "child_broken_window",
+   "child_found_money"
+  ],
+  "pendingEvents": [],
+  "log": [
+   {
+    "age": 0,
+    "year": 2000,
+    "entries": [
+     "Você nasceu uma menina em Miami, Estados Unidos. Seu nome é Ana Antiga."
+    ]
+   },
+   {
+    "age": 1,
+    "year": 2001,
+    "entries": [
+     "Você fez 1 ano."
+    ]
+   },
+   {
+    "age": 2,
+    "year": 2002,
+    "entries": [
+     "Você fez 2 anos."
+    ]
+   },
+   {
+    "age": 3,
+    "year": 2003,
+    "entries": [
+     "Você fez 3 anos.",
+     "Você pegou uma gripe forte. Você descansou e se recuperou em poucos dias."
+    ]
+   },
+   {
+    "age": 4,
+    "year": 2004,
+    "entries": [
+     "Você fez 4 anos.",
+     "Um cachorro de rua começou a seguir você até em casa. Seus pais não deixaram ficar com o cachorro. Você chorou a noite toda.",
+     "Seus pais perguntam como você quer comemorar seu aniversário. A festa foi incrível e todo mundo da turma apareceu."
+    ]
+   },
+   {
+    "age": 5,
+    "year": 2005,
+    "entries": [
+     "Você fez 5 anos.",
+     "Você encontrou uma nota de 20 no chão da praça. Você guardou o dinheiro no seu cofrinho."
+    ]
+   },
+   {
+    "age": 6,
+    "year": 2006,
+    "entries": [
+     "Você fez 6 anos.",
+     "Você pegou uma gripe forte. Você descansou e se recuperou em poucos dias.",
+     "Um colega empurrou você no recreio na frente de todo mundo. Você revidou, mas levou a pior e voltou para casa com o olho roxo."
+    ]
+   },
+   {
+    "age": 7,
+    "year": 2007,
+    "entries": [
+     "Você fez 7 anos.",
+     "Jogando bola, você quebrou a janela do vizinho. O vizinho ficou bravo, mas respeitou sua honestidade."
+    ]
+   },
+   {
+    "age": 8,
+    "year": 2008,
+    "entries": [
+     "Você fez 8 anos.",
+     "Você encontrou uma nota de 20 no chão da praça. Você guardou o dinheiro no seu cofrinho."
+    ]
+   }
+  ],
+  "alive": true
+ },
+ "16": {
+  "version": 1,
+  "seed": "fixture-v1",
+  "rngState": 1748275854,
+  "year": 2016,
+  "character": {
+   "name": "Ana Antiga",
+   "sex": "F",
+   "age": 16,
+   "birthYear": 2000,
+   "country": "Estados Unidos",
+   "city": "Miami",
+   "stats": {
+    "health": 73,
+    "happiness": 69,
+    "intelligence": 62,
+    "looks": 87,
+    "strength": 29,
+    "fitness": 20
+   }
+  },
+  "money": 80,
+  "energy": {
+   "current": 6,
+   "max": 6
+  },
+  "flags": {
+   "brigouNaEscola": true,
+   "honesto": true
+  },
+  "firedEvents": [
+   "child_flu",
+   "child_stray_dog",
+   "child_birthday_party",
+   "child_found_money",
+   "child_flu",
+   "child_playground_fight",
+   "child_broken_window",
+   "child_found_money",
+   "child_found_money",
+   "child_found_money",
+   "child_playground_fight",
+   "child_birthday_party",
+   "child_flu"
+  ],
+  "pendingEvents": [],
+  "log": [
+   {
+    "age": 0,
+    "year": 2000,
+    "entries": [
+     "Você nasceu uma menina em Miami, Estados Unidos. Seu nome é Ana Antiga."
+    ]
+   },
+   {
+    "age": 1,
+    "year": 2001,
+    "entries": [
+     "Você fez 1 ano."
+    ]
+   },
+   {
+    "age": 2,
+    "year": 2002,
+    "entries": [
+     "Você fez 2 anos."
+    ]
+   },
+   {
+    "age": 3,
+    "year": 2003,
+    "entries": [
+     "Você fez 3 anos.",
+     "Você pegou uma gripe forte. Você descansou e se recuperou em poucos dias."
+    ]
+   },
+   {
+    "age": 4,
+    "year": 2004,
+    "entries": [
+     "Você fez 4 anos.",
+     "Um cachorro de rua começou a seguir você até em casa. Seus pais não deixaram ficar com o cachorro. Você chorou a noite toda.",
+     "Seus pais perguntam como você quer comemorar seu aniversário. A festa foi incrível e todo mundo da turma apareceu."
+    ]
+   },
+   {
+    "age": 5,
+    "year": 2005,
+    "entries": [
+     "Você fez 5 anos.",
+     "Você encontrou uma nota de 20 no chão da praça. Você guardou o dinheiro no seu cofrinho."
+    ]
+   },
+   {
+    "age": 6,
+    "year": 2006,
+    "entries": [
+     "Você fez 6 anos.",
+     "Você pegou uma gripe forte. Você descansou e se recuperou em poucos dias.",
+     "Um colega empurrou você no recreio na frente de todo mundo. Você revidou, mas levou a pior e voltou para casa com o olho roxo."
+    ]
+   },
+   {
+    "age": 7,
+    "year": 2007,
+    "entries": [
+     "Você fez 7 anos.",
+     "Jogando bola, você quebrou a janela do vizinho. O vizinho ficou bravo, mas respeitou sua honestidade."
+    ]
+   },
+   {
+    "age": 8,
+    "year": 2008,
+    "entries": [
+     "Você fez 8 anos.",
+     "Você encontrou uma nota de 20 no chão da praça. Você guardou o dinheiro no seu cofrinho."
+    ]
+   },
+   {
+    "age": 9,
+    "year": 2009,
+    "entries": [
+     "Você fez 9 anos.",
+     "Você encontrou uma nota de 20 no chão da praça. Você guardou o dinheiro no seu cofrinho."
+    ]
+   },
+   {
+    "age": 10,
+    "year": 2010,
+    "entries": [
+     "Você fez 10 anos.",
+     "Você encontrou uma nota de 20 no chão da praça. Você guardou o dinheiro no seu cofrinho.",
+     "Um colega empurrou você no recreio na frente de todo mundo. Você empurrou de volta e o colega recuou. A turma ficou impressionada."
+    ]
+   },
+   {
+    "age": 11,
+    "year": 2011,
+    "entries": [
+     "Você fez 11 anos.",
+     "Seus pais perguntam como você quer comemorar seu aniversário. A festa foi incrível e todo mundo da turma apareceu."
+    ]
+   },
+   {
+    "age": 12,
+    "year": 2012,
+    "entries": [
+     "Você fez 12 anos.",
+     "Você pegou uma gripe forte. Você descansou e se recuperou em poucos dias."
+    ]
+   },
+   {
+    "age": 13,
+    "year": 2013,
+    "entries": [
+     "Você fez 13 anos."
+    ]
+   },
+   {
+    "age": 14,
+    "year": 2014,
+    "entries": [
+     "Você fez 14 anos."
+    ]
+   },
+   {
+    "age": 15,
+    "year": 2015,
+    "entries": [
+     "Você fez 15 anos."
+    ]
+   },
+   {
+    "age": 16,
+    "year": 2016,
+    "entries": [
+     "Você fez 16 anos."
+    ]
+   }
+  ],
+  "alive": true
+ },
+ "25": {
+  "version": 1,
+  "seed": "fixture-v1",
+  "rngState": 2124346736,
+  "year": 2025,
+  "character": {
+   "name": "Ana Antiga",
+   "sex": "F",
+   "age": 25,
+   "birthYear": 2000,
+   "country": "Estados Unidos",
+   "city": "Miami",
+   "stats": {
+    "health": 73,
+    "happiness": 66,
+    "intelligence": 66,
+    "looks": 87,
+    "strength": 30,
+    "fitness": 20
+   }
+  },
+  "money": 80,
+  "energy": {
+   "current": 7,
+   "max": 7
+  },
+  "flags": {
+   "brigouNaEscola": true,
+   "honesto": true
+  },
+  "firedEvents": [
+   "child_flu",
+   "child_stray_dog",
+   "child_birthday_party",
+   "child_found_money",
+   "child_flu",
+   "child_playground_fight",
+   "child_broken_window",
+   "child_found_money",
+   "child_found_money",
+   "child_found_money",
+   "child_playground_fight",
+   "child_birthday_party",
+   "child_flu"
+  ],
+  "pendingEvents": [],
+  "log": [
+   {
+    "age": 0,
+    "year": 2000,
+    "entries": [
+     "Você nasceu uma menina em Miami, Estados Unidos. Seu nome é Ana Antiga."
+    ]
+   },
+   {
+    "age": 1,
+    "year": 2001,
+    "entries": [
+     "Você fez 1 ano."
+    ]
+   },
+   {
+    "age": 2,
+    "year": 2002,
+    "entries": [
+     "Você fez 2 anos."
+    ]
+   },
+   {
+    "age": 3,
+    "year": 2003,
+    "entries": [
+     "Você fez 3 anos.",
+     "Você pegou uma gripe forte. Você descansou e se recuperou em poucos dias."
+    ]
+   },
+   {
+    "age": 4,
+    "year": 2004,
+    "entries": [
+     "Você fez 4 anos.",
+     "Um cachorro de rua começou a seguir você até em casa. Seus pais não deixaram ficar com o cachorro. Você chorou a noite toda.",
+     "Seus pais perguntam como você quer comemorar seu aniversário. A festa foi incrível e todo mundo da turma apareceu."
+    ]
+   },
+   {
+    "age": 5,
+    "year": 2005,
+    "entries": [
+     "Você fez 5 anos.",
+     "Você encontrou uma nota de 20 no chão da praça. Você guardou o dinheiro no seu cofrinho."
+    ]
+   },
+   {
+    "age": 6,
+    "year": 2006,
+    "entries": [
+     "Você fez 6 anos.",
+     "Você pegou uma gripe forte. Você descansou e se recuperou em poucos dias.",
+     "Um colega empurrou você no recreio na frente de todo mundo. Você revidou, mas levou a pior e voltou para casa com o olho roxo."
+    ]
+   },
+   {
+    "age": 7,
+    "year": 2007,
+    "entries": [
+     "Você fez 7 anos.",
+     "Jogando bola, você quebrou a janela do vizinho. O vizinho ficou bravo, mas respeitou sua honestidade."
+    ]
+   },
+   {
+    "age": 8,
+    "year": 2008,
+    "entries": [
+     "Você fez 8 anos.",
+     "Você encontrou uma nota de 20 no chão da praça. Você guardou o dinheiro no seu cofrinho."
+    ]
+   },
+   {
+    "age": 9,
+    "year": 2009,
+    "entries": [
+     "Você fez 9 anos.",
+     "Você encontrou uma nota de 20 no chão da praça. Você guardou o dinheiro no seu cofrinho."
+    ]
+   },
+   {
+    "age": 10,
+    "year": 2010,
+    "entries": [
+     "Você fez 10 anos.",
+     "Você encontrou uma nota de 20 no chão da praça. Você guardou o dinheiro no seu cofrinho.",
+     "Um colega empurrou você no recreio na frente de todo mundo. Você empurrou de volta e o colega recuou. A turma ficou impressionada."
+    ]
+   },
+   {
+    "age": 11,
+    "year": 2011,
+    "entries": [
+     "Você fez 11 anos.",
+     "Seus pais perguntam como você quer comemorar seu aniversário. A festa foi incrível e todo mundo da turma apareceu."
+    ]
+   },
+   {
+    "age": 12,
+    "year": 2012,
+    "entries": [
+     "Você fez 12 anos.",
+     "Você pegou uma gripe forte. Você descansou e se recuperou em poucos dias."
+    ]
+   },
+   {
+    "age": 13,
+    "year": 2013,
+    "entries": [
+     "Você fez 13 anos."
+    ]
+   },
+   {
+    "age": 14,
+    "year": 2014,
+    "entries": [
+     "Você fez 14 anos."
+    ]
+   },
+   {
+    "age": 15,
+    "year": 2015,
+    "entries": [
+     "Você fez 15 anos."
+    ]
+   },
+   {
+    "age": 16,
+    "year": 2016,
+    "entries": [
+     "Você fez 16 anos."
+    ]
+   },
+   {
+    "age": 17,
+    "year": 2017,
+    "entries": [
+     "Você fez 17 anos."
+    ]
+   },
+   {
+    "age": 18,
+    "year": 2018,
+    "entries": [
+     "Você fez 18 anos."
+    ]
+   },
+   {
+    "age": 19,
+    "year": 2019,
+    "entries": [
+     "Você fez 19 anos."
+    ]
+   },
+   {
+    "age": 20,
+    "year": 2020,
+    "entries": [
+     "Você fez 20 anos."
+    ]
+   },
+   {
+    "age": 21,
+    "year": 2021,
+    "entries": [
+     "Você fez 21 anos."
+    ]
+   },
+   {
+    "age": 22,
+    "year": 2022,
+    "entries": [
+     "Você fez 22 anos."
+    ]
+   },
+   {
+    "age": 23,
+    "year": 2023,
+    "entries": [
+     "Você fez 23 anos."
+    ]
+   },
+   {
+    "age": 24,
+    "year": 2024,
+    "entries": [
+     "Você fez 24 anos."
+    ]
+   },
+   {
+    "age": 25,
+    "year": 2025,
+    "entries": [
+     "Você fez 25 anos."
+    ]
+   }
+  ],
+  "alive": true
+ }
+}
