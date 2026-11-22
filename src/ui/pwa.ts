@@ -27,7 +27,8 @@ export function setupPwa(): void {
     installEvent = null;
     installListeners.forEach((l) => l());
   });
-  if (!('serviceWorker' in navigator)) return;
+  // versão de teste em arquivo único (build:artifact): sem service worker nem chunks externos
+  if (import.meta.env.VITE_NO_PWA === '1' || !('serviceWorker' in navigator)) return;
   try {
     updateFn = registerSW({
       onNeedRefresh() {
