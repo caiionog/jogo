@@ -101,5 +101,8 @@ export function genesForRace(rng: Rng, race: Race): AppearanceGenes {
     faceShape: pickWeighted(rng, FACE_SHAPES, FACE_W),
     baldness: rng.next(),
     weightGain: rng.next(),
+    // sardas e pintas: a mesma distribuição para todos os grupos
+    freckles: rng.chance(0.18) ? Math.round(rng.next() * 100) / 100 : 0,
+    moles: rng.chance(0.3) ? Math.round(rng.next() * 100) / 100 : 0,
   };
 }

@@ -60,6 +60,8 @@ export function inheritGenes(rng: Rng, father: AppearanceGenes, mother: Appearan
     // calvície: herança mista das duas linhas
     baldness: mix(rng, father.baldness, mother.baldness, 0.15),
     weightGain: mix(rng, father.weightGain, mother.weightGain, 0.12),
+    freckles: mix(rng, father.freckles ?? 0, mother.freckles ?? 0, 0.1),
+    moles: mix(rng, father.moles ?? 0, mother.moles ?? 0, 0.1),
   };
 }
 

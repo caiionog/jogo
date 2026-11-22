@@ -408,10 +408,31 @@ function migrateV7toV8(save: AnySave): AnySave {
     };
     activeFight = { ...activeFight, offer: { ...activeFight.offer, opponent: convertNpc(activeFight.offer.opponent) }, fight: { ...activeFight.fight, fighters: activeFight.fight.fighters.map(snap) } };
   }
+  // guarda-roupa por camadas (Etapa 8): a peça antiga vira a parte de cima/inteira quando ainda existe
+  const def = defaultWardrobe(GAME_CONTENT);
+  const oldW = (s0.wardrobe ?? {}) as { unlocked?: string[]; outfit?: { id: string; color: number }; facialHair?: string };
+  const known = new Set(GAME_CONTENT.outfits.map((o) => o.id));
+  const unlocked = [...new Set([...def.unlocked, ...(oldW.unlocked ?? []).filter((id) => known.has(id))])];
+  const worn = { ...def.worn } as Record<string, { id: string; color: number }>;
+  const old = oldW.outfit && GAME_CONTENT.outfits.find((o) => o.id === oldW.outfit!.id);
+  if (old && (old.layer === 'cima' || old.layer === 'inteira' || old.layer === 'agasalho')) {
+    worn[old.layer] = { id: old.id, color: Math.min(oldW.outfit!.color, old.colors.length - 1) };
+    if (old.layer === 'inteira') { delete worn.cima; delete worn.baixo; }
+  }
+  const wardrobe = { unlocked, worn, facialHair: oldW.facialHair ?? 'nenhuma' };
+  // sardas e pintas: genes novos, derivados de forma estável (sem mexer no rngState)
+  const look = (a: Record<string, any> | undefined, key: string) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    if (!a?.genes) return a;
+    const r = createRng(seedToState(`${s0.seed}:v8:${key}`));
+    return { ...a, genes: { ...a.genes, freckles: r.chance(0.18) ? Math.round(r.next() * 100) / 100 : 0, moles: r.chance(0.3) ? Math.round(r.next() * 100) / 100 : 0 } };
+  };
+  const people = ((s0.relationships?.people ?? []) as Record<string, any>[]).map((p) => (p.appearance ? { ...p, appearance: look(p.appearance, p.id) } : p)); // eslint-disable-line @typescript-eslint/no-explicit-any
   return {
     ...(s0 as AnySave),
     version: 8,
-    character: { ...s0.character, stats: { ...restStats, athletic } },
+    wardrobe,
+    relationships: { ...s0.relationships, people },
+    character: { ...s0.character, appearance: look(s0.character.appearance, 'player'), stats: { ...restStats, athletic } },
     fighter: { ...f, skills: convertSkills(oldSkills), chinBase: r1(oldSkills.chin ?? 55), trainingLoad: f.gymId ? 0.3 : 0, sessionsThisYear: 0, offers },
     world: { ...s0.world, rosters },
     activeFight,

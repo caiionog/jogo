@@ -56,12 +56,13 @@ describe('deriveAvatar', () => {
     const s = at(base, 25);
     const fight = { ...s, fighter: { ...s.fighter, belt: { rank: 2, years: 0 } }, activeFight: { offer: { rules: 'grappling' } } } as unknown as GameState;
     const o = playerOutfit(fight, C, 'luta');
-    expect(o.mesh).toBe('kimono');
-    expect(o.beltColor).toBe(BELT_HEX[2]);
+    expect(o.inteira?.id).toBe('kimono');
+    expect(o.acessorio?.id).toBe('faixa');
+    expect(o.acessorio?.color).toBe(BELT_HEX[2]);
     const kid = makeGame('escola-av');
     const enrolled = { ...kid, character: { ...kid.character, age: 9 }, education: { ...kid.education, current: { stage: 'fund1' } } } as unknown as GameState;
-    expect(playerOutfit(enrolled, C).id).toBe('uniforme');
-    expect(playerOutfit(at(base, 1), C).id).toBe('body');
+    expect(playerOutfit(enrolled, C).cima?.id).toBe('uniforme');
+    expect(playerOutfit(at(base, 1), C).inteira?.id).toBe('body');
   });
 
   it('marcas: sequelas da Etapa 6 e olho roxo depois de uma derrota no ano', () => {

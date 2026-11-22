@@ -53,7 +53,7 @@ export const MARKET_ICONS: Readonly<Record<string, IconSprite>> = {
     ],
   },
   praia: {
-    palette: { o: OUT, s: '#f2c94c', y: '#fff1a8', r: '#e06c4a', w: '#f4ead2', W: '#d6c39b', a: '#4fa3d1', A: '#2f7fb0', n: '#ecd59a', N: '#c9ad6b' },
+    palette: { o: OUT, s: '#f2c94c', y: '#fff1a8', r: '#e06c4a', d: '#7a4a2c', w: '#f4ead2', W: '#d6c39b', a: '#4fa3d1', A: '#2f7fb0', n: '#ecd59a', N: '#c9ad6b' },
     grid: [
       '...........ss...',
       '..........syys..',

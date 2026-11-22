@@ -1,7 +1,6 @@
 /**
- * Miniaturas dos NPCs (Etapa 7): nenhum canvas por pessoa. Um renderizador oculto e compartilhado
- * (`snapshot.ts`, carregado sob demanda com o three) desenha o busto e devolve um dataURL; o resultado fica num
- * cache LRU pela chave `avatarHash(descriptor)`. Os pedidos entram numa fila processada em tempo ocioso.
+ * Miniaturas dos NPCs: nenhum canvas por pessoa. O busto em pixel art é composto uma vez e guardado (dataURL) num
+ * cache LRU pela chave `avatarHash(descriptor)`; os pedidos entram numa fila processada em tempo ocioso.
  */
 import type { AvatarDescriptor } from '../../engine';
 import { avatarHash } from '../../engine';
@@ -16,7 +15,7 @@ export interface ThumbnailOptions {
 
 const defaultSchedule = (fn: () => void) => {
   const ric = (globalThis as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number }).requestIdleCallback;
-  if (ric) ric(fn, { timeout: 500 });
+  if (ric) ric(fn, { timeout: 300 });
   else setTimeout(fn, 16);
 };
 
@@ -40,7 +39,6 @@ export class ThumbnailCache {
     return `${avatarHash(d)}@${size}`;
   }
 
-  /** Imagem já pronta (ou undefined). Marca como usada recentemente. */
   get(d: AvatarDescriptor, size: number): string | undefined {
     const k = this.key(d, size);
     const url = this.cache.get(k);
@@ -55,7 +53,6 @@ export class ThumbnailCache {
     return this.cache.size;
   }
 
-  /** Pede a miniatura; resolve quando estiver no cache (pedidos iguais compartilham o mesmo desenho). */
   request(d: AvatarDescriptor, size: number): Promise<string> {
     const hit = this.get(d, size);
     if (hit !== undefined) return Promise.resolve(hit);
@@ -79,7 +76,6 @@ export class ThumbnailCache {
       this.loading ??= this.load();
       this.renderer = await this.loading;
     }
-    // poucos por vez para não travar a interface
     const started = Date.now();
     for (const [k, w] of this.waiting) {
       this.waiting.delete(k);
@@ -99,5 +95,5 @@ export class ThumbnailCache {
   }
 }
 
-/** Cache global do app. */
-export const thumbnails = new ThumbnailCache(() => import('./snapshot').then((m) => m.snapshot));
+/** Cache global do app (busto em pixel art; o tamanho na tela é só escala CSS). */
+export const thumbnails = new ThumbnailCache(() => import('./renderer').then((m) => (d: AvatarDescriptor) => m.PixelAvatarRenderer.snapshot(d)));

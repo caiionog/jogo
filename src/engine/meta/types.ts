@@ -36,8 +36,6 @@ export interface MetaSettings {
   /** Narração das lutas: lenta, normal, rápida. */
   fightSpeed: 'lenta' | 'normal' | 'rapida';
   fontScale: 'normal' | 'grande';
-  /** Avatar 3D (Etapa 7); desligado = desenho 2D. Ausente = ligado. */
-  avatar3d?: boolean;
 }
 
 export interface MetaState {

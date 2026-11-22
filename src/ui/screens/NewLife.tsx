@@ -9,10 +9,10 @@ import { NAMES } from '../../content/names';
 import type { Appearance, PartnerPreference, Race, Sex } from '../../engine';
 import {
   EYE_COLORS, EYE_COLOR_LABEL, EYE_RGB, EYE_SHAPES, EYE_SHAPE_LABEL, FACE_SHAPES, FACE_SHAPE_LABEL, FACIAL_HAIR, FACIAL_HAIR_LABEL,
-  HAIR_TYPES, HAIR_TYPE_LABEL, RACES, RACE_LABEL, createRng, genesForRace, hairRgb, pickBirthplace, pickFirstName, previewAvatar,
+  HAIR_STYLES, HAIR_STYLE_LABEL, HAIR_TYPES, HAIR_TYPE_LABEL, RACES, RACE_LABEL, createRng, genesForRace, hairRgb, pickBirthplace, pickFirstName, previewAvatar,
   randomAppearance, rgbHex, seedToState, skinRgb, ufOrDefault,
 } from '../../engine';
-import AvatarStage from '../avatar/AvatarStage';
+import PixelAvatar from '../avatar/PixelAvatar';
 import { AdultToggle, PreferencePicker } from '../components/SettingsSheet';
 import MenuHost from '../components/MenuHost';
 import { useGameStore } from '../store';
@@ -24,8 +24,16 @@ const freshRng = () => createRng(seedToState(`${Date.now()}:${performance.now()}
 const PREVIEW_AGES = [
   ['Bebê', 1],
   ['Criança', 8],
+  ['Adolescente', 15],
   ['Adulto', 28],
   ['Idoso', 72],
+] as const;
+/** Amostras da rampa de pele (tom contínuo do gene). */
+const SKIN_SWATCHES = [0.02, 0.12, 0.22, 0.32, 0.42, 0.52, 0.62, 0.72, 0.82, 0.92, 1];
+const THIRDS = [
+  ['Fino', 0.15],
+  ['Médio', 0.5],
+  ['Largo', 0.85],
 ] as const;
 
 function Choice<T extends string>({ value, options, labels, onChange, cols = 3, swatch }: { value: T; options: readonly T[]; labels: Record<T, string>; onChange: (v: T) => void; cols?: number; swatch?: (v: T) => string }) {
@@ -67,7 +75,6 @@ const HAIR_GRADIENT = `linear-gradient(to right, ${[0, 0.25, 0.5, 0.75, 1].map((
 
 export default function NewLife() {
   const startLife = useGameStore((s) => s.startLife);
-  const avatar3d = useGameStore((s) => s.meta.settings.avatar3d !== false);
   const [step, setStep] = useState(1);
   const [name, setName] = useState('');
   const [surnames, setSurnames] = useState('');
@@ -135,11 +142,13 @@ export default function NewLife() {
 
       {/* prévia (um só canvas ao vivo) */}
       <div className="flex items-center gap-3 rounded-2xl bg-gradient-to-b from-slate-800 to-slate-900 p-2">
-        <AvatarStage d={desc} enabled={avatar3d} className="h-40 w-40 shrink-0" label="Prévia do personagem" />
+        <div className="flex h-[136px] w-[72px] shrink-0 items-end justify-center rounded-xl bg-[var(--ds-avatar-bg)] p-1" data-testid="creation-preview">
+          <PixelAvatar d={desc} scale={2} animate label="Prévia do personagem" />
+        </div>
         <div className="flex flex-1 flex-col gap-2">
           <p className="text-sm font-semibold">{name.trim() ? `${name.trim()} ${surnames.trim()}` : 'Seu personagem'}</p>
           <p className="text-xs text-slate-400">{place.city} – {place.uf} · {RACE_LABEL[look.race]}</p>
-          <div className="grid grid-cols-2 gap-1" role="radiogroup" aria-label="Ver como">
+          <div className="grid grid-cols-3 gap-1" role="radiogroup" aria-label="Ver como">
             {PREVIEW_AGES.map(([label, age]) => (
               <button key={age} type="button" role="radio" aria-checked={previewAge === age} onClick={() => setPreviewAge(age)} className={`min-h-9 rounded-lg border text-xs ${previewAge === age ? 'border-emerald-500 bg-emerald-500/15 text-emerald-200' : 'border-slate-700'}`} data-testid={`preview-${age}`}>
                 {label}
@@ -203,11 +212,17 @@ export default function NewLife() {
             <p className="text-xs text-slate-500">Só aparência: cor ou raça nunca muda atributos, chances, salários nem eventos.</p>
           </Field>
           <Field title="Pele">
-            <Slider testId="skin-slider" label="Tom" value={genes.skinTone} onChange={(v) => setGene('skinTone', v)} gradient={SKIN_GRADIENT(genes.undertone)} />
+            <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Tom de pele">
+              {SKIN_SWATCHES.map((t) => (
+                <button key={t} type="button" role="radio" aria-checked={Math.abs(genes.skinTone - t) < 0.05} aria-label={`Tom ${Math.round(t * 10) + 1}`} onClick={() => setGene('skinTone', t)} className={`h-9 w-9 rounded-lg border-2 ${Math.abs(genes.skinTone - t) < 0.05 ? 'border-[var(--ds-accent)]' : 'border-transparent'}`} style={{ background: rgbHex(skinRgb(t, genes.undertone)) }} />
+              ))}
+            </div>
+            <Slider testId="skin-slider" label="Ajuste fino do tom" value={genes.skinTone} onChange={(v) => setGene('skinTone', v)} gradient={SKIN_GRADIENT(genes.undertone)} />
             <Slider label="Subtom (frio ↔ quente)" value={(genes.undertone + 1) / 2} onChange={(v) => setGene('undertone', v * 2 - 1)} />
           </Field>
           <Field title="Cabelo">
             <Choice value={genes.hairType} options={HAIR_TYPES} labels={HAIR_TYPE_LABEL} onChange={(v) => setGene('hairType', v)} cols={4} />
+            <Choice value={desc.hair.style} options={HAIR_STYLES} labels={HAIR_STYLE_LABEL} onChange={(v) => setLook((l) => ({ ...l, hairStyle: v }))} cols={3} />
             <Slider label="Cor (preto → loiro)" value={genes.hairColor} onChange={(v) => setGene('hairColor', v)} gradient={HAIR_GRADIENT} />
             <label className="flex min-h-11 items-center gap-2 text-sm">
               <input type="checkbox" checked={genes.red} onChange={(e) => setGene('red', e.target.checked)} className="h-5 w-5 accent-emerald-500" /> Ruivo
@@ -219,8 +234,21 @@ export default function NewLife() {
           </Field>
           <Field title="Rosto">
             <Choice value={genes.faceShape} options={FACE_SHAPES} labels={FACE_SHAPE_LABEL} onChange={(v) => setGene('faceShape', v)} />
-            <Slider label="Nariz (fino ↔ largo)" value={genes.noseWidth} onChange={(v) => setGene('noseWidth', v)} />
-            <Slider label="Lábios (finos ↔ cheios)" value={genes.lipVolume} onChange={(v) => setGene('lipVolume', v)} />
+            <p className="text-xs text-[var(--ds-text-muted)]">Nariz</p>
+            <div className="grid grid-cols-3 gap-2">
+              {THIRDS.map(([l, v]) => (
+                <button key={l} type="button" aria-pressed={Math.abs(genes.noseWidth - v) < 0.17} onClick={() => setGene('noseWidth', v)} className={`min-h-11 rounded-xl border text-xs ${Math.abs(genes.noseWidth - v) < 0.17 ? 'border-[var(--ds-accent)] text-[var(--ds-accent)]' : 'border-[var(--ds-border)]'}`}>{l}</button>
+              ))}
+            </div>
+            <p className="text-xs text-[var(--ds-text-muted)]">Lábios</p>
+            <div className="grid grid-cols-3 gap-2">
+              {THIRDS.map(([l, v]) => (
+                <button key={l} type="button" aria-pressed={Math.abs(genes.lipVolume - v) < 0.17} onClick={() => setGene('lipVolume', v)} className={`min-h-11 rounded-xl border text-xs ${Math.abs(genes.lipVolume - v) < 0.17 ? 'border-[var(--ds-accent)] text-[var(--ds-accent)]' : 'border-[var(--ds-border)]'}`}>{l === 'Fino' ? 'Finos' : l === 'Médio' ? 'Médios' : 'Cheios'}</button>
+              ))}
+            </div>
+            <label className="flex min-h-11 items-center gap-2 text-sm">
+              <input type="checkbox" checked={(genes.freckles ?? 0) > 0} onChange={(e) => setGene('freckles', e.target.checked ? 0.6 : 0)} className="h-5 w-5 accent-emerald-500" /> Sardas
+            </label>
           </Field>
           {sex === 'M' && (
             <Field title="Barba (quando adulto)">

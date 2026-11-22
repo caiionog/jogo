@@ -1,6 +1,6 @@
 /** Mostra um PixelImage num <canvas> ampliado por escala inteira, sem suavização. */
 import { useEffect, useRef } from 'react';
-import type { PixelImage } from './compose';
+import type { PixelImage } from './render';
 
 export default function PixelCanvas({ img, scale, className = '', label, crop }: { img: PixelImage; scale: number; className?: string; label?: string; crop?: { x: number; y: number; w: number; h: number } }) {
   const ref = useRef<HTMLCanvasElement>(null);

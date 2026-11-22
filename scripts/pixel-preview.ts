@@ -1,13 +1,9 @@
 /**
  * Exporta o avatar em pixel art para PNG sem navegador (iteração rápida da arte):
- *   npx tsx scripts/pixel-preview.ts <saída.png> [escala]
+ *   (funções png e sheet usadas por scripts/pixel-sheet.ts)
  */
-import { writeFileSync } from 'node:fs';
 import { deflateSync } from 'node:zlib';
-import { skinRgb, rgbHex } from '../src/engine';
-import { composeAvatar } from '../src/ui/avatar/pixel/compose';
-import type { PixelImage } from '../src/ui/avatar/pixel/compose';
-import { firstCharacter } from '../src/ui/avatar/pixel/first';
+import type { PixelImage } from '../src/ui/avatar/pixel/render';
 
 function crc32(buf: Buffer): number {
   let c = ~0;
@@ -60,9 +56,4 @@ export function sheet(imgs: PixelImage[], scale: number, bg: [number, number, nu
   return png(W, H, out);
 }
 
-const target = process.argv[2] ?? 'tmp/pixel.png';
-const scale = Number(process.argv[3] ?? 6);
-const tones = [0.05, 0.3, 0.55, 0.8, 0.97];
-const imgs = tones.map((t) => composeAvatar(firstCharacter(rgbHex(skinRgb(t, 0.1)))));
-writeFileSync(target, sheet(imgs, scale));
-console.log('ok', target);
+// (uso como biblioteca: funções png/sheet)

@@ -1,6 +1,7 @@
 /**
- * Aparência dinâmica (Etapa 7): `deriveAvatar` calcula tudo o que o renderizador precisa a partir do estado.
- * Nada disso é guardado no save — só os genes (fixos) e o guarda-roupa. A UI apenas renderiza o descriptor.
+ * Aparência dinâmica: `deriveAvatar` calcula tudo o que o renderizador precisa a partir do estado.
+ * Nada disso é guardado no save — só os genes (fixos) e o guarda-roupa. A UI apenas desenha o descriptor
+ * (Etapa 8: pixel art de corpo inteiro, por camadas).
  */
 import type { GameContent } from '../../core/content';
 import { createRng, seedToState } from '../../core/rng';
@@ -9,38 +10,51 @@ import { bmiAt } from '../../fighting/body';
 import type { Npc } from '../../fighting/types';
 import { pickUf } from '../../geo';
 import type { Person } from '../../relationships/types';
-import { EYE_RGB, hairRgb, rgbHex, skinRgb } from './genes';
-import type { Appearance, EyeShape, FaceShape, FacialHair, HairType } from './genes';
+import { EYE_RGB, HAIR_STYLES, hairRgb, rgbHex, skinRgb } from './genes';
+import type { Appearance, EyeShape, FaceShape, FacialHair, HairStyle, HairType } from './genes';
 import { randomAppearance } from './inherit';
 import { outfitDef, outfitFitsAge } from './outfits';
-import type { OutfitMesh } from './outfits';
+import type { OutfitLayer, OutfitPattern, Worn } from './outfits';
 
 export type AgeStage = 'bebe' | 'crianca' | 'adolescente' | 'adulto' | 'idoso';
-export type Expression = 'feliz' | 'neutro' | 'triste' | 'cansado' | 'machucado';
-export type HairStyle = 'raspado' | 'curto' | 'medio' | 'longo' | 'preso';
+export type Expression = 'feliz' | 'neutro' | 'triste' | 'cansado' | 'bravo' | 'machucado';
+/** Tipo físico (silhueta da pixel art), derivado de gordura e musculatura. */
+export type Build = 'magro' | 'medio' | 'atletico' | 'musculoso' | 'acima';
+export const BUILDS: readonly Build[] = ['magro', 'medio', 'atletico', 'musculoso', 'acima'];
 export type AvatarContext = 'principal' | 'luta' | 'casamento' | 'formatura' | 'lista';
+
+export interface OutfitPiece {
+  id: string;
+  /** Cor base (hex) — o renderizador gera a rampa. */
+  color: string;
+  pattern: OutfitPattern;
+}
+export type AvatarOutfit = Partial<Record<OutfitLayer, OutfitPiece>>;
 
 export interface AvatarDescriptor {
   sex: Sex;
   age: number;
   stage: AgeStage;
-  /** 0 = recém-nascido … 1 = adulto (proporções contínuas: cabeça grande → corpo adulto). */
+  /** 0 = recém-nascido … 1 = adulto (crescimento contínuo pela idade). */
   growth: number;
   /** 0 até ~55 anos … 1 aos ~90 (postura, rosto, pele). */
   elder: number;
   fat: number;
   muscle: number;
+  build: Build;
   skin: string;
   hair: { type: HairType; style: HairStyle; color: string; grey: number; baldness: number };
   eyes: { color: string; shape: EyeShape };
   noseWidth: number;
   lipVolume: number;
   faceShape: FaceShape;
+  freckles: number;
+  moles: number;
   wrinkles: number;
   facialHair: FacialHair;
   marks: { scar: boolean; brokenNose: boolean; cauliflowerEar: boolean; blackEye: boolean };
   expression: Expression;
-  outfit: { id: string; mesh: OutfitMesh; color: string; beltColor?: string };
+  outfit: AvatarOutfit;
 }
 
 const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
@@ -53,7 +67,7 @@ export function ageStage(age: number): AgeStage {
   return age <= 2 ? 'bebe' : age <= 11 ? 'crianca' : age <= 17 ? 'adolescente' : age <= 59 ? 'adulto' : 'idoso';
 }
 
-/** Crescimento contínuo de 0 (bebê) a 1 (adulto aos ~20): sem troca brusca de modelo. */
+/** Crescimento contínuo de 0 (bebê) a 1 (adulto aos ~20). */
 export function growthAt(age: number): number {
   return r2(clamp01(Math.pow(Math.min(age, 20) / 20, 0.75)));
 }
@@ -62,31 +76,53 @@ export function elderAt(age: number): number {
   return r2(clamp01((age - 55) / 35));
 }
 
+export function buildOf(fat: number, muscle: number): Build {
+  if (fat >= 0.62) return 'acima';
+  if (muscle >= 0.62 && fat < 0.45) return 'musculoso';
+  if (muscle >= 0.42) return 'atletico';
+  if (fat < 0.22 && muscle < 0.3) return 'magro';
+  return 'medio';
+}
+
 /** Pseudoaleatório estável a partir de um número (estilos que não estão nos genes). */
 function frac(x: number, k: number): number {
   const v = Math.sin(x * 12.9898 * k + k * 78.233) * 43758.5453;
   return v - Math.floor(v);
 }
 
+/** Estilo de cabelo de quem não escolheu: estável pelos genes; todo estilo pode aparecer para qualquer pessoa. */
 function hairStyleFor(sex: Sex, age: number, a: Appearance): HairStyle {
-  const r = frac(a.genes.weightGain + a.genes.noseWidth, 3);
+  if (a.hairStyle) return a.hairStyle;
   if (age <= 1) return 'curto';
-  if (sex === 'M') return r < 0.12 ? 'raspado' : r < 0.8 ? 'curto' : 'medio';
-  return r < 0.15 ? 'curto' : r < 0.45 ? 'medio' : r < 0.85 ? 'longo' : 'preso';
+  const r = frac(a.genes.weightGain + a.genes.noseWidth + a.genes.lipVolume, 3);
+  const curly = a.genes.hairType === 'cacheado' || a.genes.hairType === 'crespo';
+  // pesos por sexo (moda, não genética); black power só com cabelo cacheado/crespo (física do cabelo)
+  const w: Partial<Record<HairStyle, number>> =
+    sex === 'M'
+      ? { raspado: 14, curto: 40, medio: 10, moicano: 3, dreads: 4, trancas: 3, franja: 4, longo: 3, rabo: 1, black_power: curly ? 8 : 0 }
+      : { curto: 10, medio: 20, longo: 24, rabo: 12, coque: 10, franja: 8, trancas: 6, dreads: 3, raspado: 2, black_power: curly ? 10 : 0 };
+  const keys = HAIR_STYLES.filter((k) => (w[k] ?? 0) > 0);
+  const total = keys.reduce((t, k) => t + (w[k] ?? 0), 0);
+  let x = r * total;
+  for (const k of keys) {
+    x -= w[k] ?? 0;
+    if (x < 0) return k;
+  }
+  return 'curto';
 }
 
 interface BodyInputs {
   sex: Sex;
   age: number;
   appearance: Appearance;
-  /** 0–1 */
   fat: number;
   muscle: number;
   health: number;
   facialHair: FacialHair;
+  hairStyle?: HairStyle;
   marks?: AvatarDescriptor['marks'];
   expression: Expression;
-  outfit: AvatarDescriptor['outfit'];
+  outfit: AvatarOutfit;
 }
 
 function build(i: BodyInputs): AvatarDescriptor {
@@ -96,20 +132,25 @@ function build(i: BodyInputs): AvatarDescriptor {
   const grey = r2(clamp01((age - greyStart) / 28));
   const baldness = r2(i.sex === 'M' ? clamp01((age - 24) / 36) * Math.pow(g.baldness, 1.4) : clamp01((age - 50) / 40) * g.baldness * 0.25);
   const wrinkles = r2(clamp01((age - 30) / 55) * (1 + (1 - i.health / 100) * 0.4));
+  const fat = r2(i.fat);
+  const muscle = r2(i.muscle);
   return {
     sex: i.sex,
     age,
     stage: ageStage(age),
     growth: growthAt(age),
     elder: elderAt(age),
-    fat: r2(i.fat),
-    muscle: r2(i.muscle),
+    fat,
+    muscle,
+    build: buildOf(fat, muscle),
     skin: rgbHex(skinRgb(g.skinTone, g.undertone)),
-    hair: { type: g.hairType, style: hairStyleFor(i.sex, age, i.appearance), color: rgbHex(hairRgb(g.hairColor, g.red, grey)), grey, baldness },
+    hair: { type: g.hairType, style: i.hairStyle ?? hairStyleFor(i.sex, age, i.appearance), color: rgbHex(hairRgb(g.hairColor, g.red, grey)), grey, baldness },
     eyes: { color: rgbHex(EYE_RGB[g.eyeColor]), shape: g.eyeShape },
     noseWidth: r2(g.noseWidth),
     lipVolume: r2(g.lipVolume),
     faceShape: g.faceShape,
+    freckles: r2(g.freckles ?? 0),
+    moles: r2(g.moles ?? 0),
     wrinkles,
     facialHair: age >= 16 ? i.facialHair : 'nenhuma',
     marks: i.marks ?? { scar: false, brokenNose: false, cauliflowerEar: false, blackEye: false },
@@ -118,36 +159,69 @@ function build(i: BodyInputs): AvatarDescriptor {
   };
 }
 
-/** Roupa por idade/contexto quando não há escolha (NPCs e fallback). */
-function pickOutfit(content: GameContent, age: number, seed: number, context: 'dia' | 'luta' = 'dia'): AvatarDescriptor['outfit'] {
-  if (age <= 2) return wear(content, 'body', 0);
-  const pool = content.outfits.filter((o) => (o.context === context || (context === 'dia' && o.context === 'dia')) && outfitFitsAge(o, age));
-  const o = pool[Math.floor(frac(seed, 5) * pool.length)] ?? content.outfits[0]!;
-  return wear(content, o.id, Math.floor(frac(seed, 11) * o.colors.length));
+function piece(content: GameContent, id: string, color: number): OutfitPiece | undefined {
+  const o = outfitDef(content, id);
+  if (!o) return undefined;
+  return { id: o.id, color: o.colors[Math.max(0, Math.min(color, o.colors.length - 1))] ?? '#888888', pattern: o.pattern ?? 'liso' };
 }
 
-function wear(content: GameContent, id: string, color: number, beltColor?: string): AvatarDescriptor['outfit'] {
-  const o = outfitDef(content, id) ?? content.outfits[0]!;
-  return { id: o.id, mesh: o.mesh, color: o.colors[Math.min(color, o.colors.length - 1)] ?? '#888888', ...(beltColor ? { beltColor } : {}) };
+function wornToOutfit(content: GameContent, worn: Worn, age: number): AvatarOutfit {
+  const out: AvatarOutfit = {};
+  for (const [layer, w] of Object.entries(worn) as [OutfitLayer, { id: string; color: number }][]) {
+    const o = outfitDef(content, w.id);
+    if (!o || !outfitFitsAge(o, age)) continue;
+    const p = piece(content, w.id, w.color);
+    if (p) out[layer] = p;
+  }
+  return out;
 }
 
-/** Roupa do personagem: contexto automático (escola, luta, casamento, formatura) ou guarda-roupa. */
-export function playerOutfit(state: GameState, content: GameContent, context: AvatarContext = 'principal'): AvatarDescriptor['outfit'] {
+/** Roupa de quem não escolhe (NPCs e fallback): peças do dia a dia sorteadas de forma estável. */
+function casualOutfit(content: GameContent, age: number, sex: Sex, seed: number): AvatarOutfit {
+  if (age <= 2) return { inteira: piece(content, 'body', Math.floor(frac(seed, 2) * 5))!, calcado: piece(content, 'meia', 0)! };
+  const pick = (ids: string[], k: number) => {
+    const fit = ids.filter((id) => {
+      const o = outfitDef(content, id);
+      return o && outfitFitsAge(o, age);
+    });
+    const id = fit[Math.floor(frac(seed, k) * fit.length)] ?? ids[0]!;
+    const o = outfitDef(content, id)!;
+    return piece(content, id, Math.floor(frac(seed, k + 1) * o.colors.length))!;
+  };
+  const dress = sex === 'F' && frac(seed, 31) < 0.25;
+  if (dress) return { inteira: pick(['vestido'], 5), calcado: pick(['tenis', 'chinelo', 'sapato'], 7) };
+  return {
+    cima: pick(['camiseta', 'camiseta', 'camiseta_listrada', 'camiseta_estampa', 'polo', 'regata', 'blusa', 'moletom', 'xadrez', 'social'], 11),
+    baixo: pick(sex === 'F' ? ['calca_jeans', 'calca_jeans', 'saia', 'shorts', 'bermuda'] : ['calca_jeans', 'calca_jeans', 'bermuda', 'calca_moletom', 'shorts'], 13),
+    calcado: pick(['tenis', 'tenis', 'chinelo', 'bota', 'sapato'], 17),
+  };
+}
+
+/** Roupa do personagem: contexto automático (bebê, escola, luta, casamento, formatura) ou o guarda-roupa. */
+export function playerOutfit(state: GameState, content: GameContent, context: AvatarContext = 'principal'): AvatarOutfit {
   const age = state.character.age;
-  const belt = BELT_HEX[state.fighter.belt.rank] ?? BELT_HEX[0];
+  const belt = state.fighter.belt.rank;
   if (context === 'luta') {
     const rules = state.activeFight?.offer.rules;
-    return rules === 'grappling' ? wear(content, 'kimono', 0, belt) : wear(content, age < 14 ? 'regata_treino' : 'rashguard', 0);
+    if (rules === 'grappling') return { inteira: piece(content, 'kimono', 0)!, acessorio: piece(content, 'faixa', belt)!, calcado: piece(content, 'descalco', 0)! };
+    return { cima: piece(content, age < 14 ? 'regata_treino' : 'rashguard', 0)!, baixo: piece(content, 'shorts_luta', 0)!, calcado: piece(content, 'descalco', 0)! };
   }
-  if (context === 'casamento' && age >= 16) return wear(content, state.character.sex === 'F' ? 'vestido_festa' : 'terno', 0);
-  if (context === 'formatura') return wear(content, 'camisa_formatura', 0);
-  if (age <= 2) return wear(content, 'body', 0);
-  if (state.education.current && age >= 6 && age <= 17) return wear(content, 'uniforme', 0);
-  const chosen = outfitDef(content, state.wardrobe.outfit.id);
-  if (chosen && outfitFitsAge(chosen, age) && state.wardrobe.unlocked.includes(chosen.id)) {
-    return chosen.context === 'luta' ? wear(content, chosen.id, state.wardrobe.outfit.color, belt) : wear(content, chosen.id, state.wardrobe.outfit.color);
+  if (context === 'casamento' && age >= 16) {
+    return state.character.sex === 'F'
+      ? { inteira: piece(content, 'vestido_festa', 0)!, calcado: piece(content, 'sapato', 0)! }
+      : { cima: piece(content, 'social', 0)!, agasalho: piece(content, 'terno', 0)!, baixo: piece(content, 'calca_social', 0)!, calcado: piece(content, 'sapato', 0)! };
   }
-  return pickOutfit(content, age, state.character.birthYear);
+  if (context === 'formatura') return { cima: piece(content, 'camisa_formatura', 0)!, baixo: piece(content, 'calca_jeans', 0)!, calcado: piece(content, 'tenis', 0)! };
+  if (age <= 2) return { inteira: piece(content, 'body', 0)!, calcado: piece(content, 'meia', 0)! };
+  const worn = wornToOutfit(content, state.wardrobe.worn ?? {}, age);
+  if (state.education.current && age >= 6 && age <= 17) {
+    // dia de escola: uniforme por cima, resto do guarda-roupa
+    const { inteira: _i, ...rest } = worn;
+    void _i;
+    return { ...rest, cima: piece(content, 'uniforme', 0)!, baixo: rest.baixo ?? piece(content, 'calca_jeans', 0)! };
+  }
+  if (!worn.cima && !worn.inteira) return casualOutfit(content, age, state.character.sex, state.character.birthYear);
+  return worn;
 }
 
 /** Avatar do personagem do jogador. */
@@ -177,7 +251,18 @@ export function deriveAvatar(state: GameState, content: GameContent, context: Av
     cauliflowerEar: seq.includes('orelha_couve_flor'),
     blackEye: foughtHurt || headInjury,
   };
-  const expression: Expression = marks.blackEye ? 'machucado' : st.health < 35 ? 'cansado' : st.happiness >= 70 ? 'feliz' : st.happiness <= 35 ? 'triste' : 'neutro';
+  const lostThisYear = !!last && last.year === state.year && last.result === 'L';
+  const expression: Expression = marks.blackEye
+    ? 'machucado'
+    : st.health < 35
+      ? 'cansado'
+      : lostThisYear || (st.happiness <= 25 && st.health >= 50)
+        ? 'bravo'
+        : st.happiness >= 70
+          ? 'feliz'
+          : st.happiness <= 35
+            ? 'triste'
+            : 'neutro';
   return build({
     sex: c.sex,
     age,
@@ -186,6 +271,7 @@ export function deriveAvatar(state: GameState, content: GameContent, context: Av
     muscle,
     health: st.health,
     facialHair: state.wardrobe.facialHair,
+    ...(state.wardrobe.hairStyle ? { hairStyle: state.wardrobe.hairStyle } : {}),
     marks,
     expression,
     outfit: playerOutfit(state, content, context),
@@ -199,9 +285,9 @@ export function derivePersonAvatar(person: Person, content: GameContent, opts: {
   const age = person.age;
   const muscle = clamp01((person.athletic / 100) * 0.9 - 0.1) * growthAt(age);
   const fat = clamp01(0.3 + (50 - person.athletic) / 160 + (a.genes.weightGain - 0.5) * 0.35 + (age > 40 ? 0.06 : 0) - (person.health < 35 ? 0.08 : 0));
-  const expression: Expression = !person.alive ? 'neutro' : person.health < 30 ? 'cansado' : (opts.affection ?? 50) >= 70 ? 'feliz' : (opts.affection ?? 50) <= 20 ? 'triste' : 'neutro';
-  const seed = Number(person.id.replace(/\D/g, '')) || 1;
-  return build({ sex: person.sex, age, appearance: a, fat, muscle, health: person.health, facialHair: a.facialHair, expression, outfit: pickOutfit(content, age, seed + a.genes.lipVolume) });
+  const expression: Expression = !person.alive ? 'neutro' : person.health < 30 ? 'cansado' : (opts.affection ?? 50) >= 70 ? 'feliz' : (opts.affection ?? 50) <= 20 ? 'bravo' : (opts.affection ?? 50) <= 35 ? 'triste' : 'neutro';
+  const seed = (Number(person.id.replace(/\D/g, '')) || 1) + a.genes.lipVolume;
+  return build({ sex: person.sex, age, appearance: a, fat, muscle, health: person.health, facialHair: a.facialHair, expression, outfit: casualOutfit(content, age, person.sex, seed) });
 }
 
 /** Aparência derivada (não guardada) de um lutador do elenco: UF pelo peso populacional, genes pela cor. */
@@ -210,16 +296,21 @@ export function npcAppearance(seed: string, npc: Pick<Npc, 'id'>, sex: Sex, cont
   return randomAppearance(rng, pickUf(rng, content.geo), sex);
 }
 
-/** Avatar de um lutador NPC: força/condicionamento e categoria de peso definem o corpo. */
 /** Dados mínimos de um lutador (NPC do elenco ou adversário de uma oferta; sem idade, 28). */
 export type NpcLike = Pick<Npc, 'id' | 'athletic' | 'style'> & { age?: number };
 
+/** Avatar de um lutador NPC: físico e categoria de peso definem o corpo; roupa de luta. */
 export function deriveNpcAvatar(seed: string, npc: NpcLike, sex: Sex, content: GameContent, opts: { heavy?: number; champion?: boolean } = {}): AvatarDescriptor {
   const a = npcAppearance(seed, npc, sex, content);
   const muscle = clamp01(npc.athletic / 100 + 0.1);
   const fat = clamp01(0.12 + (opts.heavy ?? 0.4) * 0.35 + (a.genes.weightGain - 0.5) * 0.15 - (npc.athletic - 60) / 300);
   const s = Number(npc.id.replace(/\D/g, '')) || 1;
-  const outfit = opts.champion ? wear(content, 'roupao', Math.floor(frac(s, 2) * 3)) : pickOutfit(content, npc.age ?? 28, s, 'luta');
+  const outfit: AvatarOutfit = {
+    cima: piece(content, frac(s, 3) < 0.5 ? 'rashguard' : 'regata_treino', Math.floor(frac(s, 4) * 4))!,
+    baixo: piece(content, 'shorts_luta', Math.floor(frac(s, 5) * 4))!,
+    calcado: piece(content, 'descalco', 0)!,
+    ...(opts.champion ? { agasalho: piece(content, 'roupao', Math.floor(frac(s, 2) * 3))! } : {}),
+  };
   return build({
     sex,
     age: npc.age ?? 28,
@@ -235,11 +326,18 @@ export function deriveNpcAvatar(seed: string, npc: NpcLike, sex: Sex, content: G
 }
 
 /** Prévia da criação de personagem: a mesma aparência em qualquer idade ("ver como"). */
-export function previewAvatar(appearance: Appearance, sex: Sex, age: number, content: GameContent, opts: { facialHair?: FacialHair; outfitId?: string } = {}): AvatarDescriptor {
-  const muscle = clamp01(0.3 - (age > 60 ? (age - 60) / 100 : 0)) * growthAt(age);
-  const fat = clamp01(0.32 + (appearance.genes.weightGain - 0.5) * 0.3 + (age > 40 ? 0.08 : 0));
-  const outfit = opts.outfitId && outfitDef(content, opts.outfitId) && outfitFitsAge(outfitDef(content, opts.outfitId)!, age) ? wear(content, opts.outfitId, 0) : pickOutfit(content, age, 7);
-  return build({ sex, age, appearance, fat, muscle, health: age > 75 ? 60 : 90, facialHair: opts.facialHair ?? appearance.facialHair, expression: 'feliz', outfit });
+export function previewAvatar(
+  appearance: Appearance,
+  sex: Sex,
+  age: number,
+  content: GameContent,
+  opts: { facialHair?: FacialHair; worn?: Worn; fat?: number; muscle?: number; expression?: Expression } = {},
+): AvatarDescriptor {
+  const muscle = opts.muscle ?? clamp01(0.3 - (age > 60 ? (age - 60) / 100 : 0)) * growthAt(age);
+  const fat = opts.fat ?? clamp01(0.32 + (appearance.genes.weightGain - 0.5) * 0.3 + (age > 40 ? 0.08 : 0));
+  const worn = opts.worn ? wornToOutfit(content, opts.worn, age) : {};
+  const outfit = age <= 2 ? casualOutfit(content, age, sex, 7) : worn.cima || worn.inteira ? worn : casualOutfit(content, age, sex, 7);
+  return build({ sex, age, appearance, fat, muscle, health: age > 75 ? 60 : 90, facialHair: opts.facialHair ?? appearance.facialHair, expression: opts.expression ?? 'feliz', outfit });
 }
 
 /** Hash estável do descriptor (cache de miniaturas). */

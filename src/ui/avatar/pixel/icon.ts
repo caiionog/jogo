@@ -1,7 +1,7 @@
 /** Rasteriza um ícone de grade + paleta num PixelImage (mesmo motor de exibição do avatar). */
 import type { IconSprite } from '../../../content/sprites/market';
 import { hexToRgb } from './color';
-import type { PixelImage } from './compose';
+import type { PixelImage } from './render';
 
 const cache = new Map<IconSprite, PixelImage>();
 

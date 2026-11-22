@@ -11,7 +11,7 @@ import { AgeButton, BottomNav, StatBar } from '../design/components';
 import { EventModal, ResultModal } from '../design/modals';
 import FightScreen from '../components/FightScreen';
 import MenuHost from '../components/MenuHost';
-import AvatarStage from '../avatar/AvatarStage';
+import PixelAvatar from '../avatar/PixelAvatar';
 import AvatarSheet from '../avatar/AvatarSheet';
 import NavHost from './menus/NavHost';
 import { useNav } from '../nav';
@@ -75,7 +75,6 @@ export default function Life({ onShowObituary }: { onShowObituary?: () => void }
   const choose = useGameStore((s) => s.choose);
   const outcome = useGameStore((s) => s.outcome);
   const dismissOutcome = useGameStore((s) => s.dismissOutcome);
-  const avatar3d = useGameStore((s) => s.meta.settings.avatar3d !== false);
   const nav = useNav();
   const [profile, setProfile] = useState(false);
   const [statsOpen, setStatsOpen] = useState(true);
@@ -91,8 +90,8 @@ export default function Life({ onShowObituary }: { onShowObituary?: () => void }
   return (
     <div className="flex h-dvh flex-col">
       <header className="flex items-center gap-3 border-b border-[var(--ds-border)] bg-[var(--ds-surface)] px-3 pb-2 pt-[max(0.5rem,env(safe-area-inset-top))]">
-        <button type="button" onClick={() => setProfile(true)} aria-label="Abrir perfil e guarda-roupa" className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-[var(--ds-avatar-bg)]" data-testid="avatar-button">
-          <AvatarStage d={desc} enabled={avatar3d && !profile} className="h-full w-full" label={`Avatar de ${c.name}`} />
+        <button type="button" onClick={() => setProfile(true)} aria-label="Abrir perfil e guarda-roupa" className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[var(--ds-avatar-bg)]" data-testid="avatar-button">
+          <PixelAvatar d={desc} scale={2} bust animate={!profile} label={`Avatar de ${c.name}`} />
         </button>
         <div className="min-w-0 flex-1">
           <h1 className="ds-pixel-title truncate text-lg leading-tight" data-testid="char-name">

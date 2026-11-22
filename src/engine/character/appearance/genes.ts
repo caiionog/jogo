@@ -13,7 +13,8 @@ export const EYE_SHAPES = ['amendoado', 'redondo', 'alongado', 'palpebra_lisa'] 
 export type EyeShape = (typeof EYE_SHAPES)[number];
 export const FACE_SHAPES = ['oval', 'redondo', 'quadrado', 'coracao', 'longo'] as const;
 export type FaceShape = (typeof FACE_SHAPES)[number];
-export const FACIAL_HAIR = ['nenhuma', 'barba', 'bigode', 'cavanhaque'] as const;
+/** 'barba' = barba cheia (nome mantido por compatibilidade de save). */
+export const FACIAL_HAIR = ['nenhuma', 'por_fazer', 'rala', 'barba', 'bigode', 'cavanhaque'] as const;
 export type FacialHair = (typeof FACIAL_HAIR)[number];
 
 export interface AppearanceGenes {
@@ -36,6 +37,9 @@ export interface AppearanceGenes {
   baldness: number;
   /** Propensão a ganhar peso (0–1). */
   weightGain: number;
+  /** Sardas (0 = nenhuma … 1 = muitas) e pintas — mesma distribuição para todos (Etapa 8). */
+  freckles?: number;
+  moles?: number;
 }
 
 /** Aparência guardada no personagem e nas pessoas (`Person.appearance`). */
@@ -44,13 +48,23 @@ export interface Appearance {
   /** Cor ou raça (IBGE) — demografia e aparência apenas. */
   race: Race;
   facialHair: FacialHair;
+  /** Estilo de cabelo escolhido (jogador) ou fixo (NPC); sem ele, derivado. */
+  hairStyle?: HairStyle;
 }
 
 export const HAIR_TYPE_LABEL: Record<HairType, string> = { liso: 'Liso', ondulado: 'Ondulado', cacheado: 'Cacheado', crespo: 'Crespo' };
 export const EYE_COLOR_LABEL: Record<EyeColor, string> = { castanho_escuro: 'Castanho-escuro', castanho: 'Castanho', mel: 'Mel', verde: 'Verde', azul: 'Azul', cinza: 'Cinza' };
 export const EYE_SHAPE_LABEL: Record<EyeShape, string> = { amendoado: 'Amendoado', redondo: 'Redondo', alongado: 'Alongado', palpebra_lisa: 'Pálpebra lisa' };
 export const FACE_SHAPE_LABEL: Record<FaceShape, string> = { oval: 'Oval', redondo: 'Redondo', quadrado: 'Quadrado', coracao: 'Coração', longo: 'Longo' };
-export const FACIAL_HAIR_LABEL: Record<FacialHair, string> = { nenhuma: 'Sem barba', barba: 'Barba', bigode: 'Bigode', cavanhaque: 'Cavanhaque' };
+export const FACIAL_HAIR_LABEL: Record<FacialHair, string> = { nenhuma: 'Sem barba', por_fazer: 'Por fazer', rala: 'Rala', barba: 'Cheia', bigode: 'Bigode', cavanhaque: 'Cavanhaque' };
+
+/** Estilos de cabelo (Etapa 8). O tipo (liso…crespo) vem dos genes; o estilo é escolha/NPC. */
+export const HAIR_STYLES = ['careca', 'raspado', 'curto', 'medio', 'longo', 'black_power', 'trancas', 'dreads', 'coque', 'rabo', 'moicano', 'franja'] as const;
+export type HairStyle = (typeof HAIR_STYLES)[number];
+export const HAIR_STYLE_LABEL: Record<HairStyle, string> = {
+  careca: 'Careca', raspado: 'Raspado', curto: 'Curto', medio: 'Médio', longo: 'Longo', black_power: 'Black power', trancas: 'Tranças',
+  dreads: 'Dreads', coque: 'Coque', rabo: 'Rabo de cavalo', moicano: 'Moicano', franja: 'Franja',
+};
 
 // ---------------------------------------------------------------------------
 // Cores (paleta ampla e realista; matemática pura, sem DOM)

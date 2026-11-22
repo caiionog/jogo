@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { GAME_CONTENT } from '../content';
 import {
+  removeOutfit,
+  setHairStyle,
   STAT_KEYS,
   buyBusiness,
   getDriversLicense,
@@ -70,6 +72,7 @@ import type {
   StatKey,
   Appearance,
   FacialHair,
+  HairStyle,
   GameState,
   HealthActionId,
   Housing,
@@ -177,6 +180,8 @@ interface GameStore {
   selectOutfit(id: string, color: number): void;
   buyOutfit(id: string): void;
   setFacialHair(f: FacialHair): void;
+  removeOutfit(layer: 'agasalho' | 'acessorio'): void;
+  setHairStyle(style: HairStyle): void;
   moveCity(uf: string, city: string): void;
   doAction(actionId: string): void;
   joinClub(clubId: string): void;
@@ -290,6 +295,8 @@ export const useGameStore = create<GameStore>((setState, getState) => {
     selectOutfit: (id, color) => update((g) => selectOutfit(g, GAME_CONTENT, id, color)),
     buyOutfit: (id) => update((g) => buyOutfit(g, GAME_CONTENT, id)),
     setFacialHair: (f) => update((g) => setFacialHair(g, f)),
+    removeOutfit: (layer) => update((g) => removeOutfit(g, layer)),
+    setHairStyle: (style) => update((g) => setHairStyle(g, style)),
     moveCity: (uf, city) => update((g) => moveTo(g, GAME_CONTENT, uf, city)),
     retire: () => update((g) => retire(g, GAME_CONTENT)),
     treatInjury: (id, t) => update((g) => treatInjury(g, id, t, GAME_CONTENT)),

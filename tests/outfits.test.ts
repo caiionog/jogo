@@ -30,14 +30,14 @@ describe('roupas e guarda-roupa', () => {
     expect(b.money).toBe(50000 - lux.price!);
     expect(ledgerOk(b)).toBe(true);
     expect(b.wardrobe.unlocked).toContain(lux.id);
-    expect(b.wardrobe.outfit.id).toBe(lux.id);
+    expect(b.wardrobe.worn[C.outfits.find((o) => o.id === lux.id)!.layer]?.id).toBe(lux.id);
     expect(buyOutfitBlock(b, C, lux.id)).toBe('owned');
     expect(wardrobeOptions(b, C).map((o) => o.id)).toContain(lux.id);
   });
 
   it('seleção respeita idade e cor; barba só para 16+; desbloqueio por evento', () => {
     const s = adult(30, 0);
-    expect(selectOutfit(s, C, 'camiseta', 99).wardrobe.outfit.color).toBe(C.outfits.find((o) => o.id === 'camiseta')!.colors.length - 1);
+    expect(selectOutfit(s, C, 'camiseta', 99).wardrobe.worn.cima?.color).toBe(C.outfits.find((o) => o.id === 'camiseta')!.colors.length - 1);
     expect(selectOutfit(s, C, 'body')).toBe(s);
     expect(setFacialHair(s, 'barba').wardrobe.facialHair).toBe('barba');
     expect(setFacialHair({ ...s, character: { ...s.character, age: 12 } }, 'barba').wardrobe.facialHair).toBe(s.wardrobe.facialHair);
