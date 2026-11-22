@@ -166,3 +166,30 @@ describe('save enxuto', () => {
     void marketYear;
   });
 });
+
+describe('ajustes de balanceamento', () => {
+  it('saldo negativo é coberto pela poupança e depois pelo índice antes de virar dívida', async () => {
+    const { debtYear, post } = await import('../src/engine');
+    let s = adult(30, 0);
+    s = { ...s, economy: { ...s.economy, savings: 5000, investments: 50000 } };
+    s = post(s, 'compras', -20000, 'teste');
+    const r = debtYear(s, (x) => x);
+    expect(r.economy.debt).toBe(0);
+    expect(r.money).toBeGreaterThanOrEqual(0);
+    expect(r.economy.savings).toBe(0);
+    expect(r.economy.investments).toBeLessThan(50000 - 15000);
+    expect(ledgerOk(r)).toBe(true);
+  });
+
+  it('salário paga 9% de previdência e é ajustado ao custo da cidade', async () => {
+    const { closeEconomicYear, PENSION_RATE, salaryOf } = await import('../src/engine');
+    let s = adult(30, 50000);
+    s = { ...s, character: { ...s.character, city: 'São Paulo' }, economy: { ...s.economy, job: { jobId: 'tecnico', level: 1, performance: 50, years: 1 } } };
+    const r = closeEconomicYear(s, createRng(5), C);
+    const wage = salaryOf(job('tecnico'), 1, C.economy.cityCost['São Paulo']);
+    expect(wage).toBeGreaterThan(job('tecnico').salary[0]);
+    const entries = r.economy.history.at(-1)!;
+    expect(entries.totals.salario).toBeGreaterThanOrEqual(wage);
+    expect(-(entries.totals.impostos ?? 0)).toBeGreaterThanOrEqual(Math.round(wage * PENSION_RATE));
+  });
+});

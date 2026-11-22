@@ -2,8 +2,12 @@
 import type { TaxBracket } from './types';
 import { toMoney } from './ledger';
 
+/** Contribuição previdenciária fictícia sobre o salário (9%). */
+export const PENSION_RATE = 0.09;
 export const PROPERTY_TAX_RATE = 0.008;
 export const INHERITANCE_TAX_RATE = 0.04;
+/** Imposto sobre o ganho anual do índice (retido na aplicação). */
+export const INDEX_GAIN_TAX = 0.15;
 
 /** Imposto progressivo: cada faixa tributa só a parte da renda dentro dela. */
 export function incomeTax(income: number, brackets: readonly TaxBracket[]): number {

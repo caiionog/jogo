@@ -25,18 +25,19 @@ export const FAMILY_EVENTS: readonly GameEvent[] = [
   },
   {
     id: 'rel_sibling_money',
-    conditions: { minAge: 18, relationship: { types: ['irmao'], personAge: { min: 18 } } },
+    conditions: { minAge: 18, relationship: { types: ['irmao'], personAge: { min: 18 }, personFlagNone: 'pediu_dinheiro' } },
     weight: 5,
     text: '{pessoa} está com as contas atrasadas e pede R$ 2.000 emprestados.',
     choices: [
       {
         id: 'lend',
         label: 'Emprestar',
-        effects: { money: -2000, social: { affection: 12 } },
+        // o empréstimo volta com um agradinho; no risco, o dinheiro nunca volta
+        effects: { money: 200, social: { affection: 12, setPersonFlags: { pediu_dinheiro: true } } },
         resultText: '{pessoa} te pagou de volta alguns meses depois, com juros de gratidão.',
-        risk: { chance: 0.4, effects: { money: -2000, social: { affection: 6 } }, resultText: 'O dinheiro nunca voltou, mas {pessoa} ficou devendo um favor.' },
+        risk: { chance: 0.4, effects: { money: -2200, social: { affection: 6 } }, resultText: 'O dinheiro nunca voltou, mas {pessoa} ficou devendo um favor.' },
       },
-      { id: 'refuse', label: 'Negar', effects: { social: { affection: -8 } }, resultText: '{pessoa} ficou magoado(a).' },
+      { id: 'refuse', label: 'Negar', effects: { social: { affection: -8, setPersonFlags: { pediu_dinheiro: true } } }, resultText: '{pessoa} ficou magoado(a).' },
     ],
   },
   {

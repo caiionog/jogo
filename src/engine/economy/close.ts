@@ -12,7 +12,7 @@ import { jobYear } from './jobs';
 import { archiveLedger, post, taxableIncome, toMoney } from './ledger';
 import { debtYear, livingYear } from './living';
 import { marketYear } from './market';
-import { PROPERTY_TAX_RATE, incomeTax } from './taxes';
+import { INDEX_GAIN_TAX, PENSION_RATE, PROPERTY_TAX_RATE, incomeTax } from './taxes';
 import { netWorth } from './worth';
 
 /** Vende tudo a preço de urgência (falência): bens a 70%, empresas a 50%, aplicações resgatadas. */
@@ -35,7 +35,10 @@ export function closeEconomicYear(state: GameState, rng: Rng, content: GameConte
   // rendimentos: poupança paga juros em dinheiro; o índice valoriza (ou cai) dentro da aplicação
   if (s.economy.savings > 0) s = post(s, 'juros', s.economy.savings * market.savingsRate, 'Rendimento da poupança');
   if (s.economy.investments > 0) {
-    s = { ...s, economy: { ...s.economy, investments: Math.max(0, toMoney(s.economy.investments * (1 + market.indexReturn))) } };
+    // ganho do índice paga 15% de imposto (retido na própria aplicação)
+    const gain = s.economy.investments * market.indexReturn;
+    const net = gain > 0 ? gain * (1 - INDEX_GAIN_TAX) : gain;
+    s = { ...s, economy: { ...s.economy, investments: Math.max(0, toMoney(s.economy.investments + net)) } };
   }
   s = livingYear(s, content);
   s = alimonyYear(s);
@@ -49,6 +52,10 @@ export function closeEconomicYear(state: GameState, rng: Rng, content: GameConte
     s = { ...s, economy: { ...s.economy, evadedTax: s.economy.evadedTax + evaded } };
   }
   if (tax > 0) s = post(s, 'impostos', -tax, 'Imposto de renda');
+  // contribuição previdenciária sobre salário (gancho de aposentadoria da Etapa 6)
+  const wages = s.economy.ledger.entries.filter((e) => e.cat === 'salario').reduce((t, e) => t + e.amount, 0);
+  const pension = toMoney(wages * PENSION_RATE);
+  if (pension > 0) s = post(s, 'impostos', -pension, 'Previdência');
   const iptu = toMoney(propertyValue(s) * PROPERTY_TAX_RATE);
   if (iptu > 0) s = post(s, 'impostos', -iptu, 'Imposto sobre imóveis');
   s = { ...s, economy: { ...s.economy, lastIncome: income } };

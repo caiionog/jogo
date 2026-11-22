@@ -9,7 +9,7 @@ import { setRegime } from './family';
 import { deposit } from './bank';
 import { relationsOf, updatePerson, firstName } from '../relationships/people';
 import { fireAgent, hireAgent, signSponsor } from './fightIncome';
-import { jobDef, salaryOf } from './jobs';
+import { cityMultOf, jobDef, salaryOf } from './jobs';
 import { post, toMoney } from './ledger';
 import type { AssetKind, LedgerCategory, Regime } from './types';
 
@@ -77,7 +77,7 @@ export function applyEconomyEffects(state: GameState, fx: EconomyEffects, rng: R
     const def = jobDef(content, fx.jobOffer);
     if (def) {
       s = { ...s, economy: { ...s.economy, job: { jobId: def.id, level: 1, performance: 55, years: 0 } } };
-      s = appendLog(s, `Novo emprego: ${def.title.toLowerCase()} (R$ ${salaryOf(def, 1).toLocaleString('pt-BR')}/ano).`);
+      s = appendLog(s, `Novo emprego: ${def.title.toLowerCase()} (R$ ${salaryOf(def, 1, cityMultOf(s, content)).toLocaleString('pt-BR')}/ano).`);
     }
   }
   if (fx.assetDamage) {

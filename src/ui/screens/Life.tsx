@@ -12,9 +12,13 @@ import { useState } from 'react';
 import RelationshipsPanel from '../components/RelationshipsPanel';
 import SettingsSheet from '../components/SettingsSheet';
 import StatBars from '../components/StatBars';
+import FinancePanel from '../components/FinancePanel';
+import WorkPanel from '../components/WorkPanel';
+import AssetsPanel from '../components/AssetsPanel';
+import BusinessPanel from '../components/BusinessPanel';
 import { useGameStore } from '../store';
 
-const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
 
 export default function Life() {
   const game = useGameStore((s) => s.game);
@@ -24,7 +28,7 @@ export default function Life() {
   const advance = useGameStore((s) => s.advance);
   const choose = useGameStore((s) => s.choose);
   const newLife = useGameStore((s) => s.newLife);
-  const [tab, setTab] = useState<'vida' | 'carreira' | 'relacoes' | 'ranking'>('vida');
+  const [tab, setTab] = useState<'vida' | 'carreira' | 'relacoes' | 'ranking' | 'financas' | 'trabalho' | 'bens' | 'empresas'>('vida');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
   if (!game) return null;
@@ -52,7 +56,10 @@ export default function Life() {
             </p>
           </div>
           <div className="text-right">
-            <p className="font-semibold text-emerald-400 tabular-nums">{money.format(game.money)}</p>
+            <p className={`font-semibold tabular-nums ${game.money < 0 ? 'text-rose-400' : 'text-emerald-400'}`} data-testid="money">
+              {money.format(game.money)}
+            </p>
+            {game.economy.debt > 0 && <p className="text-[11px] text-rose-400 tabular-nums">dívida {money.format(game.economy.debt)}</p>}
             <div className="mt-1 flex items-center justify-end gap-3">
               <button onClick={() => setSettingsOpen(true)} className="text-base" aria-label="Configurações">
                 ⚙️
@@ -63,13 +70,17 @@ export default function Life() {
             </div>
           </div>
         </div>
-        <nav className="mt-3 grid grid-cols-4 gap-1" role="tablist">
+        <nav className="-mx-4 mt-3 flex snap-x gap-1 overflow-x-auto px-4 [scrollbar-width:none]" role="tablist">
           {(
             [
               ['vida', '🏠 Vida'],
               ['carreira', `🥊 Carreira${game.fighter.offers.length ? ` (${game.fighter.offers.length})` : ''}`],
               ['relacoes', '❤️ Relações'],
               ['ranking', '🏆 Ranking'],
+              ['financas', `💰 Finanças${game.economy.debt > 0 ? ' ⚠️' : ''}`],
+              ['trabalho', '💼 Trabalho'],
+              ['bens', '🏡 Bens'],
+              ['empresas', '🏢 Empresas'],
             ] as const
           ).map(([id, label]) => (
             <button
@@ -77,7 +88,7 @@ export default function Life() {
               role="tab"
               aria-selected={tab === id}
               onClick={() => setTab(id)}
-              className={`rounded-lg px-1 py-2 text-[13px] leading-tight ${tab === id ? 'bg-slate-800 font-bold text-white' : 'text-slate-400'}`}
+              className={`shrink-0 snap-start whitespace-nowrap rounded-lg px-3 py-2 text-[13px] leading-tight ${tab === id ? 'bg-slate-800 font-bold text-white' : 'text-slate-400'}`}
             >
               {label}
             </button>
@@ -99,6 +110,10 @@ export default function Life() {
         {tab === 'carreira' && game.alive && <CareerPanel game={game} />}
         {tab === 'relacoes' && <RelationshipsPanel game={game} />}
         {tab === 'ranking' && <RankingPanel game={game} />}
+        {tab === 'financas' && <FinancePanel game={game} />}
+        {tab === 'trabalho' && <WorkPanel game={game} />}
+        {tab === 'bens' && <AssetsPanel game={game} />}
+        {tab === 'empresas' && <BusinessPanel game={game} />}
       </main>
 
       <footer className="fixed inset-x-0 bottom-0 z-10 mx-auto w-full max-w-md border-t border-slate-800 bg-slate-950/95 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur">

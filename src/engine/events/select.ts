@@ -97,6 +97,7 @@ export function matchingTargets(state: GameState, event: GameEvent): { person: P
     if (c.stages && (!rel.romance || !c.stages.includes(rel.romance.stage))) return false;
     if (c.sameGym !== undefined && (!!state.fighter.gymId && person.flags.academia === state.fighter.gymId) !== c.sameGym) return false;
     if (c.personFlag && !person.flags[c.personFlag]) return false;
+    if (c.personFlagNone && person.flags[c.personFlagNone]) return false;
     // evento adulto: a pessoa-alvo também precisa ter 18+
     if (adult && !canHaveSexualContent(state.character, person)) return false;
     return true;

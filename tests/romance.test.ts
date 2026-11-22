@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { GAME_CONTENT } from '../src/content';
 import {
+  CHILD_YEARLY_COST,
   canDate,
   canHaveSexualContent,
   canMarry,
@@ -150,6 +151,6 @@ describe('filhos', () => {
   it('despesa anual por filho menor de 18', () => {
     let [g] = withPerson(aged(35), 'filho', 5);
     g = { ...g, money: 10000, year: g.year + 1 };
-    expect(relationshipsYear(g, createRng(1), C).money).toBe(7000);
+    expect(relationshipsYear(g, createRng(1), C).money).toBe(10000 - CHILD_YEARLY_COST);
   });
 });

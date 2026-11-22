@@ -90,6 +90,8 @@ export interface RelationshipCondition {
   sameGym?: boolean;
   /** Flag da pessoa-alvo que precisa estar presente. */
   personFlag?: string;
+  /** Flag da pessoa-alvo que NÃO pode estar presente (ex.: só pede dinheiro uma vez). */
+  personFlagNone?: string;
 }
 
 /** Tags de evento. 'adult' = conteúdo adulto (só 18+, com a opção ligada; ver guards.ts). */

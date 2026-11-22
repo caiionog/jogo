@@ -3,17 +3,19 @@ import type { GameContent } from '../core/content';
 import type { GameState } from '../core/state';
 import { addStats, appendLog } from '../core/stats';
 import { relationsOf } from '../relationships/people';
-import { DEBT_RATE } from './bank';
+import { DEBT_RATE, INDEX_WITHDRAW_FEE } from './bank';
 import { post, toMoney } from './ledger';
 import type { Housing, LivingStandard } from './types';
 
 export const STANDARD: Record<LivingStandard, { cost: number; rent: number; happiness: number; label: string }> = {
-  simples: { cost: 14000, rent: 12000, happiness: 0, label: 'Simples' },
+  simples: { cost: 15000, rent: 11000, happiness: 0, label: 'Simples' },
   confortavel: { cost: 36000, rent: 24000, happiness: 3, label: 'Confortável' },
-  luxo: { cost: 110000, rent: 60000, happiness: 6, label: 'Luxo' },
+  luxo: { cost: 110000, rent: 55000, happiness: 6, label: 'Luxo' },
 };
 export const HOUSING_LABEL: Record<Housing, string> = { pais: 'Com os pais', aluguel: 'Aluguel', propria: 'Casa própria' };
 export const BANKRUPTCY_YEARS = 3;
+/** Dívida mínima para a falência por tempo (dívidas pequenas viram só cobrança). */
+export const BANKRUPTCY_MIN_DEBT = 25000;
 
 export function cityCost(state: GameState, content: GameContent): number {
   return content.economy.cityCost[state.character.city] ?? 1;
@@ -83,6 +85,19 @@ export function livingYear(state: GameState, content: GameContent): GameState {
  */
 export function debtYear(state: GameState, liquidate: (s: GameState) => GameState): GameState {
   let s = state;
+  // antes de virar dívida, o banco cobre o saldo negativo com a poupança (resgate automático)
+  if (s.money < 0 && s.economy.savings > 0) {
+    const cover = Math.min(s.economy.savings, -s.money);
+    s = post(s, 'aplicacoes', cover, 'Resgate automático da poupança');
+    s = { ...s, economy: { ...s.economy, savings: s.economy.savings - cover } };
+  }
+  // depois, resgata do índice (com a taxa de resgate)
+  if (s.money < 0 && s.economy.investments > 0) {
+    const gross = Math.min(s.economy.investments, toMoney(-s.money / (1 - INDEX_WITHDRAW_FEE)) + 1);
+    const net = toMoney(gross * (1 - INDEX_WITHDRAW_FEE));
+    s = post(s, 'aplicacoes', net, 'Resgate automático do índice');
+    s = { ...s, economy: { ...s.economy, investments: s.economy.investments - gross } };
+  }
   // juros sobre a dívida que já existia
   if (s.economy.debt > 0) s = { ...s, economy: { ...s.economy, debt: s.economy.debt + toMoney(s.economy.debt * DEBT_RATE) } };
   if (s.money < 0) {
@@ -100,10 +115,10 @@ export function debtYear(state: GameState, liquidate: (s: GameState) => GameStat
   if (s.economy.debt <= 0) return { ...s, economy: { ...s.economy, debt: 0, debtYears: 0 } };
   const debtYears = s.economy.debtYears + 1;
   s = { ...s, economy: { ...s.economy, debtYears } };
-  s = { ...s, character: { ...s.character, stats: addStats(s.character.stats, { happiness: -(2 + Math.min(8, debtYears * 2)), health: debtYears >= 2 ? -2 : 0 }) } };
+  s = { ...s, character: { ...s.character, stats: addStats(s.character.stats, { happiness: -(2 + Math.min(8, debtYears * 2)), health: debtYears >= 3 && s.economy.debt > BANKRUPTCY_MIN_DEBT ? -1 : 0 }) } };
   // falência: dívida grande por 2+ anos, ou qualquer dívida por mais de 3 anos
   const limit = Math.max(60000, s.economy.lastIncome * 3);
-  if ((debtYears >= 2 && s.economy.debt > limit) || debtYears > BANKRUPTCY_YEARS) s = bankruptcy(s, liquidate);
+  if ((debtYears >= 2 && s.economy.debt > limit) || (debtYears > BANKRUPTCY_YEARS && s.economy.debt > BANKRUPTCY_MIN_DEBT)) s = bankruptcy(s, liquidate);
   return s;
 }
 
@@ -111,9 +126,11 @@ function bankruptcy(state: GameState, liquidate: (s: GameState) => GameState): G
   let s = liquidate(state);
   const pay = Math.min(Math.max(0, s.money), s.economy.debt);
   if (pay > 0) s = post(s, 'parcelas', -pay, 'Pagamento da dívida (falência)');
+  // renegociação: metade do que sobrou continua sendo devida (sem juros acumulados)
+  const remaining = toMoney((s.economy.debt - pay) / 2);
   s = {
     ...s,
-    economy: { ...s.economy, debt: 0, debtYears: 0 },
+    economy: { ...s.economy, debt: remaining, debtYears: 0 },
     flags: { ...s.flags, falencia: (Number(s.flags.falencia) || 0) + 1 },
     fighter: { ...s.fighter, reputation: Math.max(0, s.fighter.reputation - 5) },
     character: { ...s.character, stats: addStats(s.character.stats, { happiness: -15 }) },

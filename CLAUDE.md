@@ -31,12 +31,16 @@ Antes de commitar: `npm test && npm run build`.
    detalhado abaixo) e são validados por `validateContent` (`engine/events/validate.ts`) nos testes.
 4. **`GameState` é JSON puro** com campo `version`. Ao mudar o formato: incremente `STATE_VERSION`
    (`engine/core/state.ts`) e adicione a migração `n → n+1` em `src/save/migrations.ts` + teste.
-   Versão atual: **4** (v3→v4 adiciona `relationships` com família coerente com a idade e "Conteúdo adulto" desligado;
-   fixtures em `tests/fixtures/saves-v3.json`). v2→v3 adicionou corpo, `fighter`, `world` e `activeFight`.
+   Versão atual: **5** (v4→v5 cria `economy` — extrato vazio, moradia pela idade, patrimônio dos pais, regime de bens
+   parcial para casados — e `energy.reserved`; fixtures em `tests/fixtures/saves-v4.json`).
+   v3→v4 adicionou `relationships` com família coerente com a idade e "Conteúdo adulto" desligado. v2→v3 adicionou corpo, `fighter`, `world` e `activeFight`.
    Versão 2: A migração v1→v2 cria `education` coerente com a idade, `familyWealth` e `scheduledEvents`,
    usando um RNG próprio (derivado da seed) para não alterar o `rngState`. Antes de mudar o formato de novo, gere
    uma fixture com saves reais da versão atual em `tests/fixtures/`.
-5. **A UI (`src/ui/`) só lê o estado e despacha ações** pelo store Zustand (`ui/store.ts`), que chama a engine.
+5. **Dinheiro é inteiro e só muda por `post()`** (`engine/economy/ledger.ts`): `post(estado, categoria, valor, rótulo)`
+   lança no extrato do ano. Nunca escreva `money: s.money + x`. Invariante testada: `money − ledger.opening === Σ
+   lançamentos`. Arredonde com `toMoney`. Efeitos `money` de eventos já viram `post('eventos')`.
+6. **A UI (`src/ui/`) só lê o estado e despacha ações** pelo store Zustand (`ui/store.ts`), que chama a engine.
    Nenhuma regra de jogo dentro de componentes.
 
 ## Estrutura
@@ -58,7 +62,14 @@ src/
       guards.ts           # canDate, isValidPartnerAge, canMarry, canHaveSexualContent, adultContentAllowed
       people.ts family.ts # pessoas/relações (limite de 40 ativas), família, envelhecimento e morte
       actions.ts social.ts romance.ts year.ts   # ações, amizades/efeitos `social`, namoro/casamento/filhos, ciclo anual
-    economy/ assets/      # placeholders (etapas futuras)
+    economy/              # economia (Etapa 5)
+      types.ts            # EconomyState, Ledger, Loan, Job, Business, Asset, defs de conteúdo
+      ledger.ts           # post (ÚNICA forma de mudar dinheiro), categorias, histórico, toMoney
+      market.ts bank.ts taxes.ts   # ano econômico por seed, poupança/índice/empréstimos (Price), IR/previdência/IPTU
+      jobs.ts business.ts fightIncome.ts   # empregos (energia reservada), empresas, empresário/contrato/patrocínio
+      living.ts family.ts worth.ts close.ts  # custo de vida/dívida/falência, herança/divórcio/pensão, patrimônio, fechamento
+      effects.ts actions.ts   # efeitos `economy` de eventos; ações prontas para a UI (com a guarda economyAction)
+    assets/               # bens: mercado anual, compra/financiamento/venda, aluguel, depreciação
   content/                # dados (GAME_CONTENT em index.ts)
     actions.ts            # ações (categoria 'vida' | 'escola')
     clubs.ts              # clubes escolares
@@ -72,6 +83,8 @@ src/
     fightText/            # narração da luta (index.ts), apelidos e lesões (nicknames.ts)
     relationships/        # traços de personalidade (traits.ts) e profissões (jobs.ts)
     events/relationships/ # família, amigos, romance, adult (tag 'adult'), filhos, amor × carreira
+    jobs/ assets/ businesses/ sponsors/ economy/   # vagas, catálogo de bens, empresas, patrocinadores, impostos/cidades
+    events/economy/       # eventos de economia (work.ts, money.ts, assets.ts)
 scripts/sim.ts            # balanceamento (Node/tsx, só engine + conteúdo)
   save/                   # migrations.ts (versão/migrações), storage.ts (idb-keyval)
   ui/                     # store.ts, App.tsx, screens/, components/
@@ -110,9 +123,12 @@ tests/                    # Vitest; fixtures/saves-v1.json = saves reais da Etap
     fighting?: { orgs?, tiers?: ['none'|'kids'|'amateur'|'regional'|'major'], contracted?, ranked?, rankMax?,
                  champion?, belt?: {min,max}, amateurWins?, proWins?, reputation?, hasGym?, injured?, suspended?,
                  orgEligible?: 'titan', beltPromotionReady?, hasFought? },
-    relationship?: { types: ['amigo'], affection?, traits?, personAge?, stages?, sameGym?, personFlag? }, // alvo {pessoa}
+    relationship?: { types: ['amigo'], affection?, traits?, personAge?, stages?, sameGym?, personFlag?, personFlagNone? }, // alvo {pessoa}
     hasRelation?, noRelation?, civilStatus?: ['solteiro'|'ficando'|'namorando'|'noivo'|'casado'|'divorciado'],
     children?: {min,max}, partnerAge?: {min,max},
+    economy?: { money?, netWorth?, debt?: {min,max}, employed?, jobs?, jobCategory?, hasAsset?: ['imovel'|'veiculo'|'luxo'],
+                ownsBusiness?, businessDefs?, econYear?: ['normal'|'crise'|'boom'], hasSponsor?, hasAgent?, hasLoan?,
+                housing?, evadedTax?, invested?, rentingOut? },
   },
   text: '... {colega} ... {professor} ... {da_escola} ... {o/a}',
   choices: [{ id, label, resultText, effects?, risk?: { chance, effects?, resultText } }],  // 2–3 escolhas
@@ -126,7 +142,9 @@ tests/                    # Vitest; fixtures/saves-v1.json = saves reais da Etap
   injury: { name?, years }, suspendYears, vacateTitles, promoteBelt, offer: { kind: 'shortNotice'|'rival'|'titleDefense'|'bjjOpen' } }`,
   `social: { affection (do alvo), meet: { context }, addFromVar: { var, type }, setType, endRelation, breakUp, stage,
   wedding: 'simple'|'big', divorce, pregnancyChance, ist, giveUpPregnancy, adopt, personHealth, setPersonFlags,
-  parentsAffection }` e `followUps: [{ eventId, delayYears }]`. Com `delayYears ≥ 1`, o evento é agendado em
+  parentsAffection }`, `economy: { post: {cat, amount, label}, postShareOfMoney, hireAgent, fireAgent, agentScam,
+  signSponsor, cancelSponsors, loseJob, promote, jobOffer, assetDamage, vehicleTheft, investLoss, sellBusinessOffer,
+  taxFine, evade, lend, inherit, regime, investShare, savingsShare, parentGift }` e `followUps: [{ eventId, delayYears }]`. Com `delayYears ≥ 1`, o evento é agendado em
   `scheduledEvents` e herda as variáveis do evento de origem (o mesmo `{colega}`). Com `0`, fica pendente na hora.
   Ao disparar, as condições são reavaliadas; se não baterem, o agendamento é descartado.
 - **Placeholders**: `{name}`, `{city}`, `{escola}`, `{da_escola}`/`{na_escola}` (do/da, no/na conforme o nome),
@@ -135,7 +153,8 @@ tests/                    # Vitest; fixtures/saves-v1.json = saves reais da Etap
   — sorteados quando o evento entra na fila — e `{o/a}` (gênero do personagem).
   Também funcionam nos rótulos das escolhas.
 - **Ordem do tick anual** (`advanceYear`): fim do ano letivo → fim do ano de luta (ofertas expiram, faixa, mensalidade,
-  lesão) → envelhecer (corpo, saúde) → início do ano letivo/matrícula → energia → relacionamentos (envelhecer/morte,
+  lesão) → fechamento econômico (`closeEconomicYear`: emprego, patrocínios, empresas, bens, juros, custo de vida,
+  parcelas, impostos, dívida, arquivo do extrato) → envelhecer (corpo, saúde) → início do ano letivo/matrícula → energia → relacionamentos (envelhecer/morte,
   nascimentos, despesas, decaimento, desgaste, carreira × família, limite) → início do ano de luta (declínio, mundo
   dos NPCs, ofertas) → eventos (agendados vencidos + `auto` + 1–2 aleatórios).
 - **Luta em andamento** (`GameState.activeFight`) bloqueia ações, avançar ano e novas lutas até `closeFight`.
@@ -170,13 +189,24 @@ tests/                    # Vitest; fixtures/saves-v1.json = saves reais da Etap
 - **Texto de luta:** acrescente variações em `src/content/fightText/index.ts` na chave do tipo de lance. Placeholders:
   `{a}` (quem age), `{b}`, `{golpe}`, `{finalizacao}`, `{n}`, `{plano}`, `{placar}`, `{tipo}`. O validador exige todas as chaves.
 
+- **Emprego:** `JobDef` em `src/content/jobs/index.ts` (`category` 'meio_periodo'|'formal'|'luta', `minAge`, `education`,
+  `minStats?`, `minReputation?`, `fightReq?`, `salary: [nível 1, nível 5]` antes do custo da cidade, `energy` reservada/ano).
+- **Bem:** `AssetDef` em `src/content/assets/index.ts` (`kind`, `price: [min,max]` — imóveis × cidade —, `happiness`,
+  `reputation?`, `article?` para o log, `variants?`). Taxas/depreciação ficam em `engine/assets/assets.ts`.
+- **Empresa:** `BusinessDef` em `src/content/businesses/index.ts` (`startCost`, `revenue`, `cost`, `managerCost`, `combat?`).
+- **Patrocinador:** `SponsorDef` em `src/content/sponsors/index.ts` (marca fictícia, `minReputation`, `amount`, `years`,
+  `maxLossStreak`, `scandal`).
+- **Evento econômico:** em `src/content/events/economy/`, com `conditions.economy` e `effects.economy`. Valores sempre
+  inteiros. Depois rode `npm run sim` e confira a tabela de perfis econômicos.
+- **Cidade nova:** inclua o custo em `content/economy/index.ts` (`cityCost`); salários e imóveis escalam por ele.
+
 ## Flags importantes (ganchos entre etapas)
 `interesse_luta`, `brigou_na_escola`, `medalha_interescolar`, `caminho_18` ('faculdade' | 'trabalho' | 'luta'),
 `gostaDeLuta`, `artesMarciais`, `sonhaSerLutador`, `formado`, `repetente`, `expulso`, `suspenso`, `bolsista`,
 `pensa_aposentar` (gancho de aposentadoria), `casado`, `divorciado`, `viuvo`, `recem_nascido`, `primeiro_beijo`,
-`pais_separados`, `ist`; nas pessoas: `interesse_luta`, `lutador_mirim` (gancho do legado), `academia`, `separados`.
+`pais_separados`, `ist`, `falencia`, `empresa_faliu`, `academia_propria`, `sonegar_ano`; nas pessoas: `interesse_luta`, `lutador_mirim` (gancho do legado), `academia`, `separados`, `pediu_dinheiro`.
 
 ## Regras de conteúdo
 - Use **somente organizações, ligas, academias, eventos e lutadores fictícios** (ex.: "Circuito Titã", "ARC").
-  Nada de UFC, Bellator, ONE, PFL, IBJJF ou nomes de pessoas reais (`tests/content.test.ts` barra os nomes de ligas).
+  Nada de UFC, Bellator, ONE, PFL, IBJJF, marcas, bancos ou empresas reais, nem nomes de pessoas reais (`tests/content.test.ts` barra os nomes de ligas).
 - Textos em pt-BR, segunda pessoa ("Você...").

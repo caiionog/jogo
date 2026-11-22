@@ -377,31 +377,181 @@ A carreira foi recalibrada, porque os eventos de família diluem os de carreira 
 - **Resultado**: 97% estreiam como profissionais, 24% chegam ao Titã e 2,7% são campeões.
 
 ### Ganchos para as próximas etapas
-- **Etapa 5 (economia)**:
-  - divisão de bens no divórcio (hoje é metade do dinheiro);
-  - herança dos pais falecidos;
-  - despesas da família e da casa;
-  - pensão;
-  - dívidas: o dinheiro já pode ficar negativo por eventos com custo.
+- **Etapa 5 (economia)** ✅: divisão de bens no divórcio, herança, despesas da casa, pensão e dívida (seção 7).
 - **Etapa 6 (legado)**:
   - filhos com `interesse_luta` / `lutador_mirim`, atletismo herdado e afeto;
   - jogar como herdeiro;
   - netos;
   - a pessoa `npcId` permite reencontrar rivais e lutadores do elenco.
 
-## 7. Sistemas futuros
+## 7. Economia e bens (Etapa 5)
+O dinheiro tem origem e destino. Toda a renda e toda a despesa disputam a mesma energia anual: emprego × treino ×
+empresa × família. Todas as marcas, bancos, empresas e patrocinadores são fictícios.
+
+### Dinheiro e extrato (`engine/economy/ledger.ts`)
+- **Valores sempre inteiros** (R$ 1). `toMoney = Math.round`. A formatação fica só na UI.
+- **`post(estado, categoria, valor, rótulo)`** é a única forma de mudar `money`. Cada chamada grava um lançamento no
+  extrato do ano. Invariante (testada numa vida inteira): `money − ledger.opening === Σ lançamentos`.
+- **Categorias**:
+  - entradas: salário, luta, patrocínio, aluguel recebido, empresa, juros, herança, venda de bens, crédito, família,
+    aplicações;
+  - saídas: impostos, moradia, padrão de vida, filhos, academia, compras, parcelas, manutenção, agente, pensão,
+    multas, eventos.
+- **Fechamento** (`closeEconomicYear`, no `advanceYear` logo depois de `endFightingYear`), nesta ordem:
+  1. emprego, patrocínios, empresas e bens;
+  2. juros da poupança e retorno do índice (com 15% de imposto sobre o ganho);
+  3. custo de vida, pensão e parcelas;
+  4. imposto de renda, previdência e IPTU;
+  5. patrimônio dos pais;
+  6. dívida e falência;
+  7. arquiva **só os totais por categoria** em `economy.history` (≤ 100 anos) e abre o extrato do ano seguinte.
+- **Patrimônio líquido** = dinheiro + poupança + índice + bens + empresas − dívida − saldo dos empréstimos.
+
+### Custo de vida e dívida (`living.ts`)
+- **Padrão de vida** (custo/ano × custo da cidade; metade morando com os pais):
+  | Padrão | Custo | Aluguel | Felicidade | Extra |
+  |---|---|---|---|---|
+  | Simples | R$ 15 mil | R$ 11 mil | +0 | — |
+  | Confortável | R$ 36 mil | R$ 24 mil | +3 | — |
+  | Luxo | R$ 110 mil | R$ 55 mil | +6 | +1 aparência e +1 reputação |
+- **Custo da cidade**: de 0,85 (Manaus) a 2,2 (Nova York). Os salários são ajustados pelo mesmo fator.
+- **Moradia** (`pais | aluguel | propria`): a casa própria exige um imóvel marcado como residência. Morar com os pais
+  depois dos 25 custa −1 de felicidade por ano. Até os 18, a família paga tudo; a mesada sai do patrimônio dos pais.
+- **Saldo negativo no fechamento**:
+  1. o banco resgata automaticamente da poupança e depois do índice;
+  2. o que faltar vira **dívida no cheque especial** (35% a.a.);
+  3. a dívida custa felicidade por ano (e saúde a partir de 3 anos, se for > R$ 25 mil).
+- **Falência pessoal** quando:
+  - a dívida passa de max(R$ 60 mil, 3× a renda) por 2 anos; ou
+  - há mais de 3 anos de dívida acima de R$ 25 mil.
+
+  Na falência, os bens são vendidos a 70% e as empresas a 50%, e metade do que sobra da dívida continua devida
+  (renegociação: a falência não é um "reset grátis"). Flag `falencia` e −5 de reputação.
+
+### Empregos (`src/content/jobs/`, `jobs.ts`)
+- **14 vagas**:
+  - meio período (16+, ⚡2): lanchonete, entregador, repositor;
+  - formais (⚡3–4): auxiliar, vendedor, motorista, técnico, analista, gerente, engenheiro;
+  - ligadas à luta: instrutor, segurança, treinador, comentarista de TV.
+- **Requisitos**: idade, escolaridade (derivada da Etapa 2: fundamental / médio / superior com
+  `caminho_18 = 'faculdade'` aos 22+), atributos, reputação e faixa/vitórias.
+- **O emprego reserva energia**: `energy.reserved` é descontado no início de cada ano e já no ano da contratação. A
+  barra de energia mostra a parte reservada.
+- **Ações**: candidatar-se (⚡1, chance pelos atributos, −25% na crise), dar o sangue (⚡1, +desempenho), pedir
+  aumento (1×/ano) e pedir demissão.
+- **Fechamento**:
+  - salário pelo nível (5 níveis);
+  - promoção com 40% de chance se o desempenho for ≥ 75;
+  - demissão com desempenho < 25 ou por desemprego da crise;
+  - o desempenho tende a 50.
+
+### Renda da luta (`fightIncome.ts`)
+- **Bolsas**: lançadas em "luta" por `payFightPurse`.
+- **Empresário**: +20% nas bolsas e 15% de comissão. Contratado na aba Trabalho (reputação ≥ 10) ou por evento.
+- **Contrato com a liga ao assinar**: 4 lutas com bolsa base. Na renovação, a base vai a ×1,3 se o aproveitamento
+  for ≥ 60%; senão, a ×0,9.
+- **Patrocínios**: 6 marcas fictícias, cada uma com reputação mínima, valor anual, duração e cláusulas.
+  - São cancelados por N derrotas seguidas ou por escândalo (suspensão por doping).
+  - Chegam por evento ou pela ação "Procurar patrocínio" (⚡1, 1×/ano, chance de 35% + reputação/150).
+
+### Banco, mercado e impostos (`bank.ts`, `market.ts`, `taxes.ts`)
+- **Ano econômico global** por seed (`marketYear(seed, ano)`), igual para quem joga a mesma seed:
+  | Ano | Chance | Índice | Imóveis | Empresas | Desemprego |
+  |---|---|---|---|---|---|
+  | Normal | 70% | −7%..+12% | −1%..+4% | ×1 | 3% |
+  | Crise | 15% | −28%..−6% | −8%..0% | ×0,75 | 12% |
+  | Boom | 15% | +12%..+30% | +4%..+10% | ×1,2 | 1% |
+- **Poupança**: 2% a.a. (1% na crise, 3% no boom).
+- **Índice Bolsa Titã 100**: resgate com taxa de 0,5%.
+- **Empréstimos**: tabela Price com parcelas inteiras; a última parcela fecha o saldo exatamente.
+  - Tipos: pessoal 18% (≤ 5 anos), imobiliário 9% (≤ 20 anos), veículo 12% (≤ 5 anos).
+  - Limite de crédito = 2× a renda + 30% do patrimônio − o que já deve.
+- **Impostos**:
+  - IR progressivo por faixas (dados em `content/economy`): até 24 mil 0%, até 48 mil 7,5%, até 96 mil 15%,
+    até 200 mil 22,5%, acima disso 27,5%;
+  - **previdência** de 9% sobre o salário;
+  - IPTU de 0,8% do valor dos imóveis;
+  - herança com 4% de imposto.
+- **Sonegação** (evento): o imposto do ano cai à metade, e a malha fina cobra depois.
+
+### Bens (`engine/assets/`)
+- **Mercado do ano**: calculado por seed + ano + cidade e não fica no save. As ofertas compradas ficam em
+  `boughtOffers`.
+- **Catálogo**: 4 imóveis (com preço × cidade), 4 veículos e 3 itens de luxo.
+- **Taxas**:
+  | Tipo | Compra | Revenda | Valor por ano | Manutenção |
+  |---|---|---|---|---|
+  | Imóvel | +5% | 94% | valoriza com o mercado | 1% |
+  | Veículo | +2% | 85% | −12% | 3% (seguro 4%) |
+  | Luxo | — | 60% | −6% | — |
+
+  Como o valor só muda no fechamento, **comprar e vender no mesmo ano sempre dá prejuízo** (testado para todos os
+  tipos).
+- **Financiamento**: entrada mínima de 20% + taxas, e a parcela pode ser no máximo 45% da renda. Vender o bem quita o
+  saldo devedor.
+- **Aluguel**: rende 5% do valor por ano, com 15% de chance de ficar vago.
+
+### Empresas (`business.ts`)
+- **5 negócios**: academia própria (R$ 150 mil, +10% no treino, +1 de reputação/ano, flag `academia_propria`),
+  suplementos, marca de roupa de luta, restaurante e lava-jato.
+- **Receita** = base × nível × (0,7 + rep/200 + bônus do dono) × ano econômico × ruído (0,72–1,28) × cuidado
+  (dedicado 1,1 / gerente 1 / abandonada 0,75).
+- **Custo** = base × nível + gerente.
+- **Lucro**: 50% vira dividendo e o resto fica no caixa. **Caixa < 0 → falência** ("Sua academia faliu.").
+- **Valor de venda** = caixa + 3× o lucro médio recente (−10% na venda rápida).
+
+### Relacionamentos × dinheiro
+- **Regime de bens**: evento `eco_regime` logo após o casamento, com comunhão parcial (padrão) ou separação total.
+- **Divórcio**: na comunhão parcial, paga metade do patrimônio construído no casamento (sem dinheiro, vira dívida).
+- **Pensão**: 15% da renda por filho menor de 18 (mínimo de R$ 6 mil).
+- **Herança**: os pais têm patrimônio próprio (`Person.wealth`, por classe social). Quando um morre, metade fica para
+  o cônjuge vivo e o resto é dividido entre o personagem e os irmãos vivos.
+- **Filhos**: R$ 6 mil/ano cada até os 18.
+- **Empréstimos a amigos e irmãos**: cada pessoa pede só uma vez (`personFlagNone: 'pediu_dinheiro'`).
+
+### Eventos (27, em `src/content/events/economy/`)
+- **Trabalho**: promoção, chefe abusivo, demissão em massa na crise, convite para comentar na TV, oferta de
+  empresário, renovação.
+- **Dinheiro**: herança de tio distante, pirâmide, falso leilão, malha fina, sonegar, cobrança, presente dos pais
+  ricos, regime de bens.
+- **Bens**: infiltração, roubo do carro (sem seguro perde), multa, acidente, inquilino calote, boom imobiliário,
+  proposta pela academia, irmão quer sociedade, amigo pede empréstimo.
+
+### Balanceamento (`npm run sim -- 300 150`: 150 vidas por perfil até os 70)
+| Perfil | Patrimônio mediano 30 / 50 / 70 | Falência | Milionário aos 50 / alguma vez |
+|---|---|---|---|
+| Só luta (aposenta aos 40 e vira treinador/instrutor/emprego) | R$ 40 mil / 409 mil / 994 mil | 54% | 25% / 53% |
+| Só emprego | R$ 302 mil / 483 mil / 548 mil | 9% | 14% / 37% |
+| Misto (meio período/instrutor + lutas) | R$ 221 mil / 522 mil / 1,0 mi | 5% | 13% / 57% |
+| Empreendedor (emprego → empresa aos 25+) | R$ 324 mil / 749 mil / 974 mil | 6% | 35% / 55% |
+
+- Empresas que quebram: 21%.
+- Renda anual da luta: campeão do Titã ≈ R$ 233 mil, lutador do Titã ≈ R$ 138 mil, regional ≈ R$ 12 mil.
+- **Leitura**:
+  - lutar é arriscado no começo (metade passa por uma falência, quase sempre nos anos de bolsa regional), mas o topo
+    paga muito;
+  - o emprego é seguro e mais rico aos 30, mas atrasa a carreira;
+  - ninguém fica milionário com facilidade (14% dos empregados aos 50, com política de poupança ótima).
+- **Carreira na mesma rodada**: 95% estreiam, 25% chegam ao Titã, 1,3% são campeões do Titã (oscila entre 1% e 3% com
+  300 vidas).
+
+### Ganchos para a Etapa 6
+- **Testamento**: hoje a herança é só entre herdeiros vivos.
+- **Academia própria como legado**: flag `academia_propria`; filhos com `lutador_mirim` herdam.
+- **Aposentadoria**: a previdência já é cobrada; o benefício e o fim da carreira vêm com o gancho `pensa_aposentar`.
+- **Conquistas financeiras**: primeiro milhão, casa própria, falência superada.
+
+## 8. Sistemas futuros
 - **Faculdade:** vestibular, cursos e vida universitária (a partir da escolha `caminho_18 = 'faculdade'`).
-- **Emprego:** trabalhos paralelos antes de viver da luta; carreira pós-luta (técnico, comentarista).
-- **Economia e bens:** salário, bolsas, patrocínio, imóveis, carros, abrir academia/empresa.
 - **Saúde:** lesões, cirurgias, desgaste acumulado, doenças.
 - **Aposentadoria e legado:** fim da carreira, Hall da Fama, filhos herdando academia/fama; jogar como herdeiro.
 - **Meta:** conquistas, estatísticas de vidas anteriores.
 
-## 8. Arquitetura (resumo)
+## 9. Arquitetura (resumo)
 Engine TS pura e determinística (`src/engine`), conteúdo como dados (`src/content`), save versionado com
 migrações (`src/save`), UI React que apenas lê o estado e despacha ações (`src/ui`). Detalhes em `CLAUDE.md`.
 
-## 9. Roadmap
+## 10. Roadmap
 - **Etapa 1 — Esqueleto jogável** ✅ — projeto, GameState, criação de personagem, energia, 3 ações,
   avançar ano, motor de eventos + 10 eventos de infância, log, autosave em IndexedDB, testes.
 - **Etapa 2 — Escola** ✅ — fases escolares, matrícula automática, nota/disciplina/faltas/popularidade,
@@ -412,5 +562,8 @@ migrações (`src/save`), UI React que apenas lê o estado e despacha ações (`
   com córner, mundo vivo de NPCs com ranking e cinturão, ofertas/bolsas/lesões, 24 eventos, save v3 e `npm run sim`.
 - **Etapa 4 — Relacionamentos** ✅ — modelo único de pessoa, família pelo seed, amizades (escola/academia), namoro com
   faixas de idade e regra de conteúdo adulto, casamento, divórcio, filhos, 39 eventos, aba Relações, save v4.
-- **Etapa 5 — Economia e bens** — empregos, bolsas e patrocínios, imóveis, carros, empresas/academia.
+- **Etapa 5 — Economia e bens** ✅ — dinheiro inteiro com extrato anual por categoria, custo de vida e moradia,
+  dívida e falência, 14 empregos com energia reservada, empresário/contrato/patrocínios, banco e índice fictício,
+  ano econômico por seed, imóveis/veículos/luxo com mercado anual e financiamento, 5 empresas (inclui academia
+  própria), impostos, divórcio por regime/pensão/herança, 27 eventos, abas Finanças/Trabalho/Bens/Empresas, save v5.
 - **Etapa 6 — Polimento** — PWA (instalável/offline), conquistas, aposentadoria e legado (jogar como herdeiro).

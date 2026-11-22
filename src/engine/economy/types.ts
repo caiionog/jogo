@@ -181,6 +181,8 @@ export interface AssetDef {
   happiness: number;
   /** Reputação anual (luxo/status). */
   reputation?: number;
+  /** Artigo usado no log ("um", "uma", "as"...). Padrão: "um". */
+  article?: string;
   /** Bairros/variações para dar nome às ofertas. */
   variants?: readonly string[];
 }

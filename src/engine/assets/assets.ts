@@ -130,7 +130,9 @@ export function buyAsset(state: GameState, offerId: string, content: GameContent
   }
   const asset: Asset = { id, kind: offer.kind, catalogId: offer.defId, name: offer.name, value: offer.price, paid: cost, boughtYear: s.year, ...(loanId ? { loanId } : {}) };
   s = { ...s, economy: { ...s.economy, assets: [...s.economy.assets, asset], boughtOffers: [...s.economy.boughtOffers, offer.id] } };
-  return appendLog(s, `Você comprou ${offer.kind === 'imovel' ? 'o imóvel' : ''}${offer.kind === 'imovel' ? ' ' : ''}${offer.name} por R$ ${offer.price.toLocaleString('pt-BR')}${financed ? ' (financiado)' : ''}.`);
+  const article = assetDef(content, offer.defId)?.article ?? 'um';
+  const name = /^.[a-zà-ú]/.test(offer.name) ? offer.name[0]!.toLowerCase() + offer.name.slice(1) : offer.name;
+  return appendLog(s, `Você comprou ${article} ${name} por R$ ${offer.price.toLocaleString('pt-BR')}${financed ? ' (financiado)' : ''}.`);
 }
 
 /** Venda: recebe o valor menos a taxa e quita o financiamento vinculado. */

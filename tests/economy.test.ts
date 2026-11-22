@@ -95,7 +95,13 @@ describe('dinheiro e extrato', () => {
 });
 
 describe('impostos', () => {
-  const B = C.economy.taxBrackets;
+  const B = [
+    { upTo: 30000, rate: 0 },
+    { upTo: 60000, rate: 0.075 },
+    { upTo: 120000, rate: 0.15 },
+    { upTo: 250000, rate: 0.225 },
+    { upTo: null, rate: 0.275 },
+  ];
   it('faixas progressivas: cada faixa tributa só a parte dentro dela', () => {
     expect(incomeTax(0, B)).toBe(0);
     expect(incomeTax(30000, B)).toBe(0);
@@ -212,7 +218,10 @@ describe('dívida', () => {
     const r = closeEconomicYear(s, createRng(3), C);
     expect(r.flags.falencia).toBe(1);
     expect(r.economy.assets).toHaveLength(0);
-    expect(r.economy.debt).toBe(0);
+    // renegociação: metade do que não foi pago continua devida, sem os anos de atraso
+    expect(r.economy.debt).toBeGreaterThan(0);
+    expect(r.economy.debt).toBeLessThan(200000 * (1 + DEBT_RATE) / 2);
+    expect(r.economy.debtYears).toBe(0);
     expect(r.log.flatMap((y) => y.entries).join('\n')).toMatch(/Falência pessoal/);
   });
 });

@@ -11,10 +11,10 @@ export const ECONOMY_CONTENT: EconomyContent = {
   sponsors: SPONSORS,
   // imposto de renda progressivo fictício (renda anual em R$)
   taxBrackets: [
-    { upTo: 30000, rate: 0 },
-    { upTo: 60000, rate: 0.075 },
-    { upTo: 120000, rate: 0.15 },
-    { upTo: 250000, rate: 0.225 },
+    { upTo: 24000, rate: 0 },
+    { upTo: 48000, rate: 0.075 },
+    { upTo: 96000, rate: 0.15 },
+    { upTo: 200000, rate: 0.225 },
     { upTo: null, rate: 0.275 },
   ],
   cityCost: {

@@ -29,9 +29,15 @@ export function jobDef(content: GameContent, id: string | undefined): JobDef | u
   return id ? content.economy.jobs.find((j) => j.id === id) : undefined;
 }
 
-export function salaryOf(def: JobDef, level: number): number {
+/** Salário anual no nível (1–5), ajustado ao custo da cidade (`cityMult`). */
+export function salaryOf(def: JobDef, level: number, cityMult = 1): number {
   const [lo, hi] = def.salary;
-  return toMoney(lo + ((hi - lo) * (Math.max(1, Math.min(5, level)) - 1)) / 4);
+  return toMoney((lo + ((hi - lo) * (Math.max(1, Math.min(5, level)) - 1)) / 4) * cityMult);
+}
+
+/** Multiplicador da cidade do personagem (custo de vida e salários). */
+export function cityMultOf(state: GameState, content: GameContent): number {
+  return content.economy.cityCost[state.character.city] ?? 1;
 }
 
 export type JobBlockReason = 'dead' | 'busy' | 'age' | 'education' | 'stats' | 'reputation' | 'fight' | 'current' | 'no-energy';
@@ -73,7 +79,7 @@ export function applyForJob(state: GameState, jobId: string, content: GameConten
       energy: { ...s.energy, current: s.energy.current - def.energy, reserved: def.energy },
       economy: { ...s.economy, job: { jobId, level: 1, performance: 50, years: 0 } },
     };
-    s = appendLog(s, `Você foi contratad${s.character.sex === 'M' ? 'o' : 'a'} como ${def.title.toLowerCase()} (R$ ${salaryOf(def, 1).toLocaleString('pt-BR')}/ano).`);
+    s = appendLog(s, `Você foi contratad${s.character.sex === 'M' ? 'o' : 'a'} como ${def.title.toLowerCase()} (R$ ${salaryOf(def, 1, cityMultOf(s, content)).toLocaleString('pt-BR')}/ano).`);
   } else {
     s = appendLog(s, `Você não passou na seleção para ${def.title.toLowerCase()}.`);
   }
@@ -104,7 +110,7 @@ export function askRaise(state: GameState, content: GameContent): GameState {
   let s: GameState = { ...state, rngState: rng.state, flags: { ...state.flags, pediu_aumento: state.year } };
   if (job.level < 5 && rng.chance((job.performance / 100) * 0.6)) {
     s = { ...s, economy: { ...s.economy, job: { ...job, level: job.level + 1 } } };
-    return appendLog(s, `Aumento aprovado! Agora você ganha R$ ${salaryOf(def, job.level + 1).toLocaleString('pt-BR')}/ano.`);
+    return appendLog(s, `Aumento aprovado! Agora você ganha R$ ${salaryOf(def, job.level + 1, cityMultOf(s, content)).toLocaleString('pt-BR')}/ano.`);
   }
   s = { ...s, economy: { ...s.economy, job: { ...job, performance: Math.max(0, job.performance - 5) } } };
   return appendLog(s, 'O pedido de aumento foi negado.');
@@ -127,7 +133,7 @@ export function jobYear(state: GameState, rng: Rng, content: GameContent, market
   const job = state.economy.job;
   const def = jobDef(content, job?.jobId);
   if (!job || !def) return state;
-  let s = post(state, 'salario', salaryOf(def, job.level), `Salário: ${def.title}`);
+  let s = post(state, 'salario', salaryOf(def, job.level, cityMultOf(state, content)), `Salário: ${def.title}`);
   let next = { ...job, years: job.years + 1 };
   if (next.performance >= 75 && next.level < 5 && rng.chance(0.4)) {
     next = { ...next, level: next.level + 1 };

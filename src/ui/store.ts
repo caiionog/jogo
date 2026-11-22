@@ -18,8 +18,34 @@ import {
   interact,
   meetSomeoneAction,
   setRelationshipSettings,
+  economyAction,
+  hireAgentAction,
+  deposit,
+  withdraw,
+  payDebt,
+  payOffLoan,
+  personalLoan,
+  setStandard,
+  setHousing,
+  applyJob,
+  workHard,
+  askRaise,
+  quitJob,
+  fireAgent,
+  seekSponsor,
+  buyAsset,
+  sellAsset,
+  setHome,
+  setRented,
+  setInsured,
+  openBusiness,
+  dedicate,
+  setManager,
+  expandBusiness,
+  injectCash,
+  sellBusiness,
 } from '../engine';
-import type { GameState, InteractionKind, MeetMode, PartnerPreference, Sex, SkillKey, Strategy, TrainingKind } from '../engine';
+import type { GameState, Housing, LivingStandard, InteractionKind, MeetMode, PartnerPreference, Sex, SkillKey, Strategy, TrainingKind } from '../engine';
 import { clearGame, loadGame, saveGame } from '../save';
 
 interface GameStore {
@@ -42,6 +68,32 @@ interface GameStore {
   meet(mode: MeetMode): void;
   setSettings(patch: { adultContent?: boolean; preference?: PartnerPreference }): void;
   advance(): void;
+  // economia (Etapa 5)
+  deposit(amount: number, where: 'savings' | 'investments'): void;
+  withdraw(amount: number, where: 'savings' | 'investments'): void;
+  payDebt(amount: number): void;
+  payOffLoan(loanId: string): void;
+  personalLoan(amount: number, years: number): void;
+  setStandard(standard: LivingStandard): void;
+  setHousing(housing: Housing): void;
+  applyJob(jobId: string): void;
+  workHard(): void;
+  askRaise(): void;
+  quitJob(): void;
+  hireAgent(): void;
+  fireAgent(): void;
+  seekSponsor(): void;
+  buyAsset(offerId: string, financed: boolean, years?: number): void;
+  sellAsset(assetId: string): void;
+  setHome(assetId: string): void;
+  setRented(assetId: string, rented: boolean): void;
+  setInsured(assetId: string, insured: boolean): void;
+  openBusiness(defId: string): void;
+  dedicate(businessId: string): void;
+  setManager(businessId: string, manager: boolean): void;
+  expandBusiness(businessId: string): void;
+  injectCash(businessId: string, amount: number): void;
+  sellBusiness(businessId: string): void;
   choose(eventId: string, choiceId: string): void;
   newLife(): Promise<void>;
 }
@@ -51,6 +103,7 @@ export const useGameStore = create<GameStore>((setState, getState) => {
     const g = getState().game;
     if (g) setState({ game: fn(g) });
   };
+  const eco = (fn: (g: GameState) => GameState) => update((g) => economyAction(g, fn));
 
   return {
     status: 'loading',
@@ -112,6 +165,32 @@ export const useGameStore = create<GameStore>((setState, getState) => {
     choose(eventId, choiceId) {
       update((g) => resolveEvent(g, eventId, choiceId, GAME_CONTENT));
     },
+    // economia: toda ação passa pela guarda `economyAction` da engine
+    deposit: (amount, where) => eco((g) => deposit(g, amount, where)),
+    withdraw: (amount, where) => eco((g) => withdraw(g, amount, where)),
+    payDebt: (amount) => eco((g) => payDebt(g, amount)),
+    payOffLoan: (id) => eco((g) => payOffLoan(g, id)),
+    personalLoan: (amount, years) => eco((g) => personalLoan(g, amount, years)),
+    setStandard: (st) => eco((g) => setStandard(g, st)),
+    setHousing: (h) => eco((g) => setHousing(g, h)),
+    applyJob: (id) => eco((g) => applyJob(g, id, GAME_CONTENT)),
+    workHard: () => eco((g) => workHard(g)),
+    askRaise: () => eco((g) => askRaise(g, GAME_CONTENT)),
+    quitJob: () => eco((g) => quitJob(g, GAME_CONTENT)),
+    hireAgent: () => update((g) => hireAgentAction(g, GAME_CONTENT)),
+    fireAgent: () => eco((g) => fireAgent(g)),
+    seekSponsor: () => eco((g) => seekSponsor(g, GAME_CONTENT)),
+    buyAsset: (offerId, financed, years) => eco((g) => buyAsset(g, offerId, GAME_CONTENT, { financed, years })),
+    sellAsset: (id) => eco((g) => sellAsset(g, id)),
+    setHome: (id) => eco((g) => setHome(g, id)),
+    setRented: (id, rented) => eco((g) => setRented(g, id, rented)),
+    setInsured: (id, insured) => eco((g) => setInsured(g, id, insured)),
+    openBusiness: (defId) => eco((g) => openBusiness(g, defId, GAME_CONTENT)),
+    dedicate: (id) => eco((g) => dedicate(g, id)),
+    setManager: (id, manager) => eco((g) => setManager(g, id, manager)),
+    expandBusiness: (id) => eco((g) => expandBusiness(g, id, GAME_CONTENT)),
+    injectCash: (id, amount) => eco((g) => injectCash(g, id, amount)),
+    sellBusiness: (id) => eco((g) => sellBusiness(g, id)),
     async newLife() {
       await clearGame();
       setState({ game: null });

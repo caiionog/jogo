@@ -24,7 +24,7 @@ import { divorceSettlement, recordMarriage } from '../economy/family';
 export const MEET_COST = 1;
 export const WEDDING_COST = { simple: 3000, big: 20000 } as const;
 export const ADOPTION_COST = 10000;
-export const CHILD_YEARLY_COST = 3000;
+export const CHILD_YEARLY_COST = 6000;
 
 export type MeetMode = 'social' | 'app';
 

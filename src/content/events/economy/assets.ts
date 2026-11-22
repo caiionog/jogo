@@ -89,12 +89,12 @@ export const ASSET_EVENTS: readonly GameEvent[] = [
   },
   {
     id: 'eco_friend_loan',
-    conditions: { minAge: 18, economy: { money: { min: 3000 } }, relationship: { types: ['amigo', 'colega_treino', 'irmao'], affection: { min: 40 } } },
+    conditions: { minAge: 18, economy: { money: { min: 3000 } }, relationship: { types: ['amigo', 'colega_treino', 'irmao'], affection: { min: 40 }, personFlagNone: 'pediu_dinheiro' } },
     weight: 4,
     text: '{pessoa} está numa situação difícil e pede R$ 3.000 emprestados.',
     choices: [
-      { id: 'lend', label: 'Emprestar', effects: { economy: { lend: { amount: 3000, repayChance: 0.5 } }, social: { affection: 8 } }, resultText: 'Você ajudou quem precisava.' },
-      { id: 'no', label: 'Negar', effects: { social: { affection: -8 } }, resultText: 'Ficou um clima estranho.' },
+      { id: 'lend', label: 'Emprestar', effects: { economy: { lend: { amount: 3000, repayChance: 0.5 } }, social: { affection: 8, setPersonFlags: { pediu_dinheiro: true } } }, resultText: 'Você ajudou quem precisava.' },
+      { id: 'no', label: 'Negar', effects: { social: { affection: -8, setPersonFlags: { pediu_dinheiro: true } } }, resultText: 'Ficou um clima estranho.' },
     ],
   },
 ];

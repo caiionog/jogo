@@ -14,9 +14,11 @@ export const ALIMONY_MIN = 6000;
 
 /** Patrimônio dos pais coerente com a renda da família. */
 export function parentWealth(rng: Rng, familyWealth: number): number {
-  if (familyWealth < 35) return toMoney(rng.int(5, 40) * 1000);
-  if (familyWealth < 70) return toMoney(rng.int(50, 300) * 1000);
-  return toMoney(rng.int(500, 3000) * 1000);
+  // patrimônio de CADA genitor (o casal soma os dois)
+  if (familyWealth < 35) return toMoney(rng.int(3, 20) * 1000);
+  if (familyWealth < 70) return toMoney(rng.int(25, 120) * 1000);
+  if (familyWealth < 92) return toMoney(rng.int(150, 500) * 1000);
+  return toMoney(rng.int(600, 1500) * 1000);
 }
 
 /** Pais guardam/gastam um pouco a cada ano. */
@@ -24,7 +26,7 @@ export function parentsWealthYear(state: GameState, rng: Rng): GameState {
   let s = state;
   for (const { person } of relationsOf(s, ['pai', 'mae'])) {
     if (person.wealth === undefined) continue;
-    const g = person.age >= 65 ? -0.02 : 0.03;
+    const g = person.age >= 65 ? -0.03 : 0.01;
     s = updatePerson(s, person.id, (p) => ({ ...p, wealth: Math.max(0, toMoney((p.wealth ?? 0) * (1 + g + (rng.next() - 0.5) * 0.02))) }));
   }
   return s;
