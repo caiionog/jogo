@@ -23,11 +23,12 @@ describe('requisitos de entrada', () => {
   });
 
   it('liga principal exige vitórias pro, reputação, boa fase recente e idade de assinatura', () => {
-    const good = { pro: rec(9, 2), reputation: 60, history: hist(['W', 'W', 'L', 'W', 'W', 'W', 'W', 'W']) };
+    const good = { pro: rec(11, 2), reputation: 60, history: hist(['W', 'W', 'L', 'W', 'W', 'W', 'W', 'W', 'L', 'W']) };
     expect(meetsOrgRequirements(fighterGame(25, {}, good), org('titan'))).toBe(true);
-    expect(orgRequirementGap(fighterGame(25, {}, { ...good, pro: rec(5) }), org('titan'))).toBe('pro-wins');
-    const slump = { ...good, history: hist(['W', 'W', 'W', 'L', 'L', 'L', 'W', 'L', 'L']) };
-    expect(recentProWinRate(fighterGame(25, {}, slump))).toBeLessThan(0.62);
+    expect(orgRequirementGap(fighterGame(25, {}, { ...good, pro: rec(9) }), org('titan'))).toBe('pro-wins');
+    // as vitórias antigas não contam: só as últimas 10 lutas
+    const slump = { ...good, history: hist(['W', 'W', 'W', 'W', 'W', 'W', 'L', 'L', 'L', 'W', 'L', 'L', 'W', 'L', 'W']) };
+    expect(recentProWinRate(fighterGame(25, {}, slump))).toBeLessThan(0.6);
     expect(orgRequirementGap(fighterGame(25, {}, slump), org('titan'))).toBe('win-rate');
     expect(orgRequirementGap(fighterGame(34, {}, good), org('titan'))).toBe('signing-age');
   });
@@ -92,5 +93,13 @@ describe('matchmaking', () => {
     expect(m).toHaveLength(1);
     expect(m[0]!.title).toBe(true);
     expect(['r1', 'r2', 'r3']).toContain(m[0]!.npcId);
+  });
+});
+
+describe('estreia profissional', () => {
+  it('estreantes (< 3 lutas pro) enfrentam só não ranqueados', () => {
+    const ids = Array.from({ length: 10 }, (_, i) => `r${i + 1}`);
+    const r = roster(ids, 'champ', ['u1', 'u2']);
+    for (let i = 0; i < 20; i++) for (const m of findMatches(r, 0, 2, createRng(i), 0)) expect(['u1', 'u2']).toContain(m.npcId);
   });
 });

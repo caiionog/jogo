@@ -1,7 +1,22 @@
 import { create } from 'zustand';
 import { GAME_CONTENT } from '../content';
-import { advanceYear, joinClub, leaveClub, newGame, performAction, resolveEvent } from '../engine';
-import type { GameState, Sex } from '../engine';
+import {
+  acceptOffer,
+  advanceYear,
+  autoFinishFight,
+  chooseFightCorner,
+  closeFight,
+  declineOffer,
+  joinClub,
+  joinGym,
+  leaveClub,
+  leaveGym,
+  newGame,
+  performAction,
+  resolveEvent,
+  trainFighter,
+} from '../engine';
+import type { GameState, Sex, SkillKey, Strategy, TrainingKind } from '../engine';
 import { clearGame, loadGame, saveGame } from '../save';
 
 interface GameStore {
@@ -12,6 +27,14 @@ interface GameStore {
   doAction(actionId: string): void;
   joinClub(clubId: string): void;
   leaveClub(): void;
+  joinGym(gymId: string): void;
+  leaveGym(): void;
+  train(kind: TrainingKind, skill?: SkillKey): void;
+  acceptOffer(offerId: string, aggressiveCut: boolean): void;
+  declineOffer(offerId: string): void;
+  chooseCorner(strategy: Strategy): void;
+  skipFight(): void;
+  closeFight(): void;
   advance(): void;
   choose(eventId: string, choiceId: string): void;
   newLife(): Promise<void>;
@@ -43,6 +66,30 @@ export const useGameStore = create<GameStore>((setState, getState) => {
     },
     leaveClub() {
       update((g) => leaveClub(g, GAME_CONTENT));
+    },
+    joinGym(gymId) {
+      update((g) => joinGym(g, gymId, GAME_CONTENT));
+    },
+    leaveGym() {
+      update((g) => leaveGym(g, GAME_CONTENT));
+    },
+    train(kind, skill) {
+      update((g) => trainFighter(g, kind, skill, GAME_CONTENT));
+    },
+    acceptOffer(offerId, aggressiveCut) {
+      update((g) => acceptOffer(g, offerId, { aggressiveCut }, GAME_CONTENT));
+    },
+    declineOffer(offerId) {
+      update((g) => declineOffer(g, offerId));
+    },
+    chooseCorner(strategy) {
+      update((g) => chooseFightCorner(g, strategy, GAME_CONTENT));
+    },
+    skipFight() {
+      update((g) => autoFinishFight(g, GAME_CONTENT));
+    },
+    closeFight() {
+      update((g) => closeFight(g));
     },
     advance() {
       update((g) => advanceYear(g, GAME_CONTENT));

@@ -72,6 +72,6 @@ describe('conteúdo', () => {
   });
 
   it('não usa organizações reais de MMA', () => {
-    expect(JSON.stringify(GAME_CONTENT)).not.toMatch(/\b(UFC|Bellator|PFL|ONE Championship)\b/i);
+    expect(JSON.stringify(GAME_CONTENT)).not.toMatch(/\b(UFC|Bellator|PFL|ONE Championship|IBJJF|Gracie Barra|Pride FC)\b/i);
   });
 });

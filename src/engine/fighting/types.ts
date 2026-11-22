@@ -79,6 +79,8 @@ export interface FightLogEntry {
   round: number;
   kind: FightLogKind;
   text: string;
+  /** Template usado (para não repetir a mesma variação em sequência). */
+  raw?: string;
   /** Índice de quem agiu (para a UI colorir). */
   actor?: 0 | 1;
   stamina: [number, number];

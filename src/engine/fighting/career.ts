@@ -109,7 +109,8 @@ export function generateOffers(state: GameState, rng: Rng, content: GameContent)
     const key = rosterKey(contract.id, playerDivision(s, content).id);
     const roster = s.world.rosters[key];
     if (roster) {
-      for (const m of findMatches(roster, s.fighter.winStreak, contract.offersPerYear, rng)) {
+      const proFights = s.fighter.pro.wins + s.fighter.pro.losses + s.fighter.pro.draws;
+      for (const m of findMatches(roster, s.fighter.winStreak, contract.offersPerYear, rng, proFights)) {
         const npc = roster.npcs.find((n) => n.id === m.npcId);
         if (npc) s = pushOffer(s, makeOffer(s, contract, m.title ? 'title' : 'regular', npcToOpponent(npc, roster), m.title), content);
       }
@@ -474,4 +475,42 @@ function effectOffer(state: GameState, kind: NonNullable<FighterEffects['offer']
   if (!pool.length) return s;
   const npc = roster.npcs.find((n) => n.id === rng.pick(pool));
   return npc ? pushOffer(s, makeOffer(s, contract, 'shortNotice', npcToOpponent(npc, roster), false, 1.5), content) : s;
+}
+
+// ---------------------------------------------------------------------------
+// Academia (ações do jogador)
+// ---------------------------------------------------------------------------
+
+export const GYM_JOIN_COST = 1;
+export type GymBlockReason = 'dead' | 'busy' | 'too-young' | 'other-city' | 'current' | 'no-money' | 'no-energy' | 'unknown';
+
+/** Pode pagar: menor de idade (pais pagam), bolsa de atleta (reputação ≥ 15) ou dinheiro para a mensalidade. */
+export function canAffordGym(state: GameState, fee: number): boolean {
+  return state.character.age < 18 || state.fighter.reputation >= 15 || state.money >= fee;
+}
+
+export function gymBlockReason(state: GameState, gymId: string, content: GameContent): GymBlockReason | null {
+  const gym = content.fighting.gyms.find((g) => g.id === gymId);
+  if (!gym) return 'unknown';
+  if (!state.alive) return 'dead';
+  if (state.pendingEvents.length > 0 || state.activeFight) return 'busy';
+  if (state.fighter.gymId === gymId) return 'current';
+  if (gym.city !== null && gym.city !== state.character.city) return 'other-city';
+  if (state.character.age < gym.minAge) return 'too-young';
+  if (!canAffordGym(state, gym.fee)) return 'no-money';
+  if (state.energy.current < GYM_JOIN_COST) return 'no-energy';
+  return null;
+}
+
+/** Entra (ou troca) de academia. Custa 1 de energia. */
+export function joinGym(state: GameState, gymId: string, content: GameContent): GameState {
+  if (gymBlockReason(state, gymId, content) !== null) return state;
+  const s = { ...state, energy: { ...state.energy, current: state.energy.current - GYM_JOIN_COST } };
+  return enterGym(s, gymId, content);
+}
+
+export function leaveGym(state: GameState, content: GameContent): GameState {
+  const gym = currentGym(state, content);
+  if (!gym || state.activeFight) return state;
+  return appendLog({ ...state, fighter: { ...state.fighter, gymId: null } }, `Você saiu da ${gym.name}.`);
 }

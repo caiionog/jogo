@@ -17,6 +17,7 @@ npm test            # Vitest (uma execução); npm run test:watch para modo watc
 npm run typecheck   # tsc --noEmit
 npm run build       # typecheck + build de produção em dist/
 npm run preview     # serve o build
+npm run sim         # balanceamento da carreira: simula 500 vidas de lutador (npm run sim -- 1000)
 ```
 Antes de commitar: `npm test && npm run build`.
 
@@ -30,7 +31,8 @@ Antes de commitar: `npm test && npm run build`.
    detalhado abaixo) e são validados por `validateContent` (`engine/events/validate.ts`) nos testes.
 4. **`GameState` é JSON puro** com campo `version`. Ao mudar o formato: incremente `STATE_VERSION`
    (`engine/core/state.ts`) e adicione a migração `n → n+1` em `src/save/migrations.ts` + teste.
-   Versão atual: **2**. A migração v1→v2 cria `education` coerente com a idade, `familyWealth` e `scheduledEvents`,
+   Versão atual: **3** (v2→v3 adiciona corpo, `fighter`, `world` e `activeFight`; fixtures em `tests/fixtures/saves-v2.json`).
+   Versão 2: A migração v1→v2 cria `education` coerente com a idade, `familyWealth` e `scheduledEvents`,
    usando um RNG próprio (derivado da seed) para não alterar o `rngState`. Antes de mudar o formato de novo, gere
    uma fixture com saves reais da versão atual em `tests/fixtures/`.
 5. **A UI (`src/ui/`) só lê o estado e despacha ações** pelo store Zustand (`ui/store.ts`), que chama a engine.
@@ -44,7 +46,13 @@ src/
     character/            # criação de personagem, names.ts (geradores de nomes/escolas + preposições)
     lifeStages/           # fases da vida, energia, school.ts (matrícula, ano letivo, transferência, clubes)
     events/               # schema (types.ts), seleção (select.ts), validação de conteúdo (validate.ts)
-    fighting/ relationships/ economy/ assets/   # placeholders (etapas futuras)
+    fighting/             # carreira de luta (Etapa 3)
+      simulateFight.ts    # luta round a round (máquina de estados) — narração vem de content.fighting.text
+      types.ts            # habilidades, organizações, academias, ofertas, elencos, perfil
+      profile.ts body.ts training.ts belts.ts   # perfil, corpo/categoria, treino, faixas
+      orgs.ts world.ts ranking.ts matchmaking.ts # requisitos/contratos, NPCs, ranking, adversários
+      career.ts           # ofertas, aceitar/córner/resultado, viradas de ano, efeitos `fighter`, academia
+    relationships/ economy/ assets/   # placeholders (etapas futuras)
   content/                # dados (GAME_CONTENT em index.ts)
     actions.ts            # ações (categoria 'vida' | 'escola')
     clubs.ts              # clubes escolares
@@ -52,6 +60,11 @@ src/
     names/                # nomes fictícios de pessoas e escolas
     events/childhood.ts   # eventos de infância (Etapa 1)
     events/school/        # eventos escolares por fase + disciplina + marcos
+    events/fighting/      # eventos de carreira de luta (base.ts, pro.ts)
+    organizations/        # organizações (index.ts) e categorias de peso (divisions.ts)
+    gyms/                 # academias por cidade
+    fightText/            # narração da luta (index.ts), apelidos e lesões (nicknames.ts)
+scripts/sim.ts            # balanceamento (Node/tsx, só engine + conteúdo)
   save/                   # migrations.ts (versão/migrações), storage.ts (idb-keyval)
   ui/                     # store.ts, App.tsx, screens/, components/
 tests/                    # Vitest; fixtures/saves-v1.json = saves reais da Etapa 1 para testar migração
@@ -71,6 +84,9 @@ tests/                    # Vitest; fixtures/saves-v1.json = saves reais da Etap
     school?: { average?: {min,max}, discipline?: {...}, popularity?: {...} },
     club?: ['judo', 'wrestling'] | 'any' | 'none',
     schoolResult?: ['passed'|'failed'|'honors'|'graduated'|'expelled'],  // resultado do último ano letivo
+    fighting?: { orgs?, tiers?: ['none'|'kids'|'amateur'|'regional'|'major'], contracted?, ranked?, rankMax?,
+                 champion?, belt?: {min,max}, amateurWins?, proWins?, reputation?, hasGym?, injured?, suspended?,
+                 orgEligible?: 'titan', beltPromotionReady?, hasFought? },
   },
   text: '... {colega} ... {professor} ... {da_escola} ... {o/a}',
   choices: [{ id, label, resultText, effects?, risk?: { chance, effects?, resultText } }],  // 2–3 escolhas
@@ -80,14 +96,19 @@ tests/                    # Vitest; fixtures/saves-v1.json = saves reais da Etap
   `schoolResult`). `'followUp'` nunca é sorteado e só acontece quando outra escolha o agenda.
 - **Efeitos** (`Effects`, `engine/core/effects.ts`): `stats`, `money`, `setFlags`, `clearFlags`,
   `school: { average, discipline, popularity, absences, suspend, expel, changeSchool: { type? }, joinClub, leaveClub }`
-  (ignorado fora da escola) e `followUps: [{ eventId, delayYears }]`. Com `delayYears ≥ 1`, o evento é agendado em
+  (ignorado fora da escola), `fighter: { skills, reputation, joinGym: 'local'|'best'|id, leaveGym, signWith: orgId,
+  injury: { name?, years }, suspendYears, vacateTitles, promoteBelt, offer: { kind: 'shortNotice'|'rival'|'titleDefense'|'bjjOpen' } }`
+  e `followUps: [{ eventId, delayYears }]`. Com `delayYears ≥ 1`, o evento é agendado em
   `scheduledEvents` e herda as variáveis do evento de origem (o mesmo `{colega}`). Com `0`, fica pendente na hora.
   Ao disparar, as condições são reavaliadas; se não baterem, o agendamento é descartado.
 - **Placeholders**: `{name}`, `{city}`, `{escola}`, `{da_escola}`/`{na_escola}` (do/da, no/na conforme o nome),
-  `{colega}`, `{professor}`, `{clube}` (sorteados quando o evento entra na fila) e `{o/a}` (gênero do personagem).
+  `{colega}`, `{professor}`, `{clube}`, `{lutador}` (nome 'apelido' sobrenome; também `{lutador_nome}`, `{lutador_apelido}`)
+  — sorteados quando o evento entra na fila — e `{o/a}` (gênero do personagem).
   Também funcionam nos rótulos das escolhas.
-- **Ordem do tick anual** (`advanceYear`): fim do ano letivo → envelhecer → início do ano letivo/matrícula → energia →
-  eventos (agendados vencidos + `auto` + 1–2 aleatórios).
+- **Ordem do tick anual** (`advanceYear`): fim do ano letivo → fim do ano de luta (ofertas expiram, faixa, mensalidade,
+  lesão) → envelhecer (corpo, saúde) → início do ano letivo/matrícula → energia → início do ano de luta (declínio,
+  mundo dos NPCs, ofertas) → eventos (agendados vencidos + `auto` + 1–2 aleatórios).
+- **Luta em andamento** (`GameState.activeFight`) bloqueia ações, avançar ano e novas lutas até `closeFight`.
 
 ## Como adicionar conteúdo
 - **Evento:**
@@ -101,12 +122,22 @@ tests/                    # Vitest; fixtures/saves-v1.json = saves reais da Etap
 - **Ação:** adicione um `ActionDef` em `src/content/actions.ts` com `category`, custo de energia, idade mínima,
   `requires?: { enrolled, schoolStages }`, efeitos, textos e `risk?` (efeitos extras com probabilidade).
 - **Clube:** adicione um `ClubDef` em `src/content/clubs.ts` (`minStage`, `combat`, `joinEffects`, `yearlyEffects`).
+- **Organização:** adicione um `OrgDef` em `src/content/organizations/index.ts` (tier, sport, regras, idade, requisitos,
+  `contract`, `rankingSize` (>0 exige contrato), rounds, bolsa, custo de camp, faixa de habilidade dos NPCs). Se tiver
+  contrato, crie um evento `trigger: 'auto'` com `conditions.fighting.orgEligible` e efeito `fighter.signWith`.
+  Depois rode `npm run sim` e confira o balanceamento.
+- **Academia:** adicione um `GymDef` em `src/content/gyms/index.ts` (`city` precisa existir em `locations.ts`, ou `null`).
+- **Evento de luta:** em `src/content/events/fighting/` (base = infância/amador, pro = profissional), usando
+  `conditions.fighting` e `effects.fighter`.
+- **Texto de luta:** acrescente variações em `src/content/fightText/index.ts` na chave do tipo de lance. Placeholders:
+  `{a}` (quem age), `{b}`, `{golpe}`, `{finalizacao}`, `{n}`, `{plano}`, `{placar}`, `{tipo}`. O validador exige todas as chaves.
 
 ## Flags importantes (ganchos entre etapas)
 `interesse_luta`, `brigou_na_escola`, `medalha_interescolar`, `caminho_18` ('faculdade' | 'trabalho' | 'luta'),
-`gostaDeLuta`, `artesMarciais`, `sonhaSerLutador`, `formado`, `repetente`, `expulso`, `suspenso`, `bolsista`.
+`gostaDeLuta`, `artesMarciais`, `sonhaSerLutador`, `formado`, `repetente`, `expulso`, `suspenso`, `bolsista`,
+`pensa_aposentar` (gancho de aposentadoria).
 
 ## Regras de conteúdo
-- Use **somente organizações, ligas e lutadores fictícios** (ex.: "Circuito Titã"). Nada de UFC, Bellator,
-  ONE, PFL ou nomes de atletas reais.
+- Use **somente organizações, ligas, academias, eventos e lutadores fictícios** (ex.: "Circuito Titã", "ARC").
+  Nada de UFC, Bellator, ONE, PFL, IBJJF ou nomes de pessoas reais (`tests/content.test.ts` barra os nomes de ligas).
 - Textos em pt-BR, segunda pessoa ("Você...").

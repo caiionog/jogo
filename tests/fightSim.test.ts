@@ -154,3 +154,15 @@ describe('máquina de estados', () => {
     }
   });
 });
+
+describe('narração', () => {
+  it('não repete a mesma variação de texto em lances seguidos do mesmo tipo', () => {
+    for (let i = 0; i < 50; i++) {
+      const f = simulateFight(mk('A', { grappling: 70 }), mk('B'), { rounds: 1, rngState: seedOf(i), rules: 'grappling' }, FIGHT_TEXT);
+      for (let j = 1; j < f.log.length; j++) {
+        const [a, b] = [f.log[j - 1]!, f.log[j]!];
+        if (a.kind === b.kind && FIGHT_TEXT[a.kind].length > 1) expect(b.raw).not.toBe(a.raw);
+      }
+    }
+  });
+});

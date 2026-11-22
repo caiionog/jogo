@@ -493,6 +493,10 @@ function say(ctx: Ctx, kind: FightLogKind, actor?: 0 | 1, vars: Record<string, s
   const b = a === 0 ? 1 : 0;
   const options = ctx.text[kind];
   let t = options.length ? ctx.rng.pick(options) : kind;
+  // evita repetir a mesma variação do lance anterior
+  const prev = s.log[s.log.length - 1];
+  if (options.length > 1 && prev?.kind === kind && prev.raw === t) t = ctx.rng.pick(options.filter((o) => o !== t));
+  const raw = t;
   const all: Record<string, string> = { a: s.fighters[a].name, b: s.fighters[b].name, ...vars };
   for (const [k, v] of Object.entries(all)) t = t.replaceAll(`{${k}}`, v);
   t = t.charAt(0).toUpperCase() + t.slice(1);
@@ -500,6 +504,7 @@ function say(ctx: Ctx, kind: FightLogKind, actor?: 0 | 1, vars: Record<string, s
     round: s.round,
     kind,
     text: t,
+    raw,
     ...(actor !== undefined ? { actor } : {}),
     stamina: [Math.round(s.live[0].stamina), Math.round(s.live[1].stamina)],
     damage: [Math.round(s.live[0].damage), Math.round(s.live[1].damage)],

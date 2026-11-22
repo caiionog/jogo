@@ -72,3 +72,32 @@ describe('ganho de treino', () => {
     expect(judo.yearlyEffects.fighter?.skills?.grappling).toBeGreaterThan(0);
   });
 });
+
+describe('academias', () => {
+  it('entrar custa energia; respeita cidade, idade e dinheiro', async () => {
+    const { joinGym, gymBlockReason, leaveGym } = await import('../src/engine');
+    const g = { ...fighterGame(20), character: { ...fighterGame(20).character, city: 'São Paulo' }, money: 0 };
+    expect(gymBlockReason(g, 'rj_irmandade', GAME_CONTENT)).toBe('other-city');
+    expect(gymBlockReason(g, 'sp_leao_dourado', GAME_CONTENT)).toBe('no-money');
+    const kid = { ...g, character: { ...g.character, age: 6 } };
+    expect(gymBlockReason(kid, 'sp_leao_dourado', GAME_CONTENT)).toBe('too-young');
+    expect(gymBlockReason(kid, 'sp_tatame_paulista', GAME_CONTENT)).toBeNull(); // pais pagam
+    const rich = { ...g, money: 20000 };
+    const r = joinGym(rich, 'sp_leao_dourado', GAME_CONTENT);
+    expect(r.fighter.gymId).toBe('sp_leao_dourado');
+    expect(r.energy.current).toBe(rich.energy.current - 1);
+    expect(gymBlockReason(r, 'sp_leao_dourado', GAME_CONTENT)).toBe('current');
+    expect(leaveGym(r, GAME_CONTENT).fighter.gymId).toBeNull();
+  });
+
+  it('mensalidade cobrada a partir dos 18; sem dinheiro, sai da academia', async () => {
+    const { advanceYear } = await import('../src/engine');
+    const base = fighterGame(20, {}, { gymId: 'gen_bairro', reputation: 0 });
+    const paid = advanceYear({ ...base, money: 5000 }, GAME_CONTENT);
+    expect(paid.money).toBeLessThanOrEqual(5000 - 1200);
+    const broke = advanceYear({ ...base, money: 0 }, GAME_CONTENT);
+    expect(broke.fighter.gymId).toBeNull();
+    const sponsored = advanceYear({ ...base, money: 0, fighter: { ...base.fighter, reputation: 30 } }, GAME_CONTENT);
+    expect(sponsored.fighter.gymId).toBe('gen_bairro');
+  });
+});

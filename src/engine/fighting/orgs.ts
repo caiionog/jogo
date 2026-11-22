@@ -37,7 +37,7 @@ export function orgRequirementGap(state: GameState, org: OrgDef): OrgBlockReason
 }
 
 /** Lutas profissionais consideradas na "fase recente". */
-export const RECENT_PRO_FIGHTS = 8;
+export const RECENT_PRO_FIGHTS = 10;
 
 /** Aproveitamento (vitórias / lutas decididas) nas últimas lutas profissionais. */
 export function recentProWinRate(state: GameState): number {

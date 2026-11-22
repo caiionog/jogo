@@ -1,6 +1,6 @@
 /**
  * Balanceamento da carreira de luta: simula N vidas focadas em luta usando só a engine + conteúdo.
- *   npm run sim            (200 vidas)
+ *   npm run sim            (500 vidas)
  *   npm run sim -- 500     (N vidas)
  */
 import { GAME_CONTENT } from '../src/content';
@@ -23,7 +23,7 @@ import {
 } from '../src/engine';
 import type { GameState, Rng, SkillKey } from '../src/engine';
 
-const N = Number(process.argv[2] ?? 200);
+const N = Number(process.argv[2] ?? 500);
 const MAX_AGE = 40;
 const C = GAME_CONTENT;
 

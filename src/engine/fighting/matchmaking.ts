@@ -67,9 +67,9 @@ export interface Match {
  * - campeão → defesa contra o top 3;
  * - top 3 com sequência ≥ TITLE_SHOT_STREAK vitórias → disputa de cinturão contra o campeão;
  * - ranqueado em r → entre r−3 e r+3;
- * - sem ranking → não ranqueados ou os 3 últimos do ranking.
+ * - sem ranking → não ranqueados ou os 3 últimos do ranking (estreantes: só não ranqueados).
  */
-export function findMatches(roster: Roster, winStreak: number, count: number, rng: Rng): Match[] {
+export function findMatches(roster: Roster, winStreak: number, count: number, rng: Rng, proFights = 99): Match[] {
   const r = rankOf(roster, PLAYER_ID);
   const unranked = roster.npcs.map((n) => n.id).filter((id) => id !== roster.champion && !roster.ranking.includes(id));
   if (r === 0) {
@@ -79,7 +79,8 @@ export function findMatches(roster: Roster, winStreak: number, count: number, rn
   const out: Match[] = [];
   if (r !== null && r <= 3 && winStreak >= TITLE_SHOT_STREAK && roster.champion) out.push({ npcId: roster.champion, title: true });
   let pool: string[];
-  if (r === null) pool = [...unranked, ...roster.ranking.slice(-3)];
+ // estreantes (< 3 lutas pro) enfrentam só não ranqueados
+  if (r === null) pool = proFights < 3 && unranked.length ? unranked : [...unranked, ...roster.ranking.slice(-3)];
   else pool = roster.ranking.slice(Math.max(0, r - 4), r + 3);
   pool = pool.filter((id) => id !== PLAYER_ID && !out.some((m) => m.npcId === id));
   while (out.length < count && pool.length) {
