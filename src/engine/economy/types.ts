@@ -2,6 +2,8 @@
 
 export type LedgerCategory =
   | 'salario'
+  /** Trabalho sem carteira (Etapa 8): sem INSS nem imposto retido. */
+  | 'trabalho_informal'
   | 'luta'
   | 'patrocinio'
   | 'aluguel_recebido'
@@ -52,7 +54,8 @@ export type Housing = 'pais' | 'aluguel' | 'propria';
 export type LivingStandard = 'simples' | 'confortavel' | 'luxo';
 export type EconYearKind = 'normal' | 'crise' | 'boom';
 export type EducationLevel = 'nenhuma' | 'fundamental' | 'medio' | 'superior';
-export type JobCategory = 'meio_periodo' | 'formal' | 'luta';
+/** aprendiz = jovem aprendiz/estágio (14+/16+); meio_periodo; formal e luta = tempo integral. */
+export type JobCategory = 'aprendiz' | 'meio_periodo' | 'formal' | 'luta';
 export type LoanKind = 'pessoal' | 'imobiliario' | 'veiculo';
 export type Regime = 'parcial' | 'separacao';
 
@@ -170,8 +173,30 @@ export interface JobDef {
   minReputation?: number;
   /** Requisito alternativo de luta: faixa mínima OU vitórias pro mínimas. */
   fightReq?: { minBelt?: number; minProWins?: number };
+  /** Salário anual (R$) no nível 1 e no 5, antes do custo da cidade (no conteúdo, gerado a partir de `salaryMW`). */
   salary: [number, number];
+  /** O mesmo salário em salários mínimos mensais de referência (exibição; Etapa 8). */
+  salaryMW?: [number, number];
   energy: number;
+  /** Requisitos extras (Etapa 8). */
+  requires?: {
+    /** Precisa estar matriculado (jovem aprendiz). */
+    studying?: boolean;
+    /** Fases escolares aceitas (estágio: ensino médio); `graduated` aceita quem já terminou. */
+    schoolStages?: readonly ('fund2' | 'medio')[];
+    acceptGraduated?: boolean;
+    /** Carteira de motorista (flag `cnh`). */
+    cnh?: boolean;
+  };
+  /** Carteira assinada (padrão true). Informal paga 15% a mais, sem INSS e sem imposto retido. */
+  formal?: boolean;
+  /** Escada de cargos ao longo dos níveis 1–5 (ex.: Atendente → Supervisor → Gerente). */
+  ladder?: readonly string[];
+  /** Chance base de contratação (padrão 0,6). */
+  hireChance?: number;
+  /** Efeitos anuais nos atributos (servente: +Capacidade atlética, −Saúde). */
+  yearlyEffects?: Partial<Record<'health' | 'happiness' | 'intelligence' | 'looks' | 'athletic', number>>;
+  description?: string;
 }
 
 export interface AssetDef {

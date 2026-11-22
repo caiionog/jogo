@@ -1,3 +1,4 @@
+import { jobReasonText } from '../text/jobs';
 import { GAME_CONTENT } from '../../content';
 import {
   AGENT_CUT,
@@ -16,39 +17,16 @@ import {
   seekSponsorBlockReason,
   sponsorDef,
 } from '../../engine';
-import type { GameState, JobBlockReason, JobCategory, JobDef } from '../../engine';
+import type { GameState, JobCategory } from '../../engine';
 import { useGameStore } from '../store';
 import { Bar } from './fightUi';
 import { Btn, Row, Section, money } from './ecoUi';
 
 const C = GAME_CONTENT;
 
-const CATEGORY_TITLE: Record<JobCategory, string> = { meio_periodo: 'Meio período', formal: 'Emprego formal', luta: 'Ligados à luta' };
+const CATEGORY_TITLE: Record<JobCategory, string> = { aprendiz: 'Aprendiz e estágio', meio_periodo: 'Meio período', formal: 'Emprego formal', luta: 'Ligados à luta' };
 
-function reasonText(r: JobBlockReason, def: JobDef): string {
-  switch (r) {
-    case 'age':
-      return `a partir de ${def.minAge} anos`;
-    case 'education':
-      return `exige ${EDUCATION_LABEL[def.education].toLowerCase()}`;
-    case 'stats': {
-      const m = def.minStats ?? {};
-      return [m.intelligence && `inteligência ${m.intelligence}`, m.athletic && `capacidade atlética ${m.athletic}`, m.looks && `aparência ${m.looks}`].filter(Boolean).join(', ');
-    }
-    case 'reputation':
-      return `reputação ${def.minReputation}`;
-    case 'fight':
-      return `faixa roxa ou ${def.fightReq?.minProWins ?? 0} vitórias pro`;
-    case 'no-energy':
-      return `precisa de ⚡${1 + def.energy}`;
-    case 'current':
-      return 'seu emprego atual';
-    case 'busy':
-      return 'resolva o evento';
-    case 'dead':
-      return '—';
-  }
-}
+const reasonText = jobReasonText;
 
 function CurrentJob({ game }: { game: GameState }) {
   const workHard = useGameStore((s) => s.workHard);
@@ -107,7 +85,7 @@ function Openings({ game }: { game: GameState }) {
                 {C.economy.jobs
                   .filter((j) => j.category === cat)
                   .map((j) => {
-                    const r = jobBlockReason(game, j);
+                    const r = jobBlockReason(game, j, C, { replace: true });
                     return (
                       <li key={j.id} className="flex items-center justify-between gap-2 rounded-xl bg-slate-950 px-3 py-2">
                         <div className="min-w-0">

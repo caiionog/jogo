@@ -27,6 +27,8 @@ export interface EconomyEffects {
   cancelSponsors?: boolean;
   loseJob?: string;
   promote?: boolean;
+  /** Muda o desempenho no emprego atual (−100..100; Etapa 8). */
+  jobPerformance?: number;
   /** Oferta de emprego aceita na hora (ex.: comentarista de TV). */
   jobOffer?: string;
   /** Dano num bem do tipo (percentual do valor, pago como manutenção). */
@@ -70,6 +72,10 @@ export function applyEconomyEffects(state: GameState, fx: EconomyEffects, rng: R
     s = appendLog({ ...s, economy: { ...s.economy, sponsors: [] } }, 'Seus patrocinadores cancelaram os contratos.');
   }
   if (fx.loseJob && s.economy.job) s = appendLog({ ...s, economy: { ...s.economy, job: null } }, fx.loseJob);
+  if (fx.jobPerformance && s.economy.job) {
+    const j = s.economy.job;
+    s = { ...s, economy: { ...s.economy, job: { ...j, performance: Math.max(0, Math.min(100, j.performance + fx.jobPerformance)) } } };
+  }
   if (fx.promote && s.economy.job && s.economy.job.level < 5) {
     const job = s.economy.job;
     s = { ...s, economy: { ...s.economy, job: { ...job, level: job.level + 1, performance: Math.min(100, job.performance + 10) } } };

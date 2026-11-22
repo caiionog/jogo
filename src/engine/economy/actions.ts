@@ -13,8 +13,8 @@ export function currentMarket(state: GameState) {
   return marketYear(state.seed, state.year);
 }
 
-export function applyJob(state: GameState, jobId: string, content: GameContent): GameState {
-  return applyForJob(state, jobId, content, currentMarket(state));
+export function applyJob(state: GameState, jobId: string, content: GameContent, opts: { replace?: boolean } = {}): GameState {
+  return applyForJob(state, jobId, content, currentMarket(state), opts);
 }
 
 export function personalLoan(state: GameState, amount: number, years: number): GameState {

@@ -156,7 +156,7 @@ interface GameStore {
   personalLoan(amount: number, years: number): void;
   setStandard(standard: LivingStandard): void;
   setHousing(housing: Housing): void;
-  applyJob(jobId: string): void;
+  applyJob(jobId: string, replace?: boolean): void;
   workHard(): void;
   askRaise(): void;
   quitJob(): void;
@@ -344,7 +344,7 @@ export const useGameStore = create<GameStore>((setState, getState) => {
     personalLoan: (amount, years) => eco((g) => personalLoan(g, amount, years)),
     setStandard: (st) => eco((g) => setStandard(g, st)),
     setHousing: (h) => eco((g) => setHousing(g, h)),
-    applyJob: (id) => eco((g) => applyJob(g, id, GAME_CONTENT)),
+    applyJob: (id, replace) => eco((g) => applyJob(g, id, GAME_CONTENT, { replace })),
     workHard: () => eco((g) => workHard(g)),
     askRaise: () => eco((g) => askRaise(g, GAME_CONTENT)),
     quitJob: () => eco((g) => quitJob(g, GAME_CONTENT)),

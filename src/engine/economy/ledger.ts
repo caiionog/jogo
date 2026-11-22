@@ -14,6 +14,7 @@ export function toMoney(x: number): number {
 }
 
 export const CATEGORY_LABEL: Record<LedgerCategory, string> = {
+  trabalho_informal: 'Trabalho informal',
   salario: 'Salário',
   luta: 'Bolsas de luta',
   patrocinio: 'Patrocínios',

@@ -5,6 +5,7 @@ export * from './market';
 export * from './bank';
 export * from './taxes';
 export * from './jobs';
+export * from './careers';
 export * from './business';
 export * from './fightIncome';
 export * from './living';
