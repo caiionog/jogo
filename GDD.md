@@ -1,4 +1,4 @@
-# GDD — Vida de Lutador (versão 1.1)
+# GDD — Vida de Lutador (versão 1.2)
 
 > Jogo completo: infância, escola, carreira de luta, relacionamentos, economia, lesões, aposentadoria, morte e legado
 > por gerações, com conquistas e Hall da Fama entre vidas. Funciona offline como app instalado (PWA).
@@ -777,7 +777,7 @@ social, jaqueta, vestido, blusa), luta (kimono, rashguard, regata de treino, rou
 festa, camisa de formatura) e luxo de grifes fictícias ("Maison Arara", "Cronos Wear", R$ 6 mil a R$ 35 mil, compradas
 pelo extrato). As desbloqueadas ficam em `GameState.wardrobe` (gancho para cosméticos).
 
-### Avatar 3D (`src/ui/avatar/`)
+### Avatar 3D (`src/ui/avatar/`) — substituído na Etapa 8 pela pixel art (registro histórico)
 - **Fase A (atual)**: busto procedural low-poly feito em three.js (`buildBust`), com deformação por idade, gordura,
   músculo e formato do rosto, 4 tipos de cabelo com calvície e grisalho, barba, rugas, marcas, expressões e roupas.
   Até 6 mil triângulos (testado). React Three Fiber + drei num **chunk carregado sob demanda** (≈ 237 KB gzip); o
@@ -795,12 +795,129 @@ pelo extrato). As desbloqueadas ficam em `GameState.wardrobe` (gancho para cosm�
 `npm run dev` → `/dev/avatars`: grade de 5 fases × 3 níveis de gordura × 6 combinações de genes e roupas, uma linha
 de musculatura e um busto ao vivo do item tocado. Fica fora do build de produção.
 
-## 10. Ideias futuras
+## 10. Nova interface, atributos, empregos, mercado e pixel art (Etapa 8)
+
+### Tela principal e menus em camadas (`src/ui/`)
+- **Tela principal**: busto em pixel art no topo (toque → Perfil com avatar de corpo inteiro e guarda-roupa), nome,
+  idade, cidade e dinheiro; no meio, o **feed da vida** agrupado por idade ("Idade: 25 anos"), rolando até o ano
+  atual; embaixo, energia em pontos e as 5 barras de atributos (recolhíveis); por fim a **barra inferior** com
+  Ocupação · Bens · **+ Idade** (botão central maior) · Relações · Atividades.
+- **Navegação**: pilha de telas (`ui/nav.ts`) ligada ao histórico do navegador; o Voltar do Android e o gesto do
+  iPhone fecham um nível. O estado da navegação nunca entra no `GameState`.
+- **Mapa dos menus**:
+```
+≡ Menu ─ Conquistas · Hall da Fama · Saves · Configurações · Nova vida
+Ocupação ─┬ Minha ocupação ─ escola/emprego/luta de hoje, com atalhos
+          ├ Carreiras ─┬ Aprendiz e estágio · Meio período · Tempo integral ─ cartão → detalhe → Candidatar-se
+          │            ├ Carreira de lutador ─ etapa, próximo passo, academias, Procurar lutas
+          │            ├ Estudos ─ "Em breve"
+          │            └ Empreender → Bens › Mercado › Empreendimentos
+          ├ Escola ─ série, nota, clube, ações escolares
+          └ Carreira de luta ─ academia, faixa, cartel, avaliação do treinador, Ranking, ofertas, aposentar
+Bens ─────┬ Meus bens ─ imóvel (morar/alugar/reformar/vender) · veículo · luxo · empreendimento (gerenciar, renomear…)
+          ├ Mercado ─ Imóveis · Veículos · Luxo · Empreendimentos; filtros, "ver outra cidade" → confirmação
+          └ Finanças ─ saldo, extrato, padrão de vida, moradia, banco, dívida
+Relações ─ família, amigos, amor, filhos, rivais (miniaturas) → detalhe com avatar e ações
+Atividades ─ Treino · Estudo · Saúde · Lazer (sair, festa, viagem) · Amor · Mudar de cidade · CNH · Testamento
+```
+- Itens indisponíveis aparecem **desabilitados com o motivo** ("A partir dos 14 anos", "Energia insuficiente"), vindo
+  das funções `*BlockReason` da engine.
+- **Eventos** abrem num pop-up central com a miniatura do NPC (quando há `{pessoa}`/`{lutador}`); o **resultado**
+  mostra o texto e as mudanças dos atributos visíveis ("Felicidade +5 ▲"). Ações dão toast + linha no log.
+- **Sistema de design** (`src/ui/design/`): tokens em CSS variables com modo claro/escuro, fonte pixelada (Pixelify
+  Sans, empacotada) só nos títulos, ícones lucide, toque ≥ 44 px, contraste AA, animações que respeitam
+  `prefers-reduced-motion`.
+
+### Atributos
+- **Visíveis (5)**: Felicidade, Saúde, Inteligência, Aparência e **Capacidade atlética** (`athletic`, substitui força
+  e condicionamento).
+- **Ocultos**: `fighter.skills = { jiujitsu, trocacao }` e o **queixo** (`chinOf`: `chinBase` inato × fator de idade,
+  que cai depois dos ~32, − dano cerebral × 0,25, com piso pela saúde). **Nunca aparecem como número na UI.**
+- **Pistas qualitativas**: frase do treinador depois de cada treino (`content/fightText/coach.ts`), faixa, cartel,
+  ranking e a **avaliação do treinador** (`coachAssessment`): o valor geral recebe um erro determinístico de ±6 por
+  ano e vira palavra — Iniciante < 30 ≤ Promissor < 50 ≤ Sólido < 72 ≤ Elite.
+- **Treino**: jiu-jitsu, trocação, físico (→ capacidade atlética) e sparring (os dois, com risco de lesão), com
+  retornos decrescentes, idade, treinador e especialidade da academia (`trocacao | jiujitsu | mma`).
+
+### Modelo de luta
+Mesma máquina de estados da Etapa 3 (fases, métodos, córner, determinismo), com o perfil de combate derivado: em pé
+(ataque e defesa) pela trocação; clinch, quedas e chão pelo jiu-jitsu; estamina e potência pela capacidade atlética;
+resistência a nocaute pelo queixo. NPCs têm `{ jiujitsu, trocacao, athletic, chinBase }` e um estilo ("Especialista
+em chão", "Trocador", "Completo"): o especialista em chão vence mais no chão e o trocador em pé (testado).
+
+### Empregos e carreiras
+- **26 empregos** (19 básicos em `content/jobs/basic/`): jovem aprendiz e estágio (14+, estudando), atendente,
+  repositor, empacotador, entregador do app fictício "Zuum", caixa, vendedor, garçom, recepcionista, auxiliar
+  administrativo, frentista, servente de obra, auxiliar de limpeza, cuidador(a), motorista de app (CNH), professor
+  particular, instrutor de academia, segurança (21+)…
+- Salário em múltiplos do **salário mínimo de referência** (R$ 1.518/mês, dado ajustável) × 13 por ano e pelo custo
+  da cidade; **formal** (benefícios e INSS) ou **informal** (+15% na mão, sem benefícios); **escada** de cargos
+  (ex.: Atendente → Supervisor → Gerente); chance de contratação pelos requisitos, aparência e inteligência; vagas do
+  ano sorteadas pela seed e pela cidade; efeitos anuais (servente: +atlética, −saúde).
+- Um emprego por vez; trocar pede confirmação de demissão. A energia reservada do emprego disputa com o treino, mas
+  academia e emprego coexistem. **CNH**: atividade de 18+ (R$ 3.000, chance de reprovar).
+- **16 eventos de trabalho** (`content/events/jobs/`): cliente grosseiro, hora extra na véspera da luta, colega
+  rouba o caixa e te acusa, gorjeta, promoção, demissão em massa, fiscalização do informal, salário atrasado, estágio
+  que vira efetivação, cliente que te reconhece das lutas…
+- **Carreiras** (`engine/economy/careers.ts`): cartões com salário, requisitos ✓/✗ com motivo e energia; detalhe
+  com a escada e o que falta para subir; a carreira de lutador mostra a etapa (sem academia → aluno → amador → pro
+  regional → liga principal) e o próximo passo em palavras.
+
+### Mercado
+- Vitrine sobre a Etapa 5: ofertas do ano pela seed, na cidade, com preço × custo da cidade. **20 bens**: kitnet,
+  apartamento, casa, casa de praia (só em UF litorânea), sítio (fora da capital), sala comercial, terreno; moto,
+  carro popular/usado, SUV, luxo; relógio, joias e grifes. Cartões com estado, tamanho, bairro, aluguel estimado e
+  tendência em palavras.
+- **11 empreendimentos**: comprar um existente (lanchonete, barbearia, lava-jato, mercadinho, loja de roupas,
+  academia à venda) com clientela e risco, ou abrir do zero/franquia fictícia.
+- Compra à vista ou financiada (custo total com juros, parcela anual); bloqueios por dinheiro, crédito e idade (antes
+  dos 18, só luxo barato com o próprio dinheiro). **Reformar** imóvel (+valor) e **renomear** empresa são novos.
+  Comprar e vender no mesmo ano sempre dá prejuízo (testado).
+
+### Avatar em pixel art
+Corpo inteiro 32×64 gerado por código a partir do `AvatarDescriptor`: 5 fases × 2 sexos × 5 tipos físicos, roupas
+como regras sobre a silhueta (43 peças em 6 camadas), 12 cabelos com textura pelo tipo, 6 barbas, 6 expressões,
+sardas, pintas, marcas da luta e kimono com a cor real da faixa. Paleta em rampas de 4 tons com deslocamento de
+matiz, ≤ 48 cores por avatar, contorno seletivo. O 3D da Etapa 7 foi removido. Direção de arte e pipeline do
+Aseprite em [`ASSETS.md`](./ASSETS.md); vitrine em `/dev/avatars` (só no dev).
+
+### Save v8
+`migrateV7toV8`: atributos (`athletic` = 0,4·força + 0,35·condicionamento + 0,25·cardio), habilidades
+(`jiujitsu` = 0,45·grappling + 0,35·wrestling + 0,2·média; `trocacao` = 0,7·striking + 0,3·defesa; `chinBase` =
+queixo) no personagem, nos elencos, nas ofertas e na luta em andamento; guarda-roupa por camadas; sardas e pintas
+por um RNG próprio. Fixtures em `tests/fixtures/saves-v7.json`.
+
+### Balanceamento (antes × depois, `npm run sim`)
+| Métrica (500 vidas de luta até os 40) | Etapa 7 | Etapa 8 |
+|---|---|---|
+| Estreia profissional | 94,0% | 98,0% |
+| Chegou à liga principal | 24,2% | 28,6% |
+| Campeão (qualquer liga) | 17,4% | 19,2% |
+| Campeão do Circuito Titã | 2,4% | 2,8% |
+| Faixa preta | 11,4% | 12,6% |
+| Cartel pro médio | 12,0-12,4-0,7 | 13,8-12,8-0,7 |
+| Duração da carreira pro | 15,2 anos | 15,9 anos |
+| Métodos (KO · SUB · DEC) | 21 · 31 · 48% | 23 · 35 · 43% |
+| Lesão grave (carreiras pro) | 50,3% | 46,0% |
+
+| Patrimônio mediano aos 50 (150 vidas) | Etapa 7 | Etapa 8 |
+|---|---|---|
+| luta | R$ 351 mil (falência 42,7%) | R$ 549 mil (falência 32,0%) |
+| emprego | R$ 512 mil (12,7%) | R$ 519 mil (2,7%) |
+| misto | R$ 534 mil (6,7%) | R$ 608 mil (4,0%) |
+| empreendedor | R$ 766 mil (9,3%) | R$ 998 mil (9,3%) |
+
+Ajustes para chegar lá: ganhos de treino reescalados para 2 habilidades, Circuito Titã mais difícil (NPCs 55–77,
+reputação 50, aproveitamento 65%, bolsa 25+25+40 mil), regionais um pouco mais fáceis (NPCs 40–68 e 36–64). A luta
+continua sendo o caminho de maior variância (mais falência e mais milionários); o lutador aposentado agora tem
+empregos básicos de verdade para cair, o que explica a mediana maior.
+
+## 11. Ideias futuras
 - **Outras carreiras**: boxe olímpico, wrestling universitário, árbitro, treinador de seleção, empresário de lutadores.
 - **Faculdade**: vestibular, cursos e vida universitária (a partir de `caminho_18 = 'faculdade'`).
 - **Outros países e ligas** (fictícios): o jogo hoje é só no Brasil (Etapa 7); circuitos asiáticos, europeus e
   americanos voltariam como transferência de carreira, com idioma e dados demográficos próprios de cada país.
-- **Avatar Fase B**: modelos GLB com shape keys (pipeline em `ASSETS.md`), corpo inteiro na tela de luta.
+- **Avatar animado na luta**: os mesmos sprites em poses de luta (guarda, soco, queda) na tela da luta.
 - **Aposentadoria financeira**: benefício da previdência que já é cobrada, investimento para a velhice.
 - **Modo desafio**: metas com regras (ex.: "campeão sem academia", "milionário sem lutar", "5 gerações de faixas pretas").
 - **Eventos sazonais**: copa de fim de ano, torneio beneficente, Dia das Mães/Pais com a família.
@@ -808,13 +925,13 @@ de musculatura e um busto ao vivo do item tocado. Fica fora do build de produç�
 - **Talento revelado aos poucos**: olheiros, testes físicos, "promessa" no noticiário.
 - **Netos e bisnetos jogáveis** com árvore genealógica completa (hoje: antepassados jogados + filhos).
 
-## 11. Arquitetura (resumo)
+## 12. Arquitetura (resumo)
 Engine TS pura e determinística (`src/engine`), conteúdo como dados (`src/content`), save versionado com
 migrações (`src/save`: saves de vida em 3 slots e o armazenamento meta separado), UI React que apenas lê o estado e
 despacha ações (`src/ui`), PWA com service worker gerado no build. Detalhes em `CLAUDE.md`; como jogar e instalar no
 `README.md`.
 
-## 12. Roadmap
+## 13. Roadmap
 - **Etapa 1 — Esqueleto jogável** ✅ — projeto, GameState, criação de personagem, energia, 3 ações,
   avançar ano, motor de eventos + 10 eventos de infância, log, autosave em IndexedDB, testes.
 - **Etapa 2 — Escola** ✅ — fases escolares, matrícula automática, nota/disciplina/faltas/popularidade,
@@ -839,3 +956,8 @@ despacha ações (`src/ui`), PWA com service worker gerado no build. Detalhes em
   aparência herdável com regra de não discriminação testada, `deriveAvatar`, 22 roupas com guarda-roupa e grifes,
   busto 3D procedural com miniaturas e fallback 2D, criação de personagem em 3 passos com prévia de idade, save v7.
   **Versão 1.1.**
+- **Etapa 8 — Nova interface, pixel art, empregos e mercado** ✅ — tela principal com feed da vida e barra inferior,
+  menus em camadas com Voltar, pop-ups de evento e resultado, sistema de design claro/escuro; 5 atributos visíveis e
+  habilidades ocultas (jiu-jitsu, trocação, queixo) com pistas do treinador; 26 empregos com escada, formal/informal,
+  CNH e 16 eventos; tela de Carreiras; Mercado de imóveis, veículos, luxo e 11 empreendimentos; avatar de corpo
+  inteiro em pixel art gerado por código (3D removido); save v8. **Versão 1.2.**

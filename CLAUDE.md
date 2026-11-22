@@ -20,6 +20,8 @@ npm run preview     # serve o build de produção (PWA: service worker, offline,
 npm run sim         # balanceamento: npm run sim -- N M L D (carreiras até 40, perfis econômicos, vidas completas, dinastias)
 npm run bench       # performance: "Avançar ano" com save de 80 anos (grava tmp/save-80.json)
 npm run icons       # regera os PNGs do PWA a partir de public/icons/icon.svg
+npx tsx scripts/sprites/gen-bodies.ts            # regera as silhuetas de pixel art (body/generated.ts)
+npx tsx scripts/sprites/png-to-grid.ts arq.png   # importa um corpo desenhado no Aseprite (ver ASSETS.md)
 npm run build:artifact -- caminho.html   # versão de teste em arquivo único (sem service worker)
 ```
 Antes de commitar: `npm test && npm run build`.
@@ -34,9 +36,14 @@ Antes de commitar: `npm test && npm run build`.
    detalhado abaixo) e são validados por `validateContent` (`engine/events/validate.ts`) nos testes.
 4. **`GameState` é JSON puro** com campo `version`. Ao mudar o formato: incremente `STATE_VERSION`
    (`engine/core/state.ts`) e adicione a migração `n → n+1` em `src/save/migrations.ts` + teste.
-   Versão atual: **6** (v5→v6: `fighter.injury` vira lesão do catálogo em `health.injuries`, `health.brainDamage`
+   Versão atual: **8** (v7→v8: `strength/fitness` viram `athletic`; as 6 habilidades viram `jiujitsu`/`trocacao` +
+   `chinBase` no personagem, nos elencos, nas ofertas e na luta em andamento; guarda-roupa por camadas; sardas e pintas
+   por RNG próprio `seed:v8:*`; fixtures em `tests/fixtures/saves-v7.json`). Cadeia testada: v1 → v8.
+   v6→v7: só Brasil (cidade estrangeira → UF/cidade sorteada), aparência/genes para todas as pessoas com família
+   coerente, guarda-roupa inicial (RNG `seed:v7`; fixtures `saves-v6.json`).
+   v5→v6: `fighter.injury` vira lesão do catálogo em `health.injuries`, `health.brainDamage`
    estimado pelos nocautes do histórico, `fighter.retired`, `feats`, `dynasty` geração 1, `ending`, `economy.will`;
-   saves mortos ganham o fim de vida; fixtures em `tests/fixtures/saves-v5.json`). Cadeia testada: v1 → v6.
+   saves mortos ganham o fim de vida; fixtures em `tests/fixtures/saves-v5.json`.
    v4→v5 criou `economy` — extrato vazio, moradia pela idade, patrimônio dos pais, regime de bens
    parcial para casados — e `energy.reserved`; fixtures em `tests/fixtures/saves-v4.json`).
    v3→v4 adicionou `relationships` com família coerente com a idade e "Conteúdo adulto" desligado. v2→v3 adicionou corpo, `fighter`, `world` e `activeFight`.
@@ -51,6 +58,12 @@ Antes de commitar: `npm test && npm run build`.
    lançamentos`. Arredonde com `toMoney`. Efeitos `money` de eventos já viram `post('eventos')`.
 6. **A UI (`src/ui/`) só lê o estado e despacha ações** pelo store Zustand (`ui/store.ts`), que chama a engine.
    Nenhuma regra de jogo dentro de componentes.
+7. **Habilidades de luta nunca aparecem como número na UI.** `fighter.skills` (jiu-jitsu, trocação) e o queixo
+   (`chinOf`) são ocultos: a UI mostra só pistas (frase do treinador, `coachAssessment` em palavras, faixa, cartel,
+   ranking). O teste de navegação (`tests/ui.test.tsx`) falha se um número de habilidade for renderizado. Os 5
+   atributos visíveis (`STAT_KEYS`: health, happiness, intelligence, looks, athletic) podem aparecer.
+8. **Não discriminação**: cor ou raça e genes são só demografia e aparência; nunca entram em mecânica, chances,
+   salários ou condições de evento (`tests/fairness.test.ts`).
 
 ## Estrutura
 ```
@@ -104,7 +117,16 @@ src/
     events/health/ events/legacy/   # aposentadoria, doenças e mortes por evento; eventos de legado (2ª geração+)
 scripts/sim.ts            # balanceamento (Node/tsx, só engine + conteúdo); bench.ts (performance); icons.mjs
   save/                   # migrations.ts (versão/migrações), storage.ts (3 slots), meta.ts (meta separado), transfer.ts (exportar/importar)
-  ui/                     # store.ts, App.tsx, pwa.ts, screens/ (Life, NewLife, Obituary), components/ (painéis, Sheet, MenuSheet, MetaScreens, Toasts)
+  ui/                     # store.ts, nav.ts (pilha de menus + Voltar), App.tsx, pwa.ts
+    design/               # tokens.css (claro/escuro), components.tsx (ListItem, MenuScreen, StatBar, BottomNav, AgeButton…), modals.tsx
+    screens/              # Life (tela principal), NewLife (criação), Obituary; menus/ (occupation, assets, activities, NavHost)
+    avatar/               # pixel/ (render.ts, bodygen.ts, color.ts, PixelCanvas, icon.ts), PixelAvatar, AvatarThumb, AvatarSheet, thumbnails
+    dev/                  # /dev/avatars (só no dev)
+    components/ text/     # painéis reaproveitados nos menus (Sheet, MenuSheet, MetaScreens, Toasts, FightScreen…), textos de UI
+  content/geo/ content/outfits/ content/sprites/   # Brasil (UFs/cidades/IBGE), roupas, grades de pixel art (corpos, regras de roupa, ícones)
+  engine/geo/ engine/character/appearance/          # sorteio de local; genes, herança, deriveAvatar, guarda-roupa
+  engine/economy/careers.ts content/jobs/basic/ content/events/jobs/   # carreiras, empregos básicos, eventos de trabalho
+scripts/sprites/          # gen-bodies.ts (gera body/generated.ts), png-to-grid.ts (importa PNG do Aseprite)
 public/icons/             # ícones originais do PWA (SVG + PNGs gerados)
 tests/                    # Vitest; fixtures/saves-v1.json = saves reais da Etapa 1 para testar migração
 ```
@@ -132,7 +154,7 @@ tests/                    # Vitest; fixtures/saves-v1.json = saves reais da Etap
   once?: true,                    // só uma vez por vida
   tags?: ['adult'],               // conteúdo adulto (ver regra acima)
   conditions: {
-    minAge?, maxAge?, sex?, stats?: { strength: { min: 25 } },
+    minAge?, maxAge?, sex?, stats?: { athletic: { min: 25 } },
     flagsAll?: [...], flagsNone?: [...],
     enrolled?: boolean, schoolStages?: ['pre'|'fund1'|'fund2'|'medio'], schoolType?: 'publica'|'particular',
     school?: { average?: {min,max}, discipline?: {...}, popularity?: {...} },
@@ -158,7 +180,7 @@ tests/                    # Vitest; fixtures/saves-v1.json = saves reais da Etap
   `schoolResult`). `'followUp'` nunca é sorteado e só acontece quando outra escolha o agenda.
 - **Efeitos** (`Effects`, `engine/core/effects.ts`): `stats`, `money`, `setFlags`, `clearFlags`,
   `school: { average, discipline, popularity, absences, suspend, expel, changeSchool: { type? }, joinClub, leaveClub }`
-  (ignorado fora da escola), `fighter: { skills, reputation, joinGym: 'local'|'best'|id, leaveGym, signWith: orgId,
+  (ignorado fora da escola), `fighter: { skills: { jiujitsu, trocacao, athletic, chin } (SkillDelta), reputation, joinGym: 'local'|'best'|id, leaveGym, signWith: orgId,
   injury: { name?, years } (legado: vira lesão do catálogo), suspendYears, vacateTitles, promoteBelt,
   offer: { kind: 'shortNotice'|'rival'|'titleDefense'|'bjjOpen'|'farewell' }, retire: motivo, unretire }`,
   `health: { injury: id|'random', heal, brainDamage, condition, controlCondition: id|'var', sequela, die: causa }`,
@@ -234,6 +256,32 @@ tests/                    # Vitest; fixtures/saves-v1.json = saves reais da Etap
   vida vão em `state.feats` via `bumpFeat`/`maxFeat`). Acrescente o caso em `tests/achievementsReachable.test.ts`.
 - **Evento de legado:** em `src/content/events/legacy/` com `conditions.legacy` (`generation: { min: 2 }`,
   `parentChampion`, `inheritedGym`) e os placeholders `{antecessor}`/`{seu_pai}`.
+
+## Interface (Etapa 8)
+- **Tela principal** (`screens/Life.tsx`): busto pixel (toque → Perfil/guarda-roupa), feed da vida por idade, energia,
+  5 barras, barra inferior Ocupação · Bens · **+ Idade** · Relações · Atividades. Menu ≡: Conquistas, Hall da Fama,
+  Saves, Configurações, Nova vida.
+- **Menus em camadas**: `useNav().open(id, params)` empilha uma tela; `NavHost.tsx` mapeia o id para título e corpo
+  (`MenuScreen` + `ListItem`). O Voltar do sistema (popstate) fecha um nível. Mapa completo no GDD §10.
+- **Sistema de design**: use os tokens `--ds-*` (`design/tokens.css`) e os componentes de `design/components.tsx`;
+  toque ≥ 44 px, contraste AA nos dois modos, animações com `prefers-reduced-motion`. Ícones: lucide-react.
+- **Ação desabilitada mostra o motivo** (`ListItem disabled reason=…`), vindo de uma `*BlockReason` da engine.
+- **Pop-ups**: `EventModal` (evento + miniatura do NPC) e `ResultModal` (texto + diff dos atributos visíveis, calculado
+  no store por `diffOf`). Ações viram toast.
+
+### Como adicionar (Etapa 8)
+- **Item de menu**: `ListItem` na tela-mãe (`screens/menus/*.tsx`) com `onClick={() => nav.open('id')}` e o caso
+  `'id'` em `NavHost.tsx`. Se precisar de regra, crie a função na engine e a ação no store.
+- **Emprego básico**: `JobDef` em `src/content/jobs/basic/index.ts` (`minAge`, `requires { studying, schoolStages,
+  acceptGraduated, cnh }`, `salaryMW: [início, teto]` em salários mínimos/mês, `formal`, `ladder` com títulos e
+  multiplicadores, `hireChance`, `yearlyEffects`, `energy`, `description`). Aparece sozinho em Carreiras.
+- **Categoria de carreira**: `CareerCategory` e `careerCategoryOf` em `engine/economy/careers.ts` + título em
+  `CAT_TITLE` (NavHost).
+- **Atividade**: `ActionDef` em `src/content/actions.ts` e o item no grupo certo de `menus/activities.tsx`.
+- **Imóvel/veículo/luxo**: `AssetDef` (`where?: 'litoral'|'interior'`, `size`, `noRent`, `teen`) + ícone em
+  `content/sprites/market/` (`ICON_FOR`). **Empreendimento**: `BusinessDef` (`open`, `forSale`, `saleNames`, `risk`).
+- **Roupa, cabelo, barba, expressão**: ver `ASSETS.md` (roupa = `OutfitDef` + regra em `sprites/clothes.ts`).
+- **Pista do treinador**: frases em `src/content/fightText/coach.ts`.
 
 ## Saúde, morte e legado (Etapa 6)
 - Lesões vivem em `GameState.health` (não em `fighter`). Só lesão grave (≥ 3) com mais de 6 meses veta luta
