@@ -27,6 +27,8 @@ export interface UfDef {
   cities: readonly CityDef[];
   /** Percentuais de cor ou raça (Censo 2022), somando 100. */
   corRaca: Readonly<Record<Race, number>>;
+  /** UF banhada pelo mar (casa de praia no Mercado; Etapa 8). */
+  litoral?: boolean;
 }
 
 export interface GeoContent {

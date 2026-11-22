@@ -6,6 +6,8 @@ import { appendLog } from '../core/stats';
 import { nextEcoId, post, toMoney } from './ledger';
 import type { MarketYear } from './market';
 import type { Business, BusinessDef } from './types';
+import { createRng, seedToState } from '../core/rng';
+import { cityDef } from '../geo';
 
 export const DEDICATE_COST = 2;
 export const OPEN_CASH_SHARE = 0.2;
@@ -45,12 +47,98 @@ export function openBusiness(state: GameState, defId: string, content: GameConte
   let id: string;
   [s, id] = nextEcoId(state, 'b');
   s = post(s, 'empresa', -def.startCost, `Abertura: ${def.name}`);
-  const name = def.combat ? `Academia ${s.character.name.split(' ').slice(-1)[0]} Team` : def.name;
+  const name = def.combat ? `Academia ${s.character.name.split(' ').slice(-1)[0]} Team` : def.open === 'franquia' ? `${def.name} (franquia)` : def.name;
   const b: Business = { id, defId, name, level: 1, cash: toMoney(def.startCost * OPEN_CASH_SHARE), reputation: 40, manager: false, dedicatedYear: -1, years: 0, lastProfit: 0, profits: [] };
   s = { ...s, economy: { ...s.economy, businesses: [...s.economy.businesses, b] } };
   if (def.combat) s = { ...s, flags: { ...s.flags, academia_propria: true } };
   s = { ...s, feats: { ...s.feats, businessesOpened: (s.feats?.businessesOpened ?? 0) + 1 } };
   return appendLog(s, `Você abriu ${def.combat ? 'a sua própria academia' : 'um negócio'}: ${name}.`);
+}
+
+// ---------------------------------------------------------------------------
+// Mercado de empreendimentos (Etapa 8)
+// ---------------------------------------------------------------------------
+
+export type BusinessState = 'reforma' | 'regular' | 'fiel';
+
+export interface BusinessOffer {
+  id: string;
+  defId: string;
+  name: string;
+  /** Preço pedido (R$), com o custo de vida do lugar. */
+  price: number;
+  level: number;
+  /** Clientela/estado: precisa de reforma, regular, clientela fiel. */
+  status: BusinessState;
+  reputation: number;
+  cash: number;
+  /** Faturamento e lucro anuais estimados (ano normal, com gerente). */
+  revenue: number;
+  profit: number;
+  risk: 'baixo' | 'medio' | 'alto';
+  city: string;
+  uf: string;
+}
+
+/** Faturamento esperado (ano normal, dono com gerente). */
+export function expectedRevenue(def: BusinessDef, level: number, reputation: number): number {
+  return toMoney(def.revenue * level * (0.7 + reputation / 200));
+}
+
+/** Negócios existentes à venda na cidade (determinísticos por seed + ano + lugar). */
+export function businessOffers(state: GameState, content: GameContent, at?: { uf: string; city: string }): BusinessOffer[] {
+  const place = at ?? { uf: state.character.uf, city: state.character.city };
+  const rng = createRng(seedToState(`${state.seed}:negocios:${state.year}:${place.uf}/${place.city}`));
+  const mult = cityDef(content.geo, place.uf, place.city)?.custo ?? 1;
+  const out: BusinessOffer[] = [];
+  for (const def of content.economy.businesses) {
+    if (!def.forSale || !rng.chance(0.8)) continue;
+    const roll = rng.next();
+    const status: BusinessState = roll < 0.3 ? 'reforma' : roll < 0.75 ? 'regular' : 'fiel';
+    const reputation = status === 'reforma' ? rng.int(20, 35) : status === 'regular' ? rng.int(40, 55) : rng.int(65, 80);
+    const level = status === 'fiel' && rng.chance(0.4) ? 2 : 1;
+    const revenue = expectedRevenue(def, level, reputation);
+    const profit = toMoney(revenue - def.cost * level - def.managerCost);
+    const factor = status === 'reforma' ? 0.7 : status === 'regular' ? 1 : 1.35;
+    const price = toMoney((def.startCost * level * factor * mult * (0.9 + rng.next() * 0.25)) / 1000) * 1000;
+    const name = def.saleNames?.length ? rng.pick(def.saleNames) : def.name;
+    const id = `${state.year}-${place.uf}-${def.id}`;
+    if (state.economy.boughtOffers.includes(id)) continue;
+    out.push({ id, defId: def.id, name, price, level, status, reputation, cash: toMoney(def.startCost * 0.05), revenue, profit, risk: def.risk ?? 'medio', city: place.city, uf: place.uf });
+  }
+  return out;
+}
+
+export function buyBusinessBlockReason(state: GameState, offer: BusinessOffer | undefined): BusinessBlockReason | null {
+  if (!offer) return 'already';
+  if (!state.alive) return 'dead';
+  if (state.pendingEvents.length || state.activeFight) return 'busy';
+  if (state.character.age < 18) return 'too-young';
+  if (state.money < offer.price) return 'no-money';
+  return null;
+}
+
+/** Compra um negócio que já existe: herda nível, clientela e um pouco de caixa. */
+export function buyBusiness(state: GameState, offerId: string, content: GameContent, at?: { uf: string; city: string }): GameState {
+  const offer = businessOffers(state, content, at).find((o) => o.id === offerId);
+  const def = offer ? businessDef(content, offer.defId) : undefined;
+  if (!offer || !def || buyBusinessBlockReason(state, offer) !== null) return state;
+  let s: GameState;
+  let id: string;
+  [s, id] = nextEcoId(state, 'b');
+  s = post(s, 'empresa', -offer.price, `Compra: ${offer.name}`);
+  const b: Business = { id, defId: def.id, name: offer.name, level: offer.level, cash: offer.cash, reputation: offer.reputation, manager: false, dedicatedYear: -1, years: 0, lastProfit: 0, profits: [] };
+  s = { ...s, economy: { ...s.economy, businesses: [...s.economy.businesses, b], boughtOffers: [...s.economy.boughtOffers, offer.id] } };
+  if (def.combat) s = { ...s, flags: { ...s.flags, academia_propria: true } };
+  s = { ...s, feats: { ...s.feats, businessesOpened: (s.feats?.businessesOpened ?? 0) + 1 } };
+  return appendLog(s, `Você comprou ${offer.name} em ${offer.city} por R$ ${offer.price.toLocaleString('pt-BR')}.`);
+}
+
+/** Renomear o negócio (só o nome muda). */
+export function renameBusiness(state: GameState, id: string, name: string): GameState {
+  const n = name.trim().slice(0, 40);
+  if (!n || !state.economy.businesses.some((b) => b.id === id)) return state;
+  return update(state, id, (b) => ({ ...b, name: n }));
 }
 
 function update(state: GameState, id: string, fn: (b: Business) => Business): GameState {

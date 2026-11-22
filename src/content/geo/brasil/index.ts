@@ -6,6 +6,9 @@ import { UF_DATA } from './data.generated';
  * Exceção: o DF tem um único município (Brasília); para o sorteio de cidade usamos Brasília e 5 regiões
  * administrativas com PESOS IGUAIS — escolha do jogo, porque o Censo 2022 não publica população por RA.
  */
+/** As 17 UFs com litoral (geografia, não dado estatístico). */
+const LITORAL = new Set(['AP', 'PA', 'MA', 'PI', 'CE', 'RN', 'PB', 'PE', 'AL', 'SE', 'BA', 'ES', 'RJ', 'SP', 'PR', 'SC', 'RS']);
+
 const DF_LOCALITIES = ['Brasília', 'Ceilândia', 'Taguatinga', 'Samambaia', 'Gama', 'Planaltina'];
 
 export const BRASIL_UFS: readonly UfDef[] = UF_DATA.map((u) => {
@@ -21,6 +24,7 @@ export const BRASIL_UFS: readonly UfDef[] = UF_DATA.map((u) => {
     capital: u.capital,
     cities,
     corRaca: { ...u.corRaca },
+    litoral: LITORAL.has(u.sigla),
   };
 });
 

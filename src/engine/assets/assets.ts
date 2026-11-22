@@ -1,4 +1,4 @@
-import { cityMultOf } from '../geo';
+import { cityDef, cityMultOf, ufDef } from '../geo';
 /**
  * Bens: imóveis, veículos e luxo. O mercado do ano é calculado pelo seed (não ocupa o save).
  * Taxas de compra/venda garantem que comprar e vender no mesmo ano sempre dá prejuízo.
@@ -31,25 +31,73 @@ export interface Offer {
   kind: AssetKind;
   name: string;
   price: number;
+  /** Detalhes da vitrine (Etapa 8). */
+  neighborhood?: string;
+  size?: number;
+  condition?: 'nova' | 'boa' | 'reformar';
+  /** Aluguel anual estimado (imóveis). */
+  rent?: number;
+  /** Tendência do bairro (±% ao ano). */
+  trend?: number;
+  city?: string;
+  uf?: string;
 }
+
+/** Lugar das ofertas (padrão: cidade atual). */
+export interface MarketPlace {
+  uf: string;
+  city: string;
+}
+
+/** Valor máximo de item de luxo que menor de idade compra com o próprio dinheiro. */
+export const TEEN_MAX_PRICE = 5000;
+/** Reforma: custo sobre o valor e quanto valoriza. */
+export const RENOVATION_COST = 0.08;
+export const RENOVATION_GAIN = 0.12;
+/** Desconto de quem compra para reformar; aluguel menor enquanto não reforma. */
+export const NEEDS_RENOVATION_DISCOUNT = 0.15;
+export const NEEDS_RENOVATION_RENT = 0.7;
 
 export function cityMultiplier(state: GameState, content: GameContent): number {
   return cityMultOf(state, content);
 }
 
-/** Ofertas do ano (determinísticas por seed + ano + cidade). */
-export function marketOffers(state: GameState, content: GameContent): Offer[] {
-  const rng = createRng(seedToState(`${state.seed}:market:${state.year}:${state.character.city}`));
-  const city = cityMultiplier(state, content);
+/** O tipo de bem existe neste lugar? (casa de praia só no litoral; sítio fora da capital) */
+export function availableAt(def: AssetDef, content: GameContent, place: MarketPlace): boolean {
+  const uf = ufDef(content.geo, place.uf);
+  if (def.where === 'litoral') return !!uf?.litoral;
+  if (def.where === 'interior') return !!uf && uf.capital !== place.city;
+  return true;
+}
+
+/** Ofertas do ano (determinísticas por seed + ano + cidade), com o preço ajustado ao custo de vida do lugar. */
+export function marketOffers(state: GameState, content: GameContent, at?: MarketPlace): Offer[] {
+  const place = at ?? { uf: state.character.uf, city: state.character.city };
+  const here = place.uf === state.character.uf && place.city === state.character.city;
+  const rng = createRng(seedToState(`${state.seed}:market:${state.year}:${here ? state.character.city : `${place.uf}/${place.city}`}`));
+  const city = cityDef(content.geo, place.uf, place.city)?.custo ?? 1;
   const out: Offer[] = [];
   for (const def of content.economy.assets) {
+    if (!availableAt(def, content, place)) continue;
     const n = def.kind === 'imovel' ? 2 : 1;
     for (let i = 0; i < n; i++) {
       const [lo, hi] = def.price;
       const base = lo + rng.next() * (hi - lo);
-      const price = toMoney((def.kind === 'imovel' ? base * city : base) / 100) * 100;
-      const variant = def.variants?.length ? ` ${rng.pick(def.variants)}` : '';
-      out.push({ id: `${state.year}-${def.id}-${i}`, defId: def.id, kind: def.kind, name: `${def.name}${variant}`, price });
+      const variant = def.variants?.length ? rng.pick(def.variants) : '';
+      const offer: Offer = { id: `${state.year}-${here ? '' : `${place.uf}-`}${def.id}-${i}`, defId: def.id, kind: def.kind, name: variant ? `${def.name} ${variant}` : def.name, price: 0, city: place.city, uf: place.uf };
+      let price = def.kind === 'imovel' ? base * city : base;
+      if (def.kind === 'imovel') {
+        const roll = rng.next();
+        offer.condition = roll < 0.2 ? 'nova' : roll < 0.75 ? 'boa' : 'reformar';
+        if (offer.condition === 'reformar') price *= 1 - NEEDS_RENOVATION_DISCOUNT;
+        if (offer.condition === 'nova') price *= 1.06;
+        if (variant) offer.neighborhood = variant;
+        if (def.size) offer.size = Math.round(def.size[0] + rng.next() * (def.size[1] - def.size[0]));
+        offer.trend = Math.round((rng.next() - 0.45) * 0.03 * 1000) / 1000;
+      }
+      offer.price = toMoney(price / 100) * 100;
+      if (def.kind === 'imovel' && !def.noRent) offer.rent = toMoney(offer.price * RENT_YIELD * (offer.condition === 'reformar' ? NEEDS_RENOVATION_RENT : 1));
+      out.push(offer);
     }
   }
   return out.filter((o) => !state.economy.boughtOffers.includes(o.id));
@@ -93,24 +141,27 @@ export function financingQuote(offer: Offer, years: number, downShare = MIN_DOWN
   return { downPayment: down, loan, years: y, rate: t.rate, installment, totalCost: total };
 }
 
-export type BuyBlockReason = 'dead' | 'busy' | 'too-young' | 'no-money' | 'income' | 'not-found';
+export type BuyBlockReason = 'dead' | 'busy' | 'too-young' | 'no-money' | 'income' | 'credit' | 'not-found';
 
 export function buyBlockReason(state: GameState, offer: Offer | undefined, financed: boolean, years = 20): BuyBlockReason | null {
   if (!offer) return 'not-found';
   if (!state.alive) return 'dead';
   if (state.pendingEvents.length || state.activeFight) return 'busy';
-  if (state.character.age < 18) return 'too-young';
+  // menor de idade: só luxo barato, à vista, com o próprio dinheiro
+  if (state.character.age < 18 && (financed || offer.kind !== 'luxo' || offer.price > TEEN_MAX_PRICE)) return 'too-young';
   if (!financed) return state.money >= buyCost(offer) ? null : 'no-money';
   const q = financingQuote(offer, years);
   if (!q) return 'not-found';
+  // crédito negado com dívida em atraso ou falência recente
+  if (state.economy.debt > 0 || state.flags.falencia) return 'credit';
   if (state.money < q.downPayment) return 'no-money';
   if (q.installment > state.economy.lastIncome * MAX_INSTALLMENT_SHARE) return 'income';
   return null;
 }
 
 /** Compra à vista ou financiada. */
-export function buyAsset(state: GameState, offerId: string, content: GameContent, opts: { financed?: boolean; years?: number } = {}): GameState {
-  const offer = marketOffers(state, content).find((o) => o.id === offerId);
+export function buyAsset(state: GameState, offerId: string, content: GameContent, opts: { financed?: boolean; years?: number; place?: MarketPlace } = {}): GameState {
+  const offer = marketOffers(state, content, opts.place).find((o) => o.id === offerId);
   const financed = !!opts.financed && offer?.kind !== 'luxo';
   const years = opts.years ?? (offer?.kind === 'imovel' ? 20 : 5);
   if (!offer || buyBlockReason(state, offer, financed, years) !== null) return state;
@@ -129,11 +180,24 @@ export function buyAsset(state: GameState, offerId: string, content: GameContent
   } else {
     s = post(s, 'compras', -cost, `Compra: ${offer.name}`);
   }
-  const asset: Asset = { id, kind: offer.kind, catalogId: offer.defId, name: offer.name, value: offer.price, paid: cost, boughtYear: s.year, ...(loanId ? { loanId } : {}) };
+  const asset: Asset = {
+    id,
+    kind: offer.kind,
+    catalogId: offer.defId,
+    name: offer.name,
+    value: offer.price,
+    paid: cost,
+    boughtYear: s.year,
+    ...(loanId ? { loanId } : {}),
+    ...(offer.condition ? { condition: offer.condition } : {}),
+    ...(offer.trend !== undefined ? { trend: offer.trend } : {}),
+    ...(offer.city ? { city: offer.city, uf: offer.uf } : {}),
+  };
   s = { ...s, economy: { ...s.economy, assets: [...s.economy.assets, asset], boughtOffers: [...s.economy.boughtOffers, offer.id] } };
   const article = assetDef(content, offer.defId)?.article ?? 'um';
   const name = /^.[a-zà-ú]/.test(offer.name) ? offer.name[0]!.toLowerCase() + offer.name.slice(1) : offer.name;
-  return appendLog(s, `Você comprou ${article} ${name} por R$ ${offer.price.toLocaleString('pt-BR')}${financed ? ' (financiado)' : ''}.`);
+  const where = offer.city ? ` em ${offer.city}` : '';
+  return appendLog(s, `Você comprou ${article} ${name}${where} por R$ ${offer.price.toLocaleString('pt-BR')}${financed ? ' (financiado)' : ''}.`);
 }
 
 /** Venda: recebe o valor menos a taxa e quita o financiamento vinculado. */
@@ -165,9 +229,10 @@ export function setHome(state: GameState, assetId: string): GameState {
   return s;
 }
 
-export function setRented(state: GameState, assetId: string, rented: boolean): GameState {
+export function setRented(state: GameState, assetId: string, rented: boolean, content?: GameContent): GameState {
   const asset = state.economy.assets.find((a) => a.id === assetId);
   if (!asset || asset.kind !== 'imovel' || (rented && asset.home)) return state;
+  if (rented && content && assetDef(content, asset.catalogId)?.noRent) return state;
   return updateAsset(state, assetId, (a) => ({ ...a, rented }));
 }
 
@@ -175,6 +240,31 @@ export function setInsured(state: GameState, assetId: string, insured: boolean):
   const asset = state.economy.assets.find((a) => a.id === assetId);
   if (!asset || asset.kind !== 'veiculo') return state;
   return updateAsset(state, assetId, (a) => ({ ...a, insured }));
+}
+
+export type RenovateBlockReason = 'not-found' | 'busy' | 'already' | 'no-money';
+
+export function renovationCost(asset: Asset): number {
+  return toMoney(asset.value * RENOVATION_COST);
+}
+
+export function renovateBlockReason(state: GameState, assetId: string): RenovateBlockReason | null {
+  const a = state.economy.assets.find((x) => x.id === assetId);
+  if (!a || a.kind !== 'imovel') return 'not-found';
+  if (state.pendingEvents.length || state.activeFight) return 'busy';
+  if (a.renovatedYear === state.year) return 'already';
+  if (state.money < renovationCost(a)) return 'no-money';
+  return null;
+}
+
+/** Reformar: custo de 8% do valor, valoriza 12% e o imóvel fica "bom" (aluguel cheio). Uma vez por ano. */
+export function renovateAsset(state: GameState, assetId: string): GameState {
+  if (renovateBlockReason(state, assetId) !== null) return state;
+  const a = state.economy.assets.find((x) => x.id === assetId)!;
+  const cost = renovationCost(a);
+  let s = post(state, 'manutencao', -cost, `Reforma: ${a.name}`);
+  s = updateAsset(s, assetId, (x) => ({ ...x, value: toMoney(x.value * (1 + RENOVATION_GAIN)), condition: x.condition === 'reformar' ? 'boa' : 'nova', renovatedYear: s.year }));
+  return appendLog(s, `Você reformou ${a.name} (R$ ${cost.toLocaleString('pt-BR')}).`);
 }
 
 export function assetDef(content: GameContent, id: string): AssetDef | undefined {
@@ -190,7 +280,7 @@ export function assetsYear(state: GameState, rng: Rng, content: GameContent, mar
     const def = assetDef(content, a.catalogId);
     if (a.rented) {
       if (rng.chance(0.15)) s = appendLog(s, `${a.name} ficou sem inquilino este ano.`);
-      else s = post(s, 'aluguel_recebido', a.value * RENT_YIELD, `Aluguel: ${a.name}`);
+      else s = post(s, 'aluguel_recebido', a.value * RENT_YIELD * (a.condition === 'reformar' ? NEEDS_RENOVATION_RENT : 1), `Aluguel: ${a.name}`);
     }
     const maint = toMoney(a.value * MAINTENANCE[a.kind]);
     if (maint) s = post(s, 'manutencao', -maint, `Manutenção: ${a.name}`);
@@ -204,7 +294,7 @@ export function assetsYear(state: GameState, rng: Rng, content: GameContent, mar
     economy: {
       ...s.economy,
       assets: s.economy.assets.map((a) => {
-        const growth = a.kind === 'imovel' ? market.propertyGrowth + (rng.next() - 0.5) * 0.04 : -DEPRECIATION[a.kind];
+        const growth = a.kind === 'imovel' ? market.propertyGrowth + (a.trend ?? 0) + (rng.next() - 0.5) * 0.04 : -DEPRECIATION[a.kind];
         return { ...a, value: Math.max(0, toMoney(a.value * (1 + growth))) };
       }),
     },

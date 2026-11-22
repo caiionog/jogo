@@ -127,6 +127,15 @@ export interface Asset {
   rented?: boolean;
   insured?: boolean;
   loanId?: string;
+  /** Estado de conservação (Etapa 8): imóvel a reformar rende menos aluguel. */
+  condition?: 'nova' | 'boa' | 'reformar';
+  /** Tendência do bairro (±% ao ano somado à valorização do mercado). */
+  trend?: number;
+  /** Ano da última reforma (uma por ano). */
+  renovatedYear?: number;
+  /** Cidade/UF do imóvel (pode ser comprado em outra cidade). */
+  city?: string;
+  uf?: string;
 }
 
 export interface EconomyState {
@@ -213,6 +222,14 @@ export interface AssetDef {
   article?: string;
   /** Bairros/variações para dar nome às ofertas. */
   variants?: readonly string[];
+  /** Onde existe (Etapa 8): casa de praia só em UF litorânea; sítio/fazenda fora da capital. */
+  where?: 'litoral' | 'interior';
+  /** Tamanho em m² (imóveis) para os cartões do Mercado. */
+  size?: [number, number];
+  /** Imóvel que não pode ser alugado (terreno). */
+  noRent?: boolean;
+  /** Item que menor de idade pode comprar com o próprio dinheiro (luxo barato). */
+  teen?: boolean;
 }
 
 export interface BusinessDef {
@@ -224,6 +241,14 @@ export interface BusinessDef {
   managerCost: number;
   /** Academia própria: liga à carreira de luta. */
   combat?: boolean;
+  /** Como aparece no Mercado (Etapa 8): abrir do zero, franquia (marca fictícia) e/ou comprar um existente. */
+  open?: 'zero' | 'franquia';
+  /** Negócios existentes à venda no Mercado. */
+  forSale?: boolean;
+  /** Nomes fictícios de negócios existentes à venda. */
+  saleNames?: readonly string[];
+  /** Risco em palavras (variação do faturamento). */
+  risk?: 'baixo' | 'medio' | 'alto';
 }
 
 export interface SponsorDef {

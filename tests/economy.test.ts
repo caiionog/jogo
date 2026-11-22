@@ -212,7 +212,7 @@ describe('dívida', () => {
 
   it('dívida longa leva à falência pessoal com perda de bens', () => {
     let s = adult(30, 2_000_000);
-    const offer = marketOffers(s, C).find((o) => o.kind === 'veiculo')!;
+    const offer = marketOffers(s, C).find((o) => o.defId === 'carro_popular')!;
     s = buyAsset(s, offer.id, C);
     s = { ...s, money: 0, economy: { ...s.economy, ledger: { ...s.economy.ledger, opening: 0, entries: [] }, debt: 200000, debtYears: 3, lastIncome: 0 } };
     const r = closeEconomicYear(s, createRng(3), C);

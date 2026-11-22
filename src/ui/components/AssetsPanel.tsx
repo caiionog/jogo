@@ -28,6 +28,7 @@ const BLOCK: Record<BuyBlockReason, string> = {
   busy: 'Resolva o evento',
   'too-young': 'Só a partir dos 18',
   'no-money': 'Dinheiro insuficiente',
+  credit: 'Crédito negado (dívida ou falência)',
   income: `Parcela acima de ${Math.round(MAX_INSTALLMENT_SHARE * 100)}% da sua renda`,
   'not-found': '—',
 };
