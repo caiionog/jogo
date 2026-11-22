@@ -1,2 +1,15 @@
-// Etapa 5: emprego, salário, bolsas de luta, patrocínios e empresas. Ainda não implementado.
-export {};
+// Etapa 5: economia.
+export * from './types';
+export * from './ledger';
+export * from './market';
+export * from './bank';
+export * from './taxes';
+export * from './jobs';
+export * from './business';
+export * from './fightIncome';
+export * from './living';
+export * from './family';
+export * from './worth';
+export * from './close';
+export * from './effects';
+export * from './actions';

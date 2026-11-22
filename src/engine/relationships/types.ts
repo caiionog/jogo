@@ -37,6 +37,8 @@ export interface Person {
   job?: string;
   /** Referência a um lutador NPC do elenco (Etapa 3), sem duplicar habilidades. */
   npcId?: string;
+  /** Patrimônio (inteiro, R$) — pais, para herança e "pedir dinheiro" (Etapa 5). */
+  wealth?: number;
   flags: Record<string, FlagValue>;
 }
 

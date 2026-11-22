@@ -13,10 +13,12 @@ import { DIVISIONS } from './organizations/divisions';
 import { FIGHTING_EVENTS } from './events/fighting';
 import { RELATIONSHIP_EVENTS } from './events/relationships';
 import { RELATIONSHIPS_CONTENT } from './relationships';
+import { ECONOMY_CONTENT } from './economy';
+import { ECONOMY_EVENTS } from './events/economy';
 
 export const GAME_CONTENT: GameContent = {
   actions: ACTIONS,
-  events: [...CHILDHOOD_EVENTS, ...SCHOOL_EVENTS, ...FIGHTING_EVENTS, ...RELATIONSHIP_EVENTS],
+  events: [...CHILDHOOD_EVENTS, ...SCHOOL_EVENTS, ...FIGHTING_EVENTS, ...RELATIONSHIP_EVENTS, ...ECONOMY_EVENTS],
   locations: LOCATIONS,
   clubs: CLUBS,
   names: NAMES,
@@ -30,7 +32,8 @@ export const GAME_CONTENT: GameContent = {
     hooks: { weightMissEventId: 'fight_weight_miss' },
   },
   relationships: RELATIONSHIPS_CONTENT,
+  economy: ECONOMY_CONTENT,
 };
 
-export { RELATIONSHIP_EVENTS, RELATIONSHIPS_CONTENT };
+export { RELATIONSHIP_EVENTS, RELATIONSHIPS_CONTENT, ECONOMY_CONTENT, ECONOMY_EVENTS };
 export { ACTIONS, CHILDHOOD_EVENTS, CLUBS, DIVISIONS, FIGHT_TEXT, FIGHTING_EVENTS, GYMS, LOCATIONS, NAMES, ORGANIZATIONS, SCHOOL_EVENTS };

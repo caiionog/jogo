@@ -17,6 +17,9 @@ import {
   survivalByAge,
   updatePerson,
   relationsOf,
+  emptyEconomy,
+  parentWealth,
+  netWorth,
 } from '../engine';
 import { NAMES } from '../content/names';
 import { GYMS } from '../content/gyms';
@@ -34,6 +37,7 @@ export const migrations: Record<number, (save: AnySave) => AnySave> = {
   1: migrateV1toV2,
   2: migrateV2toV3,
   3: migrateV3toV4,
+  4: migrateV4toV5,
 };
 
 export class SaveMigrationError extends Error {}
@@ -199,4 +203,35 @@ function migrateV3toV4(save: AnySave): AnySave {
   const gym = GYMS.find((x) => x.id === s.fighter.gymId);
   if (gym) g = setCoach(g, rng, GAME_CONTENT, gym.id);
   return { ...(g as unknown as AnySave), rngState: s.rngState, version: 4 };
+}
+
+// ---------------------------------------------------------------------------
+// v4 → v5 (Etapa 5: economia e bens)
+// ---------------------------------------------------------------------------
+
+/**
+ * Dinheiro vira inteiro; cria o extrato vazio (opening = dinheiro), moradia coerente com a idade, padrão simples,
+ * patrimônio dos pais pela renda da família e comunhão parcial para quem já é casado.
+ */
+function migrateV4toV5(save: AnySave): AnySave {
+  const s0 = save as unknown as GameState;
+  const rng = createRng(seedToState(`${s0.seed}:v5`));
+  const money = Math.round(s0.money);
+  const age = s0.character.age;
+  let g: GameState = {
+    ...s0,
+    money,
+    energy: { ...s0.energy, reserved: 0 },
+    economy: { ...emptyEconomy(money, s0.year), housing: age >= 25 ? 'aluguel' : 'pais' },
+  };
+  for (const { person } of relationsOf(g, ['pai', 'mae'], false)) {
+    const wealth = person.alive ? parentWealth(rng, g.character.familyWealth) : 0;
+    g = updatePerson(g, person.id, (p) => ({ ...p, wealth }));
+  }
+  if (relationsOf(g, ['pai', 'mae']).length === 0 && g.economy.housing === 'pais' && age >= 18) {
+    g = { ...g, economy: { ...g.economy, housing: 'aluguel' } };
+  }
+  const spouse = g.relationships.relations.find((r) => r.romance?.stage === 'casados');
+  if (spouse) g = { ...g, economy: { ...g.economy, marriage: { personId: spouse.personId, regime: 'parcial', netWorthAtMarriage: Math.round(netWorth(g) / 2) } } };
+  return { ...(g as unknown as AnySave), version: 5 };
 }

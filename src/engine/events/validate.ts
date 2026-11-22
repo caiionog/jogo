@@ -130,6 +130,45 @@ export function validateContent(content: GameContent): string[] {
   if (traitIds.size !== content.relationships.traits.length) errors.push('ids de traço duplicados');
   for (const t of content.relationships.traits) for (const x of [...(t.likes ?? []), ...(t.dislikes ?? [])]) if (!traitIds.has(x)) errors.push(`traço ${t.id}: referência inexistente "${x}"`);
   for (const h of Object.values(content.relationships.hooks)) if (h && !allEventIds.has(h)) errors.push(`hook: evento inexistente "${h}"`);
+  // economia
+  const ec = content.economy;
+  const uniq = (label: string, ids: string[]) => {
+    if (new Set(ids).size !== ids.length) errors.push(`ids duplicados em ${label}`);
+  };
+  uniq('empregos', ec.jobs.map((j) => j.id));
+  uniq('bens', ec.assets.map((a) => a.id));
+  uniq('empresas', ec.businesses.map((b) => b.id));
+  uniq('patrocinadores', ec.sponsors.map((x) => x.id));
+  for (const j of ec.jobs) {
+    if (j.salary[0] > j.salary[1] || j.salary.some((v) => !Number.isInteger(v))) errors.push(`emprego ${j.id}: salário inválido`);
+    if (j.energy < 0 || j.energy > 5) errors.push(`emprego ${j.id}: energia inválida`);
+  }
+  for (const a of ec.assets) if (a.price[0] > a.price[1] || a.price[0] <= 0) errors.push(`bem ${a.id}: preço inválido`);
+  for (const b of ec.businesses) if (!Number.isInteger(b.startCost) || b.revenue <= 0 || b.cost <= 0) errors.push(`empresa ${b.id}: valores inválidos`);
+  for (const x of ec.sponsors) if (x.amount <= 0 || x.years <= 0 || x.maxLossStreak < 1) errors.push(`patrocinador ${x.id}: valores inválidos`);
+  let last = 0;
+  ec.taxBrackets.forEach((b, i) => {
+    if (b.rate < 0 || b.rate > 1) errors.push('faixa de imposto com alíquota inválida');
+    if (b.upTo === null && i !== ec.taxBrackets.length - 1) errors.push('faixa sem teto precisa ser a última');
+    if (b.upTo !== null && b.upTo <= last) errors.push('faixas de imposto fora de ordem');
+    if (b.upTo !== null) last = b.upTo;
+  });
+  for (const city of Object.keys(ec.cityCost)) if (!content.locations.some((l) => l.cities.includes(city))) errors.push(`custo de cidade inexistente: ${city}`);
+  for (const h of Object.values(ec.hooks)) if (h && !allEventIds.has(h)) errors.push(`hook: evento inexistente "${h}"`);
+  const jobIds = new Set(ec.jobs.map((j) => j.id));
+  const bizIds = new Set(ec.businesses.map((b) => b.id));
+  for (const e of content.events) {
+    for (const j of e.conditions.economy?.jobs ?? []) if (!jobIds.has(j)) errors.push(`${e.id}: emprego inexistente "${j}"`);
+    for (const b of e.conditions.economy?.businessDefs ?? []) if (!bizIds.has(b)) errors.push(`${e.id}: empresa inexistente "${b}"`);
+    for (const ch of e.choices) for (const fx of [ch.effects, ch.risk?.effects]) {
+      const eco = fx?.economy;
+      if (eco?.jobOffer && !jobIds.has(eco.jobOffer)) errors.push(`${e.id}: jobOffer inexistente "${eco.jobOffer}"`);
+      if (eco?.sellBusinessOffer?.defId && !bizIds.has(eco.sellBusinessOffer.defId)) errors.push(`${e.id}: empresa inexistente`);
+      if (fx?.money !== undefined && !Number.isInteger(fx.money)) errors.push(`${e.id}: dinheiro precisa ser inteiro`);
+      if (eco?.post && !Number.isInteger(eco.post.amount)) errors.push(`${e.id}: lançamento precisa ser inteiro`);
+    }
+  }
+
   // efeitos com chance de gravidez/IST só em eventos 18+
   for (const e of content.events) {
     const fxs = e.choices.flatMap((ch) => [ch.effects, ch.risk?.effects]);

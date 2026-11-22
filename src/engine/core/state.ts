@@ -1,5 +1,6 @@
 import type { ActiveFight, FighterProfile, World } from '../fighting/types';
 import type { RelationshipsState } from '../relationships/types';
+import type { EconomyState } from '../economy/types';
 
 /** Tipos do estado do jogo. Tudo aqui deve ser JSON puro (sem classes, Date, Map, funções). */
 
@@ -38,6 +39,8 @@ export interface Character {
 export interface Energy {
   current: number;
   max: number;
+  /** Energia do ano já comprometida com o emprego (Etapa 5). */
+  reserved?: number;
 }
 
 export type FlagValue = boolean | number | string;
@@ -145,9 +148,11 @@ export interface GameState {
   activeFight: ActiveFight | null;
   /** Família, amigos, amores, filhos, treinador e rivais (Etapa 4). */
   relationships: RelationshipsState;
+  /** Dinheiro, extrato, emprego, bens, empresas, banco (Etapa 5). */
+  economy: EconomyState;
   /** Histórico ano a ano. O último item é o ano atual. */
   log: LogYear[];
   alive: boolean;
 }
 
-export const STATE_VERSION = 4;
+export const STATE_VERSION = 5;

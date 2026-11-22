@@ -1,2 +1,2 @@
-// Etapa 5: imóveis, veículos e outros bens. Ainda não implementado.
-export {};
+// Etapa 5: bens (imóveis, veículos, luxo).
+export * from './assets';

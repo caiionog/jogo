@@ -8,6 +8,7 @@ import { removeFromRanking } from './ranking';
 import type { DivisionDef, OrgDef, Tier } from './types';
 import { TIER_ORDER } from './types';
 import { ensureRoster, rosterKey } from './world';
+import { startContract } from '../economy/fightIncome';
 
 export const tierIndex = (t: Tier) => TIER_ORDER.indexOf(t);
 
@@ -74,6 +75,8 @@ export function signWith(state: GameState, orgId: string, content: GameContent):
     },
   };
   next = ensureRoster(next, orgId, playerDivision(next, content).id, content);
+  // contrato de 4 lutas com bolsa base garantida
+  next = startContract(next, orgId, org.purse.base * (1 + next.fighter.reputation / 100));
   return appendLog(next, `Você assinou contrato com a ${org.name}!`);
 }
 

@@ -8,6 +8,8 @@ import { adultContentAllowed, canDate, canMarry } from './guards';
 import { breakUp, canConceive, divorce, ADOPTION_COST, startPregnancy } from './romance';
 import { changeAffection, firstName, getPerson, getRelation, relLabel, updatePerson, updateRelation, withHistory } from './people';
 import type { InteractionKind, Person, Relation } from './types';
+import { post } from '../economy/ledger';
+import { moneyFromParent } from '../economy/family';
 
 export const INTERACTION_COST: Record<InteractionKind, number> = {
   spend_time: 1,
@@ -176,7 +178,7 @@ function runInteraction(state: GameState, person: Person, rel: Relation, kind: I
       return appendLog(s, hasTrait(person, 'explosivo') ? `A discussão com ${n} virou briga feia.` : `Você discutiu com ${n}.`);
     }
     case 'gift': {
-      s = { ...s, money: s.money - GIFT_COST };
+      s = post(s, 'compras', -GIFT_COST, `Presente para ${n}`);
       s = changeAffection(s, person.id, gain(rng, 4, 9, m), 'Ganhou um presente.');
       return appendLog(s, `Você deu um presente para ${n}.`);
     }
@@ -184,9 +186,9 @@ function runInteraction(state: GameState, person: Person, rel: Relation, kind: I
       s = updatePerson(s, person.id, (p) => ({ ...p, flags: { ...p.flags, pediu_dinheiro: s.year } }));
       const chance = 0.2 + (s.character.familyWealth / 100) * 0.4 + rel.affection / 300;
       if (rng.chance(chance)) {
-        const amount = Math.round((100 + s.character.familyWealth * 40) / 50) * 50;
-        s = { ...s, money: s.money + amount };
-        return appendLog(s, `${n} te deu R$ ${amount.toLocaleString('pt-BR')}.`);
+        // sai do patrimônio real dos pais (Etapa 5)
+        const res = moneyFromParent(s, person.id, rng);
+        if (res.amount > 0) return appendLog(res.state, `${n} te deu R$ ${res.amount.toLocaleString('pt-BR')}.`);
       }
       s = changeAffection(s, person.id, -4);
       return appendLog(s, `${n} disse que não dá para ajudar com dinheiro agora.`);
@@ -245,7 +247,7 @@ function runInteraction(state: GameState, person: Person, rel: Relation, kind: I
       return appendLog(s, `Você e ${n} estão tentando ter um filho. Ainda não foi desta vez.`);
     }
     case 'adopt': {
-      s = { ...s, money: s.money - ADOPTION_COST };
+      s = post(s, 'compras', -ADOPTION_COST, 'Processo de adoção');
       return startPregnancy(s, person.id, content, true);
     }
   }

@@ -4,6 +4,7 @@ import type { Rng } from '../core/rng';
 import type { FlagValue, GameState, Sex } from '../core/state';
 import { addStats, appendLog } from '../core/stats';
 import { addRelation, createPerson, firstName, lastName, relationsOf, updatePerson } from './people';
+import { inheritFrom, parentWealth } from '../economy/family';
 import type { Person } from './types';
 
 export function jobTier(familyWealth: number): 'low' | 'mid' | 'high' {
@@ -30,9 +31,11 @@ export function generateFamily(state: GameState, rng: Rng, content: GameContent,
 
   let father: Person;
   [s, father] = createPerson(s, rng, content, { sex: 'M', age: fatherAge, surname, job: randomJob(rng, content, tier), flags: { ...parentFlags } });
+  s = updatePerson(s, father.id, (p) => ({ ...p, wealth: parentWealth(rng, c.familyWealth) }));
   s = addRelation(s, father.id, 'pai', rng.int(55, 85));
   let mother: Person;
   [s, mother] = createPerson(s, rng, content, { sex: 'F', age: motherAge, job: randomJob(rng, content, tier), flags: { ...parentFlags } });
+  s = updatePerson(s, mother.id, (p) => ({ ...p, wealth: parentWealth(rng, c.familyWealth) }));
   s = addRelation(s, mother.id, 'mae', rng.int(60, 90));
 
   // irmãos mais velhos (0–2), nascidos depois que a mãe tinha 18
@@ -100,6 +103,8 @@ export function ageFamilyAndPeople(state: GameState, rng: Rng, content: GameCont
   for (const { person, rel } of relationsOf(s, undefined)) {
     if (!rng.chance(npcDeathChance(person.age, person.health))) continue;
     s = updatePerson(s, person.id, (p) => ({ ...p, alive: false, deathAge: p.age }));
+    // herança: o patrimônio do pai/mãe vai para os herdeiros vivos (Etapa 5)
+    if (rel.type === 'pai' || rel.type === 'mae') s = inheritFrom(s, { ...person, alive: false });
     const grief = rel.affection >= 40 ? (GRIEF[rel.type] ?? 3) : Math.round((GRIEF[rel.type] ?? 3) / 3);
     s = { ...s, character: { ...s.character, stats: addStats(s.character.stats, { happiness: -grief }) } };
     const label = relLabelPossessive(rel.type, person.sex);

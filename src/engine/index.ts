@@ -5,3 +5,5 @@ export * from './lifeStages';
 export * from './events';
 export * from './fighting';
 export * from './relationships';
+export * from './economy';
+export * from './assets';

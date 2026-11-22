@@ -5,6 +5,7 @@ import type { EventVars, GameState } from '../core/state';
 import { addStats, appendLog } from '../core/stats';
 import { canHaveSexualContent, canMarry, isValidPartnerAge } from './guards';
 import { ADOPTION_COST, breakUp, divorce, marry, setStage, startPregnancy } from './romance';
+import { post } from '../economy/ledger';
 import { contractIst, checkTypeShift } from './actions';
 import {
   addRelation,
@@ -115,7 +116,7 @@ export function applySocialEffects(state: GameState, fx: SocialEffects, rng: Rng
   if (fx.setPersonFlags && target) s = updatePerson(s, target.id, (p) => ({ ...p, flags: { ...p.flags, ...fx.setPersonFlags } }));
   if (fx.personHealth && target) s = updatePerson(s, target.id, (p) => ({ ...p, health: Math.max(0, Math.min(100, p.health + (fx.personHealth ?? 0))) }));
   if (fx.adopt && target && !s.relationships.pregnancy && s.money >= ADOPTION_COST) {
-    s = startPregnancy({ ...s, money: s.money - ADOPTION_COST }, target.id, content, true);
+    s = startPregnancy(post(s, 'compras', -ADOPTION_COST, 'Processo de adoção'), target.id, content, true);
   }
   if (fx.meet && rng.chance(fx.meet.chance ?? 1)) s = meetFriend(s, rng, content, fx.meet.context, fx.meet.type);
   if (fx.addFromVar) {
@@ -139,7 +140,12 @@ export function applySocialEffects(state: GameState, fx: SocialEffects, rng: Rng
       const ok = fx.stage === 'noivos' || fx.stage === 'casados' ? canMarry(s.character.age, target.age) : isValidPartnerAge(s.character.age, target.age);
       if (ok) s = setStage(s, target.id, fx.stage);
     }
-    if (fx.wedding) s = marry(s, target.id, fx.wedding);
+    if (fx.wedding) {
+      s = marry(s, target.id, fx.wedding);
+      // escolha do regime de bens logo após o casamento (Etapa 5)
+      const hook = content.economy.hooks.regimeEventId;
+      if (hook && s.economy.marriage?.personId === target.id) s = { ...s, pendingEvents: [...s.pendingEvents, { eventId: hook, source: 'followUp', ...(vars ? { vars } : {}) }] };
+    }
     if (fx.breakUp) s = breakUp(s, target.id, true);
     if (fx.divorce) s = divorce(s, target.id);
     if (fx.pregnancyChance && canHaveSexualContent(s.character, target) && rng.chance(fx.pregnancyChance)) s = startPregnancy(s, target.id, content);

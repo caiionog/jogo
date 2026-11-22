@@ -2,6 +2,7 @@ import type { Effects } from '../core/effects';
 import type { ClubId, SchoolStage, SchoolType, Sex, StatKey } from '../core/state';
 import type { Tier } from '../fighting/types';
 import type { CivilStatus, RelType, RomanceStage, TraitId } from '../relationships/types';
+import type { AssetKind, EconYearKind, Housing, JobCategory } from '../economy/types';
 
 export interface StatRange {
   min?: number;
@@ -48,6 +49,33 @@ export interface EventConditions {
   children?: StatRange;
   /** Idade do(a) parceiro(a) romântico(a) atual (exige ter parceiro). */
   partnerAge?: StatRange;
+
+  // --- economia ---
+  economy?: EconomyConditions;
+}
+
+export interface EconomyConditions {
+  money?: StatRange;
+  netWorth?: StatRange;
+  debt?: StatRange;
+  employed?: boolean;
+  jobs?: string[];
+  jobCategory?: JobCategory[];
+  /** Possui ao menos um bem de algum destes tipos. */
+  hasAsset?: AssetKind[];
+  ownsBusiness?: boolean;
+  businessDefs?: string[];
+  econYear?: EconYearKind[];
+  hasSponsor?: boolean;
+  hasAgent?: boolean;
+  hasLoan?: boolean;
+  housing?: Housing[];
+  /** Tem imposto sonegado pendente. */
+  evadedTax?: boolean;
+  /** Tem dinheiro investido no índice. */
+  invested?: boolean;
+  /** Algum imóvel alugado para terceiros. */
+  rentingOut?: boolean;
 }
 
 export interface RelationshipCondition {

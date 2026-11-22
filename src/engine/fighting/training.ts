@@ -6,6 +6,7 @@ import type { GameState } from '../core/state';
 import { addStats, appendLog } from '../core/stats';
 import { addSkills } from './profile';
 import { meetFriend, socialTrainingBonus } from '../relationships/social';
+import { ownGymBonus } from '../economy/business';
 import type { GymDef, SkillKey, Skills } from './types';
 
 export type TrainingKind = 'technique' | 'sparring' | 'conditioning' | 'bjj';
@@ -95,7 +96,7 @@ export function trainFighter(state: GameState, kind: TrainingKind, skill: SkillK
   const rng = createRng(state.rngState);
   const gym = currentGym(state, content);
   // companheiros de treino próximos e treinador querido rendem um treino melhor
-  const ctx: GainContext = { age: state.character.age, health: state.character.stats.health, gym, talent: state.fighter.talent * (1 + socialTrainingBonus(state)) };
+  const ctx: GainContext = { age: state.character.age, health: state.character.stats.health, gym, talent: state.fighter.talent * (1 + socialTrainingBonus(state) + ownGymBonus(state, content)) };
   const sk = state.fighter.skills;
   const delta: Partial<Skills> = {};
   const g = (base: number, k: SkillKey) => {

@@ -7,6 +7,10 @@ import type { EventVars } from '../core/state';
 import { adultContentAllowed, canHaveSexualContent } from '../relationships/guards';
 import { childrenOf, civilStatus, currentPartner, relationsOf } from '../relationships/people';
 import type { Person, Relation } from '../relationships/types';
+import type { EconomyConditions } from './types';
+import { netWorth } from '../economy/worth';
+import { marketYear } from '../economy/market';
+import { jobDef } from '../economy/jobs';
 import type { GameContent } from '../core/content';
 import { beltPromotionReady } from '../fighting/belts';
 import { getOrg, isOrgEligible, currentRosterKey } from '../fighting/orgs';
@@ -128,7 +132,32 @@ export function adultTagAllowed(state: GameState, event: GameEvent): boolean {
   return !p || canHaveSexualContent(state.character, p.person);
 }
 
-/** Verifica apenas as condições do evento (idade, atributos, flags, escola, luta, relações, `once`). */
+function economyConditionsMet(state: GameState, c: EconomyConditions, content?: GameContent): boolean {
+  const e = state.economy;
+  if (!inRange(state.money, c.money)) return false;
+  if (c.netWorth && !inRange(netWorth(state), c.netWorth)) return false;
+  if (!inRange(e.debt, c.debt)) return false;
+  if (c.employed !== undefined && (e.job !== null) !== c.employed) return false;
+  if (c.jobs && (!e.job || !c.jobs.includes(e.job.jobId))) return false;
+  if (c.jobCategory) {
+    const def = content ? jobDef(content, e.job?.jobId) : undefined;
+    if (!def || !c.jobCategory.includes(def.category)) return false;
+  }
+  if (c.hasAsset && !e.assets.some((a) => c.hasAsset!.includes(a.kind))) return false;
+  if (c.ownsBusiness !== undefined && (e.businesses.length > 0) !== c.ownsBusiness) return false;
+  if (c.businessDefs && !e.businesses.some((b) => c.businessDefs!.includes(b.defId))) return false;
+  if (c.econYear && !c.econYear.includes(marketYear(state.seed, state.year).kind)) return false;
+  if (c.hasSponsor !== undefined && (e.sponsors.length > 0) !== c.hasSponsor) return false;
+  if (c.hasAgent !== undefined && (e.agent !== null) !== c.hasAgent) return false;
+  if (c.hasLoan !== undefined && (e.loans.length > 0) !== c.hasLoan) return false;
+  if (c.housing && !c.housing.includes(e.housing)) return false;
+  if (c.evadedTax !== undefined && (e.evadedTax > 0) !== c.evadedTax) return false;
+  if (c.invested !== undefined && (e.investments > 0) !== c.invested) return false;
+  if (c.rentingOut !== undefined && e.assets.some((a) => a.rented) !== c.rentingOut) return false;
+  return true;
+}
+
+/** Verifica apenas as condições do evento (idade, atributos, flags, escola, luta, relações, economia, `once`). */
 export function conditionsMet(state: GameState, event: GameEvent, content?: GameContent, vars?: EventVars): boolean {
   if (!adultTagAllowed(state, event)) return false;
   const c = event.conditions;
@@ -151,6 +180,7 @@ export function conditionsMet(state: GameState, event: GameEvent, content?: Game
   }
   if (c.fighting && !fightingConditionsMet(state, c.fighting, content)) return false;
   if (!relationshipConditionsMet(state, event, vars)) return false;
+  if (c.economy && !economyConditionsMet(state, c.economy, content)) return false;
   return true;
 }
 

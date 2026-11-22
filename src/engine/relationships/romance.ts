@@ -18,6 +18,8 @@ import {
   withHistory,
 } from './people';
 import type { Person, RomanceStage } from './types';
+import { post } from '../economy/ledger';
+import { divorceSettlement, recordMarriage } from '../economy/family';
 
 export const MEET_COST = 1;
 export const WEDDING_COST = { simple: 3000, big: 20000 } as const;
@@ -111,7 +113,9 @@ export function marry(state: GameState, personId: string, ceremony: 'simple' | '
   if (!person || !canMarry(state.character.age, person.age)) return state;
   let s = setStage(state, personId, 'casados');
   const cost = WEDDING_COST[ceremony];
-  s = { ...s, money: Math.max(0, s.money - cost), character: { ...s.character, stats: addStats(s.character.stats, { happiness: ceremony === 'big' ? 12 : 8 }) } };
+  s = post(s, 'compras', -cost, ceremony === 'big' ? 'Festa de casamento' : 'Cerimônia de casamento');
+  s = { ...s, character: { ...s.character, stats: addStats(s.character.stats, { happiness: ceremony === 'big' ? 12 : 8 }) } };
+  s = recordMarriage(s, personId);
   s = updateRelation(s, personId, (r) => withHistory({ ...r, affection: Math.min(100, r.affection + 10) }, 'Casamento!'));
   s = { ...s, flags: { ...s.flags, casado: true } };
   return appendLog(s, `Você se casou com ${person.name}${ceremony === 'big' ? ' numa grande festa' : ' numa cerimônia simples'}.`);
@@ -139,10 +143,12 @@ export function divorce(state: GameState, personId: string): GameState {
     const { romance: _drop, ...rest } = r;
     return withHistory({ ...rest, type: 'ex', affection: Math.max(0, r.affection - 30) }, 'Divórcio.');
   });
-  const lost = Math.round(s.money / 2);
+  // divisão de bens conforme o regime (Etapa 5) e pensão dos filhos
+  const settled = divorceSettlement(s, personId);
+  s = settled.state;
+  const lost = settled.paid;
   s = {
     ...s,
-    money: s.money - lost,
     flags: { ...s.flags, divorciado: true, casado: false },
     character: { ...s.character, stats: addStats(s.character.stats, { happiness: -20 }) },
   };
@@ -212,8 +218,10 @@ export function payChildExpenses(state: GameState): GameState {
   const kids = childrenOf(state).filter((k) => k.person.age < 18).length;
   if (kids === 0) return state;
   const cost = kids * CHILD_YEARLY_COST;
-  if (state.money >= cost) return { ...state, money: state.money - cost };
-  const s: GameState = { ...state, money: 0, character: { ...state.character, stats: addStats(state.character.stats, { happiness: -5 }) } };
+  const short = state.money < cost;
+  let s = post(state, 'filhos', -cost, `Despesas com ${kids} filho(s)`);
+  if (!short) return s;
+  s = { ...s, character: { ...s.character, stats: addStats(s.character.stats, { happiness: -5 }) } };
   return appendLog(s, 'As contas com os filhos apertaram: faltou dinheiro este ano.');
 }
 

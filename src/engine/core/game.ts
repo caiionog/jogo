@@ -28,6 +28,9 @@ import { endFightingYear, startFightingYear } from '../fighting/career';
 import { emptyRelationships } from '../relationships/people';
 import { generateFamily } from '../relationships/family';
 import { relationshipsYear } from '../relationships/year';
+import { emptyEconomy } from '../economy/ledger';
+import { closeEconomicYear } from '../economy/close';
+import { jobEnergy } from '../economy/jobs';
 
 export interface NewGameOptions {
   seed: string | number;
@@ -71,6 +74,7 @@ export function newGame(options: NewGameOptions, content: GameContent): GameStat
     world: emptyWorld(),
     activeFight: null,
     relationships: { ...emptyRelationships(options.adultContent ?? false), settings: { adultContent: options.adultContent ?? false, preference: options.preference ?? 'any' } },
+    economy: emptyEconomy(0, birthYear),
     log: [],
     alive: true,
   };
@@ -305,6 +309,8 @@ export function advanceYear(
   return withRng(state, (rng, s) => {
     let next = endSchoolYear(s, rng, content);
     next = endFightingYear(next, content);
+    // fecha o ano econômico (salário, custos, impostos, dívida) e abre o extrato do novo ano
+    next = closeEconomicYear(next, rng, content);
     next = {
       ...next,
       year: next.year + 1,
@@ -321,7 +327,9 @@ export function advanceYear(
 
     next = startSchoolYear(next, rng, content);
     const max = maxEnergy(next.character.age, next.character.stats.health);
-    next = { ...next, energy: { current: max, max } };
+    // o emprego reserva parte da energia do ano
+    const reserved = Math.min(max, jobEnergy(next, content));
+    next = { ...next, energy: { current: max - reserved, max, reserved } };
     next = relationshipsYear(next, rng, content);
     next = startFightingYear(next, rng, content);
 

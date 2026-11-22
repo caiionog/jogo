@@ -26,6 +26,8 @@ import type {
 } from './types';
 import { ensureRoster, rosterKey, simulateWorldYear } from './world';
 import { partnerSupportsFighting, setCoach } from '../relationships/social';
+import { post } from '../economy/ledger';
+import { checkSponsorClauses, countContractFight, payFightPurse, purseMultiplier } from '../economy/fightIncome';
 import { addSkills as addSk } from './profile';
 
 export const AGGRESSIVE_CUT_MISS_CHANCE = 0.25;
@@ -44,6 +46,10 @@ function trainsFighting(state: GameState, content: GameContent): boolean {
 
 function makeOffer(state: GameState, org: OrgDef, kind: OfferKind, opponent: Opponent, title: boolean, mult = 1): FightOffer {
   const rep = 1 + state.fighter.reputation / 100;
+  // empresário negocia bolsas maiores; contrato garante a bolsa base
+  const agent = purseMultiplier(state);
+  const c = state.economy.contract;
+  const base = c && c.orgId === org.id ? Math.max(c.basePurse, org.purse.base * rep) : org.purse.base * rep;
   return {
     id: `o${state.fighter.nextOfferId}`,
     orgId: org.id,
@@ -52,8 +58,8 @@ function makeOffer(state: GameState, org: OrgDef, kind: OfferKind, opponent: Opp
     opponent,
     rounds: title ? org.titleRounds : org.rounds,
     rules: org.rules,
-    purse: Math.round(org.purse.base * (title ? 2 : 1) * rep * mult),
-    winBonus: Math.round(org.purse.win * (title ? 2 : 1) * mult),
+    purse: Math.round(base * (title ? 2 : 1) * mult * agent),
+    winBonus: Math.round(org.purse.win * (title ? 2 : 1) * mult * agent),
     campCost: kind === 'shortNotice' ? 1 : org.campCost + (title ? 1 : 0),
     title,
   };
@@ -251,7 +257,9 @@ export function applyFightResult(state: GameState, content: GameContent): GameSt
   // queixo: quem é nocauteado fica mais vulnerável
   if (result === 'L' && key === 'KO' && org.rules === 'mma') f.skills = addSkills(f.skills, { chin: -3 });
 
-  let s: GameState = { ...state, fighter: f, money: state.money + earnings };
+  let s: GameState = { ...state, fighter: f };
+  if (earnings > 0) s = payFightPurse(s, earnings, `Bolsa: luta contra ${opponentFullName(offer.opponent)}`);
+  s = countContractFight(s, org.id, result);
   s = { ...s, fighter: { ...s.fighter, skills: fightExperience(s, rng, content, org.rules === 'grappling') } };
   const oppName = opponentFullName(offer.opponent);
   let titleText = '';
@@ -318,6 +326,7 @@ export function applyFightResult(state: GameState, content: GameContent): GameSt
       ].slice(-MAX_HISTORY),
     },
   };
+  if (result === 'L') s = checkSponsorClauses(s, content);
   return { ...s, rngState: rng.state, activeFight: { ...af, applied: true, summary, earnings } };
 }
 
@@ -351,7 +360,7 @@ export function endFightingYear(state: GameState, content: GameContent): GameSta
 
   // mensalidade (a partir dos 18; reputação ≥ 15 rende bolsa de atleta)
   if (gym && state.character.age >= 18 && s.fighter.reputation < 15) {
-    if (s.money >= gym.fee) s = { ...s, money: s.money - gym.fee };
+    if (s.money >= gym.fee) s = post(s, 'academia', -gym.fee, `Mensalidade: ${gym.name}`);
     else {
       s = { ...s, fighter: { ...s.fighter, gymId: null } };
       s = appendLog(s, `Sem dinheiro para a mensalidade, você saiu da ${gym.name}.`);
@@ -427,6 +436,8 @@ export function applyFighterEffects(state: GameState, fx: FighterEffects, rng: R
   if (fx.leaveGym) f = { ...f, gymId: null };
   if (fx.suspendYears) f = { ...f, suspendedYears: f.suspendedYears + fx.suspendYears, offers: [] };
   s = { ...s, fighter: f };
+  // escândalo (suspensão) rompe patrocínios com cláusula de imagem
+  if (fx.suspendYears) s = checkSponsorClauses(s, content, true);
   if (fx.injury) {
     const name = fx.injury.name ?? rng.pick(content.fighting.injuries);
     s = {

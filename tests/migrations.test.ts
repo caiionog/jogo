@@ -117,6 +117,7 @@ describe('migração v2 → v3 (carreira de luta)', () => {
 
 import fixturesV3 from './fixtures/saves-v3.json';
 import { relationsOf } from '../src/engine';
+import type { GameState } from '../src/engine';
 const v3 = fixturesV3 as unknown as Record<string, Raw>;
 
 describe('migração v3 → v4 (relacionamentos)', () => {
@@ -130,7 +131,7 @@ describe('migração v3 → v4 (relacionamentos)', () => {
   it.each(['3', '12', '20', '35'])('idade %s: família coerente, treinador e conteúdo adulto desligado', (key) => {
     const g = migrate(structuredClone(v3[key]!));
     const age = g.character.age;
-    expect(g.version).toBe(4);
+    expect(g.version).toBe(CURRENT_VERSION);
     expect(g.rngState).toBe(v3[key]!.rngState);
     expect(g.relationships.settings.adultContent).toBe(false);
     const parents = relationsOf(g, ['pai', 'mae'], false);
@@ -152,5 +153,45 @@ describe('migração v3 → v4 (relacionamentos)', () => {
 
   it('é determinística', () => {
     expect(migrate(structuredClone(v3['20']!))).toEqual(migrate(structuredClone(v3['20']!)));
+  });
+});
+
+import fixturesV4 from './fixtures/saves-v4.json';
+const v4 = fixturesV4 as unknown as Record<string, Raw>;
+
+describe('migração v4 → v5 (economia)', () => {
+  it('fixtures são saves v4 reais (Etapa 4)', () => {
+    for (const s of Object.values(v4)) {
+      expect(s.version).toBe(4);
+      expect(s).not.toHaveProperty('economy');
+    }
+  });
+
+  it.each(['10', '22', '35', '60'])('idade %s: dinheiro inteiro, extrato vazio, moradia e patrimônio dos pais', (key) => {
+    const g = migrate(structuredClone(v4[key]!));
+    expect(g.version).toBe(5);
+    expect(Number.isInteger(g.money)).toBe(true);
+    expect(g.economy.ledger.opening).toBe(g.money);
+    expect(g.economy.ledger.entries).toEqual([]);
+    if (g.character.age < 18) expect(g.economy.housing).toBe('pais');
+    for (const { person } of relationsOf(g, ['pai', 'mae'])) expect(Number.isInteger(person.wealth)).toBe(true);
+    if (g.alive) {
+      let s = resolveAllFirst(advanceYear(g, GAME_CONTENT));
+      s = resolveAllFirst(advanceYear(s, GAME_CONTENT));
+      expect(s.character.age).toBe(g.character.age + 2);
+      expect(s.economy.history.length).toBe(2);
+    }
+  });
+
+  it('casamentos existentes ganham comunhão parcial', () => {
+    const raw = structuredClone(v4['22']!) as unknown as GameState;
+    const spouse = raw.relationships.people[0]!;
+    raw.relationships.relations = raw.relationships.relations.map((r) => (r.personId === spouse.id ? { ...r, type: 'conjuge', romance: { stage: 'casados', since: 21 } } : r));
+    const g = migrate(raw);
+    expect(g.economy.marriage).toMatchObject({ personId: spouse.id, regime: 'parcial' });
+  });
+
+  it('é determinística', () => {
+    expect(migrate(structuredClone(v4['35']!))).toEqual(migrate(structuredClone(v4['35']!)));
   });
 });

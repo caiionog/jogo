@@ -4,6 +4,9 @@ import type { ClubId, EventSource, EventVars, FlagValue, GameState, SchoolType, 
 import { addStats, clamp } from './stats';
 import { joinClubState, transferSchool } from '../lifeStages/school';
 import { withPreposition } from '../character/names';
+import { post } from '../economy/ledger';
+import { applyEconomyEffects } from '../economy/effects';
+import type { EconomyEffects } from '../economy/effects';
 import { applyFighterEffects } from '../fighting/career';
 import type { FighterEffects } from '../fighting/career';
 import { applySocialEffects } from '../relationships/social';
@@ -42,6 +45,8 @@ export interface Effects {
   fighter?: FighterEffects;
   /** Efeitos de relacionamento (afeto do alvo {pessoa}, conhecer alguém, namoro, casamento, filhos...). */
   social?: SocialEffects;
+  /** Efeitos econômicos (emprego, bens, patrocínio, impostos, empréstimos...). */
+  economy?: EconomyEffects;
   followUps?: FollowUp[];
 }
 
@@ -66,12 +71,13 @@ export function applyEffects(state: GameState, effects: Effects | undefined, ctx
   }
   let next: GameState = {
     ...state,
-    money: state.money + (effects.money ?? 0),
     flags,
     character: effects.stats
       ? { ...state.character, stats: addStats(state.character.stats, effects.stats) }
       : state.character,
   };
+  // dinheiro só via extrato (inteiro)
+  if (effects.money) next = post(next, effects.money > 0 ? 'eventos' : 'eventos', effects.money, 'Evento');
   if (effects.school) next = applySchoolEffects(next, effects.school, ctx);
   if (effects.fighter) {
     const fx = effects.fighter;
@@ -83,6 +89,10 @@ export function applyEffects(state: GameState, effects: Effects | undefined, ctx
   if (effects.social) {
     if (!ctx) throw new Error('applyEffects: efeitos sociais exigem EffectContext');
     next = applySocialEffects(next, effects.social, ctx.rng, ctx.content, ctx.vars);
+  }
+  if (effects.economy) {
+    if (!ctx) throw new Error('applyEffects: efeitos econômicos exigem EffectContext');
+    next = applyEconomyEffects(next, effects.economy, ctx.rng, ctx.content, ctx.vars);
   }
   if (effects.followUps?.length) next = applyFollowUps(next, effects.followUps, ctx);
   return next;
