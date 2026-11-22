@@ -19,6 +19,8 @@ export default function MenuSheet({ onClose, open }: { onClose: () => void; open
   const refreshSlots = useGameStore((s) => s.refreshSlots);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [confirmDel, setConfirmDel] = useState<number | null>(null);
+  const [confirmNew, setConfirmNew] = useState(false);
+  const newLife = useGameStore((s) => s.newLife);
   const [installable, setInstallable] = useState(canInstall());
   const fileRef = useRef<HTMLInputElement>(null);
   useEffect(() => onInstallChange(() => setInstallable(canInstall())), []);
@@ -66,6 +68,22 @@ export default function MenuSheet({ onClose, open }: { onClose: () => void; open
           <span className="flex-1">Configurações</span>
         </button>
 
+        {game && (
+          <button className={item} onClick={() => setConfirmNew(true)} data-testid="menu-new-life">
+            <span className="text-xl" aria-hidden>🔁</span>
+            <span className="flex-1">Nova vida</span>
+          </button>
+        )}
+        {confirmNew && game && (
+          <div className="rounded-xl border border-rose-800 p-3 text-sm" role="alertdialog" aria-label="Começar uma nova vida?">
+            <p className="font-semibold">Começar uma nova vida?</p>
+            <p className="text-xs text-slate-400">{game.alive ? `A vida de ${game.character.name} neste slot será perdida.` : 'A vida atual já terminou.'}</p>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <button className="min-h-11 rounded-xl border border-slate-700" onClick={() => setConfirmNew(false)}>Cancelar</button>
+              <button className="min-h-11 rounded-xl bg-rose-600 font-semibold text-white" data-testid="menu-new-life-yes" onClick={() => { setConfirmNew(false); onClose(); void newLife(); }}>Nova vida</button>
+            </div>
+          </div>
+        )}
         <h3 className="mt-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Vidas salvas</h3>
         <ul className="flex flex-col gap-2" data-testid="slots">
           {slots.map((s) => (

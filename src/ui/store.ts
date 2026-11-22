@@ -1,6 +1,12 @@
 import { create } from 'zustand';
 import { GAME_CONTENT } from '../content';
 import {
+  STAT_KEYS,
+  buyBusiness,
+  getDriversLicense,
+  renameBusiness,
+  renovateAsset,
+  talkToColleagues,
   buyOutfit,
   moveTo,
   selectOutfit,
@@ -61,6 +67,7 @@ import {
 } from '../engine';
 import type {
   AchievementDef,
+  StatKey,
   Appearance,
   FacialHair,
   GameState,
@@ -96,11 +103,40 @@ import {
 } from '../save';
 import type { SlotInfo } from '../save';
 
+/** Rótulos curtos dos atributos visíveis (toasts). */
+export const STAT_SHORT: Record<StatKey, string> = { happiness: 'Felicidade', health: 'Saúde', intelligence: 'Inteligência', looks: 'Aparência', athletic: 'Capacidade atlética' };
+
 export interface Toast {
   id: number;
   icon: string;
   title: string;
   text: string;
+}
+
+/** Mudança de um atributo visível (para o pop-up de resultado e os toasts). */
+export interface StatDelta {
+  key: StatKey;
+  delta: number;
+}
+
+/** Resultado de uma escolha de evento (pop-up curto). */
+export interface Outcome {
+  lines: string[];
+  deltas: StatDelta[];
+  money: number;
+}
+
+/** Compara o antes e o depois de uma ação do jogador: atributos visíveis, dinheiro e linhas novas do log. */
+export function diffOf(before: GameState, after: GameState): Outcome {
+  const deltas: StatDelta[] = [];
+  for (const key of STAT_KEYS) {
+    const d = Math.round(after.character.stats[key] - before.character.stats[key]);
+    if (d) deltas.push({ key, delta: d });
+  }
+  const lastBefore = before.log.at(-1);
+  const lastAfter = after.log.at(-1);
+  const lines = lastAfter ? (lastBefore && lastBefore.age === lastAfter.age ? lastAfter.entries.slice(lastBefore.entries.length) : lastAfter.entries) : [];
+  return { lines, deltas, money: after.money - before.money };
 }
 
 interface GameStore {
@@ -111,6 +147,15 @@ interface GameStore {
   slot: number;
   slots: SlotInfo[];
   toasts: Toast[];
+  /** Pop-up de resultado depois de uma escolha de evento. */
+  outcome: Outcome | null;
+  dismissOutcome(): void;
+  // Etapa 8: trabalho, CNH, mercado e negócios
+  talkToColleagues(): void;
+  getDriversLicense(): void;
+  renovate(assetId: string): void;
+  buyBusiness(offerId: string, place?: { uf: string; city: string }): void;
+  renameBusiness(id: string, name: string): void;
   init(): Promise<void>;
   // Etapa 6
   retire(): void;
@@ -163,7 +208,7 @@ interface GameStore {
   hireAgent(): void;
   fireAgent(): void;
   seekSponsor(): void;
-  buyAsset(offerId: string, financed: boolean, years?: number): void;
+  buyAsset(offerId: string, financed: boolean, years?: number, place?: { uf: string; city: string }): void;
   sellAsset(assetId: string): void;
   setHome(assetId: string): void;
   setRented(assetId: string, rented: boolean): void;
@@ -202,6 +247,18 @@ export const useGameStore = create<GameStore>((setState, getState) => {
     afterChange(next);
   };
   const eco = (fn: (g: GameState) => GameState) => update((g) => economyAction(g, fn));
+  /** Ação do jogador com toast do resultado (texto do log + mudanças de atributos). */
+  const act = (fn: (g: GameState) => GameState) => {
+    const before = getState().game;
+    update(fn);
+    const after = getState().game;
+    if (!before || !after || after === before || after.pendingEvents.length > before.pendingEvents.length) return;
+    const d = diffOf(before, after);
+    const line = d.lines.at(-1);
+    if (!line) return;
+    const text = d.deltas.map((x) => `${STAT_SHORT[x.key]} ${x.delta > 0 ? '+' : '−'}${Math.abs(x.delta)}`).join(' · ');
+    setState({ toasts: [...getState().toasts, { id: toastId++, icon: '✔', title: line, text }].slice(-3) });
+  };
 
   return {
     status: 'loading',
@@ -210,6 +267,13 @@ export const useGameStore = create<GameStore>((setState, getState) => {
     slot: 1,
     slots: [],
     toasts: [],
+    outcome: null,
+    dismissOutcome: () => setState({ outcome: null }),
+    talkToColleagues: () => act((g) => talkToColleagues(g, GAME_CONTENT)),
+    getDriversLicense: () => act((g) => economyAction(g, (x) => getDriversLicense(x))),
+    renovate: (id) => eco((g) => renovateAsset(g, id)),
+    buyBusiness: (id, place) => eco((g) => buyBusiness(g, id, GAME_CONTENT, place)),
+    renameBusiness: (id, name) => update((g) => renameBusiness(g, id, name)),
     async init() {
       const [slot, meta] = await Promise.all([getActiveSlot(), loadMeta()]);
       const game = await loadGame();
@@ -229,7 +293,7 @@ export const useGameStore = create<GameStore>((setState, getState) => {
     moveCity: (uf, city) => update((g) => moveTo(g, GAME_CONTENT, uf, city)),
     retire: () => update((g) => retire(g, GAME_CONTENT)),
     treatInjury: (id, t) => update((g) => treatInjury(g, id, t, GAME_CONTENT)),
-    healthAction: (id) => update((g) => healthAction(g, GAME_CONTENT, id)),
+    healthAction: (id) => act((g) => healthAction(g, GAME_CONTENT, id)),
     makeWill: (shares) => update((g) => makeWill(g, shares)),
     revokeWill: () => update((g) => revokeWill(g)),
     continueAsChild(personId) {
@@ -289,7 +353,7 @@ export const useGameStore = create<GameStore>((setState, getState) => {
       setState({ toasts: getState().toasts.filter((t) => t.id !== id) });
     },
     interact(personId, kind) {
-      update((g) => interact(g, personId, kind, GAME_CONTENT));
+      act((g) => interact(g, personId, kind, GAME_CONTENT));
     },
     meet(mode) {
       update((g) => meetSomeoneAction(g, mode, GAME_CONTENT));
@@ -298,7 +362,7 @@ export const useGameStore = create<GameStore>((setState, getState) => {
       update((g) => setRelationshipSettings(g, patch));
     },
     doAction(actionId) {
-      update((g) => performAction(g, actionId, GAME_CONTENT));
+      act((g) => performAction(g, actionId, GAME_CONTENT));
     },
     joinClub(clubId) {
       update((g) => joinClub(g, clubId, GAME_CONTENT));
@@ -313,7 +377,7 @@ export const useGameStore = create<GameStore>((setState, getState) => {
       update((g) => leaveGym(g, GAME_CONTENT));
     },
     train(kind) {
-      update((g) => trainFighter(g, kind, GAME_CONTENT));
+      act((g) => trainFighter(g, kind, GAME_CONTENT));
     },
     acceptOffer(offerId, aggressiveCut) {
       update((g) => acceptOffer(g, offerId, { aggressiveCut }, GAME_CONTENT));
@@ -334,7 +398,10 @@ export const useGameStore = create<GameStore>((setState, getState) => {
       update((g) => advanceYear(g, GAME_CONTENT));
     },
     choose(eventId, choiceId) {
+      const before = getState().game;
       update((g) => resolveEvent(g, eventId, choiceId, GAME_CONTENT));
+      const after = getState().game;
+      if (before && after && after !== before) setState({ outcome: diffOf(before, after) });
     },
     // economia: toda ação passa pela guarda `economyAction` da engine
     deposit: (amount, where) => eco((g) => deposit(g, amount, where)),
@@ -344,17 +411,22 @@ export const useGameStore = create<GameStore>((setState, getState) => {
     personalLoan: (amount, years) => eco((g) => personalLoan(g, amount, years)),
     setStandard: (st) => eco((g) => setStandard(g, st)),
     setHousing: (h) => eco((g) => setHousing(g, h)),
-    applyJob: (id, replace) => eco((g) => applyJob(g, id, GAME_CONTENT, { replace })),
-    workHard: () => eco((g) => workHard(g)),
-    askRaise: () => eco((g) => askRaise(g, GAME_CONTENT)),
+    applyJob: (id, replace) => {
+      const before = getState().game;
+      eco((g) => applyJob(g, id, GAME_CONTENT, { replace }));
+      const after = getState().game;
+      if (before && after && after !== before) setState({ outcome: diffOf(before, after) });
+    },
+    workHard: () => act((g) => economyAction(g, (x) => workHard(x))),
+    askRaise: () => act((g) => economyAction(g, (x) => askRaise(x, GAME_CONTENT))),
     quitJob: () => eco((g) => quitJob(g, GAME_CONTENT)),
     hireAgent: () => update((g) => hireAgentAction(g, GAME_CONTENT)),
     fireAgent: () => eco((g) => fireAgent(g)),
     seekSponsor: () => eco((g) => seekSponsor(g, GAME_CONTENT)),
-    buyAsset: (offerId, financed, years) => eco((g) => buyAsset(g, offerId, GAME_CONTENT, { financed, years })),
+    buyAsset: (id, financed, years, place) => eco((g) => buyAsset(g, id, GAME_CONTENT, { financed, ...(years ? { years } : {}), ...(place ? { place } : {}) })),
     sellAsset: (id) => eco((g) => sellAsset(g, id)),
     setHome: (id) => eco((g) => setHome(g, id)),
-    setRented: (id, rented) => eco((g) => setRented(g, id, rented)),
+    setRented: (id, rented) => eco((g) => setRented(g, id, rented, GAME_CONTENT)),
     setInsured: (id, insured) => eco((g) => setInsured(g, id, insured)),
     openBusiness: (defId) => eco((g) => openBusiness(g, defId, GAME_CONTENT)),
     dedicate: (id) => eco((g) => dedicate(g, id)),

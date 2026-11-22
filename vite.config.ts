@@ -48,7 +48,7 @@ export default defineConfig({
     ...(process.env.VITE_SINGLE_FILE ? { rolldownOptions: { output: { codeSplitting: false } } } : {}),
   },
   test: {
-    include: ['tests/**/*.test.ts'],
+    include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx'],
     environment: 'node',
   },
 });

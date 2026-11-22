@@ -277,7 +277,7 @@ function Living({ game }: { game: GameState }) {
 const REL_NAME: Record<string, [string, string]> = { conjuge: ['Marido', 'Esposa'], filho: ['Filho', 'Filha'], irmao: ['Irmão', 'Irmã'], pai: ['Pai', 'Pai'], mae: ['Mãe', 'Mãe'] };
 
 /** Testamento (Etapa 6): % do patrimônio para cada herdeiro vivo; sem testamento vale a divisão padrão. */
-function WillSection({ game }: { game: GameState }) {
+export function WillSection({ game }: { game: GameState }) {
   const makeWill = useGameStore((s) => s.makeWill);
   const revokeWill = useGameStore((s) => s.revokeWill);
   const heirs = eligibleHeirs(game);

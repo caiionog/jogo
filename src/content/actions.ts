@@ -52,6 +52,44 @@ export const ACTIONS: readonly ActionDef[] = [
     ],
   },
 
+  // ----- Lazer (Etapa 8) -----
+  {
+    id: 'go_out',
+    label: 'Sair com os amigos',
+    emoji: '🍕',
+    description: 'Pizza, praça, conversa jogada fora. Felicidade.',
+    category: 'vida',
+    energyCost: 1,
+    minAge: 13,
+    effects: { stats: { happiness: 4 } },
+    variance: 2,
+    logTexts: ['Você saiu com os amigos e voltou rindo.', 'Rodízio de pizza com a turma.', 'Uma tarde na praça com os amigos.'],
+  },
+  {
+    id: 'party',
+    label: 'Ir a uma festa',
+    emoji: '🎉',
+    description: 'Música alta e gente nova. Pode render ressaca.',
+    category: 'vida',
+    energyCost: 1,
+    minAge: 16,
+    effects: { stats: { happiness: 6, health: -1 } },
+    variance: 3,
+    logTexts: ['Você dançou até de madrugada.', 'Festa boa, dia seguinte difícil.'],
+  },
+  {
+    id: 'travel',
+    label: 'Viajar',
+    emoji: '🧳',
+    description: 'Uns dias longe da rotina. Custa dinheiro, renova a cabeça.',
+    category: 'vida',
+    energyCost: 2,
+    minAge: 18,
+    effects: { stats: { happiness: 9, health: 1 }, money: -1800 },
+    variance: 2,
+    logTexts: ['Você viajou para o litoral e voltou renovado(a).', 'Uma semana na serra, longe de tudo.', 'Você conheceu outra capital do Brasil.'],
+  },
+
   // ----- Escola -----
   {
     id: 'study_exams',
