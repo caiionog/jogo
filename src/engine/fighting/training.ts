@@ -5,6 +5,7 @@ import type { Rng } from '../core/rng';
 import type { GameState } from '../core/state';
 import { addStats, appendLog } from '../core/stats';
 import { addSkills } from './profile';
+import { meetFriend, socialTrainingBonus } from '../relationships/social';
 import type { GymDef, SkillKey, Skills } from './types';
 
 export type TrainingKind = 'technique' | 'sparring' | 'conditioning' | 'bjj';
@@ -93,7 +94,8 @@ export function trainFighter(state: GameState, kind: TrainingKind, skill: SkillK
   if (trainingBlockReason(state, kind, skill) !== null) return state;
   const rng = createRng(state.rngState);
   const gym = currentGym(state, content);
-  const ctx: GainContext = { age: state.character.age, health: state.character.stats.health, gym, talent: state.fighter.talent };
+  // companheiros de treino próximos e treinador querido rendem um treino melhor
+  const ctx: GainContext = { age: state.character.age, health: state.character.stats.health, gym, talent: state.fighter.talent * (1 + socialTrainingBonus(state)) };
   const sk = state.fighter.skills;
   const delta: Partial<Skills> = {};
   const g = (base: number, k: SkillKey) => {
@@ -138,6 +140,8 @@ export function trainFighter(state: GameState, kind: TrainingKind, skill: SkillK
 
   next = { ...next, fighter: { ...next.fighter, skills: addSkills(next.fighter.skills, delta) } };
   next = appendLog(next, text.replace('sozinho(a)', state.character.sex === 'M' ? 'sozinho' : 'sozinha'));
+  // na academia dá para conhecer companheiros de treino
+  if (gym && state.character.age >= 6 && rng.chance(0.12)) next = meetFriend(next, rng, content, 'gym');
   if (injury) {
     next = {
       ...next,

@@ -25,6 +25,8 @@ import type {
   Strategy,
 } from './types';
 import { ensureRoster, rosterKey, simulateWorldYear } from './world';
+import { partnerSupportsFighting, setCoach } from '../relationships/social';
+import { addSkills as addSk } from './profile';
 
 export const AGGRESSIVE_CUT_MISS_CHANCE = 0.25;
 export const AGGRESSIVE_CUT_EDGE = 0.6;
@@ -170,7 +172,9 @@ export function acceptOffer(state: GameState, offerId: string, opts: AcceptOptio
     const hook = content.fighting.hooks.weightMissEventId;
     if (hook) s = { ...s, pendingEvents: [...s.pendingEvents, { eventId: hook, source: 'action', vars: { lutador: opponentFullName(offer.opponent) } }] };
   }
-  const player = playerSnapshot(s, aggressive ? AGGRESSIVE_CUT_EDGE : 0, missed ? 85 : 100);
+  let player = playerSnapshot(s, aggressive ? AGGRESSIVE_CUT_EDGE : 0, missed ? 85 : 100);
+  // parceiro(a) que apoia a carreira: ânimo extra (+3 de cardio na luta)
+  if (partnerSupportsFighting(s, content)) player = { ...player, skills: addSk(player.skills, { cardio: 3 }) };
   let fight = startFight(player, opponentSnapshot(offer.opponent), {
     rounds: offer.rounds,
     rngState: rng.int(1, 0x7fffffff),
@@ -407,8 +411,12 @@ function pickGym(state: GameState, which: string, content: GameContent) {
 export function enterGym(state: GameState, gymId: string, content: GameContent): GameState {
   const gym = content.fighting.gyms.find((g) => g.id === gymId);
   if (!gym || state.fighter.gymId === gymId) return state;
-  const s = { ...state, fighter: { ...state.fighter, gymId } };
-  return appendLog(s, `Você começou a treinar na ${gym.name}.`);
+  let s: GameState = { ...state, fighter: { ...state.fighter, gymId } };
+  s = appendLog(s, `Você começou a treinar na ${gym.name}.`);
+  // novo(a) treinador(a) na aba Relações
+  const rng = createRng(s.rngState);
+  s = setCoach(s, rng, content, gym.id);
+  return { ...s, rngState: rng.state };
 }
 
 export function applyFighterEffects(state: GameState, fx: FighterEffects, rng: Rng, content: GameContent, vars?: EventVars): GameState {
@@ -512,5 +520,7 @@ export function joinGym(state: GameState, gymId: string, content: GameContent): 
 export function leaveGym(state: GameState, content: GameContent): GameState {
   const gym = currentGym(state, content);
   if (!gym || state.activeFight) return state;
-  return appendLog({ ...state, fighter: { ...state.fighter, gymId: null } }, `Você saiu da ${gym.name}.`);
+  const rng = createRng(state.rngState);
+  const s = setCoach({ ...state, fighter: { ...state.fighter, gymId: null } }, rng, content, null);
+  return appendLog({ ...s, rngState: rng.state }, `Você saiu da ${gym.name}.`);
 }

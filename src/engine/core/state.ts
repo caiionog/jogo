@@ -1,4 +1,5 @@
 import type { ActiveFight, FighterProfile, World } from '../fighting/types';
+import type { RelationshipsState } from '../relationships/types';
 
 /** Tipos do estado do jogo. Tudo aqui deve ser JSON puro (sem classes, Date, Map, funções). */
 
@@ -142,9 +143,11 @@ export interface GameState {
   world: World;
   /** Luta em andamento (máquina de estados) — bloqueia o resto do jogo. */
   activeFight: ActiveFight | null;
+  /** Família, amigos, amores, filhos, treinador e rivais (Etapa 4). */
+  relationships: RelationshipsState;
   /** Histórico ano a ano. O último item é o ano atual. */
   log: LogYear[];
   alive: boolean;
 }
 
-export const STATE_VERSION = 3;
+export const STATE_VERSION = 4;

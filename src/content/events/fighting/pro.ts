@@ -45,7 +45,7 @@ export const FIGHT_PRO_EVENTS: readonly GameEvent[] = [
       {
         id: 'answer',
         label: 'Responder e desafiar',
-        effects: { stats: { happiness: 2 }, fighter: { reputation: 4 }, followUps: [{ eventId: 'fight_rival_showdown', delayYears: 1 }] },
+        effects: { stats: { happiness: 2 }, fighter: { reputation: 4 }, social: { addFromVar: { var: 'lutador', type: 'rival', affection: 15 } }, followUps: [{ eventId: 'fight_rival_showdown', delayYears: 1 }] },
         resultText: 'A troca de farpas viralizou. Os fãs querem essa luta.',
       },
       { id: 'ignore', label: 'Ignorar', effects: { fighter: { skills: { defense: 1 } } }, resultText: 'Você deixou o falatório para lá e foi treinar.' },

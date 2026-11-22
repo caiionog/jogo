@@ -4,3 +4,4 @@ export * from './character';
 export * from './lifeStages';
 export * from './events';
 export * from './fighting';
+export * from './relationships';

@@ -47,6 +47,7 @@ describe('conteúdo', () => {
   it('eventos followUp são alvo de algum agendamento', () => {
     const targets = new Set(JSON.stringify(GAME_CONTENT).match(/"eventId":"[^"]+"/g)!.map((m) => m.slice(11, -1)));
     if (GAME_CONTENT.fighting.hooks.weightMissEventId) targets.add(GAME_CONTENT.fighting.hooks.weightMissEventId);
+    for (const h of Object.values(GAME_CONTENT.relationships.hooks)) if (h) targets.add(h);
     for (const e of GAME_CONTENT.events.filter((x) => x.trigger === 'followUp')) expect(targets.has(e.id), e.id).toBe(true);
   });
 

@@ -11,9 +11,16 @@ import {
   randomAdultHeight,
   randomSchool,
   seedToState,
+  emptyRelationships,
+  generateFamily,
+  setCoach,
+  survivalByAge,
+  updatePerson,
+  relationsOf,
 } from '../engine';
 import { NAMES } from '../content/names';
 import { GYMS } from '../content/gyms';
+import { GAME_CONTENT } from '../content';
 
 export const CURRENT_VERSION = STATE_VERSION;
 
@@ -26,6 +33,7 @@ type AnySave = Record<string, unknown> & { version: number };
 export const migrations: Record<number, (save: AnySave) => AnySave> = {
   1: migrateV1toV2,
   2: migrateV2toV3,
+  3: migrateV3toV4,
 };
 
 export class SaveMigrationError extends Error {}
@@ -167,4 +175,28 @@ function migrateV2toV3(save: AnySave): AnySave {
     world: emptyWorld(),
     activeFight: null,
   };
+}
+
+// ---------------------------------------------------------------------------
+// v3 → v4 (Etapa 4: relacionamentos)
+// ---------------------------------------------------------------------------
+
+/**
+ * Cria a família coerente com a idade (pais vivos ou não conforme a idade deles, irmãos plausíveis),
+ * o(a) treinador(a) da academia atual e a opção "Conteúdo adulto" DESLIGADA.
+ */
+function migrateV3toV4(save: AnySave): AnySave {
+  const s = { ...(save as unknown as GameState), relationships: emptyRelationships(false) };
+  const rng = createRng(seedToState(`${s.seed}:v4`));
+  let g: GameState = generateFamily(s, rng, GAME_CONTENT, s.character.age);
+  // pais podem já ter falecido
+  for (const { person } of relationsOf(g, ['pai', 'mae'])) {
+    if (!rng.chance(survivalByAge(person.age))) {
+      const deathAge = Math.max(40, person.age - rng.int(1, Math.max(1, s.character.age - 1)));
+      g = updatePerson(g, person.id, (p) => ({ ...p, alive: false, deathAge }));
+    }
+  }
+  const gym = GYMS.find((x) => x.id === s.fighter.gymId);
+  if (gym) g = setCoach(g, rng, GAME_CONTENT, gym.id);
+  return { ...(g as unknown as AnySave), rngState: s.rngState, version: 4 };
 }

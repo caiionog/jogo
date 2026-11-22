@@ -29,7 +29,7 @@ describe('migrações de save', () => {
     }
   });
 
-  it.each(['1', '8', '16', '25'])('v1 → atual com idade %s (cadeia v1→v2→v3)', (key) => {
+  it.each(['1', '8', '16', '25'])('v1 → atual com idade %s (cadeia v1→…→atual)', (key) => {
     const raw = structuredClone(v1[key]!);
     const g = migrate(raw);
     const age = g.character.age;
@@ -77,7 +77,7 @@ describe('migração v2 → v3 (carreira de luta)', () => {
     const raw = structuredClone(v2[key]!);
     const g = migrate(raw);
     const age = g.character.age;
-    expect(g.version).toBe(3);
+    expect(g.version).toBe(CURRENT_VERSION);
     expect(g.rngState).toBe(v2[key]!.rngState);
     // corpo
     expect(g.character.heightCm).toBeGreaterThan(age < 3 ? 60 : 100);
@@ -112,5 +112,45 @@ describe('migração v2 → v3 (carreira de luta)', () => {
 
   it('é determinística', () => {
     expect(migrate(structuredClone(v2['9']!))).toEqual(migrate(structuredClone(v2['9']!)));
+  });
+});
+
+import fixturesV3 from './fixtures/saves-v3.json';
+import { relationsOf } from '../src/engine';
+const v3 = fixturesV3 as unknown as Record<string, Raw>;
+
+describe('migração v3 → v4 (relacionamentos)', () => {
+  it('fixtures são saves v3 reais (Etapa 3)', () => {
+    for (const s of Object.values(v3)) {
+      expect(s.version).toBe(3);
+      expect(s).not.toHaveProperty('relationships');
+    }
+  });
+
+  it.each(['3', '12', '20', '35'])('idade %s: família coerente, treinador e conteúdo adulto desligado', (key) => {
+    const g = migrate(structuredClone(v3[key]!));
+    const age = g.character.age;
+    expect(g.version).toBe(4);
+    expect(g.rngState).toBe(v3[key]!.rngState);
+    expect(g.relationships.settings.adultContent).toBe(false);
+    const parents = relationsOf(g, ['pai', 'mae'], false);
+    expect(parents).toHaveLength(2);
+    for (const { person } of parents) {
+      expect(person.age - age).toBeGreaterThanOrEqual(19);
+      expect(person.age - age).toBeLessThanOrEqual(42);
+      if (!person.alive) expect(person.deathAge).toBeLessThanOrEqual(person.age);
+    }
+    for (const { person } of relationsOf(g, ['irmao'])) expect(person.age).toBeGreaterThan(age);
+    const coach = relationsOf(g, ['treinador']);
+    expect(coach.length).toBe(g.fighter.gymId ? 1 : 0);
+    // continua jogável
+    let s = resolveAllFirst(advanceYear(g, GAME_CONTENT));
+    s = resolveAllFirst(advanceYear(s, GAME_CONTENT));
+    expect(s.character.age).toBe(age + 2);
+    expect(JSON.parse(JSON.stringify(s))).toEqual(s);
+  });
+
+  it('é determinística', () => {
+    expect(migrate(structuredClone(v3['20']!))).toEqual(migrate(structuredClone(v3['20']!)));
   });
 });

@@ -100,7 +100,8 @@ export const ACTIONS: readonly ActionDef[] = [
     energyCost: 1,
     minAge: 3,
     requires: { enrolled: true },
-    effects: { stats: { happiness: 2 }, school: { popularity: 4 } },
+    // pode render uma amizade de verdade (pessoa na aba Relações)
+    effects: { stats: { happiness: 2 }, school: { popularity: 4 }, social: { meet: { context: 'school', chance: 0.45 } } },
     variance: 1,
     logTexts: [
       'Você puxou papo com colegas novos no intervalo.',

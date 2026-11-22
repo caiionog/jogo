@@ -17,6 +17,7 @@ export function validateContent(content: GameContent): string[] {
   const fc = content.fighting;
   const orgIds = new Set(fc.orgs.map((o) => o.id));
   const gymIds = new Set(fc.gyms.map((g) => g.id));
+  const traitIds = new Set(content.relationships.traits.map((t) => t.id));
 
   const checkEffects = (where: string, fx: Effects | undefined) => {
     if (!fx) return;
@@ -32,6 +33,8 @@ export function validateContent(content: GameContent): string[] {
     for (const k of Object.keys(ff?.skills ?? {})) {
       if (!['striking', 'wrestling', 'grappling', 'defense', 'cardio', 'chin'].includes(k)) errors.push(`${where}: habilidade desconhecida "${k}"`);
     }
+    const so = fx.social;
+    if (so?.pregnancyChance !== undefined && !(so.pregnancyChance > 0 && so.pregnancyChance <= 1)) errors.push(`${where}: pregnancyChance fora de (0,1]`);
     for (const f of fx.followUps ?? []) {
       if (!allEventIds.has(f.eventId)) errors.push(`${where}: followUp para evento inexistente "${f.eventId}"`);
       if (!Number.isInteger(f.delayYears) || f.delayYears < 0) errors.push(`${where}: delayYears inválido`);
@@ -50,6 +53,18 @@ export function validateContent(content: GameContent): string[] {
     if (c.minAge !== undefined && c.maxAge !== undefined && c.minAge > c.maxAge) errors.push(`${e.id}: minAge > maxAge`);
     for (const s of c.schoolStages ?? []) if (!STAGE_ORDER.includes(s)) errors.push(`${e.id}: fase escolar inválida "${s}"`);
     if (Array.isArray(c.club)) for (const id of c.club) if (!clubIds.has(id)) errors.push(`${e.id}: clube inexistente "${id}"`);
+    // relacionamentos
+    const relTypes = ['pai', 'mae', 'irmao', 'amigo', 'parceiro', 'conjuge', 'ex', 'filho', 'treinador', 'rival', 'colega_treino'];
+    for (const t of [...(c.relationship?.types ?? []), ...(c.hasRelation ?? []), ...(c.noRelation ?? [])]) if (!relTypes.includes(t)) errors.push(`${e.id}: tipo de relação inválido "${t}"`);
+    for (const t of c.relationship?.traits ?? []) if (!traitIds.has(t)) errors.push(`${e.id}: traço inexistente "${t}"`);
+    if (e.tags?.includes('adult')) {
+      // regra obrigatória: eventos adultos só para 18+ (o motor também filtra por canHaveSexualContent)
+      if ((c.minAge ?? 0) < 18) errors.push(`${e.id}: evento 'adult' precisa de minAge >= 18`);
+      if (c.relationship && (c.relationship.personAge?.min ?? 0) < 18) errors.push(`${e.id}: evento 'adult' com pessoa-alvo precisa de personAge.min >= 18`);
+    }
+    if (!e.tags?.includes('adult') && c.maxAge !== undefined && c.maxAge < 18 && c.relationship?.types.some((t) => t === 'parceiro') && (c.relationship.personAge?.max ?? 99) > 17) {
+      errors.push(`${e.id}: romance adolescente precisa limitar personAge a 14–17`);
+    }
     if (c.fighting?.orgEligible && !orgIds.has(c.fighting.orgEligible)) errors.push(`${e.id}: organização inexistente "${c.fighting.orgEligible}"`);
     for (const o of c.fighting?.orgs ?? []) if (!orgIds.has(o)) errors.push(`${e.id}: organização inexistente "${o}"`);
     const choiceIds = new Set<string>();
@@ -111,5 +126,14 @@ export function validateContent(content: GameContent): string[] {
   if (!fc.text.submissions.length) errors.push('fightText: sem finalizações');
   if (fc.hooks.weightMissEventId && !allEventIds.has(fc.hooks.weightMissEventId)) errors.push(`hook: evento inexistente "${fc.hooks.weightMissEventId}"`);
   if (!fc.nicknames.length || !fc.injuries.length) errors.push('apelidos/lesões vazios');
+  // relacionamentos
+  if (traitIds.size !== content.relationships.traits.length) errors.push('ids de traço duplicados');
+  for (const t of content.relationships.traits) for (const x of [...(t.likes ?? []), ...(t.dislikes ?? [])]) if (!traitIds.has(x)) errors.push(`traço ${t.id}: referência inexistente "${x}"`);
+  for (const h of Object.values(content.relationships.hooks)) if (h && !allEventIds.has(h)) errors.push(`hook: evento inexistente "${h}"`);
+  // efeitos com chance de gravidez/IST só em eventos 18+
+  for (const e of content.events) {
+    const fxs = e.choices.flatMap((ch) => [ch.effects, ch.risk?.effects]);
+    if (fxs.some((fx) => fx?.social?.pregnancyChance || fx?.social?.ist) && (e.conditions.minAge ?? 0) < 18) errors.push(`${e.id}: gravidez/IST exige minAge >= 18`);
+  }
   return errors;
 }

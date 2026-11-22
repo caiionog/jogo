@@ -1,6 +1,7 @@
 import type { Effects } from '../core/effects';
 import type { ClubId, SchoolStage, SchoolType, Sex, StatKey } from '../core/state';
 import type { Tier } from '../fighting/types';
+import type { CivilStatus, RelType, RomanceStage, TraitId } from '../relationships/types';
 
 export interface StatRange {
   min?: number;
@@ -34,7 +35,37 @@ export interface EventConditions {
 
   // --- carreira de luta ---
   fighting?: FightingConditions;
+
+  // --- relacionamentos ---
+  /** Escolhe uma pessoa-alvo ({pessoa}) entre as relações que batem; o evento só acontece se houver alguma. */
+  relationship?: RelationshipCondition;
+  /** Existe ao menos uma relação (viva) destes tipos. */
+  hasRelation?: RelType[];
+  /** Não existe relação (viva) destes tipos. */
+  noRelation?: RelType[];
+  civilStatus?: CivilStatus[];
+  /** Número de filhos (vivos). */
+  children?: StatRange;
+  /** Idade do(a) parceiro(a) romântico(a) atual (exige ter parceiro). */
+  partnerAge?: StatRange;
 }
+
+export interface RelationshipCondition {
+  types: RelType[];
+  affection?: StatRange;
+  /** Basta um destes traços. */
+  traits?: TraitId[];
+  /** Idade da pessoa-alvo. */
+  personAge?: StatRange;
+  stages?: RomanceStage[];
+  /** A pessoa treina na mesma academia do personagem. */
+  sameGym?: boolean;
+  /** Flag da pessoa-alvo que precisa estar presente. */
+  personFlag?: string;
+}
+
+/** Tags de evento. 'adult' = conteúdo adulto (só 18+, com a opção ligada; ver guards.ts). */
+export type EventTag = 'adult';
 
 export interface FightingConditions {
   /** Organização do contrato atual. */
@@ -94,6 +125,7 @@ export interface GameEvent {
   trigger?: EventTrigger;
   /** Se true, só acontece uma vez por vida. */
   once?: boolean;
+  tags?: EventTag[];
   /** Texto com placeholders: {name}, {city}, {escola}, {da_escola}, {na_escola}, {colega}, {professor}, {clube}, {o/a}. */
   text: string;
   choices: EventChoice[];

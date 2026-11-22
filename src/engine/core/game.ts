@@ -18,11 +18,16 @@ import {
   joinClubState,
   startSchoolYear,
 } from '../lifeStages/school';
-import { autoEvents, conditionsMet, selectEvents } from '../events/select';
+import { autoEvents, conditionsMet, matchingTargets, selectEvents } from '../events/select';
+import { relLabel } from '../relationships/people';
+import { targetVars } from '../relationships/social';
 import type { GameEvent } from '../events/types';
 import { baseSkills, emptyWorld, newFighterProfile } from '../fighting/profile';
 import { updateBody } from '../fighting/body';
 import { endFightingYear, startFightingYear } from '../fighting/career';
+import { emptyRelationships } from '../relationships/people';
+import { generateFamily } from '../relationships/family';
+import { relationshipsYear } from '../relationships/year';
 
 export interface NewGameOptions {
   seed: string | number;
@@ -30,6 +35,10 @@ export interface NewGameOptions {
   sex: Sex;
   /** Ano de nascimento. Se omitido, é sorteado pelo seed. */
   birthYear?: number;
+  /** Opção "Conteúdo adulto" (padrão: desligada). */
+  adultContent?: boolean;
+  /** Interesse amoroso (padrão: ambos). */
+  preference?: 'M' | 'F' | 'any';
 }
 
 /** Executa `fn` com um RNG criado a partir do estado e grava o novo rngState. */
@@ -61,9 +70,13 @@ export function newGame(options: NewGameOptions, content: GameContent): GameStat
     fighter: newFighterProfile({ ...baseSkills(), chin: rng.int(40, 75) }, talent),
     world: emptyWorld(),
     activeFight: null,
+    relationships: { ...emptyRelationships(options.adultContent ?? false), settings: { adultContent: options.adultContent ?? false, preference: options.preference ?? 'any' } },
     log: [],
     alive: true,
   };
+  const withFamily = generateFamily(state, rng, content, 0);
+  state.relationships = withFamily.relationships;
+  state.rngState = rng.state;
   const max = maxEnergy(0, character.stats.health);
   const pronoun = character.sex === 'M' ? 'um menino' : 'uma menina';
   return appendLog(
@@ -246,12 +259,21 @@ function pickYearEvents(state: GameState, content: GameContent, rng: Rng, target
   const chosen = new Set<string>(state.pendingEvents.map((p) => p.eventId));
   const add = (event: GameEvent, source: PendingEvent['source'], vars?: EventVars) => {
     chosen.add(event.id);
-    pending.push({ eventId: event.id, source, vars: vars ?? makeEventVars(state, rng, content) });
+    let v = vars ?? makeEventVars(state, rng, content);
+    // evento com pessoa-alvo: sorteia quem é {pessoa} (follow-ups herdam o alvo)
+    if (event.conditions.relationship && !v.pessoa_id) {
+      const targets = matchingTargets(state, event);
+      if (targets.length) {
+        const t = rng.pick(targets);
+        v = { ...v, ...targetVars(t.person, relLabel(t.rel.type, t.person.sex)) };
+      }
+    }
+    pending.push({ eventId: event.id, source, vars: v });
   };
 
   for (const s of due) {
     const ev = byId(s.eventId);
-    if (ev && !chosen.has(ev.id) && conditionsMet(state, ev, content)) add(ev, 'followUp', s.vars);
+    if (ev && !chosen.has(ev.id) && conditionsMet(state, ev, content, s.vars)) add(ev, 'followUp', s.vars);
   }
   for (const ev of autoEvents(state, content.events, content)) if (!chosen.has(ev.id)) add(ev, 'auto');
 
@@ -300,6 +322,7 @@ export function advanceYear(
     next = startSchoolYear(next, rng, content);
     const max = maxEnergy(next.character.age, next.character.stats.health);
     next = { ...next, energy: { current: max, max } };
+    next = relationshipsYear(next, rng, content);
     next = startFightingYear(next, rng, content);
 
     const target = rng.chance(twoEventChance) ? 2 : 1;

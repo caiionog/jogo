@@ -2,7 +2,11 @@ import type { Rng } from '../core/rng';
 import type { GameState } from '../core/state';
 import { STAT_KEYS } from '../core/state';
 import { stageOfGrade } from '../lifeStages/school';
-import type { EventConditions, FightingConditions, GameEvent, SchoolResultTag, StatRange } from './types';
+import type { EventConditions, FightingConditions, GameEvent, RelationshipCondition, SchoolResultTag, StatRange } from './types';
+import type { EventVars } from '../core/state';
+import { adultContentAllowed, canHaveSexualContent } from '../relationships/guards';
+import { childrenOf, civilStatus, currentPartner, relationsOf } from '../relationships/people';
+import type { Person, Relation } from '../relationships/types';
 import type { GameContent } from '../core/content';
 import { beltPromotionReady } from '../fighting/belts';
 import { getOrg, isOrgEligible, currentRosterKey } from '../fighting/orgs';
@@ -77,8 +81,56 @@ function fightingConditionsMet(state: GameState, c: FightingConditions, content?
   return true;
 }
 
-/** Verifica apenas as condições do evento (idade, atributos, flags, escola, luta, `once`). */
-export function conditionsMet(state: GameState, event: GameEvent, content?: GameContent): boolean {
+/** Pessoas que satisfazem a condição de relacionamento do evento (alvos possíveis). */
+export function matchingTargets(state: GameState, event: GameEvent): { person: Person; rel: Relation }[] {
+  const c: RelationshipCondition | undefined = event.conditions.relationship;
+  if (!c) return [];
+  const adult = event.tags?.includes('adult');
+  return relationsOf(state, c.types).filter(({ person, rel }) => {
+    if (!inRange(rel.affection, c.affection)) return false;
+    if (!inRange(person.age, c.personAge)) return false;
+    if (c.traits && !c.traits.some((t) => person.traits.includes(t))) return false;
+    if (c.stages && (!rel.romance || !c.stages.includes(rel.romance.stage))) return false;
+    if (c.sameGym !== undefined && (!!state.fighter.gymId && person.flags.academia === state.fighter.gymId) !== c.sameGym) return false;
+    if (c.personFlag && !person.flags[c.personFlag]) return false;
+    // evento adulto: a pessoa-alvo também precisa ter 18+
+    if (adult && !canHaveSexualContent(state.character, person)) return false;
+    return true;
+  });
+}
+
+function relationshipConditionsMet(state: GameState, event: GameEvent, vars?: EventVars): boolean {
+  const c = event.conditions;
+  if (c.hasRelation && relationsOf(state, c.hasRelation).length === 0) return false;
+  if (c.noRelation && relationsOf(state, c.noRelation).length > 0) return false;
+  if (c.civilStatus && !c.civilStatus.includes(civilStatus(state))) return false;
+  if (c.children && !inRange(childrenOf(state).length, c.children)) return false;
+  if (c.partnerAge) {
+    const p = currentPartner(state);
+    if (!p || !inRange(p.person.age, c.partnerAge)) return false;
+  }
+  if (c.relationship) {
+    const targets = matchingTargets(state, event);
+    if (vars?.pessoa_id) return targets.some((t) => t.person.id === vars.pessoa_id);
+    if (targets.length === 0) return false;
+  }
+  return true;
+}
+
+/**
+ * Regra de conteúdo adulto: eventos com a tag 'adult' só passam com a opção ligada, personagem 18+
+ * e, havendo parceiro(a) atual, parceiro(a) 18+ (canHaveSexualContent).
+ */
+export function adultTagAllowed(state: GameState, event: GameEvent): boolean {
+  if (!event.tags?.includes('adult')) return true;
+  if (!adultContentAllowed(state)) return false;
+  const p = currentPartner(state);
+  return !p || canHaveSexualContent(state.character, p.person);
+}
+
+/** Verifica apenas as condições do evento (idade, atributos, flags, escola, luta, relações, `once`). */
+export function conditionsMet(state: GameState, event: GameEvent, content?: GameContent, vars?: EventVars): boolean {
+  if (!adultTagAllowed(state, event)) return false;
   const c = event.conditions;
   const { age, sex, stats } = state.character;
   if (event.once && state.firedEvents.includes(event.id)) return false;
@@ -98,6 +150,7 @@ export function conditionsMet(state: GameState, event: GameEvent, content?: Game
     if (!c.schoolResult.some((t) => tags.includes(t))) return false;
   }
   if (c.fighting && !fightingConditionsMet(state, c.fighting, content)) return false;
+  if (!relationshipConditionsMet(state, event, vars)) return false;
   return true;
 }
 

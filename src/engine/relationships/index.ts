@@ -1,2 +1,9 @@
-// Etapa 4: família, amizades, namoro, casamento e filhos. Ainda não implementado.
-export {};
+// Etapa 4: relacionamentos.
+export * from './types';
+export * from './guards';
+export * from './people';
+export * from './family';
+export * from './romance';
+export * from './actions';
+export * from './social';
+export * from './year';

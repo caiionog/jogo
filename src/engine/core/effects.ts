@@ -6,6 +6,8 @@ import { joinClubState, transferSchool } from '../lifeStages/school';
 import { withPreposition } from '../character/names';
 import { applyFighterEffects } from '../fighting/career';
 import type { FighterEffects } from '../fighting/career';
+import { applySocialEffects } from '../relationships/social';
+import type { SocialEffects } from '../relationships/social';
 
 /** Agenda um evento de continuação. delayYears = 0 → pendente imediatamente. */
 export interface FollowUp {
@@ -38,6 +40,8 @@ export interface Effects {
   school?: SchoolEffects;
   /** Efeitos de carreira de luta (habilidades, reputação, academia, contrato, lesão, ofertas...). */
   fighter?: FighterEffects;
+  /** Efeitos de relacionamento (afeto do alvo {pessoa}, conhecer alguém, namoro, casamento, filhos...). */
+  social?: SocialEffects;
   followUps?: FollowUp[];
 }
 
@@ -75,6 +79,10 @@ export function applyEffects(state: GameState, effects: Effects | undefined, ctx
     if (needsCtx && !ctx) throw new Error('applyEffects: efeitos de luta exigem EffectContext');
     if (ctx) next = applyFighterEffects(next, fx, ctx.rng, ctx.content, ctx.vars);
     else next = { ...next, fighter: applyFighterEffectsNoCtx(next, fx) };
+  }
+  if (effects.social) {
+    if (!ctx) throw new Error('applyEffects: efeitos sociais exigem EffectContext');
+    next = applySocialEffects(next, effects.social, ctx.rng, ctx.content, ctx.vars);
   }
   if (effects.followUps?.length) next = applyFollowUps(next, effects.followUps, ctx);
   return next;
