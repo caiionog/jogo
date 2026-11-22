@@ -1,3 +1,5 @@
+import type { HealthState } from '../health/types';
+import type { Dynasty, LifeEnding } from '../legacy/types';
 import type { ActiveFight, FighterProfile, World } from '../fighting/types';
 import type { RelationshipsState } from '../relationships/types';
 import type { EconomyState } from '../economy/types';
@@ -34,6 +36,8 @@ export interface Character {
   /** Biotipo: −2 (magro) … +2 (largo). Ajusta o IMC. */
   build: number;
   stats: Stats;
+  /** Preenchido na morte (Etapa 6). */
+  death?: { age: number; year: number; cause: string };
 }
 
 export interface Energy {
@@ -153,6 +157,14 @@ export interface GameState {
   /** Histórico ano a ano. O último item é o ano atual. */
   log: LogYear[];
   alive: boolean;
+  /** Lesões, sequelas, dano cerebral (oculto), doenças e hábitos (Etapa 6). */
+  health: HealthState;
+  /** Contadores para conquistas (KO no rival, cirurgias, empresas abertas...). */
+  feats: Record<string, number>;
+  /** Família jogada ao longo das gerações (Etapa 6). */
+  dynasty: Dynasty;
+  /** Fim da vida (obituário, nota, partilha) — preenchido na morte. */
+  ending: LifeEnding | null;
 }
 
-export const STATE_VERSION = 5;
+export const STATE_VERSION = 6;

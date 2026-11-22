@@ -4,6 +4,9 @@ import type { ClubId, SchoolStage } from './state';
 import type { FightingContent } from '../fighting/types';
 import type { RelationshipsContent } from '../relationships/types';
 import type { EconomyContent } from '../economy/types';
+import type { HealthContent } from '../health/types';
+import type { LegacyContent } from '../legacy/types';
+import type { AchievementDef } from '../meta/types';
 
 /** Risco de uma ação: efeitos ADICIONAIS aplicados com probabilidade `chance`. */
 export interface ActionRisk {
@@ -79,4 +82,7 @@ export interface GameContent {
   fighting: FightingContent;
   relationships: RelationshipsContent;
   economy: EconomyContent;
+  health: HealthContent;
+  legacy: LegacyContent;
+  achievements: readonly AchievementDef[];
 }

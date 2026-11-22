@@ -9,7 +9,7 @@ import type { EventVars, GameState } from '../core/state';
 import { addStats, appendLog } from '../core/stats';
 import { beltPromotionReady, promoteBelt } from './belts';
 import { findMatches, ephemeralOpponent, npcToOpponent, opponentFullName, playerLevel } from './matchmaking';
-import { currentRosterKey, getOrg, leaveRankings, playerDivision, signWith } from './orgs';
+import { currentRosterKey, getOrg, leaveRankings, playerDivision, signWith, tierIndex } from './orgs';
 import { PLAYER_ID, addSkills, playerSnapshot, shortName } from './profile';
 import { applyRankingResult, rankOf } from './ranking';
 import { DECISION_TEXT, aiStrategy, chooseCorner, playRound, startFight } from './simulateFight';
@@ -21,6 +21,7 @@ import type {
   Opponent,
   OfferKind,
   OrgDef,
+  RetireReason,
   Skills,
   Strategy,
 } from './types';
@@ -29,6 +30,11 @@ import { partnerSupportsFighting, setCoach } from '../relationships/social';
 import { post } from '../economy/ledger';
 import { checkSponsorClauses, countContractFight, payFightPurse, purseMultiplier } from '../economy/fightIncome';
 import { addSkills as addSk } from './profile';
+import { applyFightInjuries, injuryFightPenalty, injuryVeto, legacyInjury } from './injuries';
+import { bumpFeat, maxFeat } from '../meta/feats';
+import { addRelation, createPerson, relationsOf } from '../relationships/people';
+import type { Person } from '../relationships/types';
+import { checkForcedRetirement, completeRetirement, unretire } from './retirement';
 
 export const AGGRESSIVE_CUT_MISS_CHANCE = 0.25;
 export const AGGRESSIVE_CUT_EDGE = 0.6;
@@ -91,7 +97,7 @@ function ephemeral(state: GameState, rng: Rng, org: OrgDef, level: number, conte
 export function generateOffers(state: GameState, rng: Rng, content: GameContent): GameState {
   let s: GameState = { ...state, fighter: { ...state.fighter, offers: [] } };
   const f = s.fighter;
-  if (!s.alive || f.injury || f.suspendedYears > 0) return s;
+  if (!s.alive || injuryVeto(s) || f.retired || f.suspendedYears > 0) return s;
   const age = s.character.age;
   const trains = trainsFighting(s, content);
   const lvl = playerLevel(s);
@@ -131,13 +137,14 @@ export function generateOffers(state: GameState, rng: Rng, content: GameContent)
 // Luta
 // ---------------------------------------------------------------------------
 
-export type FightBlockReason = 'dead' | 'busy' | 'injured' | 'suspended' | 'no-energy' | 'unknown';
+export type FightBlockReason = 'dead' | 'busy' | 'injured' | 'suspended' | 'retired' | 'no-energy' | 'unknown';
 
 export function fightBlockReason(state: GameState, offer: FightOffer | undefined): FightBlockReason | null {
   if (!offer) return 'unknown';
   if (!state.alive) return 'dead';
   if (state.activeFight || state.pendingEvents.length > 0) return 'busy';
-  if (state.fighter.injury) return 'injured';
+  if (state.fighter.retired && offer.kind !== 'farewell') return 'retired';
+  if (injuryVeto(state)) return 'injured';
   if (state.fighter.suspendedYears > 0) return 'suspended';
   if (state.energy.current < offer.campCost) return 'no-energy';
   return null;
@@ -178,7 +185,9 @@ export function acceptOffer(state: GameState, offerId: string, opts: AcceptOptio
     const hook = content.fighting.hooks.weightMissEventId;
     if (hook) s = { ...s, pendingEvents: [...s.pendingEvents, { eventId: hook, source: 'action', vars: { lutador: opponentFullName(offer.opponent) } }] };
   }
+  // lesões ativas pesam na luta (lutar machucado) e o dano cerebral enfraquece o queixo (em playerSnapshot)
   let player = playerSnapshot(s, aggressive ? AGGRESSIVE_CUT_EDGE : 0, missed ? 85 : 100);
+  player = { ...player, skills: addSk(player.skills, injuryFightPenalty(s, content)) };
   // parceiro(a) que apoia a carreira: ânimo extra (+3 de cardio na luta)
   if (partnerSupportsFighting(s, content)) player = { ...player, skills: addSk(player.skills, { cardio: 3 }) };
   let fight = startFight(player, opponentSnapshot(offer.opponent), {
@@ -254,8 +263,7 @@ export function applyFightResult(state: GameState, content: GameContent): GameSt
   const repDelta = result === 'W' ? gain * (finish ? 1.5 : 1) * (offer.title ? 2 : 1) : result === 'L' ? -gain : 1;
   f.reputation = Math.min(100, Math.max(0, Math.round(f.reputation + repDelta)));
 
-  // queixo: quem é nocauteado fica mais vulnerável
-  if (result === 'L' && key === 'KO' && org.rules === 'mma') f.skills = addSkills(f.skills, { chin: -3 });
+  // queixo: quem é nocauteado fica mais vulnerável — desde a Etapa 6 via dano cerebral (applyFightInjuries + playerSnapshot)
 
   let s: GameState = { ...state, fighter: f };
   if (earnings > 0) s = payFightPurse(s, earnings, `Bolsa: luta contra ${opponentFullName(offer.opponent)}`);
@@ -283,6 +291,7 @@ export function applyFightResult(state: GameState, content: GameContent): GameSt
       if (isChampion && !wasChampion) {
         s = { ...s, fighter: { ...s.fighter, titles: [...s.fighter.titles, { orgId: org.id, divisionId: roster.divisionId }], titlesWon: s.fighter.titlesWon + 1 } };
         titleText = ` 🏆 Você é o novo campeão ${division?.label.toLowerCase() ?? ''} da ${org.short}!`;
+        s = bumpFeat(s, org.tier === 'major' ? 'majorTitles' : 'regionalTitles');
       } else if (wasChampion && !isChampion) {
         s = { ...s, fighter: { ...s.fighter, titles: s.fighter.titles.filter((t) => !(t.orgId === org.id && t.divisionId === roster!.divisionId)) } };
         titleText = ' Você perdeu o cinturão.';
@@ -290,21 +299,13 @@ export function applyFightResult(state: GameState, content: GameContent): GameSt
     }
   }
 
-  // saúde e lesão
+  // saúde, dano cerebral e lesões (Etapa 6)
   const dmg = fight.live[0].damage;
-  let p = 0.04 + (result === 'L' && key === 'KO' ? 0.3 : 0) + (dmg >= 70 ? 0.12 : 0);
-  if (org.rules === 'grappling') p *= 0.3;
   s = { ...s, character: { ...s.character, stats: addStats(s.character.stats, { health: -Math.round(dmg / 12) }) } };
-  let injuryText = '';
-  if (rng.chance(p)) {
-    const name = rng.pick(content.fighting.injuries);
-    s = {
-      ...s,
-      fighter: { ...s.fighter, injury: { name, yearsLeft: 1 } },
-      character: { ...s.character, stats: addStats(s.character.stats, { health: -10 }) },
-    };
-    injuryText = ` Lesão: ${name} (fora por um ano).`;
-  }
+  const knockdowns = fight.roundStats.reduce((t, r) => t + r[1].knockdowns, 0);
+  const inj = applyFightInjuries(s, rng, content, { damage: dmg, koLoss: result === 'L' && key === 'KO', rules: org.rules, knockdowns, result, method: res.method });
+  s = inj.state;
+  const injuryText = inj.text;
 
   // log e histórico
   const how = res.method === 'DEC' ? `decisão ${DECISION_TEXT[res.decisionType ?? 'unanimous']}` : `${METHOD_TEXT[res.method]} no ${res.round}º round`;
@@ -327,7 +328,49 @@ export function applyFightResult(state: GameState, content: GameContent): GameSt
     },
   };
   if (result === 'L') s = checkSponsorClauses(s, content);
+  if (result === 'L' && offer.opponent.id.startsWith('n') && (res.method === 'KO' || res.method === 'TKO' || offer.title)) s = makeNpcRival(s, offer.opponent, rng, content, how);
+  s = recordFightFeats(s, { result, method: res.method, bucket, title: offer.title, wasInjured: state.health.injuries.length > 0, farewell: offer.kind === 'farewell', opponentId: offer.opponent.id, titleText });
+  if (offer.kind === 'farewell') s = completeRetirement(s, 'voluntaria', result === 'W' ? 'Você venceu a luta de despedida e saiu por cima.' : 'Você fez a luta de despedida diante da sua torcida.');
+  else s = checkForcedRetirement(s, content);
   return { ...s, rngState: rng.state, activeFight: { ...af, applied: true, summary, earnings } };
+}
+
+/** Máximo de rivais do mundo da luta ao mesmo tempo. */
+export const MAX_NPC_RIVALS = 3;
+
+/** Quem te nocauteia (ou tira o cinturão) vira rival: pessoa ligada ao NPC do elenco por `npcId`. */
+function makeNpcRival(state: GameState, opp: Opponent, rng: Rng, content: GameContent, how: string): GameState {
+  const rivals = relationsOf(state, ['rival']);
+  if (rivals.some(({ person }) => person.npcId === opp.id) || rivals.filter(({ person }) => person.npcId).length >= MAX_NPC_RIVALS) return state;
+  let s = state;
+  let p: Person;
+  [s, p] = createPerson(s, rng, content, { age: s.character.age + rng.int(-3, 3), sex: s.character.sex, name: opponentFullName(opp), npcId: opp.id, athletic: 80 });
+  s = addRelation(s, p.id, 'rival', 10, { history: [`Venceu você por ${how}.`] });
+  return appendLog(s, `${opponentFullName(opp)} virou seu rival. A revanche fica para outro dia.`);
+}
+
+/** Façanhas da luta para as conquistas (KO no rival, invencibilidade, defesas de cinturão...). */
+function recordFightFeats(
+  state: GameState,
+  o: { result: 'W' | 'L' | 'D'; method: string; bucket: string; title: boolean; wasInjured: boolean; farewell: boolean; opponentId: string; titleText: string },
+): GameState {
+  let s = state;
+  if (o.bucket === 'pro') {
+    s = maxFeat(s, 'maxUnbeaten', o.result === 'L' ? 0 : (s.feats.curUnbeaten ?? 0) + 1);
+    s = { ...s, feats: { ...s.feats, curUnbeaten: o.result === 'L' ? 0 : (s.feats.curUnbeaten ?? 0) + 1 } };
+    s = { ...s, feats: { ...s.feats, curLosses: o.result === 'L' ? (s.feats.curLosses ?? 0) + 1 : 0 } };
+  }
+  if (o.result === 'W' && (o.method === 'KO' || o.method === 'TKO')) s = bumpFeat(s, 'koWins');
+  if (o.result === 'W' && o.method === 'SUB') s = bumpFeat(s, 'subWins');
+  if (o.title && o.result === 'W' && o.titleText.includes('defendido')) s = bumpFeat(s, 'titleDefenses');
+  if (o.wasInjured) s = bumpFeat(s, 'foughtInjured');
+  if (o.farewell && o.result === 'W') s = bumpFeat(s, 'farewellWin');
+  if (o.result === 'W' && (o.method === 'KO' || o.method === 'TKO')) {
+    const rival = relationsOf(s, ['rival']).some(({ person }) => person.npcId === o.opponentId);
+    if (rival) s = bumpFeat(s, 'koRival');
+  }
+  s = maxFeat(s, 'oldestFightAge', s.character.age);
+  return maxFeat(s, 'peakRep', s.fighter.reputation);
 }
 
 // ---------------------------------------------------------------------------
@@ -340,7 +383,6 @@ export function endFightingYear(state: GameState, content: GameContent): GameSta
   const gym = currentGym(state, content);
   let s: GameState = state;
   const trainedBjj = f.trainedBjjThisYear || gym?.specialty === 'grappling';
-  const injury = f.injury ? (f.injury.yearsLeft > 1 ? { ...f.injury, yearsLeft: f.injury.yearsLeft - 1 } : null) : null;
   const foughtThisYear = f.history.some((h) => h.year === state.year);
   s = {
     ...s,
@@ -349,13 +391,13 @@ export function endFightingYear(state: GameState, content: GameContent): GameSta
       offers: [],
       trainedBjjThisYear: false,
       belt: trainedBjj ? { ...f.belt, years: f.belt.years + 1 } : f.belt,
-      injury,
       suspendedYears: Math.max(0, f.suspendedYears - 1),
-      // a fama precisa de manutenção: cai um pouco todo ano (mais se não lutou)
-      reputation: Math.max(0, f.reputation - (f.reputation > 40 ? 3 : 0) - (!foughtThisYear && f.reputation > 5 ? 2 : 0)),
+      // a fama precisa de manutenção: cai um pouco todo ano (mais se não lutou); aposentado: lenda, cai devagar
+      reputation: f.retired
+        ? Math.max(0, f.reputation - (f.reputation > 0 ? 1 : 0))
+        : Math.max(0, f.reputation - (f.reputation > 40 ? 3 : 0) - (!foughtThisYear && f.reputation > 5 ? 2 : 0)),
     },
   };
-  if (f.injury && !injury) s = appendLog(s, `Você se recuperou da lesão (${f.injury.name}).`);
   if (f.suspendedYears === 1) s = appendLog(s, 'Sua suspensão acabou. Você pode voltar a lutar.');
 
   // mensalidade (a partir dos 18; reputação ≥ 15 rende bolsa de atleta)
@@ -366,7 +408,8 @@ export function endFightingYear(state: GameState, content: GameContent): GameSta
       s = appendLog(s, `Sem dinheiro para a mensalidade, você saiu da ${gym.name}.`);
     }
   }
-  return s;
+  s = maxFeat(s, 'peakRep', s.fighter.reputation);
+  return checkForcedRetirement(s, content);
 }
 
 /** Início do ano de luta (depois de envelhecer e da escola): declínio, mundo e ofertas. */
@@ -400,7 +443,11 @@ export interface FighterEffects {
   suspendYears?: number;
   vacateTitles?: boolean;
   promoteBelt?: boolean;
-  offer?: { kind: 'shortNotice' | 'rival' | 'titleDefense' | 'bjjOpen' };
+  offer?: { kind: 'shortNotice' | 'rival' | 'titleDefense' | 'bjjOpen' | 'farewell' };
+  /** Aposenta (Etapa 6). */
+  retire?: RetireReason;
+  /** Volta da aposentadoria. */
+  unretire?: boolean;
 }
 
 export function gymsInCity(state: GameState, content: GameContent) {
@@ -439,12 +486,8 @@ export function applyFighterEffects(state: GameState, fx: FighterEffects, rng: R
   // escândalo (suspensão) rompe patrocínios com cláusula de imagem
   if (fx.suspendYears) s = checkSponsorClauses(s, content, true);
   if (fx.injury) {
-    const name = fx.injury.name ?? rng.pick(content.fighting.injuries);
-    s = {
-      ...s,
-      fighter: { ...s.fighter, injury: { name, yearsLeft: fx.injury.years }, offers: [] },
-      character: { ...s.character, stats: addStats(s.character.stats, { health: -8 }) },
-    };
+    s = legacyInjury(s, rng, content, fx.injury.name, fx.injury.years);
+    if (injuryVeto(s)) s = { ...s, fighter: { ...s.fighter, offers: [] } };
   }
   if (fx.vacateTitles && s.fighter.titles.length) {
     s = leaveRankings(s, (k) => s.fighter.titles.some((t) => rosterKey(t.orgId, t.divisionId) === k));
@@ -457,11 +500,26 @@ export function applyFighterEffects(state: GameState, fx: FighterEffects, rng: R
   if (fx.signWith) s = signWith(s, fx.signWith, content);
   if (fx.promoteBelt && beltPromotionReady(s)) s = promoteBelt(s);
   if (fx.offer) s = effectOffer(s, fx.offer.kind, rng, content, vars);
+  if (fx.retire) s = completeRetirement(s, fx.retire);
+  if (fx.unretire) s = unretire(s);
   return s;
 }
 
+/** Luta de despedida: na liga atual (ou na melhor amadora/regional acessível), bolsa 1,5×. Depois dela, aposenta. */
+function farewellOffer(state: GameState, rng: Rng, content: GameContent): GameState {
+  if (state.fighter.retired || state.fighter.suspendedYears > 0) return completeRetirement(state, 'voluntaria');
+  const org =
+    getOrg(content, state.fighter.orgId) ??
+    content.fighting.orgs.filter((o) => o.sport === 'mma' && (o.tier === 'regional' || o.tier === 'amateur') && state.character.age >= o.minAge).sort((a, b) => tierIndex(b.tier) - tierIndex(a.tier))[0];
+  if (!org) return completeRetirement(state, 'voluntaria');
+  const opp = ephemeral(state, rng, org, playerLevel(state), content);
+  const offer = { ...makeOffer(state, org, 'farewell', opp, false, 1.5), kind: 'farewell' as const };
+  return pushOffer({ ...state, fighter: { ...state.fighter, offers: [] } }, offer, content);
+}
+
 function effectOffer(state: GameState, kind: NonNullable<FighterEffects['offer']>['kind'], rng: Rng, content: GameContent, vars?: EventVars): GameState {
-  if (state.fighter.injury || state.fighter.suspendedYears > 0) return state;
+  if (kind === 'farewell') return farewellOffer(state, rng, content);
+  if (injuryVeto(state) || state.fighter.retired || state.fighter.suspendedYears > 0) return state;
   const contract = getOrg(content, state.fighter.orgId);
   const amateur = content.fighting.orgs.find((o) => o.tier === 'amateur' && o.sport === 'mma');
   const bjj = content.fighting.orgs.find((o) => o.tier === 'amateur' && o.sport === 'bjj');
@@ -472,6 +530,11 @@ function effectOffer(state: GameState, kind: NonNullable<FighterEffects['offer']
   if (kind === 'rival') {
     const org = contract ?? amateur;
     if (!org) return state;
+    // revanche: um rival do elenco da sua categoria atual
+    const rkey = contract ? currentRosterKey(state, content) : null;
+    const roster = rkey ? state.world.rosters[rkey] : undefined;
+    const rivalNpc = roster ? relationsOf(state, ['rival']).map(({ person }) => roster.npcs.find((n) => n.id === person.npcId)).find((n) => n) : undefined;
+    if (rivalNpc && roster && contract) return pushOffer(state, makeOffer(state, contract, 'rival', npcToOpponent(rivalNpc, roster), false, 1.5), content);
     const opp = ephemeral(state, rng, org, lvl + 4, content, {
       ...(vars?.lutador_nome ? { name: vars.lutador_nome } : {}),
       ...(vars?.lutador_apelido ? { nick: vars.lutador_apelido } : {}),

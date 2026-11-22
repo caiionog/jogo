@@ -26,7 +26,7 @@ export function newFighterProfile(skills: Skills = baseSkills(), talent = 1): Fi
     titles: [],
     titlesWon: 0,
     winStreak: 0,
-    injury: null,
+    retired: null,
     suspendedYears: 0,
     history: [],
     trainedBjjThisYear: false,
@@ -68,7 +68,8 @@ export function playerSnapshot(state: GameState, sizeEdge: number, startStamina 
     id: PLAYER_ID,
     name: shortName(c.name),
     fullName: c.name,
-    skills: state.fighter.skills,
+    // dano cerebral acumulado (oculto) deixa o queixo mais fraco: mais knockdowns e nocautes
+    skills: { ...state.fighter.skills, chin: Math.max(0, state.fighter.skills.chin - (state.health?.brainDamage ?? 0) / 4) },
     strength: c.stats.strength,
     fitness: c.stats.fitness,
     sizeEdge,

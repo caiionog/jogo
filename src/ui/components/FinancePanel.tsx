@@ -18,6 +18,8 @@ import {
   netWorth,
   priceInstallment,
   relationsOf,
+  eligibleHeirs,
+  effectiveShares,
 } from '../../engine';
 import type { GameState, Housing, LedgerCategory, LivingStandard } from '../../engine';
 import { useGameStore } from '../store';
@@ -272,6 +274,65 @@ function Living({ game }: { game: GameState }) {
   );
 }
 
+const REL_NAME: Record<string, [string, string]> = { conjuge: ['Marido', 'Esposa'], filho: ['Filho', 'Filha'], irmao: ['Irmão', 'Irmã'], pai: ['Pai', 'Pai'], mae: ['Mãe', 'Mãe'] };
+
+/** Testamento (Etapa 6): % do patrimônio para cada herdeiro vivo; sem testamento vale a divisão padrão. */
+function WillSection({ game }: { game: GameState }) {
+  const makeWill = useGameStore((s) => s.makeWill);
+  const revokeWill = useGameStore((s) => s.revokeWill);
+  const heirs = eligibleHeirs(game);
+  const current = effectiveShares(game, C);
+  const [draft, setDraft] = useState<Record<string, number> | null>(null);
+  if (game.character.age < 18) return null;
+  const shares = draft ?? Object.fromEntries(heirs.map((h) => [h.person.id, Math.round(current.shares[h.person.id] ?? 0)]));
+  const sum = Object.values(shares).reduce((t, v) => t + v, 0);
+  const est = Math.max(0, netWorth(game)) * (1 - C.legacy.inheritanceTax);
+  const bump = (id: string, d: number) => setDraft({ ...shares, [id]: Math.max(0, Math.min(100, (shares[id] ?? 0) + d)) });
+  return (
+    <Section title="Testamento" right={<span className="text-[11px] text-slate-400">{game.economy.will ? `registrado em ${game.economy.will.year}` : 'sem testamento'}</span>}>
+      {heirs.length === 0 ? (
+        <p className="text-sm text-slate-400">Sem herdeiros vivos (cônjuge, filhos, irmãos ou pais).</p>
+      ) : (
+        <>
+          <p className="mb-2 text-[11px] text-slate-400">
+            {game.economy.will ? 'Sua partilha está registrada.' : 'Sem testamento vale a divisão padrão: cônjuge 50% e filhos dividem o resto; sem filhos, cônjuge; depois irmãos e pais.'} Imposto de herança: {pct(C.legacy.inheritanceTax)}.
+          </p>
+          <ul className="flex flex-col gap-1.5" data-testid="will-list">
+            {heirs.map(({ person, type }) => (
+              <li key={person.id} className="flex items-center justify-between gap-2 rounded-xl bg-slate-950 px-3 py-2">
+                <div className="min-w-0">
+                  <p className="truncate text-sm">{person.name.split(' ')[0]}</p>
+                  <p className="text-[11px] text-slate-400">
+                    {(REL_NAME[type] ?? [type, type])[person.sex === 'M' ? 0 : 1]} · {person.age} anos · ~{money.format((est * (shares[person.id] ?? 0)) / 100)}
+                  </p>
+                </div>
+                <div className="flex shrink-0 items-center gap-1">
+                  <button aria-label={`Menos para ${person.name}`} onClick={() => bump(person.id, -10)} className="h-11 w-11 rounded-lg border border-slate-700">
+                    −
+                  </button>
+                  <span className="w-11 text-center text-sm tabular-nums">{shares[person.id] ?? 0}%</span>
+                  <button aria-label={`Mais para ${person.name}`} onClick={() => bump(person.id, 10)} className="h-11 w-11 rounded-lg border border-slate-700">
+                    +
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <p className={`mt-2 text-right text-xs tabular-nums ${sum === 100 ? 'text-emerald-400' : 'text-amber-300'}`}>Total: {sum}%{sum !== 100 ? ' (precisa somar 100%)' : ''}</p>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <Btn testId="will-save" tone="primary" disabled={sum !== 100 || !draft || !canManageMoney(game)} onClick={() => (makeWill(shares), setDraft(null))}>
+              Registrar testamento
+            </Btn>
+            <Btn disabled={!game.economy.will || !canManageMoney(game)} onClick={() => (revokeWill(), setDraft(null))}>
+              Revogar
+            </Btn>
+          </div>
+        </>
+      )}
+    </Section>
+  );
+}
+
 export default function FinancePanel({ game }: { game: GameState }) {
   const e = game.economy;
   const nw = netWorth(game);
@@ -289,6 +350,7 @@ export default function FinancePanel({ game }: { game: GameState }) {
       <Living game={game} />
       <Bank game={game} />
       <Credit game={game} />
+      <WillSection game={game} />
       <History game={game} />
     </div>
   );

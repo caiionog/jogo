@@ -49,6 +49,7 @@ export function openBusiness(state: GameState, defId: string, content: GameConte
   const b: Business = { id, defId, name, level: 1, cash: toMoney(def.startCost * OPEN_CASH_SHARE), reputation: 40, manager: false, dedicatedYear: -1, years: 0, lastProfit: 0, profits: [] };
   s = { ...s, economy: { ...s.economy, businesses: [...s.economy.businesses, b] } };
   if (def.combat) s = { ...s, flags: { ...s.flags, academia_propria: true } };
+  s = { ...s, feats: { ...s.feats, businessesOpened: (s.feats?.businessesOpened ?? 0) + 1 } };
   return appendLog(s, `Você abriu ${def.combat ? 'a sua própria academia' : 'um negócio'}: ${name}.`);
 }
 
@@ -100,7 +101,10 @@ export function sellBusiness(state: GameState, id: string, price?: number): Game
 
 /** Bônus de treino por treinar na própria academia. */
 export function ownGymBonus(state: GameState, content: GameContent): number {
-  return state.economy.businesses.some((b) => businessDef(content, b.defId)?.combat) ? 0.1 : 0;
+  if (!state.economy.businesses.some((b) => businessDef(content, b.defId)?.combat)) return 0;
+  // academia da família herdada: +5% por geração (máx. +20%)
+  const gens = state.feats?.gymGenerations ?? 0;
+  return 0.1 + Math.min(content.legacy.gymBonusMax, gens * content.legacy.gymBonusPerGen);
 }
 
 /** Fechamento: receita, custo, dividendos e falência. */

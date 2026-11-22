@@ -1,14 +1,19 @@
-# GDD — Vida de Lutador
+# GDD — Vida de Lutador (versão 1.0)
+
+> Jogo completo: infância, escola, carreira de luta, relacionamentos, economia, lesões, aposentadoria, morte e legado
+> por gerações, com conquistas e Hall da Fama entre vidas. Funciona offline como app instalado (PWA).
 
 ## 1. Visão
 Simulador de vida em texto, no navegador e pensado para o celular, no estilo BitLife. O jogador nasce,
-cresce ano a ano e toma decisões. O foco inicial é a **carreira de lutador**: das primeiras aulas de
-artes marciais na infância até o cinturão da principal liga de MMA (fictícia) do mundo.
+cresce ano a ano e toma decisões. O foco é a **carreira de lutador**: das primeiras aulas de artes marciais na
+infância até o cinturão da principal liga de MMA (fictícia) do mundo — e depois a aposentadoria, a velhice, a morte e
+a família que continua a história.
 
 Pilares:
 - **Decisões rápidas e consequências que se acumulam** — cada ano é uma rodada curta.
 - **Histórias emergentes** — eventos aleatórios condicionados ao passado do personagem (flags).
 - **Rejogabilidade** — atributos, local de nascimento e eventos sorteados por seed.
+- **Ciclo completo** — o corpo cobra a carreira; a vida termina com obituário e nota, e a dinastia segue nos filhos.
 
 ## 2. Loop principal (anual)
 1. Início do ano: o jogador recebe **energia** (máximo depende de idade e saúde).
@@ -16,6 +21,8 @@ Pilares:
 3. Clica **Avançar ano**: envelhece, efeitos naturais (crescimento/envelhecimento/humor) são aplicados.
 4. Acontecem **1 ou 2 eventos aleatórios** com escolhas (alguns com risco).
 5. Tudo é registrado no **log da vida**, ano a ano.
+6. No fechamento do ano: extrato, lesões que saram, doenças, envelhecimento e o sorteio de morte (seção 8).
+7. Na morte: obituário, nota, partilha e escolha do herdeiro (ou nova vida).
 
 ### Energia
 | Idade | Base |
@@ -211,8 +218,8 @@ Tudo é **fictício**: organizações, academias, eventos e lutadores.
   - vídeo viral, media day e pensamentos de aposentadoria.
 
 ### Balanceamento (`npm run sim`, 1000 vidas focadas em luta, até os 40 anos) — números da Etapa 3
-> Na Etapa 4 a família passou a disputar energia e eventos; com a recalibragem (seção 6), hoje: 97% estreiam,
-> **24%** chegam ao Titã e **2,7%** são campeões.
+> Na Etapa 4 a família passou a disputar energia e eventos; na Etapa 6 entraram lesões, dano cerebral e aposentadoria.
+> Hoje (300 vidas): 94% estreiam, **23,7%** chegam ao Titã e **3,3%** são campeões do Titã (seção 8).
 
 A política do script entra na melhor academia cedo, treina com toda a energia, aceita todas as lutas e contratos e usa o córner automático.
 
@@ -239,9 +246,9 @@ Os principais ajustes que levaram a esses números:
 - disputa de cinturão só com 3 vitórias seguidas.
 
 ### Ganchos para as próximas etapas
-- **Lesões completas**: `fighter.injury` (gravidade, cirurgia, sequelas); hoje só bloqueia lutas e tira saúde.
-- **Aposentadoria**: a flag `pensa_aposentar`; o declínio após os 33 já existe; falta encerrar a carreira e criar um evento de despedida.
-- **Legado**: `titlesWon`, histórico de lutas, Hall da Fama e filhos herdando academia ou fama.
+- **Lesões completas** ✅ (Etapa 6): catálogo, tratamento, sequelas e dano cerebral (seção 8).
+- **Aposentadoria** ✅ (Etapa 6): voluntária, forçada e volta (seção 8).
+- **Legado** ✅ (Etapa 6): Hall da Fama e filhos herdando academia e fama.
 - **Economia**: patrocínios hoje são eventos simples, a mensalidade é cobrada de forma básica, e ainda falta abrir uma academia própria.
 - **Talento** pode virar algo revelado aos poucos (olheiros, testes).
 
@@ -378,11 +385,8 @@ A carreira foi recalibrada, porque os eventos de família diluem os de carreira 
 
 ### Ganchos para as próximas etapas
 - **Etapa 5 (economia)** ✅: divisão de bens no divórcio, herança, despesas da casa, pensão e dívida (seção 7).
-- **Etapa 6 (legado)**:
-  - filhos com `interesse_luta` / `lutador_mirim`, atletismo herdado e afeto;
-  - jogar como herdeiro;
-  - netos;
-  - a pessoa `npcId` permite reencontrar rivais e lutadores do elenco.
+- **Etapa 6 (legado)** ✅: jogar como herdeiro com atletismo e talento herdados, lutador mirim com base de treino,
+  família própria do herdeiro (netos do antecessor) e rivais do elenco por `npcId` (seção 8).
 
 ## 7. Economia e bens (Etapa 5)
 O dinheiro tem origem e destino. Toda a renda e toda a despesa disputam a mesma energia anual: emprego × treino ×
@@ -518,15 +522,17 @@ empresa × família. Todas as marcas, bancos, empresas e patrocinadores são fic
   proposta pela academia, irmão quer sociedade, amigo pede empréstimo.
 
 ### Balanceamento (`npm run sim -- 300 150`: 150 vidas por perfil até os 70)
+Números recalculados na Etapa 6, com a aposentadoria real (35–40 anos ou forçada), lesões, doenças e cuidados de saúde.
+
 | Perfil | Patrimônio mediano 30 / 50 / 70 | Falência | Milionário aos 50 / alguma vez |
 |---|---|---|---|
-| Só luta (aposenta aos 40 e vira treinador/instrutor/emprego) | R$ 40 mil / 409 mil / 994 mil | 54% | 25% / 53% |
-| Só emprego | R$ 302 mil / 483 mil / 548 mil | 9% | 14% / 37% |
-| Misto (meio período/instrutor + lutas) | R$ 221 mil / 522 mil / 1,0 mi | 5% | 13% / 57% |
-| Empreendedor (emprego → empresa aos 25+) | R$ 324 mil / 749 mil / 974 mil | 6% | 35% / 55% |
+| Só luta (aposenta e vira treinador/instrutor/emprego) | R$ 24 mil / 365 mil / 854 mil | 59% | 17% / 39% |
+| Só emprego | R$ 278 mil / 372 mil / 315 mil | 16% | 7% / 25% |
+| Misto (meio período/instrutor + lutas) | R$ 211 mil / 448 mil / 626 mil | 9% | 10% / 33% |
+| Empreendedor (emprego → empresa aos 25+) | R$ 324 mil / 602 mil / 661 mil | 14% | 33% / 45% |
 
-- Empresas que quebram: 21%.
-- Renda anual da luta: campeão do Titã ≈ R$ 233 mil, lutador do Titã ≈ R$ 138 mil, regional ≈ R$ 12 mil.
+- Empresas que quebram: 24,5%.
+- Renda anual da luta: campeão do Titã ≈ R$ 194 mil, lutador do Titã ≈ R$ 133 mil, regional ≈ R$ 13 mil.
 - **Leitura**:
   - lutar é arriscado no começo (metade passa por uma falência, quase sempre nos anos de bolsa regional), mas o topo
     paga muito;
@@ -535,23 +541,187 @@ empresa × família. Todas as marcas, bancos, empresas e patrocinadores são fic
 - **Carreira na mesma rodada**: 95% estreiam, 25% chegam ao Titã, 1,3% são campeões do Titã (oscila entre 1% e 3% com
   300 vidas).
 
-### Ganchos para a Etapa 6
-- **Testamento**: hoje a herança é só entre herdeiros vivos.
-- **Academia própria como legado**: flag `academia_propria`; filhos com `lutador_mirim` herdam.
-- **Aposentadoria**: a previdência já é cobrada; o benefício e o fim da carreira vêm com o gancho `pensa_aposentar`.
-- **Conquistas financeiras**: primeiro milhão, casa própria, falência superada.
+### Ganchos para a Etapa 6 ✅
+Testamento, academia própria como legado, aposentadoria e conquistas financeiras — implementados (seção 8).
 
-## 8. Sistemas futuros
-- **Faculdade:** vestibular, cursos e vida universitária (a partir da escolha `caminho_18 = 'faculdade'`).
-- **Saúde:** lesões, cirurgias, desgaste acumulado, doenças.
-- **Aposentadoria e legado:** fim da carreira, Hall da Fama, filhos herdando academia/fama; jogar como herdeiro.
-- **Meta:** conquistas, estatísticas de vidas anteriores.
+## 8. Fim de vida e legado (Etapa 6)
+Uma vida tem começo, auge, declínio e fim. O corpo cobra o preço da carreira, o lutador se aposenta, envelhece e
+morre, e o jogador pode continuar a história como um dos filhos. Conquistas e Hall da Fama persistem entre vidas.
 
-## 9. Arquitetura (resumo)
+### Lesões (`engine/fighting/injuries/`, catálogo em `src/content/injuries/`)
+- **Catálogo** de 14 lesões, cada uma com gravidade (1 leve a 4 gravíssima), tempo de recuperação em meses, custo de
+  tratamento, penalidade nas habilidades durante a recuperação, chance de sequela e zona do corpo. Exemplos: corte no
+  supercílio, nariz e mão quebrados, costela, concussão, menisco, ligamento cruzado, ombro, hérnia de disco, fratura
+  orbital e tendinite. Há também 10 sequelas permanentes (joelho instável, ombro frágil, coluna crônica, orelha de
+  couve-flor...).
+- **Origem**:
+  - **luta**: chance = 3% + 22% × dano recebido + 20% se nocauteado (×0,45 no grappling). A zona sorteada pesa pela
+    regra: trocação acerta mais cabeça e mãos; grappling, mais joelho e ombro;
+  - **sparring**: 8% por sessão;
+  - **treino excessivo**: 10% no condicionamento com saúde abaixo de 50;
+  - **eventos**.
+- **Tempo em meses**: o ano tira 12 meses de cada lesão. Lesões graves (gravidade ≥ 3) com mais de 6 meses vetam
+  lutas. As demais permitem lutar, mas com penalidade nas habilidades e **35% de chance de agravar**: o tempo dobra
+  e a sequela fica mais provável.
+- **Tratamento** (uma escolha por lesão, na aba Saúde):
+
+  | Tratamento | Tempo | Custo | Chance de sequela |
+  |---|---|---|---|
+  | Repouso | normal | grátis | ×0,8 |
+  | Fisioterapia | ×0,75 | R$ e ⚡1 | ×0,45 |
+  | Cirurgia (lesões graves) | ×0,5–0,75 | R$ alto | ×0,3, mas falhar (5–20%) deixa sequela na hora |
+
+### Dano cerebral (oculto)
+- **Cresce com**: nocaute sofrido (+6), nocaute técnico (+3), knockdown (+0,5), concussão (+4) e sparring (+0,15 por
+  sessão). Nunca aparece como número: o jogador só recebe pistas no log e na aba Saúde ("tontura", "esquecendo
+  coisas", o neurologista perguntando quantos nocautes você já sofreu).
+- **Na luta**: o queixo efetivo cai dano ÷ 4, então quem já apanhou muito é nocauteado com mais facilidade (há teste).
+- **Na velhice** (55+): tira inteligência e saúde e aumenta o risco de doença neurodegenerativa.
+- **Na mortalidade**: risco × (1 + dano ÷ 60).
+- **Veto médico** a partir de 80: aposentadoria definitiva.
+
+### Envelhecimento e doenças (`engine/health/`)
+- **Saúde**: tende a um teto que cai com a idade (90 até os 45, depois −1,3/ano) e se recupera 20% da distância por
+  ano. Doenças e lesões puxam para baixo. O físico cai mais depois dos 55 e a aparência depois dos 70.
+- **6 doenças** (`content/health`): hipertensão, diabetes, cardiopatia, artrose, câncer e neurodegenerativa.
+  - Chance anual = base × (1 + anos acima da idade mínima ÷ 20) × fatores de risco (saúde, padrão de vida simples,
+    condicionamento baixo, lesões e sequelas, dano cerebral). Academia comum e dieta reduzem o risco.
+  - O diagnóstico vira evento (tratar ou ignorar). Doença tratada tira metade da saúde e cobra o tratamento anual
+    pelo extrato.
+- **Ações de saúde**: check-up, academia comum e dieta (⚡1 e R$ cada, uma vez por ano). O check-up coloca as doenças
+  em tratamento, e nos 2 anos seguintes as novas já chegam controladas.
+
+### Aposentadoria (`engine/fighting/retirement.ts`)
+- **Voluntária**: a ação "Aposentar" abre o evento de despedida, com três saídas: luta de despedida (bolsa 1,5×;
+  aposenta depois dela), cerimônia ou sair em silêncio. Ao se aposentar, o lutador sai dos rankings, o cinturão fica
+  vago e o contrato acaba.
+- **Forçada**:
+  - **veto médico** (dano cerebral ≥ 80);
+  - **lesão**: sequela que ameaça a carreira (joelho, ombro, coluna) a partir dos 32 abre o evento do médico, que
+    recomenda parar;
+  - **derrotas**: 6 seguidas, fora do ranking, fazem a liga cortar o contrato (o lutador segue nas ligas menores);
+    com 8 seguidas vem o evento "hora de parar?".
+- **Volta** por evento (1–6 anos depois, com reputação ≥ 30), com mais risco.
+- **Aposentado**: a reputação cai 1 por ano. O pós-carreira é treinador, comentarista ou dono de academia.
+
+### Morte (`engine/health/death.ts`)
+- **Risco anual**: Gompertz 0,0035% × e^(0,088 × idade), ou seja ~0,05% aos 30, 0,7% aos 60, 2,6% aos 75, 10% aos 90
+  e 23% aos 100.
+- **Multiplicadores**:
+  - saúde (< 15 ×4, < 30 ×2, < 50 ×1,25, ≥ 80 ×0,75);
+  - doenças (×1,2 a ×2,2; tratadas pesam metade);
+  - dano cerebral e sequelas;
+  - padrão de vida (luxo ×0,85, simples ×1,1).
+- **Morte por evento** (raras): acidente de carro, briga de rua, luta clandestina para quem foi vetado.
+- **Na morte**:
+  - obituário: manchete, cartel, títulos, faixa, família, patrimônio e até 5 momentos marcantes tirados do log;
+  - nota da vida (0–100): carreira 35, riqueza 20, família 20, longevidade 15, felicidade 10;
+  - partilha da herança.
+- **Determinismo**: com a mesma seed e as mesmas escolhas, a morte ocorre na mesma idade (há teste).
+
+### Testamento e herança (`engine/legacy/will.ts`)
+- **Testamento** (aba Finanças): porcentagens para cônjuge, filhos, irmãos e pais vivos, somando 100%. Herdeiro
+  morto tem a parte redistribuída.
+- **Sem testamento** vale a divisão padrão (`content/legacy`): cônjuge 50% e filhos dividem o resto; sem filhos, o
+  cônjuge leva tudo; sem cônjuge e filhos, irmãos; por fim, pais.
+- **Espólio** = patrimônio líquido, com 4% de imposto. Os herdeiros NPC recebem a parte no patrimônio deles.
+
+### Legado: continuar como filho(a) (`engine/legacy/succession.ts`)
+- **O herdeiro** vira o personagem com a idade e os atributos que já tinha:
+  - o talento é herdado (média com sorteio);
+  - quem era lutador mirim já começa com base de treino;
+  - recebe a parte dele: casa e academia da família primeiro, o resto em dinheiro (lançado como "Herança" no extrato);
+  - o herdeiro adulto já tem a própria família (cônjuge e filhos coerentes com a idade).
+- **O mundo continua**: NPCs, ranking (o antecessor sai e o cinturão fica vago), ano e seed.
+- **Relações recriadas**: o pai/mãe falecido, o outro genitor, irmãos, avós (tipo novo `avo`) e rivais do mundo da
+  luta (por `npcId`).
+- **Bônus de legado**:
+  - sobrenome famoso: reputação inicial = pico do antecessor ÷ 4 (máximo 25);
+  - academia herdada: +5% de treino por geração (máximo +20%);
+  - flag `filho_de_campeao`;
+  - 10 eventos de legado ("O herdeiro de {antecessor} estreia na liga", diário de treinos, rival da família...).
+- **Dinastia**: contador de geração e um resumo por antepassado, que alimenta a árvore genealógica. O log recomeça a
+  cada geração, então o save não cresce sem controle: 5 gerações ficam abaixo de 150 KB (há teste).
+- **Rivais do mundo da luta**: quem te nocauteia (ou tira o cinturão) vira rival. Eventos de rivalidade marcam a
+  revanche contra ele, e nocauteá-lo desbloqueia "Acerto de contas".
+
+### Conquistas e Hall da Fama (meta-progressão)
+- **50 conquistas**, como dados em `src/content/achievements/`, das quais 7 são secretas (descrição "???" até
+  desbloquear).
+  - O predicado é declarativo (métrica + limite); as métricas são funções puras em `engine/meta/metrics.ts`.
+  - O validador exige que a métrica exista.
+  - Contadores de façanhas em `GameState.feats` (KO no rival, cirurgias, empresas abertas, invencibilidade...).
+- **Armazenamento meta separado** (chave `meta` no IndexedDB, com `version` e migrações próprias): conquistas (data e
+  vida), Hall da Fama (até 200 vidas por nota), estatísticas globais e preferências.
+- **Toast** ao desbloquear.
+
+### App (PWA) e polimento
+- **PWA** (`vite-plugin-pwa`): manifest em pt-BR, ícones originais (octógono + "VL"), precache do build inteiro
+  (funciona offline), botão "Instalar app" (Android/desktop) ou instruções (iPhone) e aviso de nova versão.
+- **3 slots de vida**: o save antigo (chave única) migra para o slot 1.
+- **Exportar/importar** o save em JSON, com validação de formato, migração e checagem estrutural. Mensagens claras
+  para JSON inválido, arquivo de outro jogo ou versão futura.
+- **Configurações**: velocidade da narração das lutas, tamanho do texto, conteúdo adulto, interesse amoroso e apagar
+  dados.
+- **Acessibilidade**: foco visível, Esc fecha painéis, foco preso nos modais, alvos de 44 px, `aria-*` nas barras e
+  no progresso.
+- **Performance**:
+  - "Avançar ano" com save de 80 anos: 0,3 ms na engine (`npm run bench`) e ~40 ms no navegador com a CPU 4× mais
+    lenta (clique → tela atualizada);
+  - autosave com debounce de 150 ms (gravação imediata ao começar uma vida e ao sair do app);
+  - bundle: 617 KB de JS (189 KB gzip) e 31 KB de CSS. Não dividimos em chunks porque a versão de teste em arquivo
+    único depende de um JS só e tudo fica em precache offline.
+
+### Balanceamento (`npm run sim -- 300 150 200 120`)
+- **Carreira até os 40** (300 vidas): 94% estreiam, **23,7%** chegam ao Titã, **3,3%** são campeões do Titã e a
+  carreira pro dura 15 anos.
+
+| Vidas completas (200 por perfil) | Lutador | Não lutador (emprego) |
+|---|---|---|
+| Expectativa de vida | **73,3** | **77,0** |
+| Lesões por vida | 7,0 | 0,9 |
+| Sequelas por vida | 0,93 | 0,09 |
+
+- **Carreira pro (vida inteira)**: dura 15,8 anos em média, **52%** têm lesão grave e **17%** se aposentam à força
+  (lesão 30, derrotas 3, médica 1).
+- **Dano cerebral médio** de quem tem mais de 20 lutas pro: **39** (escala oculta de 0 a 100).
+- **Dinastias** (120 simuladas, até 5 gerações):
+
+  | Geração alcançada | 2ª | 3ª | 4ª | 5ª |
+  |---|---|---|---|---|
+  | % das dinastias | 39% | **22%** | 13% | 8% |
+
+- **Conquistas** (520 vidas/dinastias, incluindo um perfil "explorador" que busca patrocínios, empresas e cuidados):
+  - as comuns ficam entre 35% e 90% (casar 90%, formatura 79%, primeira vitória 60%, primeiro milhão 35%);
+  - as de carreira ficam entre 2% e 51%;
+  - as de legado (2ª geração 8%, 5ª geração 2%, 3 gerações de lutadores 2%) e as de empresa (3 empresas 5%,
+    academia 3%) dependem da estratégia;
+  - não apareceram nesta amostra: 25 vitórias pro, campeão do Titã nas vidas mistas, 3 defesas, R$ 10 milhões,
+    centenário, invicto aposentado, vida nota 80+, expulso e formado, filho campeão, Dinastia Titã e academia herdada.
+    Todas são possíveis: há testes que as disparam com estados construídos, e são o "topo" pensado para várias
+    vidas.
+- **Leitura**: a carreira tem custo físico visível (−3,7 anos de vida, 8× mais lesões, 1 sequela por carreira em
+  média) sem ser punitiva demais (83% param por decisão própria). Doenças crescem com a idade, e tratar e fazer
+  check-up compensa.
+
+## 9. Ideias futuras
+- **Outras carreiras**: boxe olímpico, wrestling universitário, árbitro, treinador de seleção, empresário de lutadores.
+- **Faculdade**: vestibular, cursos e vida universitária (a partir de `caminho_18 = 'faculdade'`).
+- **Novos países e ligas** (fictícios): circuitos asiáticos e europeus, transferências de cidade, idiomas.
+- **Aposentadoria financeira**: benefício da previdência que já é cobrada, investimento para a velhice.
+- **Modo desafio**: metas com regras (ex.: "campeão sem academia", "milionário sem lutar", "5 gerações de faixas pretas").
+- **Eventos sazonais**: copa de fim de ano, torneio beneficente, Dia das Mães/Pais com a família.
+- **Hall da Fama compartilhado** (assíncrono): comparar dinastias com amigos por código, sem servidor obrigatório.
+- **Talento revelado aos poucos**: olheiros, testes físicos, "promessa" no noticiário.
+- **Netos e bisnetos jogáveis** com árvore genealógica completa (hoje: antepassados jogados + filhos).
+
+## 10. Arquitetura (resumo)
 Engine TS pura e determinística (`src/engine`), conteúdo como dados (`src/content`), save versionado com
-migrações (`src/save`), UI React que apenas lê o estado e despacha ações (`src/ui`). Detalhes em `CLAUDE.md`.
+migrações (`src/save`: saves de vida em 3 slots e o armazenamento meta separado), UI React que apenas lê o estado e
+despacha ações (`src/ui`), PWA com service worker gerado no build. Detalhes em `CLAUDE.md`; como jogar e instalar no
+`README.md`.
 
-## 10. Roadmap
+## 11. Roadmap
 - **Etapa 1 — Esqueleto jogável** ✅ — projeto, GameState, criação de personagem, energia, 3 ações,
   avançar ano, motor de eventos + 10 eventos de infância, log, autosave em IndexedDB, testes.
 - **Etapa 2 — Escola** ✅ — fases escolares, matrícula automática, nota/disciplina/faltas/popularidade,
@@ -566,4 +736,8 @@ migrações (`src/save`), UI React que apenas lê o estado e despacha ações (`
   dívida e falência, 14 empregos com energia reservada, empresário/contrato/patrocínios, banco e índice fictício,
   ano econômico por seed, imóveis/veículos/luxo com mercado anual e financiamento, 5 empresas (inclui academia
   própria), impostos, divórcio por regime/pensão/herança, 27 eventos, abas Finanças/Trabalho/Bens/Empresas, save v5.
-- **Etapa 6 — Polimento** — PWA (instalável/offline), conquistas, aposentadoria e legado (jogar como herdeiro).
+- **Etapa 6 — Lesões, aposentadoria, morte, legado, conquistas e PWA** ✅ — 14 lesões com tratamento e sequelas,
+  dano cerebral oculto, 6 doenças da velhice, ações de saúde, aposentadoria voluntária/forçada/volta, morte por
+  Gompertz com obituário e nota, testamento e partilha, continuar como filho(a) com dinastia e bônus de legado,
+  rivais do elenco, 50 conquistas e Hall da Fama em armazenamento meta, PWA offline, 3 slots, exportar/importar,
+  configurações e acessibilidade, save v6. **Versão 1.0.**

@@ -2,7 +2,7 @@ import type { Rng } from '../core/rng';
 import type { GameState } from '../core/state';
 import { STAT_KEYS } from '../core/state';
 import { stageOfGrade } from '../lifeStages/school';
-import type { EventConditions, FightingConditions, GameEvent, RelationshipCondition, SchoolResultTag, StatRange } from './types';
+import type { EventConditions, FightingConditions, GameEvent, HealthConditions, LegacyConditions, RelationshipCondition, SchoolResultTag, StatRange } from './types';
 import type { EventVars } from '../core/state';
 import { adultContentAllowed, canHaveSexualContent } from '../relationships/guards';
 import { childrenOf, civilStatus, currentPartner, relationsOf } from '../relationships/people';
@@ -54,8 +54,11 @@ function fightingConditionsMet(state: GameState, c: FightingConditions, content?
   if (c.contracted !== undefined && (f.orgId !== null) !== c.contracted) return false;
   if (c.orgs && (!f.orgId || !c.orgs.includes(f.orgId))) return false;
   if (c.hasGym !== undefined && (f.gymId !== null) !== c.hasGym) return false;
-  if (c.injured !== undefined && (f.injury !== null) !== c.injured) return false;
+  if (c.injured !== undefined && (state.health.injuries.length > 0) !== c.injured) return false;
   if (c.suspended !== undefined && (f.suspendedYears > 0) !== c.suspended) return false;
+  if (c.retired !== undefined && !!f.retired !== c.retired) return false;
+  if (c.retiredYears && (!f.retired || !inRange(state.character.age - f.retired.age, c.retiredYears))) return false;
+  if (c.lossStreak && !inRange(state.feats.curLosses ?? 0, c.lossStreak)) return false;
   if (!inRange(f.belt.rank, c.belt)) return false;
   if (!inRange(f.amateur.wins, c.amateurWins)) return false;
   if (!inRange(f.pro.wins, c.proWins)) return false;
@@ -182,6 +185,28 @@ export function conditionsMet(state: GameState, event: GameEvent, content?: Game
   if (c.fighting && !fightingConditionsMet(state, c.fighting, content)) return false;
   if (!relationshipConditionsMet(state, event, vars)) return false;
   if (c.economy && !economyConditionsMet(state, c.economy, content)) return false;
+  if (c.health && !healthConditionsMet(state, c.health)) return false;
+  if (c.legacy && !legacyConditionsMet(state, c.legacy)) return false;
+  return true;
+}
+
+function healthConditionsMet(state: GameState, c: HealthConditions): boolean {
+  const h = state.health;
+  if (c.injured !== undefined && (h.injuries.length > 0) !== c.injured) return false;
+  if (c.sequela && !c.sequela.some((x) => h.sequelae.includes(x))) return false;
+  if (!inRange(h.brainDamage, c.brainDamage)) return false;
+  if (c.conditions === 'any' && !h.conditions.length) return false;
+  if (Array.isArray(c.conditions) && !c.conditions.some((x) => h.conditions.some((y) => y.defId === x))) return false;
+  if (!inRange(state.character.stats.health, c.healthStat)) return false;
+  if (c.hasVehicle !== undefined && state.economy.assets.some((a) => a.kind === 'veiculo') !== c.hasVehicle) return false;
+  return true;
+}
+
+function legacyConditionsMet(state: GameState, c: LegacyConditions): boolean {
+  if (!inRange(state.dynasty.generation, c.generation)) return false;
+  const parent = state.dynasty.members.at(-1);
+  if (c.parentChampion !== undefined && (!!parent && parent.titles.length > 0) !== c.parentChampion) return false;
+  if (c.inheritedGym !== undefined && !!state.flags.academia_herdada !== c.inheritedGym) return false;
   return true;
 }
 

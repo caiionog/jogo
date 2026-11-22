@@ -2,6 +2,7 @@
  * Balanceamento da carreira de luta: simula N vidas focadas em luta usando só a engine + conteúdo.
  *   npm run sim            (500 vidas)
  *   npm run sim -- 500     (N vidas)
+ *   npm run sim -- N M L D (N carreiras até 40, M vidas por perfil econômico, L vidas completas por perfil, D dinastias)
  */
 import { GAME_CONTENT } from '../src/content';
 import {
@@ -41,8 +42,24 @@ import {
   rankOf,
   resolveEvent,
   trainFighter,
+  retire,
+  retireBlockReason,
+  continueAsChild,
+  continuableHeirs,
+  emptyMeta,
+  evaluateAchievements,
+  recordLifeEnd,
+  recordLifeStart,
+  injuryDef,
+  seekSponsor,
+  setManager,
+  treatInjury,
+  treatBlockReason,
+  healthAction,
+  makeWill,
+  defaultShares,
 } from '../src/engine';
-import type { GameState, Rng, SkillKey } from '../src/engine';
+import type { GameState, MetaState, Rng, SkillKey } from '../src/engine';
 import { withdraw as withdrawFn } from '../src/engine';
 
 const N = Number(process.argv[2] ?? 500);
@@ -62,6 +79,14 @@ function chooseEvent(s: GameState, rng: Rng): GameState {
   else if (ev.id === 'rel_want_child') choice = ev.choices.find((c) => c.id === (rng.chance(0.75) ? 'try' : 'later')) ?? choice;
   else if (ev.id === 'fight_doping_offer') choice = ev.choices.find((c) => c.id === 'refuse') ?? choice;
   else if (ev.id === 'fight_offer_titan' || ev.id === 'fight_offer_arc' || ev.id === 'fight_offer_lfm') choice = ev.choices[0]!;
+  // Etapa 6: políticas para saúde/aposentadoria (um jogador razoável)
+  else if (ev.id === 'retire_farewell') choice = ev.choices.find((c) => c.id === (rng.chance(0.3) ? 'fight' : 'ceremony')) ?? choice;
+  else if (ev.id === 'retire_losing_streak') choice = ev.choices.find((c) => c.id === (rng.chance(0.5) ? 'stop' : 'go')) ?? choice;
+  else if (ev.id === 'retire_doctor') choice = ev.choices.find((c) => c.id === (rng.chance(0.5) ? 'accept' : 'insist')) ?? choice;
+  else if (ev.id === 'comeback_offer') choice = ev.choices.find((c) => c.id === (rng.chance(0.2) ? 'back' : 'no')) ?? choice;
+  else if (ev.id === 'health_diagnosis') choice = ev.choices.find((c) => c.id === 'treat') ?? choice;
+  else if (ev.id === 'health_car_accident') choice = ev.choices.find((c) => c.id === 'hospital') ?? choice;
+  else if (ev.id === 'health_street_fight' || ev.id === 'health_clandestine_fight') choice = ev.choices[ev.choices.length - 1]!.id === 'no' ? ev.choices.find((c) => c.id === 'no')! : ev.choices[0]!;
   else if (!ev.id.startsWith('fight_')) choice = rng.pick(ev.choices);
   return resolveEvent(s, ev.id, choice.id, C);
 }
@@ -74,7 +99,7 @@ function drain(s: GameState, rng: Rng): GameState {
 
 /** Política: academia cedo, treino com a energia que sobra, aceita todas as lutas. */
 function playYear(s0: GameState, rng: Rng): GameState {
-  let s = drain(s0, rng);
+  let s = treatAll(drain(s0, rng));
   if (!s.fighter.gymId && s.character.age >= 5) {
     const gyms = gymsInCity(s, C).filter((g) => g.minAge <= s.character.age);
     const best = gyms.sort((a, b) => b.coach - a.coach)[0];
@@ -90,6 +115,8 @@ function playYear(s0: GameState, rng: Rng): GameState {
   const offers = s.fighter.offers.slice().sort((a, b) => b.purse + b.winBonus - (a.purse + a.winBonus));
   for (const o of offers) {
     if (s.energy.current < o.campCost + 1) continue;
+    // jogador razoável: não luta no meio de uma recuperação longa (ou trata antes)
+    if (s.health.injuries.some((i) => i.months > 4)) break;
     s = acceptOffer(s, o.id, {}, C);
     s = autoFinishFight(s, C);
     s = closeFight(s);
@@ -327,7 +354,7 @@ function ecoYear(s0: GameState, profile: Profile, rng: Rng): GameState {
   const age = s.character.age;
   // emprego conforme o perfil
   if (!s.economy.job && age >= 16) {
-    const cats = profile === 'luta' ? (age > 40 ? ['luta', 'formal', 'meio_periodo'] : []) : profile === 'misto' ? (age >= 18 ? ['luta', 'meio_periodo'] : ['meio_periodo']) : ['formal', 'meio_periodo'];
+    const cats = profile === 'luta' ? (s.fighter.retired ? ['luta', 'formal', 'meio_periodo'] : []) : profile === 'misto' ? (age >= 18 ? ['luta', 'meio_periodo'] : ['meio_periodo']) : ['formal', 'meio_periodo'];
     const id = cats.length ? bestJob(s, cats) : undefined;
     if (id) s = drain(applyJob(s, id, C), rng);
   } else if (s.economy.job && profile !== 'luta') {
@@ -365,13 +392,78 @@ function ecoYear(s0: GameState, profile: Profile, rng: Rng): GameState {
     }
   }
   // lutas (perfis luta e misto)
-  // lutadores se aposentam aos 40 (a engine ainda não tem aposentadoria; gancho `pensa_aposentar`)
-  if ((profile === 'luta' || profile === 'misto') && age <= 40) s = playYear(s, rng);
+  // lutadores se aposentam (ação real da Etapa 6) entre 35 e 40 anos, se nada os forçar antes
+  s = careYear(s, rng);
+  if (profile === 'luta' || profile === 'misto') s = fighterYear(s, rng);
   else {
+    s = familyYear(s, rng);
     // trabalha duro com a energia que sobra
     for (let k = 0; k < 3 && s.economy.job; k++) s = workHard(s);
   }
   return manageMoney(drain(s, rng), rng);
+}
+
+/** Idade em que o jogador simulado decide parar (35–40, fixa por vida). */
+function retireAgeOf(s: GameState): number {
+  return 35 + ((s.character.birthYear * 7 + s.seed.length * 13) % 6);
+}
+
+/** Ano de lutador com aposentadoria: decide parar na idade da política; aposentado não luta. */
+function fighterYear(s0: GameState, rng: Rng): GameState {
+  let s = s0;
+  if (!s.fighter.retired && s.character.age >= retireAgeOf(s) && retireBlockReason(s) === null) s = drain(retire(s, C), rng);
+  if (!s.fighter.retired) s = playYear(s, rng);
+  else s = familyYear(s, rng);
+  return s;
+}
+
+/** Vida pessoal fora da luta (emprego, aposentado): namoro, casamento e filhos. */
+function familyYear(s0: GameState, rng: Rng): GameState {
+  let s = s0;
+  const q = currentPartner(s);
+  const kids = childrenOf(s).length;
+  if (q && q.rel.romance?.stage === 'casados' && kids < 3 && s.character.age >= 24 && s.character.age <= 45 && rng.chance(kids === 0 ? 0.6 : 0.25)) {
+    s = drain(interact(s, q.person.id, 'try_baby', C), rng);
+  }
+  if (s.character.age >= 16 && !s.pendingEvents.length && rng.chance(0.7)) {
+    const p = currentPartner(s);
+    if (!p) {
+      if (rng.chance(0.6)) s = meetSomeone(s, s.character.age >= 18 && rng.chance(0.5) ? 'app' : 'social', C, rng);
+    } else {
+      const stage = p.rel.romance?.stage;
+      const together = s.character.age - p.rel.romance!.since;
+      if (stage === 'ficando') s = interact(s, p.person.id, 'ask_out', C);
+      else if (stage === 'namorando' && s.character.age >= 22 && together >= 2 && p.rel.affection >= 55 && rng.chance(0.5)) s = interact(s, p.person.id, 'propose', C);
+      else s = interact(s, p.person.id, 'date', C);
+    }
+    s = drain(s, rng);
+  }
+  return s;
+}
+
+/** Trata as lesões novas: cirurgia nas graves (se der), fisioterapia nas outras, repouso sem dinheiro. */
+function treatAll(s0: GameState): GameState {
+  let s = s0;
+  for (const inj of s.health.injuries) {
+    if (inj.treatment !== 'none') continue;
+    const def = injuryDef(C, inj.defId);
+    if (!def) continue;
+    if (def.surgery && def.severity >= 3 && treatBlockReason(s, inj.id, 'cirurgia', C) === null && s.money > 3 * (def.cost.cirurgia ?? 0)) s = treatInjury(s, inj.id, 'cirurgia', C);
+    else if (treatBlockReason(s, inj.id, 'fisio', C) === null && s.money > 4 * def.cost.fisio) s = treatInjury(s, inj.id, 'fisio', C);
+    else s = treatInjury(s, inj.id, 'repouso', C);
+  }
+  return s;
+}
+
+/** Cuidados de um jogador razoável: trata lesões, check-up a cada 2 anos depois dos 40, testamento aos 60. */
+function careYear(s0: GameState, rng: Rng): GameState {
+  let s = treatAll(s0);
+  if (s.character.age >= 40 && s.character.age % 2 === 0) s = healthAction(s, C, 'checkup');
+  if (s.character.age === 60 && rng.chance(0.4)) {
+    const sh = defaultShares(s, C);
+    if (Object.keys(sh).length) s = makeWill(s, Object.fromEntries(Object.entries(sh).map(([k, v]) => [k, v])));
+  }
+  return s;
 }
 
 function requireWithdraw(s: GameState, amount: number, where: 'savings' | 'investments'): GameState {
@@ -425,3 +517,153 @@ for (const p of PROFILES) {
 const opened = eco.empreendedor.bizOpened;
 console.log(`Empresas abertas (empreendedor): ${opened} · quebraram ${eco.empreendedor.bizFailed} (${opened ? ((100 * eco.empreendedor.bizFailed) / opened).toFixed(1) : '—'}%)`);
 console.log(`Renda anual da luta (bolsas + patrocínios − empresário): campeão do Titã ${fmt(avg(fightIncome.champion))} · Titã ${fmt(avg(fightIncome.major))} · regional ${fmt(avg(fightIncome.regional))}`);
+
+
+// ===========================================================================
+// Etapa 6: vidas completas (lesões, aposentadoria, morte, legado, conquistas)
+// ===========================================================================
+const L = Number(process.argv[4] ?? 150);
+const D = Number(process.argv[5] ?? 60);
+
+interface LifeStats {
+  deathAge: number[];
+  careerLen: number[];
+  severeInjury: number;
+  proCareers: number;
+  forced: Record<string, number>;
+  retired: number;
+  brain20: number[];
+  injuries: number[];
+  sequelae: number[];
+}
+const lifeStats = { luta: blankLife(), emprego: blankLife() };
+function blankLife(): LifeStats {
+  return { deathAge: [], careerLen: [], severeInjury: 0, proCareers: 0, forced: {}, retired: 0, brain20: [], injuries: [], sequelae: [] };
+}
+const achCount: Record<string, number> = {};
+let achLives = 0;
+
+/** Vive até morrer (máx. 110), avaliando conquistas a cada ano. Retorna o estado final e o meta acumulado. */
+function liveToDeath(s0: GameState, profile: Profile, rng: Rng, meta0: MetaState): { s: GameState; meta: MetaState } {
+  let s = s0;
+  let meta = meta0;
+  while (s.alive && s.character.age < 110) {
+    s = drain(advanceYear(s, C), rng);
+    if (s.alive) s = ecoYear(s, profile, rng);
+    meta = evaluateAchievements(s, meta, C, 'sim').meta;
+  }
+  if (s.alive) s = { ...s };
+  meta = recordLifeEnd(meta, s);
+  meta = evaluateAchievements(s, meta, C, 'sim').meta;
+  return { s, meta };
+}
+
+function recordLife(s: GameState, profile: 'luta' | 'emprego') {
+  const ls = lifeStats[profile];
+  if (!s.alive) ls.deathAge.push(s.character.death?.age ?? s.character.age);
+  const f = s.fighter;
+  const proFights = f.pro.wins + f.pro.losses + f.pro.draws;
+  ls.injuries.push(s.health.history.length);
+  ls.sequelae.push(s.health.sequelae.length);
+  if (profile === 'luta' && f.proDebutAge !== null) {
+    ls.proCareers++;
+    if (s.health.history.some((h) => (injuryDef(C, h.defId)?.severity ?? 0) >= 3)) ls.severeInjury++;
+    if (f.retired) {
+      ls.retired++;
+      ls.careerLen.push(f.retired.age - f.proDebutAge);
+      if (f.retired.reason !== 'voluntaria') ls.forced[f.retired.reason] = (ls.forced[f.retired.reason] ?? 0) + 1;
+    }
+    if (proFights > 20) ls.brain20.push(s.health.brainDamage);
+  }
+}
+
+function countAchievements(meta: MetaState) {
+  achLives++;
+  for (const id of Object.keys(meta.achievements)) achCount[id] = (achCount[id] ?? 0) + 1;
+}
+
+for (const profile of ['luta', 'emprego'] as const) {
+  for (let i = 0; i < L; i++) {
+    const rng = createRng(90000 + i * 11 + (profile === 'luta' ? 0 : 5));
+    const sex = i % 4 === 3 ? 'F' : 'M';
+    let s = newGame({ seed: `vida-${profile}-${i}`, name: 'Sim Vida Completa', sex, preference: sex === 'M' ? 'F' : 'M' }, C);
+    if (profile === 'luta') s = { ...s, flags: { ...s.flags, gostaDeLuta: true } };
+    const r = liveToDeath(s, profile, rng, recordLifeStart(emptyMeta()));
+    recordLife(r.s, profile);
+    countAchievements(r.meta);
+  }
+}
+
+// explorador: um jogador que tenta de tudo (patrocínios, empresas, cuidados com a saúde, cirurgias)
+function explorerYear(s0: GameState, rng: Rng): GameState {
+  let s = s0;
+  const age = s.character.age;
+  if (age >= 30) {
+    for (const id of ['gym', 'diet'] as const) s = healthAction(s, C, id);
+  }
+  if (age >= 18) s = drain(seekSponsor(s, C), rng);
+  if (age >= 28 && age % 8 === 4) {
+    const def = C.economy.businesses.filter((b) => s.money > b.startCost * 1.2).sort((a, b) => b.startCost - a.startCost)[0];
+    if (def) s = openBusiness(s, def.id, C);
+  }
+  for (const b of s.economy.businesses) s = setManager(s, b.id, true);
+  for (const inj of s.health.injuries) {
+    if (inj.treatment !== 'none') continue;
+    const def = injuryDef(C, inj.defId);
+    if (def?.surgery && treatBlockReason(s, inj.id, 'cirurgia', C) === null) s = treatInjury(s, inj.id, 'cirurgia', C);
+  }
+  return s;
+}
+for (let i = 0; i < Math.round(L / 2); i++) {
+  const rng = createRng(70000 + i * 13);
+  let s = newGame({ seed: `explorador-${i}`, name: 'Sim Explorador', sex: i % 2 ? 'F' : 'M', preference: i % 2 ? 'M' : 'F' }, C);
+  s = { ...s, flags: { ...s.flags, gostaDeLuta: true } };
+  let meta = recordLifeStart(emptyMeta());
+  while (s.alive && s.character.age < 110) {
+    s = drain(advanceYear(s, C), rng);
+    if (!s.alive) break;
+    s = explorerYear(s, rng);
+    s = ecoYear(s, i % 2 ? 'misto' : 'empreendedor', rng);
+    meta = evaluateAchievements(s, meta, C, 'sim').meta;
+  }
+  meta = evaluateAchievements(s, recordLifeEnd(meta, s), C, 'sim').meta;
+  countAchievements(meta);
+}
+
+// dinastias: cada geração vive (luta ou emprego, alternando pela seed) e continua com o filho mais velho vivo
+const genReached: number[] = [];
+for (let i = 0; i < D; i++) {
+  const rng = createRng(123000 + i * 17);
+  let s = newGame({ seed: `dinastia-${i}`, name: 'Sim Dinastia', sex: i % 3 === 2 ? 'F' : 'M', preference: i % 3 === 2 ? 'M' : 'F' }, C);
+  s = { ...s, flags: { ...s.flags, gostaDeLuta: true } };
+  let meta = recordLifeStart(emptyMeta());
+  for (let gen = 1; gen <= 5; gen++) {
+    const profile: Profile = gen % 2 === 1 || s.flags.lutador_mirim ? 'luta' : 'misto';
+    const r = liveToDeath(s, profile, rng, meta);
+    s = r.s;
+    meta = r.meta;
+    const heir = continuableHeirs(s).sort((a, b) => a.age - b.age)[0];
+    if (!heir || gen === 5) break;
+    s = continueAsChild(s, heir.personId, C);
+    s = { ...s, flags: { ...s.flags, gostaDeLuta: true } };
+    meta = recordLifeStart(meta);
+  }
+  genReached.push(s.dynasty.generation);
+  countAchievements(meta);
+}
+
+const avgN = (a: number[]) => (a.length ? a.reduce((t, v) => t + v, 0) / a.length : NaN);
+const pctN = (n: number, d: number) => `${d ? ((n / d) * 100).toFixed(1) : '—'}%`;
+console.log(`\n=== Etapa 6: ${L} vidas completas por perfil + ${D} dinastias ===`);
+for (const p of ['luta', 'emprego'] as const) {
+  const ls = lifeStats[p];
+  console.log(`${p.padEnd(8)} | expectativa de vida ${avgN(ls.deathAge).toFixed(1)} | lesões/vida ${avgN(ls.injuries).toFixed(1)} | sequelas/vida ${avgN(ls.sequelae).toFixed(2)}`);
+}
+const lt = lifeStats.luta;
+const forcedTotal = Object.values(lt.forced).reduce((t, v) => t + v, 0);
+console.log(`Carreira pro: duração média ${avgN(lt.careerLen).toFixed(1)} anos | lesão grave ${pctN(lt.severeInjury, lt.proCareers)} | aposentadoria forçada ${pctN(forcedTotal, lt.retired)} (${Object.entries(lt.forced).map(([k, v]) => `${k} ${v}`).join(', ') || '—'})`);
+console.log(`Dano cerebral médio (mais de 20 lutas pro, ${lt.brain20.length} vidas): ${avgN(lt.brain20).toFixed(1)}`);
+console.log(`Dinastias: chegaram à 2ª geração ${pctN(genReached.filter((g) => g >= 2).length, D)} · à 3ª ${pctN(genReached.filter((g) => g >= 3).length, D)} · à 4ª ${pctN(genReached.filter((g) => g >= 4).length, D)} · à 5ª ${pctN(genReached.filter((g) => g >= 5).length, D)}`);
+console.log(`Conquistas (% das ${achLives} vidas/dinastias que desbloquearam):`);
+const rows = C.achievements.map((a) => [a.id, achCount[a.id] ?? 0] as const).sort((a, b) => b[1] - a[1]);
+console.log(rows.map(([id, n]) => `${id} ${((n / achLives) * 100).toFixed(0)}%`).join(' · '));

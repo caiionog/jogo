@@ -20,6 +20,9 @@ import {
   emptyEconomy,
   parentWealth,
   netWorth,
+  emptyHealth,
+  emptyDynasty,
+  killCharacter,
 } from '../engine';
 import { NAMES } from '../content/names';
 import { GYMS } from '../content/gyms';
@@ -38,6 +41,7 @@ export const migrations: Record<number, (save: AnySave) => AnySave> = {
   2: migrateV2toV3,
   3: migrateV3toV4,
   4: migrateV4toV5,
+  5: migrateV5toV6,
 };
 
 export class SaveMigrationError extends Error {}
@@ -234,4 +238,48 @@ function migrateV4toV5(save: AnySave): AnySave {
   const spouse = g.relationships.relations.find((r) => r.romance?.stage === 'casados');
   if (spouse) g = { ...g, economy: { ...g.economy, marriage: { personId: spouse.personId, regime: 'parcial', netWorthAtMarriage: Math.round(netWorth(g) / 2) } } };
   return { ...(g as unknown as AnySave), version: 5 };
+}
+
+// ---------------------------------------------------------------------------
+// v5 → v6 (Etapa 6: lesões, aposentadoria, morte e legado)
+// ---------------------------------------------------------------------------
+
+type V5Fighter = GameState['fighter'] & { injury?: { name: string; yearsLeft: number } | null };
+
+/**
+ * Converte a lesão antiga (`fighter.injury`) numa lesão do catálogo, estima o dano cerebral pelos nocautes
+ * sofridos no histórico de lutas, inicializa saúde, façanhas, dinastia (geração 1) e aposentadoria.
+ * Saves de personagens mortos ganham o fim de vida (obituário e partilha).
+ */
+function migrateV5toV6(save: AnySave): AnySave {
+  const s0 = save as unknown as GameState;
+  const f0 = s0.fighter as V5Fighter;
+  const health = emptyHealth();
+  if (f0.injury) {
+    const defId = GAME_CONTENT.health.legacyNames[f0.injury.name] ?? 'distensao';
+    const def = GAME_CONTENT.health.injuries.find((d) => d.id === defId)!;
+    health.injuries.push({ id: 'i1', defId, severity: def.severity, months: Math.max(1, Math.round(f0.injury.yearsLeft * 12)), treatment: 'none', aggravated: false, age: s0.character.age, source: 'luta' });
+    health.history.push({ age: s0.character.age, defId, source: 'luta' });
+    health.nextId = 2;
+  }
+  // dano cerebral a partir dos nocautes sofridos (o histórico guarda as últimas lutas)
+  const kos = f0.history.filter((h) => h.result === 'L' && h.method === 'KO').length;
+  const tkos = f0.history.filter((h) => h.result === 'L' && h.method === 'TKO').length;
+  health.brainDamage = Math.min(60, kos * 8 + tkos * 4);
+  const { injury: _old, ...fighterRest } = f0;
+  void _old;
+  const fighter = { ...fighterRest, retired: null } as GameState['fighter'];
+  const majorTitles = fighter.titles.filter((t) => GAME_CONTENT.fighting.orgs.find((o) => o.id === t.orgId)?.tier === 'major').length;
+  let g: GameState = {
+    ...s0,
+    fighter,
+    health,
+    feats: { peakRep: fighter.reputation, majorTitles, regionalTitles: Math.max(0, fighter.titlesWon - majorTitles) },
+    dynasty: emptyDynasty(s0.character.name.split(' ').slice(-1)[0] ?? s0.character.name, s0.character.birthYear),
+    ending: null,
+    economy: { ...s0.economy, will: null },
+    version: 6,
+  };
+  if (!g.alive) g = killCharacter({ ...g, alive: true }, g.character.stats.health <= 0 ? 'complicações de saúde' : 'causas naturais', GAME_CONTENT);
+  return g as unknown as AnySave;
 }

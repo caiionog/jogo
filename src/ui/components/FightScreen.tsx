@@ -5,7 +5,8 @@ import type { ActiveFight, Strategy } from '../../engine';
 import { useGameStore } from '../store';
 import { Bar, money } from './fightUi';
 
-const REVEAL_MS = 650;
+/** Intervalo entre lances por velocidade de narração (configuração do app). */
+const REVEAL_MS = { lenta: 1100, normal: 650, rapida: 220 } as const;
 
 const CORNER: { id: Strategy; label: string; hint: string; emoji: string }[] = [
   { id: 'pressure', label: 'Pressionar', hint: 'mais volume e dano, mais cansaço', emoji: '🔥' },
@@ -19,6 +20,7 @@ export default function FightScreen({ af }: { af: ActiveFight }) {
   const chooseCorner = useGameStore((s) => s.chooseCorner);
   const skipFight = useGameStore((s) => s.skipFight);
   const closeFight = useGameStore((s) => s.closeFight);
+  const speed = useGameStore((s) => s.meta.settings.fightSpeed);
   const { fight, offer } = af;
   const [shown, setShown] = useState(1);
   const logRef = useRef<HTMLDivElement>(null);
@@ -28,9 +30,9 @@ export default function FightScreen({ af }: { af: ActiveFight }) {
   // revela a narração lance a lance
   useEffect(() => {
     if (!revealing) return;
-    const t = setTimeout(() => setShown((n) => n + 1), REVEAL_MS);
+    const t = setTimeout(() => setShown((n) => n + 1), REVEAL_MS[speed]);
     return () => clearTimeout(t);
-  }, [shown, revealing]);
+  }, [shown, revealing, speed]);
 
   useEffect(() => {
     const el = logRef.current;

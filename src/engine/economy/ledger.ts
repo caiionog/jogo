@@ -26,6 +26,7 @@ export const CATEGORY_LABEL: Record<LedgerCategory, string> = {
   familia: 'Família e amigos',
   aplicacoes: 'Aplicações e resgates',
   impostos: 'Impostos',
+  saude: 'Saúde',
   moradia: 'Moradia',
   padrao_vida: 'Padrão de vida',
   filhos: 'Filhos',

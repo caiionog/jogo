@@ -5,6 +5,7 @@
 import type { ClubDef, GameContent } from '../core/content';
 import type { Rng } from '../core/rng';
 import type {
+  Character,
   ClubId,
   Education,
   Enrollment,
@@ -105,6 +106,32 @@ export function createEnrollment(
     club: null,
     suspensions: 0,
   };
+}
+
+/**
+ * Escolaridade coerente com a idade para um personagem que "entra" no meio da vida (herdeiro do legado):
+ * matriculado na série da idade (3–17) ou formado (18+).
+ */
+export function educationForAge(rng: Rng, content: GameContent, age: number, character: Character): Education {
+  const education = emptyEducation();
+  if (age >= 3 && age <= 17) {
+    const school = randomSchool(rng, content.names, pickSchoolType(rng, character.familyWealth));
+    return {
+      ...education,
+      current: {
+        school,
+        grade: gradeForAge(age),
+        average: initialAverage(rng, character.stats.intelligence, character.stats.intelligence, school.type),
+        discipline: 70,
+        absences: 0,
+        popularity: clamp(30 + character.stats.looks * 0.2 + rng.int(-5, 5)),
+        club: null,
+        suspensions: 0,
+      },
+    };
+  }
+  if (age >= 18) return { ...education, graduated: true };
+  return education;
 }
 
 /**

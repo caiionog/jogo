@@ -16,8 +16,11 @@ npm run dev         # servidor de desenvolvimento (http://localhost:5173)
 npm test            # Vitest (uma execução); npm run test:watch para modo watch
 npm run typecheck   # tsc --noEmit
 npm run build       # typecheck + build de produção em dist/
-npm run preview     # serve o build
-npm run sim         # balanceamento da carreira: simula 500 vidas de lutador (npm run sim -- 1000)
+npm run preview     # serve o build de produção (PWA: service worker, offline, instalar) em http://localhost:4173
+npm run sim         # balanceamento: npm run sim -- N M L D (carreiras até 40, perfis econômicos, vidas completas, dinastias)
+npm run bench       # performance: "Avançar ano" com save de 80 anos (grava tmp/save-80.json)
+npm run icons       # regera os PNGs do PWA a partir de public/icons/icon.svg
+npm run build:artifact -- caminho.html   # versão de teste em arquivo único (sem service worker)
 ```
 Antes de commitar: `npm test && npm run build`.
 
@@ -31,12 +34,18 @@ Antes de commitar: `npm test && npm run build`.
    detalhado abaixo) e são validados por `validateContent` (`engine/events/validate.ts`) nos testes.
 4. **`GameState` é JSON puro** com campo `version`. Ao mudar o formato: incremente `STATE_VERSION`
    (`engine/core/state.ts`) e adicione a migração `n → n+1` em `src/save/migrations.ts` + teste.
-   Versão atual: **5** (v4→v5 cria `economy` — extrato vazio, moradia pela idade, patrimônio dos pais, regime de bens
+   Versão atual: **6** (v5→v6: `fighter.injury` vira lesão do catálogo em `health.injuries`, `health.brainDamage`
+   estimado pelos nocautes do histórico, `fighter.retired`, `feats`, `dynasty` geração 1, `ending`, `economy.will`;
+   saves mortos ganham o fim de vida; fixtures em `tests/fixtures/saves-v5.json`). Cadeia testada: v1 → v6.
+   v4→v5 criou `economy` — extrato vazio, moradia pela idade, patrimônio dos pais, regime de bens
    parcial para casados — e `energy.reserved`; fixtures em `tests/fixtures/saves-v4.json`).
    v3→v4 adicionou `relationships` com família coerente com a idade e "Conteúdo adulto" desligado. v2→v3 adicionou corpo, `fighter`, `world` e `activeFight`.
    Versão 2: A migração v1→v2 cria `education` coerente com a idade, `familyWealth` e `scheduledEvents`,
    usando um RNG próprio (derivado da seed) para não alterar o `rngState`. Antes de mudar o formato de novo, gere
    uma fixture com saves reais da versão atual em `tests/fixtures/`.
+   O **armazenamento meta** (conquistas, Hall da Fama, estatísticas, preferências) é separado do save da vida: chave
+   `meta` no IndexedDB, `META_VERSION` e `metaMigrations` em `src/save/meta.ts`. Saves de vida ficam em 3 slots
+   (`save:slot1..3`, slot ativo em `slot:active`); a chave antiga `save:current` migra para o slot 1.
 5. **Dinheiro é inteiro e só muda por `post()`** (`engine/economy/ledger.ts`): `post(estado, categoria, valor, rótulo)`
    lança no extrato do ano. Nunca escreva `money: s.money + x`. Invariante testada: `money − ledger.opening === Σ
    lançamentos`. Arredonde com `toMoney`. Efeitos `money` de eventos já viram `post('eventos')`.
@@ -70,6 +79,11 @@ src/
       living.ts family.ts worth.ts close.ts  # custo de vida/dívida/falência, herança/divórcio/pensão, patrimônio, fechamento
       effects.ts actions.ts   # efeitos `economy` de eventos; ações prontas para a UI (com a guarda economyAction)
     assets/               # bens: mercado anual, compra/financiamento/venda, aluguel, depreciação
+    fighting/injuries/    # lesões (Etapa 6): sorteio por dano/zona, agravamento, tratamento, sequelas, dano cerebral
+    fighting/retirement.ts  # aposentadoria voluntária/forçada (veto médico, lesão, derrotas) e volta
+    health/               # types (HealthState, catálogos), aging (doenças, hábitos, pistas do dano cerebral), death, effects
+    legacy/               # will (testamento/partilha), finalize (morte, obituário, nota), succession (continuar como filho)
+    meta/                 # conquistas: metrics (registro de métricas puras), achievements (avaliação, Hall da Fama), feats
   content/                # dados (GAME_CONTENT em index.ts)
     actions.ts            # ações (categoria 'vida' | 'escola')
     clubs.ts              # clubes escolares
@@ -85,9 +99,13 @@ src/
     events/relationships/ # família, amigos, romance, adult (tag 'adult'), filhos, amor × carreira
     jobs/ assets/ businesses/ sponsors/ economy/   # vagas, catálogo de bens, empresas, patrocinadores, impostos/cidades
     events/economy/       # eventos de economia (work.ts, money.ts, assets.ts)
-scripts/sim.ts            # balanceamento (Node/tsx, só engine + conteúdo)
-  save/                   # migrations.ts (versão/migrações), storage.ts (idb-keyval)
-  ui/                     # store.ts, App.tsx, screens/, components/
+    injuries/ health/     # catálogo de lesões e sequelas; doenças e custos das ações de saúde
+    legacy/ achievements/ # regras de herança/legado; 50 conquistas (dados)
+    events/health/ events/legacy/   # aposentadoria, doenças e mortes por evento; eventos de legado (2ª geração+)
+scripts/sim.ts            # balanceamento (Node/tsx, só engine + conteúdo); bench.ts (performance); icons.mjs
+  save/                   # migrations.ts (versão/migrações), storage.ts (3 slots), meta.ts (meta separado), transfer.ts (exportar/importar)
+  ui/                     # store.ts, App.tsx, pwa.ts, screens/ (Life, NewLife, Obituary), components/ (painéis, Sheet, MenuSheet, MetaScreens, Toasts)
+public/icons/             # ícones originais do PWA (SVG + PNGs gerados)
 tests/                    # Vitest; fixtures/saves-v1.json = saves reais da Etapa 1 para testar migração
 ```
 
@@ -122,10 +140,12 @@ tests/                    # Vitest; fixtures/saves-v1.json = saves reais da Etap
     schoolResult?: ['passed'|'failed'|'honors'|'graduated'|'expelled'],  // resultado do último ano letivo
     fighting?: { orgs?, tiers?: ['none'|'kids'|'amateur'|'regional'|'major'], contracted?, ranked?, rankMax?,
                  champion?, belt?: {min,max}, amateurWins?, proWins?, reputation?, hasGym?, injured?, suspended?,
-                 orgEligible?: 'titan', beltPromotionReady?, hasFought? },
+                 orgEligible?: 'titan', beltPromotionReady?, hasFought?, retired?, retiredYears?, lossStreak? },
     relationship?: { types: ['amigo'], affection?, traits?, personAge?, stages?, sameGym?, personFlag?, personFlagNone? }, // alvo {pessoa}
     hasRelation?, noRelation?, civilStatus?: ['solteiro'|'ficando'|'namorando'|'noivo'|'casado'|'divorciado'],
     children?: {min,max}, partnerAge?: {min,max},
+    health?: { injured?, sequela?: [ids], brainDamage?: {min,max}, conditions?: [ids] | 'any', healthStat?, hasVehicle? },
+    legacy?: { generation?: {min,max}, parentChampion?, inheritedGym? },
     economy?: { money?, netWorth?, debt?: {min,max}, employed?, jobs?, jobCategory?, hasAsset?: ['imovel'|'veiculo'|'luxo'],
                 ownsBusiness?, businessDefs?, econYear?: ['normal'|'crise'|'boom'], hasSponsor?, hasAgent?, hasLoan?,
                 housing?, evadedTax?, invested?, rentingOut? },
@@ -139,7 +159,9 @@ tests/                    # Vitest; fixtures/saves-v1.json = saves reais da Etap
 - **Efeitos** (`Effects`, `engine/core/effects.ts`): `stats`, `money`, `setFlags`, `clearFlags`,
   `school: { average, discipline, popularity, absences, suspend, expel, changeSchool: { type? }, joinClub, leaveClub }`
   (ignorado fora da escola), `fighter: { skills, reputation, joinGym: 'local'|'best'|id, leaveGym, signWith: orgId,
-  injury: { name?, years }, suspendYears, vacateTitles, promoteBelt, offer: { kind: 'shortNotice'|'rival'|'titleDefense'|'bjjOpen' } }`,
+  injury: { name?, years } (legado: vira lesão do catálogo), suspendYears, vacateTitles, promoteBelt,
+  offer: { kind: 'shortNotice'|'rival'|'titleDefense'|'bjjOpen'|'farewell' }, retire: motivo, unretire }`,
+  `health: { injury: id|'random', heal, brainDamage, condition, controlCondition: id|'var', sequela, die: causa }`,
   `social: { affection (do alvo), meet: { context }, addFromVar: { var, type }, setType, endRelation, breakUp, stage,
   wedding: 'simple'|'big', divorce, pregnancyChance, ist, giveUpPregnancy, adopt, personHealth, setPersonFlags,
   parentsAffection }`, `economy: { post: {cat, amount, label}, postShareOfMoney, hireAgent, fireAgent, agentScam,
@@ -149,12 +171,14 @@ tests/                    # Vitest; fixtures/saves-v1.json = saves reais da Etap
   Ao disparar, as condições são reavaliadas; se não baterem, o agendamento é descartado.
 - **Placeholders**: `{name}`, `{city}`, `{escola}`, `{da_escola}`/`{na_escola}` (do/da, no/na conforme o nome),
   `{colega}`, `{professor}`, `{clube}`, `{lutador}` (nome 'apelido' sobrenome; também `{lutador_nome}`, `{lutador_apelido}`),
-  `{pessoa}`/`{pessoa_nome}`/`{relacao}` (alvo da condição `relationship`)
+  `{pessoa}`/`{pessoa_nome}`/`{relacao}` (alvo da condição `relationship`), `{antecessor}`/`{seu_pai}` (legado),
+  `{doenca}` (diagnóstico)
   — sorteados quando o evento entra na fila — e `{o/a}` (gênero do personagem).
   Também funcionam nos rótulos das escolhas.
 - **Ordem do tick anual** (`advanceYear`): fim do ano letivo → fim do ano de luta (ofertas expiram, faixa, mensalidade,
-  lesão) → fechamento econômico (`closeEconomicYear`: emprego, patrocínios, empresas, bens, juros, custo de vida,
-  parcelas, impostos, dívida, arquivo do extrato) → envelhecer (corpo, saúde) → início do ano letivo/matrícula → energia → relacionamentos (envelhecer/morte,
+  lesão) → lesões (`injuriesYear`: 12 meses, sequelas) → fechamento econômico (`closeEconomicYear`: emprego, patrocínios, empresas, bens, juros, custo de vida,
+  parcelas, impostos, dívida, arquivo do extrato) → envelhecer → saúde (`healthYear`: doenças, dano cerebral, hábitos)
+  → corpo → sorteio de morte (`deathCheck` → `killCharacter`: obituário, nota, partilha) → início do ano letivo/matrícula → energia → relacionamentos (envelhecer/morte,
   nascimentos, despesas, decaimento, desgaste, carreira × família, limite) → início do ano de luta (declínio, mundo
   dos NPCs, ofertas) → eventos (agendados vencidos + `auto` + 1–2 aleatórios).
 - **Luta em andamento** (`GameState.activeFight`) bloqueia ações, avançar ano e novas lutas até `closeFight`.
@@ -200,11 +224,33 @@ tests/                    # Vitest; fixtures/saves-v1.json = saves reais da Etap
   inteiros. Depois rode `npm run sim` e confira a tabela de perfis econômicos.
 - **Cidade nova:** inclua o custo em `content/economy/index.ts` (`cityCost`); salários e imóveis escalam por ele.
 
+- **Lesão:** `InjuryDef` em `src/content/injuries/index.ts` (`severity` 1–4, `months: [min,max]`, `cost`, `effects.skills`
+  na luta, `surgery?`, `sequelaChance` + `sequelaId` de `SEQUELAE`, `sources`, `zone`, `weight?`, `brainDamage?`).
+  Nome antigo da Etapa 3 → id em `LEGACY_INJURY_NAMES`. Rode `npm run sim` (lesão grave em 35–60% das carreiras pro).
+- **Doença:** `ConditionDef` em `src/content/health/index.ts` (`minAge`, `baseChance` < 0,2, `healthPerYear`,
+  `deathMult` ≥ 1, `treatmentCost`, `risk`, `deathCause`).
+- **Conquista:** `AchievementDef` em `src/content/achievements/index.ts` (`metric` existente em `engine/meta/metrics.ts`,
+  `min`/`max`, `secret?`, `onDeath?`). Métrica nova = função pura `(state, meta) => number` em `METRICS` (contadores da
+  vida vão em `state.feats` via `bumpFeat`/`maxFeat`). Acrescente o caso em `tests/achievementsReachable.test.ts`.
+- **Evento de legado:** em `src/content/events/legacy/` com `conditions.legacy` (`generation: { min: 2 }`,
+  `parentChampion`, `inheritedGym`) e os placeholders `{antecessor}`/`{seu_pai}`.
+
+## Saúde, morte e legado (Etapa 6)
+- Lesões vivem em `GameState.health` (não em `fighter`). Só lesão grave (≥ 3) com mais de 6 meses veta luta
+  (`injuryVeto`); lutar lesionado pesa nas habilidades e pode agravar. O dano cerebral é **oculto**: a UI só mostra
+  pistas (`brainHint`), nunca o número.
+- A morte passa sempre por `killCharacter` (ano ou evento com `health.die`): preenche `character.death` e `ending`
+  (obituário, nota, partilha). `continueAsChild` cria o novo estado mantendo `world`, `year`, `seed` e `rngState`.
+- O Hall da Fama e as conquistas são calculados pela engine (`evaluateAchievements`, `recordLifeEnd`) e gravados pela
+  UI no meta; a data (ISO) vem da UI.
+
 ## Flags importantes (ganchos entre etapas)
 `interesse_luta`, `brigou_na_escola`, `medalha_interescolar`, `caminho_18` ('faculdade' | 'trabalho' | 'luta'),
 `gostaDeLuta`, `artesMarciais`, `sonhaSerLutador`, `formado`, `repetente`, `expulso`, `suspenso`, `bolsista`,
 `pensa_aposentar` (gancho de aposentadoria), `casado`, `divorciado`, `viuvo`, `recem_nascido`, `primeiro_beijo`,
-`pais_separados`, `ist`, `falencia`, `empresa_faliu`, `academia_propria`, `sonegar_ano`; nas pessoas: `interesse_luta`, `lutador_mirim` (gancho do legado), `academia`, `separados`, `pediu_dinheiro`.
+`pais_separados`, `ist`, `falencia`, `empresa_faliu`, `academia_propria`, `sonegar_ano`, `aposentado`,
+`academia_herdada`, `filho_de_campeao`, `lutador_mirim` (herdado), `pensou_parar_derrotas`/`medico_parar` (controle dos
+eventos de aposentadoria); nas pessoas: `interesse_luta`, `lutador_mirim` (gancho do legado), `academia`, `separados`, `pediu_dinheiro`.
 
 ## Regras de conteúdo
 - Use **somente organizações, ligas, academias, eventos e lutadores fictícios** (ex.: "Circuito Titã", "ARC").

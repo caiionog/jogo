@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { withInjury } from './healthHelpers';
 import { GAME_CONTENT } from '../src/content';
 import { TITLE_SHOT_STREAK, createRng, emptyRecord, findMatches, isOrgEligible, meetsOrgRequirements, orgRequirementGap, rankOf, recentProWinRate, signWith } from '../src/engine';
 import type { FightHistoryEntry } from '../src/engine';
@@ -40,7 +41,7 @@ describe('requisitos de entrada', () => {
     expect(signed.fighter.orgId).toBe('lfm');
     expect(isOrgEligible(signed, org('arc'), GAME_CONTENT)).toBe(false); // mesmo nível
     expect(isOrgEligible(g, org('amador_punho_de_ferro'), GAME_CONTENT)).toBe(false); // sem contrato
-    expect(isOrgEligible({ ...g, fighter: { ...g.fighter, injury: { name: 'x', yearsLeft: 1 } } }, org('arc'), GAME_CONTENT)).toBe(false);
+    expect(isOrgEligible(withInjury(g, 'lca', 12), org('arc'), GAME_CONTENT)).toBe(false);
   });
 
   it('assinar materializa o elenco da categoria e deixa o jogador fora do ranking', () => {

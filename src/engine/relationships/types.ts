@@ -14,7 +14,8 @@ export type RelType =
   | 'filho'
   | 'treinador'
   | 'rival'
-  | 'colega_treino';
+  | 'colega_treino'
+  | 'avo';
 
 export type RomanceStage = 'ficando' | 'namorando' | 'noivos' | 'casados';
 export type CivilStatus = 'solteiro' | 'ficando' | 'namorando' | 'noivo' | 'casado' | 'divorciado';

@@ -1,3 +1,4 @@
+import { injuryVeto } from './injuries';
 /** Organizações: níveis, requisitos de entrada e contratos. */
 import type { GameContent } from '../core/content';
 import type { GameState } from '../core/state';
@@ -56,7 +57,7 @@ export function isOrgEligible(state: GameState, org: OrgDef, content: GameConten
   if (!org.contract || !meetsOrgRequirements(state, org)) return false;
   const current = getOrg(content, state.fighter.orgId);
   if (current?.id === org.id) return false;
-  if (state.fighter.injury || state.fighter.suspendedYears > 0) return false;
+  if (injuryVeto(state) || state.fighter.retired || state.fighter.suspendedYears > 0) return false;
   return !current || tierIndex(org.tier) > tierIndex(current.tier);
 }
 

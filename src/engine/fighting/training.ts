@@ -1,3 +1,5 @@
+import { addBrainDamage, addInjury, injuryVeto, pickInjury, sparringAggravation } from './injuries';
+import type { InjuryDef } from '../health/types';
 /** Treino de luta: ganhos com retornos decrescentes, curva de idade, academia e saúde. */
 import type { GameContent } from '../core/content';
 import { createRng } from '../core/rng';
@@ -14,6 +16,8 @@ export const TECHNIQUE_SKILLS: readonly SkillKey[] = ['striking', 'wrestling', '
 
 export const TRAINING_COST: Record<TrainingKind, number> = { technique: 2, sparring: 2, conditioning: 1, bjj: 2 };
 export const TRAINING_MIN_AGE: Record<TrainingKind, number> = { technique: 4, sparring: 12, conditioning: 6, bjj: 4 };
+/** Treino de condicionamento com saúde < 50: chance de lesão por excesso. */
+export const OVERTRAINING_INJURY_CHANCE = 0.1;
 export const SPARRING_INJURY_CHANCE = 0.08;
 
 /** Fator de idade: aprende pouco criança, pico 25–32, declínio depois. */
@@ -69,13 +73,14 @@ export function currentGym(state: GameState, content: GameContent): GymDef | und
   return id ? content.fighting.gyms.find((g) => g.id === id) : undefined;
 }
 
-export type TrainingBlockReason = 'dead' | 'busy' | 'too-young' | 'no-energy' | 'injured' | 'bad-skill';
+export type TrainingBlockReason = 'dead' | 'busy' | 'too-young' | 'no-energy' | 'injured' | 'retired' | 'bad-skill';
 
 export function trainingBlockReason(state: GameState, kind: TrainingKind, skill?: SkillKey): TrainingBlockReason | null {
   if (!state.alive) return 'dead';
   if (state.pendingEvents.length > 0 || state.activeFight) return 'busy';
   if (state.character.age < TRAINING_MIN_AGE[kind]) return 'too-young';
-  if (kind === 'sparring' && state.fighter.injury) return 'injured';
+  if (state.fighter.retired && (kind === 'sparring' || kind === 'technique')) return 'retired';
+  if (kind === 'sparring' && injuryVeto(state)) return 'injured';
   if (kind === 'technique' && (!skill || !TECHNIQUE_SKILLS.includes(skill))) return 'bad-skill';
   if (state.energy.current < TRAINING_COST[kind]) return 'no-energy';
   return null;
@@ -104,7 +109,7 @@ export function trainFighter(state: GameState, kind: TrainingKind, skill: SkillK
   };
   let next: GameState = { ...state, energy: { ...state.energy, current: state.energy.current - TRAINING_COST[kind] } };
   let text = '';
-  let injury: string | null = null;
+  let injury: InjuryDef | undefined;
 
   switch (kind) {
     case 'technique': {
@@ -121,13 +126,18 @@ export function trainFighter(state: GameState, kind: TrainingKind, skill: SkillK
       g(2.5, 'chin');
       next = { ...next, character: { ...next.character, stats: addStats(next.character.stats, { health: -1 }) } };
       text = 'Você fez sparring pesado com os colegas de equipe.';
-      if (rng.chance(SPARRING_INJURY_CHANCE)) injury = rng.pick(content.fighting.injuries);
+      if (rng.chance(SPARRING_INJURY_CHANCE)) injury = pickInjury(rng, content, 'sparring');
+      // pancadas de treino também contam (pouco) no dano cerebral; lesionado pode agravar
+      next = addBrainDamage(next, 0.15);
+      next = sparringAggravation(next, rng, content);
       break;
     }
     case 'conditioning': {
       g(8, 'cardio');
       next = { ...next, character: { ...next.character, stats: addStats(next.character.stats, { fitness: 2, health: 1 }) } };
       text = 'Você fez um treino puxado de condicionamento.';
+      // treino excessivo com o corpo cansado machuca
+      if (state.character.stats.health < 50 && rng.chance(OVERTRAINING_INJURY_CHANCE)) injury = pickInjury(rng, content, 'treino');
       break;
     }
     case 'bjj': {
@@ -143,14 +153,7 @@ export function trainFighter(state: GameState, kind: TrainingKind, skill: SkillK
   next = appendLog(next, text.replace('sozinho(a)', state.character.sex === 'M' ? 'sozinho' : 'sozinha'));
   // na academia dá para conhecer companheiros de treino
   if (gym && state.character.age >= 6 && rng.chance(0.12)) next = meetFriend(next, rng, content, 'gym');
-  if (injury) {
-    next = {
-      ...next,
-      fighter: { ...next.fighter, injury: { name: injury, yearsLeft: 1 } },
-      character: { ...next.character, stats: addStats(next.character.stats, { health: -8 }) },
-    };
-    next = appendLog(next, `Você se machucou no sparring: ${injury}. Sem lutas por um ano.`);
-  }
+  if (injury) next = addInjury(next, rng, content, injury, kind === 'sparring' ? 'sparring' : 'treino');
   return { ...next, rngState: rng.state };
 }
 

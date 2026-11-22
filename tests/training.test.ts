@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { withInjury } from './healthHelpers';
 import { GAME_CONTENT } from '../src/content';
 import { TRAINING_COST, ageFactor, diminishing, expectedGain, trainFighter, trainingBlockReason } from '../src/engine';
 import { fighterGame } from './fightHelpers';
@@ -50,11 +51,11 @@ describe('ganho de treino', () => {
     expect(r.character.stats.fitness).toBeGreaterThan(g.character.stats.fitness);
   });
 
-  it('sparring pode lesionar (e bloqueia lutas)', () => {
+  it('sparring pode lesionar', () => {
     let injured = 0;
     for (let i = 0; i < 200; i++) {
       const r = trainFighter(fighterGame(25, {}, {}, `sp${i}`), 'sparring', undefined, GAME_CONTENT);
-      if (r.fighter.injury) injured++;
+      if (r.health.injuries.length) injured++;
     }
     expect(injured).toBeGreaterThan(4);
     expect(injured).toBeLessThan(40);
@@ -64,7 +65,8 @@ describe('ganho de treino', () => {
     expect(trainingBlockReason({ ...fighterGame(25), energy: { current: 1, max: 8 } }, 'technique', 'striking')).toBe('no-energy');
     expect(trainingBlockReason(fighterGame(8), 'sparring')).toBe('too-young');
     expect(trainingBlockReason(fighterGame(25), 'technique', 'chin')).toBe('bad-skill');
-    expect(trainingBlockReason(fighterGame(25, {}, { injury: { name: 'x', yearsLeft: 1 } }), 'sparring')).toBe('injured');
+    expect(trainingBlockReason(withInjury(fighterGame(25), 'lca', 12), 'sparring')).toBe('injured');
+    expect(trainingBlockReason(withInjury(fighterGame(25), 'distensao', 2), 'sparring')).toBe(null);
   });
 
   it('clubes escolares de luta contam como treino na infância', () => {

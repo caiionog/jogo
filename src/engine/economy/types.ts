@@ -13,6 +13,7 @@ export type LedgerCategory =
   | 'familia'
   | 'aplicacoes'
   | 'impostos'
+  | 'saude'
   | 'moradia'
   | 'padrao_vida'
   | 'filhos'
@@ -151,6 +152,8 @@ export interface EconomyState {
   alimony: { childId: string; amount: number }[];
   /** Imposto devido sonegado (para a malha fina). */
   evadedTax: number;
+  /** Testamento (Etapa 6): personId → %. */
+  will?: { shares: Record<string, number>; year: number } | null;
 }
 
 // ---------------------------------------------------------------------------

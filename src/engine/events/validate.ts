@@ -1,3 +1,4 @@
+import { METRICS } from '../meta/metrics';
 import type { GameContent } from '../core/content';
 import { STAT_KEYS } from '../core/state';
 import { STAGE_ORDER } from '../lifeStages/school';
@@ -33,6 +34,12 @@ export function validateContent(content: GameContent): string[] {
     for (const k of Object.keys(ff?.skills ?? {})) {
       if (!['striking', 'wrestling', 'grappling', 'defense', 'cardio', 'chin'].includes(k)) errors.push(`${where}: habilidade desconhecida "${k}"`);
     }
+    const he = fx.health;
+    if (he?.injury && he.injury !== 'random' && !content.health.injuries.some((d) => d.id === he.injury)) errors.push(`${where}: lesão inexistente "${he.injury}"`);
+    if (he?.condition && !content.health.conditions.some((d) => d.id === he.condition)) errors.push(`${where}: doença inexistente "${he.condition}"`);
+    if (he?.controlCondition && he.controlCondition !== 'var' && !content.health.conditions.some((d) => d.id === he.controlCondition)) errors.push(`${where}: doença inexistente "${he.controlCondition}"`);
+    if (he?.sequela && !content.health.sequelae.some((d) => d.id === he.sequela)) errors.push(`${where}: sequela inexistente "${he.sequela}"`);
+    if (he?.die !== undefined && !he.die.trim()) errors.push(`${where}: causa de morte vazia`);
     const so = fx.social;
     if (so?.pregnancyChance !== undefined && !(so.pregnancyChance > 0 && so.pregnancyChance <= 1)) errors.push(`${where}: pregnancyChance fora de (0,1]`);
     for (const f of fx.followUps ?? []) {
@@ -124,8 +131,42 @@ export function validateContent(content: GameContent): string[] {
   for (const k of FIGHT_TEXT_KEYS) if (!fc.text[k]?.length) errors.push(`fightText: sem textos para "${k}"`);
   for (const w of ['standing', 'clinch', 'ground'] as const) if (!fc.text.strikes[w].length) errors.push(`fightText: sem golpes "${w}"`);
   if (!fc.text.submissions.length) errors.push('fightText: sem finalizações');
-  if (fc.hooks.weightMissEventId && !allEventIds.has(fc.hooks.weightMissEventId)) errors.push(`hook: evento inexistente "${fc.hooks.weightMissEventId}"`);
-  if (!fc.nicknames.length || !fc.injuries.length) errors.push('apelidos/lesões vazios');
+  for (const h of Object.values(fc.hooks)) if (h && !allEventIds.has(h)) errors.push(`hook: evento inexistente "${h}"`);
+  if (!fc.nicknames.length) errors.push('apelidos vazios');
+  // saúde (Etapa 6)
+  const hc = content.health;
+  const seqIds = new Set(hc.sequelae.map((x) => x.id));
+  const injIds = new Set<string>();
+  for (const d of hc.injuries) {
+    if (injIds.has(d.id)) errors.push(`lesão duplicada: ${d.id}`);
+    injIds.add(d.id);
+    if (d.months[0] < 1 || d.months[1] < d.months[0]) errors.push(`lesão ${d.id}: meses inválidos`);
+    if (d.sequelaId && !seqIds.has(d.sequelaId)) errors.push(`lesão ${d.id}: sequela inexistente "${d.sequelaId}"`);
+    if (d.surgery && !(d.surgery.successChance > 0 && d.surgery.successChance <= 1)) errors.push(`lesão ${d.id}: chance de cirurgia inválida`);
+    if (d.surgery && !d.cost.cirurgia) errors.push(`lesão ${d.id}: cirurgia sem custo`);
+    if (!(d.sequelaChance >= 0 && d.sequelaChance < 1)) errors.push(`lesão ${d.id}: sequelaChance fora de [0,1)`);
+    if (!d.sources.length) errors.push(`lesão ${d.id}: sem origem`);
+  }
+  for (const src of ['luta', 'sparring', 'treino', 'evento'] as const) if (!hc.injuries.some((d) => d.sources.includes(src))) errors.push(`nenhuma lesão com origem "${src}"`);
+  if (seqIds.size !== hc.sequelae.length) errors.push('sequelas duplicadas');
+  for (const [name, id] of Object.entries(hc.legacyNames)) if (!injIds.has(id)) errors.push(`lesão antiga "${name}" aponta para id inexistente "${id}"`);
+  const condIds = new Set(hc.conditions.map((c) => c.id));
+  if (condIds.size !== hc.conditions.length) errors.push('doenças duplicadas');
+  for (const c of hc.conditions) if (!(c.baseChance > 0 && c.baseChance < 0.2) || c.deathMult < 1) errors.push(`doença ${c.id}: parâmetros inválidos`);
+  if (hc.diagnosisEventId && !allEventIds.has(hc.diagnosisEventId)) errors.push(`hook: evento inexistente "${hc.diagnosisEventId}"`);
+  // conquistas (Etapa 6)
+  const achIds = new Set<string>();
+  for (const a of content.achievements) {
+    if (achIds.has(a.id)) errors.push(`conquista duplicada: ${a.id}`);
+    achIds.add(a.id);
+    if (!METRICS[a.metric]) errors.push(`conquista ${a.id}: métrica inexistente "${a.metric}"`);
+    if (a.min === undefined && a.max === undefined) errors.push(`conquista ${a.id}: sem limite (min/max)`);
+    if (!a.name.trim() || !a.description.trim() || !a.icon) errors.push(`conquista ${a.id}: nome/descrição/ícone vazios`);
+  }
+  // legado
+  const lc = content.legacy;
+  if (!(lc.inheritanceTax >= 0 && lc.inheritanceTax < 1)) errors.push('legado: imposto de herança fora de [0,1)');
+  if (!(lc.defaultSplit.spouseWithChildren >= 0 && lc.defaultSplit.spouseWithChildren <= 1)) errors.push('legado: divisão padrão inválida');
   // relacionamentos
   if (traitIds.size !== content.relationships.traits.length) errors.push('ids de traço duplicados');
   for (const t of content.relationships.traits) for (const x of [...(t.likes ?? []), ...(t.dislikes ?? [])]) if (!traitIds.has(x)) errors.push(`traço ${t.id}: referência inexistente "${x}"`);

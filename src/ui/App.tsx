@@ -1,26 +1,40 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useGameStore } from './store';
 import NewLife from './screens/NewLife';
 import Life from './screens/Life';
+import Obituary from './screens/Obituary';
+import Toasts from './components/Toasts';
 
 export default function App() {
   const status = useGameStore((s) => s.status);
-  const hasGame = useGameStore((s) => s.game !== null);
+  const game = useGameStore((s) => s.game);
   const init = useGameStore((s) => s.init);
+  const fontScale = useGameStore((s) => s.meta.settings.fontScale);
+  const [viewLife, setViewLife] = useState(false);
+  const lifeKey = game ? `${game.seed}:${game.dynasty.generation}:${game.character.name}` : '';
 
   useEffect(() => {
     void init();
   }, [init]);
+  // acessibilidade: texto maior escala tudo (o layout usa rem)
+  useEffect(() => {
+    document.documentElement.style.fontSize = fontScale === 'grande' ? '112.5%' : '';
+  }, [fontScale]);
+  // vida nova/herdeiro: volta para a visão normal
+  useEffect(() => setViewLife(false), [lifeKey]);
 
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col">
       {status === 'loading' ? (
         <p className="m-auto text-slate-400">Carregando…</p>
-      ) : hasGame ? (
-        <Life />
-      ) : (
+      ) : !game ? (
         <NewLife />
+      ) : !game.alive && game.ending && !viewLife ? (
+        <Obituary onViewLife={() => setViewLife(true)} />
+      ) : (
+        <Life onShowObituary={() => setViewLife(false)} />
       )}
+      <Toasts />
     </div>
   );
 }

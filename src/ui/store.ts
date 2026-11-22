@@ -44,14 +44,84 @@ import {
   expandBusiness,
   injectCash,
   sellBusiness,
+  retire,
+  treatInjury,
+  healthAction,
+  makeWill,
+  revokeWill,
+  continueAsChild,
+  emptyMeta,
+  evaluateAchievements,
+  recordLifeEnd,
+  recordLifeStart,
 } from '../engine';
-import type { GameState, Housing, LivingStandard, InteractionKind, MeetMode, PartnerPreference, Sex, SkillKey, Strategy, TrainingKind } from '../engine';
-import { clearGame, loadGame, saveGame } from '../save';
+import type {
+  AchievementDef,
+  GameState,
+  HealthActionId,
+  Housing,
+  LivingStandard,
+  InteractionKind,
+  MeetMode,
+  MetaSettings,
+  MetaState,
+  PartnerPreference,
+  Sex,
+  SkillKey,
+  Strategy,
+  TrainingKind,
+  Treatment,
+} from '../engine';
+import {
+  SLOT_COUNT,
+  clearGame,
+  clearSlot,
+  exportFileName,
+  exportSave,
+  getActiveSlot,
+  importSave,
+  listSlots,
+  loadGame,
+  loadMeta,
+  loadSlot,
+  saveGame,
+  saveMeta,
+  saveSlot,
+  setActiveSlot,
+} from '../save';
+import type { SlotInfo } from '../save';
+
+export interface Toast {
+  id: number;
+  icon: string;
+  title: string;
+  text: string;
+}
 
 interface GameStore {
   status: 'loading' | 'ready';
   game: GameState | null;
+  /** Conquistas, Hall da Fama, estatísticas e preferências (chave própria no IndexedDB). */
+  meta: MetaState;
+  slot: number;
+  slots: SlotInfo[];
+  toasts: Toast[];
   init(): Promise<void>;
+  // Etapa 6
+  retire(): void;
+  treatInjury(injuryId: string, treatment: Treatment): void;
+  healthAction(id: HealthActionId): void;
+  makeWill(shares: Record<string, number>): void;
+  revokeWill(): void;
+  continueAsChild(personId: string): void;
+  refreshSlots(): Promise<void>;
+  switchSlot(slot: number): Promise<void>;
+  deleteSlot(slot: number): Promise<void>;
+  exportCurrent(): { name: string; text: string } | null;
+  importFile(text: string): Promise<{ ok: boolean; error?: string }>;
+  setMetaSettings(patch: Partial<MetaSettings>): void;
+  eraseAll(): Promise<void>;
+  dismissToast(id: number): void;
   startLife(name: string, sex: Sex, opts?: { adultContent?: boolean; preference?: PartnerPreference }): void;
   doAction(actionId: string): void;
   joinClub(clubId: string): void;
@@ -99,23 +169,110 @@ interface GameStore {
 }
 
 export const useGameStore = create<GameStore>((setState, getState) => {
+  let toastId = 1;
+  /** Depois de cada mudança: avalia conquistas (toast) e registra a vida no Hall da Fama ao morrer. */
+  const afterChange = (game: GameState) => {
+    const now = new Date().toISOString();
+    let { meta } = getState();
+    const r = evaluateAchievements(game, meta, GAME_CONTENT, now);
+    meta = r.meta;
+    if (!game.alive) meta = recordLifeEnd(meta, game);
+    if (meta !== getState().meta) {
+      const toasts = [...getState().toasts, ...r.unlocked.map((a: AchievementDef) => ({ id: toastId++, icon: a.icon, title: 'Conquista desbloqueada!', text: a.name }))].slice(-4);
+      setState({ meta, toasts });
+      void saveMeta(meta);
+    }
+  };
   const update = (fn: (g: GameState) => GameState) => {
     const g = getState().game;
-    if (g) setState({ game: fn(g) });
+    if (!g) return;
+    const next = fn(g);
+    if (next === g) return;
+    setState({ game: next });
+    afterChange(next);
   };
   const eco = (fn: (g: GameState) => GameState) => update((g) => economyAction(g, fn));
 
   return {
     status: 'loading',
     game: null,
+    meta: emptyMeta(),
+    slot: 1,
+    slots: [],
+    toasts: [],
     async init() {
+      const [slot, meta] = await Promise.all([getActiveSlot(), loadMeta()]);
       const game = await loadGame();
-      setState({ game, status: 'ready' });
+      setState({ game, meta, slot, status: 'ready' });
+      void getState().refreshSlots();
     },
     startLife(name, sex, opts = {}) {
       // A seed vem da UI; a engine nunca usa fontes de aleatoriedade não determinísticas.
       const seed = `${Date.now()}-${Math.floor(performance.now() * 1000)}`;
-      setState({ game: newGame({ seed, name, sex, ...opts }, GAME_CONTENT) });
+      const meta = recordLifeStart(getState().meta);
+      setState({ game: newGame({ seed, name, sex, ...opts }, GAME_CONTENT), meta });
+      void saveMeta(meta);
+    },
+    retire: () => update((g) => retire(g, GAME_CONTENT)),
+    treatInjury: (id, t) => update((g) => treatInjury(g, id, t, GAME_CONTENT)),
+    healthAction: (id) => update((g) => healthAction(g, GAME_CONTENT, id)),
+    makeWill: (shares) => update((g) => makeWill(g, shares)),
+    revokeWill: () => update((g) => revokeWill(g)),
+    continueAsChild(personId) {
+      const g = getState().game;
+      if (!g) return;
+      const next = continueAsChild(g, personId, GAME_CONTENT);
+      if (next === g) return;
+      const meta = recordLifeStart(getState().meta);
+      setState({ game: next, meta });
+      void saveMeta(meta);
+      afterChange(next);
+    },
+    async refreshSlots() {
+      setState({ slots: await listSlots() });
+    },
+    async switchSlot(slot) {
+      if (slot < 1 || slot > SLOT_COUNT) return;
+      const g = getState().game;
+      if (g) await saveSlot(getState().slot, g);
+      await setActiveSlot(slot);
+      const game = await loadSlot(slot);
+      setState({ slot, game });
+      await getState().refreshSlots();
+    },
+    async deleteSlot(slot) {
+      await clearSlot(slot);
+      if (slot === getState().slot) setState({ game: null });
+      await getState().refreshSlots();
+    },
+    exportCurrent() {
+      const g = getState().game;
+      if (!g) return null;
+      const now = new Date().toISOString();
+      return { name: exportFileName(g, now), text: exportSave(g, now) };
+    },
+    async importFile(text) {
+      const r = importSave(text);
+      if (!r.ok) return { ok: false, error: r.error };
+      setState({ game: r.state });
+      await saveGame(r.state);
+      await getState().refreshSlots();
+      return { ok: true };
+    },
+    setMetaSettings(patch) {
+      const meta = { ...getState().meta, settings: { ...getState().meta.settings, ...patch } };
+      setState({ meta });
+      void saveMeta(meta);
+    },
+    async eraseAll() {
+      for (let s = 1; s <= SLOT_COUNT; s++) await clearSlot(s);
+      const meta = emptyMeta();
+      await saveMeta(meta);
+      setState({ game: null, meta, toasts: [] });
+      await getState().refreshSlots();
+    },
+    dismissToast(id) {
+      setState({ toasts: getState().toasts.filter((t) => t.id !== id) });
     },
     interact(personId, kind) {
       update((g) => interact(g, personId, kind, GAME_CONTENT));
@@ -194,13 +351,39 @@ export const useGameStore = create<GameStore>((setState, getState) => {
     async newLife() {
       await clearGame();
       setState({ game: null });
+      await getState().refreshSlots();
     },
   };
 });
 
 // Autosave: toda mudança no jogo é gravada no IndexedDB.
+// (com debounce curto: vários cliques seguidos viram uma gravação só, fora do caminho do clique)
+let saveTimer: ReturnType<typeof setTimeout> | null = null;
+let pendingSave: (() => void) | null = null;
 useGameStore.subscribe((s, prev) => {
   if (s.status === 'ready' && s.game && s.game !== prev.game) {
-    void saveGame(s.game);
+    if (saveTimer) clearTimeout(saveTimer);
+    const { game, slot } = s;
+    pendingSave = () => {
+      saveTimer = null;
+      pendingSave = null;
+      void saveSlot(slot, game);
+    };
+    // vida nova (ou herdeiro): grava na hora; mudanças seguidas na mesma vida: debounce
+    const newLife = !prev.game || prev.game.seed !== game.seed || prev.game.dynasty.generation !== game.dynasty.generation;
+    if (newLife) pendingSave();
+    else saveTimer = setTimeout(pendingSave, 150);
   }
 });
+// ao sair/minimizar o app, grava na hora o que estiver pendente
+if (typeof document !== 'undefined') {
+  const flush = () => {
+    if (!pendingSave) return;
+    if (saveTimer) clearTimeout(saveTimer);
+    pendingSave();
+  };
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') flush();
+  });
+  window.addEventListener('pagehide', flush);
+}

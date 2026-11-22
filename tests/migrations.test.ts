@@ -169,7 +169,7 @@ describe('migração v4 → v5 (economia)', () => {
 
   it.each(['10', '22', '35', '60'])('idade %s: dinheiro inteiro, extrato vazio, moradia e patrimônio dos pais', (key) => {
     const g = migrate(structuredClone(v4[key]!));
-    expect(g.version).toBe(5);
+    expect(g.version).toBe(CURRENT_VERSION);
     expect(Number.isInteger(g.money)).toBe(true);
     expect(g.economy.ledger.opening).toBe(g.money);
     expect(g.economy.ledger.entries).toEqual([]);
@@ -193,5 +193,60 @@ describe('migração v4 → v5 (economia)', () => {
 
   it('é determinística', () => {
     expect(migrate(structuredClone(v4['35']!))).toEqual(migrate(structuredClone(v4['35']!)));
+  });
+});
+
+import fixturesV5 from './fixtures/saves-v5.json';
+const v5 = fixturesV5 as unknown as Record<string, Raw>;
+
+describe('migração v5 → v6 (lesões, aposentadoria, legado)', () => {
+  it('fixtures são saves v5 reais (Etapa 5), duas com lesão antiga', () => {
+    for (const s of Object.values(v5)) {
+      expect(s.version).toBe(5);
+      expect(s).not.toHaveProperty('health');
+    }
+    expect(Object.values(v5).filter((s) => (s as unknown as { fighter: { injury: unknown } }).fighter.injury).length).toBe(2);
+  });
+
+  it.each(['10', '25', '40', '60'])('idade %s: saúde, dinastia, aposentadoria e um ano jogável', (key) => {
+    const raw = structuredClone(v5[key]!) as unknown as { fighter: { injury: { name: string; yearsLeft: number } | null; history: { result: string; method: string }[] } };
+    const g = migrate(structuredClone(v5[key]!));
+    expect(g.version).toBe(CURRENT_VERSION);
+    expect(g.fighter).not.toHaveProperty('injury');
+    expect(g.fighter.retired).toBeNull();
+    expect(g.dynasty).toMatchObject({ generation: 1, members: [] });
+    expect(g.ending).toBeNull();
+    if (raw.fighter.injury) {
+      expect(g.health.injuries).toHaveLength(1);
+      const def = GAME_CONTENT.health.injuries.find((d) => d.id === g.health.injuries[0]!.defId)!;
+      expect(def).toBeDefined();
+      expect(g.health.injuries[0]!.months).toBe(raw.fighter.injury.yearsLeft * 12);
+    } else expect(g.health.injuries).toEqual([]);
+    const kos = raw.fighter.history.filter((h) => h.result === 'L' && h.method === 'KO').length;
+    const tkos = raw.fighter.history.filter((h) => h.result === 'L' && h.method === 'TKO').length;
+    expect(g.health.brainDamage).toBe(Math.min(60, kos * 8 + tkos * 4));
+    const s = resolveAllFirst(advanceYear(g, GAME_CONTENT));
+    expect(s.character.age).toBe(g.character.age + 1);
+  });
+
+  it('lesões antigas são mapeadas para o catálogo', () => {
+    expect(migrate(structuredClone(v5['25']!)).health.injuries[0]!.defId).toBe('nariz_quebrado');
+    expect(migrate(structuredClone(v5['40']!)).health.injuries[0]!.defId).toBe('hernia');
+  });
+
+  it('save morto (v4 → v6) ganha fim de vida com obituário', () => {
+    const g = migrate(structuredClone(v4['60']!));
+    expect(g.alive).toBe(false);
+    expect(g.ending?.obituary.headline).toContain(g.character.name);
+  });
+
+  it('cadeia completa: um save da Etapa 1 (v1) migra até a versão atual e joga', () => {
+    for (const raw of Object.values(v1)) {
+      const g = migrate(structuredClone(raw));
+      expect(g.version).toBe(CURRENT_VERSION);
+      expect(g.health).toBeDefined();
+      expect(g.dynasty.generation).toBe(1);
+      if (g.alive) expect(resolveAllFirst(advanceYear(g, GAME_CONTENT)).character.age).toBe(g.character.age + 1);
+    }
   });
 });

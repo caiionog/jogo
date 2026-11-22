@@ -6,7 +6,3 @@ export const NICKNAMES: readonly string[] = [
 ];
 
 /** Lesões básicas (gancho para o sistema completo de lesões). */
-export const INJURIES: readonly string[] = [
-  'joelho torcido', 'costela trincada', 'mão fraturada', 'ombro deslocado', 'corte profundo no supercílio',
-  'lesão no tornozelo', 'hérnia de disco leve', 'nariz quebrado',
-];

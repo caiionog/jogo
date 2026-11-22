@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Ícone original do Vida de Lutador: octógono estilizado e as iniciais "VL" desenhadas com polígonos -->
+  <rect width="512" height="512" rx="112" fill="#020617"/>
+  <polygon points="256,62 393,119 450,256 393,393 256,450 119,393 62,256 119,119" fill="none" stroke="#10b981" stroke-width="26" stroke-linejoin="round"/>
+  <polygon points="135,180 177,180 205,282 233,180 275,180 227,340 183,340" fill="#f8fafc"/>
+  <polygon points="290,180 330,180 330,302 377,302 377,340 290,340" fill="#f8fafc"/>
+  <rect x="150" y="364" width="212" height="14" rx="7" fill="#fbbf24"/>
+</svg>

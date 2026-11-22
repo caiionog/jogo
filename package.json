@@ -1,7 +1,7 @@
 {
   "name": "jogo-vida-lutador",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,7 +11,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "sim": "tsx scripts/sim.ts",
-    "build:artifact": "npm run build && node scripts/build-artifact.mjs"
+    "build:artifact": "npm run build && node scripts/build-artifact.mjs",
+    "bench": "tsx scripts/bench.ts",
+    "icons": "node scripts/icons.mjs"
   },
   "dependencies": {
     "idb-keyval": "^6.3.0",
@@ -29,6 +31,8 @@
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
     "vite": "^8.3.8",
-    "vitest": "^5.1.1"
+    "vite-plugin-pwa": "^2.0.0",
+    "vitest": "^5.1.1",
+    "workbox-window": "^7.4.1"
   }
 }

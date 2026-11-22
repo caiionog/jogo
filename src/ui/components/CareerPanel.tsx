@@ -11,12 +11,16 @@ import {
   getOrg,
   gymBlockReason,
   gymsInCity,
+  injuryVeto,
+  monthsText,
+  worstInjury,
   opponentFullName,
   orgRequirementGap,
   playerDivision,
   rankOf,
   recentProWinRate,
   recordText,
+  retireBlockReason,
   tierIndex,
   trainingBlockReason,
 } from '../../engine';
@@ -38,6 +42,7 @@ const BLOCK_TEXT: Record<string, string> = {
   'other-city': 'Outra cidade',
   current: 'Sua academia',
   'no-money': 'Sem dinheiro',
+  retired: 'Aposentado',
 };
 
 function RecordLine({ label, r }: { label: string; r: CareerRecord }) {
@@ -214,6 +219,7 @@ const KIND_BADGE: Record<FightOffer['kind'], string> = {
   rival: '🔥 Rivalidade',
   bjj: '🥋 Jiu-jitsu',
   kids: '🧒 Torneio infantil',
+  farewell: '👋 Luta de despedida',
 };
 
 function OfferCard({ game, offer }: { game: GameState; offer: FightOffer }) {
@@ -257,6 +263,11 @@ function OfferCard({ game, offer }: { game: GameState; offer: FightOffer }) {
           Corte de peso agressivo (mais força, {Math.round(AGGRESSIVE_CUT_MISS_CHANCE * 100)}% de risco de não bater o peso)
         </label>
       )}
+      {game.health.injuries.length > 0 && (
+        <p className="mt-2 rounded-lg bg-amber-500/10 px-2 py-1 text-[11px] text-amber-200" data-testid="injured-warning">
+          ⚠️ Você está lesionado(a): lutar agora pesa nas habilidades e pode agravar a lesão.
+        </p>
+      )}
       <div className="mt-3 grid grid-cols-2 gap-2">
         <button onClick={() => decline(offer.id)} className="rounded-xl border border-slate-600 py-2 text-sm">
           Recusar
@@ -275,6 +286,8 @@ function OfferCard({ game, offer }: { game: GameState; offer: FightOffer }) {
 
 export default function CareerPanel({ game }: { game: GameState }) {
   const f = game.fighter;
+  const worst = worstInjury(game, C);
+  const veto = injuryVeto(game);
   const org = getOrg(C, f.orgId);
   const div = playerDivision(game, C);
   const key = currentRosterKey(game, C);
@@ -313,9 +326,10 @@ export default function CareerPanel({ game }: { game: GameState }) {
             <span className="text-slate-500"> · {f.belt.years} ano{f.belt.years === 1 ? '' : 's'}</span>
           </div>
         </div>
-        {(f.injury || f.suspendedYears > 0) && (
-          <p className="mt-3 rounded-lg bg-rose-500/10 px-3 py-2 text-xs text-rose-300">
-            {f.injury && `🩹 Lesão: ${f.injury.name} (${f.injury.yearsLeft} ano). `}
+        {(worst || f.suspendedYears > 0 || f.retired) && (
+          <p className="mt-3 rounded-lg bg-rose-500/10 px-3 py-2 text-xs text-rose-300" data-testid="career-status">
+            {f.retired && `🏁 Aposentado${game.character.sex === 'F' ? 'a' : ''} desde os ${f.retired.age} anos. `}
+            {worst && `🩹 Lesão: ${worst.def.name} (${monthsText(worst.injury.months)}${veto ? ', sem condições de lutar' : ', lutar agora é arriscado'}). `}
             {f.suspendedYears > 0 && `⛔ Suspenso por ${f.suspendedYears} ano(s).`}
           </p>
         )}
@@ -335,7 +349,7 @@ export default function CareerPanel({ game }: { game: GameState }) {
         <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Ofertas de luta deste ano</h2>
         {f.offers.length === 0 ? (
           <p className="rounded-xl bg-slate-900/60 px-3 py-3 text-sm text-slate-400">
-            {f.injury ? 'Lesionado: sem lutas até se recuperar.' : f.suspendedYears > 0 ? 'Suspenso: sem lutas.' : game.character.age < 6 ? 'Ainda muito novo para competir.' : !f.gymId ? 'Entre numa academia (ou num clube de luta da escola) para receber convites.' : 'Nenhuma oferta pendente. Novas ofertas chegam no próximo ano.'}
+            {f.retired ? 'Aposentado: sem ofertas de luta.' : veto ? 'Lesão grave: sem lutas até se recuperar.' : f.suspendedYears > 0 ? 'Suspenso: sem lutas.' : game.character.age < 6 ? 'Ainda muito novo para competir.' : !f.gymId ? 'Entre numa academia (ou num clube de luta da escola) para receber convites.' : 'Nenhuma oferta pendente. Novas ofertas chegam no próximo ano.'}
           </p>
         ) : (
           <ul className="flex flex-col gap-3">
@@ -367,6 +381,53 @@ export default function CareerPanel({ game }: { game: GameState }) {
           </ul>
         </section>
       )}
+      <RetireSection game={game} />
     </div>
+  );
+}
+
+/** Aposentadoria (Etapa 6): botão com confirmação; abre o evento de despedida. */
+function RetireSection({ game }: { game: GameState }) {
+  const retire = useGameStore((s) => s.retire);
+  const [confirming, setConfirming] = useState(false);
+  const f = game.fighter;
+  const reason = retireBlockReason(game);
+  if (reason === 'never-fought') return null;
+  if (f.retired) {
+    const why = { voluntaria: 'por decisão própria', lesao: 'por causa das lesões', medica: 'por veto médico', derrotas: 'depois de uma sequência de derrotas' }[f.retired.reason];
+    return (
+      <section className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4 text-sm" data-testid="retired-box">
+        <p>🏁 Você se aposentou aos {f.retired.age} anos, {why}.</p>
+        <p className="mt-1 text-xs text-slate-400">A reputação cai devagar. Dá para seguir como treinador(a), comentarista ou dono(a) de academia (abas Trabalho e Empresas). Uma volta aos ringues pode aparecer como evento.</p>
+      </section>
+    );
+  }
+  return (
+    <section className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
+      {!confirming ? (
+        <button data-testid="retire" disabled={reason !== null} onClick={() => setConfirming(true)} className="min-h-11 w-full rounded-xl border border-slate-600 py-2 text-sm text-slate-200 disabled:opacity-40">
+          🏁 Aposentar da luta
+        </button>
+      ) : (
+        <div>
+          <p className="text-sm">Pendurar as luvas? Você sai dos rankings, os cinturões ficam vagos e o contrato acaba.</p>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <button onClick={() => setConfirming(false)} className="min-h-11 rounded-xl border border-slate-600 py-2 text-sm">
+              Ainda não
+            </button>
+            <button
+              data-testid="retire-confirm"
+              onClick={() => {
+                setConfirming(false);
+                retire();
+              }}
+              className="min-h-11 rounded-xl bg-amber-500 py-2 text-sm font-bold text-slate-950"
+            >
+              Aposentar
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
   );
 }

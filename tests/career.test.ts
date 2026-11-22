@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { noInjuries, withInjury } from './healthHelpers';
 import { GAME_CONTENT } from '../src/content';
 import {
   PLAYER_ID,
@@ -57,9 +58,10 @@ describe('ofertas', () => {
     expect(offers.some((o) => o.orgId === 'amador_punho_de_ferro')).toBe(false);
   });
 
-  it('lesão ou suspensão bloqueiam ofertas', () => {
+  it('lesão grave ou suspensão bloqueiam ofertas (lesão leve não)', () => {
     const inj = pro();
-    expect(generateOffers({ ...inj, fighter: { ...inj.fighter, injury: { name: 'x', yearsLeft: 1 } } }, createRng(1), GAME_CONTENT).fighter.offers).toEqual([]);
+    expect(generateOffers(withInjury(inj, 'lca', 12), createRng(1), GAME_CONTENT).fighter.offers).toEqual([]);
+    expect(generateOffers(withInjury(inj, 'corte_supercilio', 2), createRng(1), GAME_CONTENT).fighter.offers.length).toBeGreaterThan(0);
     expect(generateOffers({ ...inj, fighter: { ...inj.fighter, suspendedYears: 1 } }, createRng(1), GAME_CONTENT).fighter.offers).toEqual([]);
   });
 });
@@ -106,7 +108,7 @@ describe('luta e resultado', () => {
     expect(g.fighter.pro.losses).toBe(1);
     expect(g.fighter.winStreak).toBe(0);
     expect(g.fighter.reputation).toBeLessThan(weak.fighter.reputation);
-    expect(g.log.at(-1)!.entries.at(-1)).toMatch(/Você perdeu para/);
+    expect(g.log.at(-1)!.entries.join(' ')).toMatch(/Você perdeu para/);
   });
 
   it('é determinístico', () => {
@@ -134,13 +136,13 @@ describe('luta e resultado', () => {
     expect(declineOffer(g0, id).fighter.offers.some((o) => o.id === id)).toBe(false);
   });
 
-  it('lesão pós-luta bloqueia novas lutas', () => {
-    const g = { ...g0, fighter: { ...g0.fighter, injury: { name: 'mão fraturada', yearsLeft: 1 } } };
+  it('lesão grave bloqueia novas lutas e passa com o tempo', () => {
+    const g = withInjury(g0, 'ombro', 9);
     expect(fightBlockReason(g, g.fighter.offers[0])).toBe('injured');
     expect(acceptOffer(g, g.fighter.offers[0]!.id, {}, GAME_CONTENT)).toBe(g);
-    // a lesão passa no fim do ano
+    // 9 meses: sara na virada do ano
     const next = advanceYear(g, GAME_CONTENT);
-    expect(next.fighter.injury).toBeNull();
+    expect(next.health.injuries.some((i) => i.defId === 'ombro')).toBe(false);
   });
 
   it('vencendo seguidas, chega ao top 3 e disputa (e ganha) o cinturão', () => {
@@ -148,10 +150,10 @@ describe('luta e resultado', () => {
     for (let year = 0; year < 12 && g.fighter.titles.length === 0; year++) {
       g = advanceYear({ ...g, pendingEvents: [] }, GAME_CONTENT);
       // ignora lesões para isolar o caminho até o cinturão
-      g = { ...g, pendingEvents: [], energy: { current: 12, max: 12 }, fighter: { ...g.fighter, injury: null } };
+      g = noInjuries({ ...g, pendingEvents: [], energy: { current: 12, max: 12 } });
       for (let k = 0; k < 4 && arcOffer(g) && g.energy.current >= arcOffer(g).campCost; k++) {
         g = closeFight(fightFirst(g));
-        g = { ...g, pendingEvents: [], fighter: { ...g.fighter, injury: null } };
+        g = noInjuries({ ...g, pendingEvents: [] });
       }
     }
     expect(g.fighter.titles).toHaveLength(1);

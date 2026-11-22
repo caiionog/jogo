@@ -52,6 +52,10 @@ export interface EventConditions {
 
   // --- economia ---
   economy?: EconomyConditions;
+
+  // --- saúde e legado (Etapa 6) ---
+  health?: HealthConditions;
+  legacy?: LegacyConditions;
 }
 
 export interface EconomyConditions {
@@ -121,6 +125,33 @@ export interface FightingConditions {
   beltPromotionReady?: boolean;
   /** Já lutou alguma vez (qualquer cartel). */
   hasFought?: boolean;
+  /** Aposentado da luta (Etapa 6). */
+  retired?: boolean;
+  /** Anos desde a aposentadoria. */
+  retiredYears?: StatRange;
+  /** Maior número de vitórias seguidas sem derrota (pro). */
+  lossStreak?: StatRange;
+}
+
+/** Condições de saúde e legado (Etapa 6). */
+export interface HealthConditions {
+  injured?: boolean;
+  /** Tem alguma destas sequelas. */
+  sequela?: string[];
+  /** Dano cerebral (oculto ao jogador). */
+  brainDamage?: StatRange;
+  /** Tem alguma destas doenças (ou 'any'). */
+  conditions?: string[] | 'any';
+  healthStat?: StatRange;
+  hasVehicle?: boolean;
+}
+
+export interface LegacyConditions {
+  generation?: StatRange;
+  /** O antecessor (pai/mãe jogado) foi campeão. */
+  parentChampion?: boolean;
+  /** Herdou a academia da família. */
+  inheritedGym?: boolean;
 }
 
 export interface EventRisk {

@@ -7,3 +7,6 @@ export * from './fighting';
 export * from './relationships';
 export * from './economy';
 export * from './assets';
+export * from './health';
+export * from './legacy';
+export * from './meta';

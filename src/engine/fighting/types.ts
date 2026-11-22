@@ -222,9 +222,13 @@ export interface TitleHeld {
   divisionId: string;
 }
 
-export interface Injury {
-  name: string;
-  yearsLeft: number;
+export type RetireReason = 'voluntaria' | 'lesao' | 'medica' | 'derrotas';
+
+export interface Retirement {
+  age: number;
+  reason: RetireReason;
+  /** Quantas vezes voltou da aposentadoria. */
+  comebacks: number;
 }
 
 export interface Npc {
@@ -266,7 +270,7 @@ export interface Opponent {
   rank: number | null;
 }
 
-export type OfferKind = 'regular' | 'title' | 'shortNotice' | 'rival' | 'bjj' | 'kids';
+export type OfferKind = 'regular' | 'title' | 'shortNotice' | 'rival' | 'bjj' | 'kids' | 'farewell';
 
 export interface FightOffer {
   id: string;
@@ -310,7 +314,8 @@ export interface FighterProfile {
   titles: TitleHeld[];
   titlesWon: number;
   winStreak: number;
-  injury: Injury | null;
+  /** Aposentadoria (Etapa 6). As lesões ficam em `GameState.health`. */
+  retired: Retirement | null;
   suspendedYears: number;
   history: FightHistoryEntry[];
   trainedBjjThisYear: boolean;
@@ -327,9 +332,14 @@ export interface FightingContent {
   divisions: readonly DivisionDef[];
   text: FightTextPack;
   nicknames: readonly string[];
-  injuries: readonly string[];
   hooks: {
     /** Evento disparado quando o jogador falha o corte de peso. */
     weightMissEventId?: string;
+    /** Evento de despedida aberto pela ação "Aposentar" (Etapa 6). */
+    farewellEventId?: string;
+    /** Evento "hora de parar?" depois de muitas derrotas seguidas. */
+    losingStreakEventId?: string;
+    /** Evento do médico recomendando parar (sequela grave). */
+    doctorRetireEventId?: string;
   };
 }

@@ -10,3 +10,4 @@ export * from './world';
 export * from './orgs';
 export * from './matchmaking';
 export * from './career';
+export * from './retirement';

@@ -11,6 +11,8 @@ import { applyFighterEffects } from '../fighting/career';
 import type { FighterEffects } from '../fighting/career';
 import { applySocialEffects } from '../relationships/social';
 import type { SocialEffects } from '../relationships/social';
+import { applyHealthEffects } from '../health/effects';
+import type { HealthEffects } from '../health/effects';
 
 /** Agenda um evento de continuação. delayYears = 0 → pendente imediatamente. */
 export interface FollowUp {
@@ -47,6 +49,8 @@ export interface Effects {
   social?: SocialEffects;
   /** Efeitos econômicos (emprego, bens, patrocínio, impostos, empréstimos...). */
   economy?: EconomyEffects;
+  /** Lesões, doenças, dano cerebral, morte por evento (Etapa 6). */
+  health?: HealthEffects;
   followUps?: FollowUp[];
 }
 
@@ -93,6 +97,10 @@ export function applyEffects(state: GameState, effects: Effects | undefined, ctx
   if (effects.economy) {
     if (!ctx) throw new Error('applyEffects: efeitos econômicos exigem EffectContext');
     next = applyEconomyEffects(next, effects.economy, ctx.rng, ctx.content, ctx.vars);
+  }
+  if (effects.health) {
+    if (!ctx) throw new Error('applyEffects: efeitos de saúde exigem EffectContext');
+    next = applyHealthEffects(next, effects.health, ctx.rng, ctx.content, ctx.vars);
   }
   if (effects.followUps?.length) next = applyFollowUps(next, effects.followUps, ctx);
   return next;
@@ -167,7 +175,8 @@ export function gendered(state: GameState, masc: string, fem: string): string {
 
 /**
  * Substitui placeholders no texto: {name}, {city}, {escola}, {da_escola}, {na_escola} e as variáveis do evento
- * ({colega}, {professor}, {clube}...). Também aceita {o/a} para concordância de gênero.
+ * ({colega}, {professor}, {clube}...). Também aceita {o/a} para concordância de gênero e, no legado,
+ * {antecessor} e {seu_pai}.
  */
 export function formatText(state: GameState, text: string, vars?: EventVars): string {
   const cur = state.education.current;
@@ -178,6 +187,9 @@ export function formatText(state: GameState, text: string, vars?: EventVars): st
     .replaceAll('{da_escola}', cur ? withPreposition(cur.school.name, 'de') : 'da escola')
     .replaceAll('{na_escola}', cur ? withPreposition(cur.school.name, 'em') : 'na escola')
     .replaceAll('{escola}', cur?.school.name ?? 'a escola');
+  // legado (Etapa 6): o antecessor jogado — {antecessor} (nome), {seu_pai} ("seu pai"/"sua mãe")
+  const prev = state.dynasty?.members.at(-1);
+  if (prev) out = out.replaceAll('{antecessor}', prev.name).replaceAll('{seu_pai}', prev.sex === 'M' ? 'seu pai' : 'sua mãe');
   for (const [k, v] of Object.entries(vars ?? {})) out = out.replaceAll(`{${k}}`, v);
   return out;
 }

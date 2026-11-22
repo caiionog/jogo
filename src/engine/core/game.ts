@@ -1,3 +1,9 @@
+import { injuriesYear } from '../fighting/injuries';
+import { healthYear } from '../health/aging';
+import { deathCheck } from '../health/death';
+import { killCharacter } from '../legacy/finalize';
+import { emptyHealth } from '../health/types';
+import { emptyDynasty } from '../legacy/types';
 import type { ActionDef, GameContent } from './content';
 import { applyEffects, formatText } from './effects';
 import type { Effects } from './effects';
@@ -77,6 +83,10 @@ export function newGame(options: NewGameOptions, content: GameContent): GameStat
     economy: emptyEconomy(0, birthYear),
     log: [],
     alive: true,
+    health: emptyHealth(),
+    feats: {},
+    dynasty: emptyDynasty(character.name.split(' ').slice(-1)[0] ?? character.name, birthYear),
+    ending: null,
   };
   const withFamily = generateFamily(state, rng, content, 0);
   state.relationships = withFamily.relationships;
@@ -197,10 +207,16 @@ function naturalAging(state: GameState, rng: Rng): GameState {
     delta.fitness = -rng.int(0, 2);
     delta.strength = -rng.int(0, 1);
   }
-  // o corpo se recupera de pancadas e lesões (até os 45)
-  if (age < 45 && stats.health < 90) delta.health = Math.round((90 - stats.health) * 0.35);
-  if (age >= 50) delta.health = -rng.int(0, 3);
-  if (age >= 70) delta.health = -rng.int(1, 5);
+  // velhice: o declínio físico acelera
+  if (age >= 55) {
+    delta.fitness = -rng.int(1, 3);
+    delta.strength = -rng.int(0, 2);
+  }
+  if (age >= 70) delta.looks = -rng.int(0, 1);
+  // o corpo se recupera de pancadas, lesões e doenças rumo a um teto que cai com a idade (Etapa 6)
+  const target = age < 45 ? 90 : Math.max(25, 90 - (age - 45) * 1.3);
+  if (stats.health < target) delta.health = Math.round((target - stats.health) * (age < 45 ? 0.35 : 0.2));
+  else if (age >= 45) delta.health = -rng.int(0, age >= 70 ? 3 : 2);
   // felicidade tende lentamente a 60
   delta.happiness = Math.round((60 - stats.happiness) * 0.1) + rng.int(-2, 2);
   return {
@@ -209,13 +225,6 @@ function naturalAging(state: GameState, rng: Rng): GameState {
   };
 }
 
-function deathCheck(state: GameState, rng: Rng): boolean {
-  const { age, stats } = state.character;
-  if (stats.health <= 0) return true;
-  if (age < 70) return false;
-  const p = (age - 70) * 0.015 + (stats.health < 30 ? 0.1 : 0);
-  return rng.chance(Math.min(0.9, p));
-}
 
 /** Variáveis de texto sorteadas para um evento ({colega}, {professor}, {clube}). */
 function makeEventVars(state: GameState, rng: Rng, content: GameContent): EventVars {
@@ -309,6 +318,8 @@ export function advanceYear(
   return withRng(state, (rng, s) => {
     let next = endSchoolYear(s, rng, content);
     next = endFightingYear(next, content);
+    // lesões: 12 meses de recuperação (sequelas ao sarar)
+    next = injuriesYear(next, rng, content);
     // fecha o ano econômico (salário, custos, impostos, dívida) e abre o extrato do novo ano
     next = closeEconomicYear(next, rng, content);
     next = {
@@ -317,13 +328,13 @@ export function advanceYear(
       character: { ...next.character, age: next.character.age + 1 },
     };
     next = naturalAging(next, rng);
-    next = updateBody(next);
     next = appendLog(next, `Você fez ${next.character.age} ${next.character.age === 1 ? 'ano' : 'anos'}.`);
+    // doenças, dano cerebral na velhice e hábitos
+    next = healthYear(next, rng, content);
+    next = updateBody(next);
 
-    if (deathCheck(next, rng)) {
-      next = appendLog(next, 'Você faleceu. Fim da jornada.');
-      return { ...next, alive: false, energy: { current: 0, max: 0 } };
-    }
+    const cause = deathCheck(next, rng, content);
+    if (cause) return killCharacter(next, cause, content);
 
     next = startSchoolYear(next, rng, content);
     const max = maxEnergy(next.character.age, next.character.stats.health);
@@ -367,6 +378,13 @@ export function resolveEvent(
     );
     next = applyEffects(next, effects, { rng, content, ...(pending.vars ? { vars: pending.vars } : {}) });
     next = { ...next, energy: { ...next.energy, current: clamp(next.energy.current, 0, next.energy.max) } };
+    // morte por evento (acidente, luta clandestina...)
+    const eventDeath = next.flags.morte_evento;
+    if (typeof eventDeath === 'string') {
+      const flags = { ...next.flags };
+      delete flags.morte_evento;
+      return killCharacter({ ...next, flags }, eventDeath, content);
+    }
     return withEventVars(next, rng, content);
   });
 }

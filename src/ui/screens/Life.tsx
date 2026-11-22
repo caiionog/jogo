@@ -10,7 +10,9 @@ import FightScreen from '../components/FightScreen';
 import RankingPanel from '../components/RankingPanel';
 import { useState } from 'react';
 import RelationshipsPanel from '../components/RelationshipsPanel';
-import SettingsSheet from '../components/SettingsSheet';
+import MenuHost from '../components/MenuHost';
+import HealthPanel from '../components/HealthPanel';
+import { FamilyTree } from '../components/MetaScreens';
 import StatBars from '../components/StatBars';
 import FinancePanel from '../components/FinancePanel';
 import WorkPanel from '../components/WorkPanel';
@@ -20,7 +22,7 @@ import { useGameStore } from '../store';
 
 const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
 
-export default function Life() {
+export default function Life({ onShowObituary }: { onShowObituary?: () => void }) {
   const game = useGameStore((s) => s.game);
   const doAction = useGameStore((s) => s.doAction);
   const joinClub = useGameStore((s) => s.joinClub);
@@ -28,8 +30,7 @@ export default function Life() {
   const advance = useGameStore((s) => s.advance);
   const choose = useGameStore((s) => s.choose);
   const newLife = useGameStore((s) => s.newLife);
-  const [tab, setTab] = useState<'vida' | 'carreira' | 'relacoes' | 'ranking' | 'financas' | 'trabalho' | 'bens' | 'empresas'>('vida');
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [tab, setTab] = useState<'vida' | 'saude' | 'carreira' | 'relacoes' | 'ranking' | 'financas' | 'trabalho' | 'bens' | 'empresas'>('vida');
   const [confirming, setConfirming] = useState(false);
   if (!game) return null;
 
@@ -61,9 +62,7 @@ export default function Life() {
             </p>
             {game.economy.debt > 0 && <p className="text-[11px] text-rose-400 tabular-nums">dívida {money.format(game.economy.debt)}</p>}
             <div className="mt-1 flex items-center justify-end gap-3">
-              <button onClick={() => setSettingsOpen(true)} className="text-base" aria-label="Configurações">
-                ⚙️
-              </button>
+              <MenuHost className="flex h-11 w-11 items-center justify-center rounded-lg text-xl" />
               <button onClick={confirmNewLife} className="text-xs text-slate-400 underline">
                 Nova vida
               </button>
@@ -74,6 +73,7 @@ export default function Life() {
           {(
             [
               ['vida', '🏠 Vida'],
+              ['saude', `🩺 Saúde${game.health.injuries.length ? ' 🩹' : ''}`],
               ['carreira', `🥊 Carreira${game.fighter.offers.length ? ` (${game.fighter.offers.length})` : ''}`],
               ['relacoes', '❤️ Relações'],
               ['ranking', '🏆 Ranking'],
@@ -108,7 +108,13 @@ export default function Life() {
           </>
         )}
         {tab === 'carreira' && game.alive && <CareerPanel game={game} />}
-        {tab === 'relacoes' && <RelationshipsPanel game={game} />}
+        {tab === 'saude' && <HealthPanel game={game} />}
+        {tab === 'relacoes' && (
+          <>
+            <RelationshipsPanel game={game} />
+            {(game.dynasty.generation > 1 || game.relationships.relations.some((r) => r.type === 'filho')) && <FamilyTree game={game} />}
+          </>
+        )}
         {tab === 'ranking' && <RankingPanel game={game} />}
         {tab === 'financas' && <FinancePanel game={game} />}
         {tab === 'trabalho' && <WorkPanel game={game} />}
@@ -126,13 +132,12 @@ export default function Life() {
             ➕ Avançar ano
           </button>
         ) : (
-          <button onClick={confirmNewLife} className="w-full rounded-xl bg-slate-200 py-4 text-lg font-bold text-slate-950">
-            🔁 Nova vida
+          <button onClick={() => (game.ending && onShowObituary ? onShowObituary() : confirmNewLife())} className="w-full rounded-xl bg-slate-200 py-4 text-lg font-bold text-slate-950">
+            {game.ending ? '🕯️ Ver obituário' : '🔁 Nova vida'}
           </button>
         )}
       </footer>
 
-      {settingsOpen && <SettingsSheet game={game} onClose={() => setSettingsOpen(false)} />}
       {confirming && (
         <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/70 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:items-center" role="dialog" aria-modal="true">
           <div className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-5">

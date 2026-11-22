@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import type { PartnerPreference, Sex } from '../../engine';
 import { AdultToggle, PreferencePicker } from '../components/SettingsSheet';
 import { useGameStore } from '../store';
+import MenuHost from '../components/MenuHost';
 
 export default function NewLife() {
   const startLife = useGameStore((s) => s.startLife);
@@ -61,7 +62,7 @@ export default function NewLife() {
 
       <AdultToggle id="adult-new" value={adultContent} onChange={setAdultContent} />
 
-      <p className="text-center text-sm text-slate-500">País, cidade, família e atributos serão sorteados. Dá para mudar as opções depois em ⚙️.</p>
+      <p className="text-center text-sm text-slate-400">País, cidade, família e atributos serão sorteados. Dá para mudar as opções depois no menu ☰.</p>
 
       <button
         type="submit"
@@ -70,6 +71,7 @@ export default function NewLife() {
       >
         Começar vida
       </button>
+      <MenuHost className="min-h-11 rounded-xl border border-slate-700 text-sm text-slate-300" label="☰ Vidas salvas, conquistas e backup" />
     </form>
   );
 }
