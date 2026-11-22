@@ -23,19 +23,22 @@ export default function Life() {
   const choose = useGameStore((s) => s.choose);
   const newLife = useGameStore((s) => s.newLife);
   const [tab, setTab] = useState<'vida' | 'carreira' | 'ranking'>('vida');
+  const [confirming, setConfirming] = useState(false);
   if (!game) return null;
 
   const { character: c } = game;
   const pending = game.pendingEvents[0];
   const pendingEvent = pending ? GAME_CONTENT.events.find((e) => e.id === pending.eventId) : undefined;
 
+  // confirmação dentro da tela (window.confirm não funciona em páginas embutidas)
   const confirmNewLife = () => {
-    if (!game.alive || window.confirm('Começar uma nova vida? A vida atual será perdida.')) void newLife();
+    if (!game.alive) void newLife();
+    else setConfirming(true);
   };
 
   return (
     <>
-      <header className="sticky top-0 z-10 border-b border-slate-800 bg-slate-950/95 px-4 pb-2 pt-4 backdrop-blur">
+      <header className="sticky top-[env(safe-area-inset-top,0px)] z-10 border-b border-slate-800 bg-slate-950/95 px-4 pb-2 pt-4 backdrop-blur">
         <div className="flex items-start justify-between gap-2">
           <div>
             <h1 className="text-xl font-bold" data-testid="char-name">
@@ -104,6 +107,28 @@ export default function Life() {
         )}
       </footer>
 
+      {confirming && (
+        <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/70 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:items-center" role="dialog" aria-modal="true">
+          <div className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-5">
+            <p className="text-lg font-semibold">Começar uma nova vida?</p>
+            <p className="mt-1 text-sm text-slate-400">A vida de {c.name} será perdida.</p>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <button onClick={() => setConfirming(false)} className="rounded-xl border border-slate-600 py-3">
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  setConfirming(false);
+                  void newLife();
+                }}
+                className="rounded-xl bg-rose-500 py-3 font-bold text-slate-950"
+              >
+                Nova vida
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {game.activeFight && <FightScreen key={game.activeFight.offer.id} af={game.activeFight} />}
       {!game.activeFight && pending && pendingEvent && <EventModal game={game} event={pendingEvent} pending={pending} onChoose={choose} />}
     </>

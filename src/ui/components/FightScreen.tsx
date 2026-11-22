@@ -49,7 +49,7 @@ export default function FightScreen({ af }: { af: ActiveFight }) {
   return (
     <div className="fixed inset-0 z-30 flex justify-center bg-slate-950" role="dialog" aria-modal="true" data-testid="fight-screen">
       <div className="flex h-dvh w-full max-w-md flex-col">
-        <header className="border-b border-slate-800 px-4 pb-3 pt-4">
+        <header className="border-b border-slate-800 px-4 pb-3 pt-[max(1rem,env(safe-area-inset-top))]">
           <p className="text-center text-[11px] uppercase tracking-widest text-slate-400">
             {org?.short} {offer.title && '· 🏆 Disputa de cinturão'} · Round {round}/{fight.rounds}
           </p>

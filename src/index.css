@@ -1,6 +1,16 @@
 @import "tailwindcss";
 
 html, body, #root { min-height: 100%; }
+:root { color-scheme: dark; }
+/* faixa acima do cabeçalho fixo (notch/barra do sistema) */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto;
+  height: env(safe-area-inset-top, 0px);
+  z-index: 20;
+  background: #020617;
+}
 body {
   @apply bg-slate-950 text-slate-100 antialiased;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
