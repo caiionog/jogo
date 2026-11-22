@@ -177,6 +177,8 @@ export interface OrgDef {
   reputationGain: number;
   /** Ofertas de luta por ano. */
   offersPerYear: number;
+  /** Vitórias seguidas (estando no top 3) para disputar o cinturão. Padrão: TITLE_SHOT_STREAK. */
+  titleShotStreak?: number;
 }
 
 export type GymSpecialty = 'striking' | 'wrestling' | 'grappling' | 'mma';

@@ -9,6 +9,11 @@ import {
   acceptOffer,
   advanceYear,
   autoFinishFight,
+  childrenOf,
+  civilStatus,
+  currentPartner,
+  interact,
+  meetSomeone,
   closeFight,
   createRng,
   currentRosterKey,
@@ -33,6 +38,9 @@ function chooseEvent(s: GameState, rng: Rng): GameState {
   const ev = C.events.find((e) => e.id === p.eventId)!;
   let choice = ev.choices[0]!;
   if (ev.id === 'adult_path_18') choice = ev.choices.find((c) => c.id === 'fight') ?? choice;
+  else if (ev.id === 'rel_wedding') choice = ev.choices.find((c) => c.id === 'simple') ?? choice;
+  else if (ev.id === 'rel_proposal_moment') choice = ev.choices.find((c) => c.id === 'ask') ?? choice;
+  else if (ev.id === 'rel_want_child') choice = ev.choices.find((c) => c.id === (rng.chance(0.75) ? 'try' : 'later')) ?? choice;
   else if (ev.id === 'fight_doping_offer') choice = ev.choices.find((c) => c.id === 'refuse') ?? choice;
   else if (ev.id === 'fight_offer_titan' || ev.id === 'fight_offer_arc' || ev.id === 'fight_offer_lfm') choice = ev.choices[0]!;
   else if (!ev.id.startsWith('fight_')) choice = rng.pick(ev.choices);
@@ -53,6 +61,12 @@ function playYear(s0: GameState, rng: Rng): GameState {
     const best = gyms.sort((a, b) => b.coach - a.coach)[0];
     if (best && (s.character.age < 18 || s.money >= best.fee || s.fighter.reputation >= 15)) s = enterGym(s, best.id, C);
   }
+  // casal que quer filhos tenta antes de gastar a energia com camps
+  const q = currentPartner(s);
+  const kids = childrenOf(s).length;
+  if (q && q.rel.romance?.stage === 'casados' && kids < 3 && s.character.age >= 24 && rng.chance(kids === 0 ? 0.6 : 0.25)) {
+    s = drain(interact(s, q.person.id, 'try_baby', C), rng);
+  }
   // lutas primeiro (as melhores ofertas: maior bolsa)
   const offers = s.fighter.offers.slice().sort((a, b) => b.purse + b.winBonus - (a.purse + a.winBonus));
   for (const o of offers) {
@@ -60,6 +74,21 @@ function playYear(s0: GameState, rng: Rng): GameState {
     s = acceptOffer(s, o.id, {}, C);
     s = autoFinishFight(s, C);
     s = closeFight(s);
+    s = drain(s, rng);
+  }
+  // vida amorosa: ~1 de energia por ano (a partir dos 16) — o resto vai para o treino
+  if (s.character.age >= 16 && !s.pendingEvents.length && rng.chance(Number(process.env.ROMANCE ?? 0.7))) {
+    const p = currentPartner(s);
+    if (!p) {
+      if (rng.chance(0.6)) s = meetSomeone(s, s.character.age >= 18 && rng.chance(0.5) ? 'app' : 'social', C, rng);
+    } else {
+      const stage = p.rel.romance?.stage;
+      const together = s.character.age - p.rel.romance!.since;
+      if (stage === 'ficando') s = interact(s, p.person.id, 'ask_out', C);
+      else if (stage === 'namorando' && s.character.age >= 22 && together >= 2 && p.rel.affection >= 55 && rng.chance(0.5)) s = interact(s, p.person.id, 'propose', C);
+      else s = interact(s, p.person.id, 'date', C);
+      s = drain(s, rng);
+    }
     s = drain(s, rng);
   }
   // treino com o resto da energia: técnica na habilidade mais fraca, jiu-jitsu, condicionamento
@@ -91,20 +120,46 @@ interface Stats {
   died: number;
   money: number[];
   peakRank: number[];
+  married: number;
+  marriageAge: number[];
+  divorced: number;
+  children: number[];
+  saveKB80: number[];
+  people80: number[];
+  fightsMarried: [number, number];
+  fightsSingle: [number, number];
+  yearsMarried: number;
+  yearsSingle: number;
 }
 
-const st: Stats = { proDebut: [], majorDebut: [], reachedMajor: 0, champion: 0, majorChampion: 0, methods: {}, careerLen: [], proRecords: [], black: 0, amateurWins: [], died: 0, money: [], peakRank: [] };
+const st: Stats = { proDebut: [], majorDebut: [], reachedMajor: 0, champion: 0, majorChampion: 0, methods: {}, careerLen: [], proRecords: [], black: 0, amateurWins: [], died: 0, money: [], peakRank: [], married: 0, marriageAge: [], divorced: 0, children: [], saveKB80: [], people80: [], fightsMarried: [0, 0], fightsSingle: [0, 0], yearsMarried: 0, yearsSingle: 0 };
 
 for (let i = 0; i < N; i++) {
   const rng = createRng(1000 + i);
-  let s = newGame({ seed: `sim-${i}`, name: 'Sim Lutador', sex: i % 4 === 3 ? 'F' : 'M' }, C);
+  const sex = i % 4 === 3 ? 'F' : 'M';
+  // população: ~90% procura o sexo oposto, ~10% o mesmo sexo ou ambos
+  const preference = i % 10 === 0 ? 'any' : sex === 'M' ? 'F' : 'M';
+  let s = newGame({ seed: `sim-${i}`, name: 'Sim Lutador', sex, adultContent: i % 2 === 0, preference }, C);
+  let marriedAt: number | null = null;
   s = { ...s, flags: { ...s.flags, gostaDeLuta: true } };
   let bestRank: number | null = null;
   let champ = false;
   let majorChamp = false;
   while (s.alive && s.character.age < MAX_AGE) {
+    const wasMarried = civilStatus(s) === 'casado';
+    const before = s.fighter.history.length;
     s = drain(advanceYear(s, C), rng);
     s = playYear(s, rng);
+    if (marriedAt === null && civilStatus(s) === 'casado') marriedAt = s.character.age;
+    if (s.character.age >= 20) {
+      const pro = s.fighter.history.slice(before).filter((h) => h.pro && h.result !== 'D');
+      const wins = pro.filter((h) => h.result === 'W').length;
+      const bucket = wasMarried ? st.fightsMarried : st.fightsSingle;
+      bucket[0] += wins;
+      bucket[1] += pro.length;
+      if (wasMarried) st.yearsMarried++;
+      else st.yearsSingle++;
+    }
     const key = currentRosterKey(s, C);
     const roster = key ? s.world.rosters[key] : undefined;
     const r = roster ? rankOf(roster, PLAYER_ID) : null;
@@ -115,6 +170,19 @@ for (let i = 0; i < N; i++) {
     }
   }
   const f = s.fighter;
+  if (marriedAt !== null) {
+    st.married++;
+    st.marriageAge.push(marriedAt);
+  }
+  if (s.flags.divorciado) st.divorced++;
+  st.children.push(childrenOf(s).length);
+  // subamostra: continua a vida até os 80 para medir o tamanho do save
+  if (i < 60) {
+    let old = s;
+    while (old.alive && old.character.age < 80) old = playYear(drain(advanceYear(old, C), rng), rng);
+    st.saveKB80.push(JSON.stringify(old).length / 1024);
+    st.people80.push(old.relationships.people.length);
+  }
   if (!s.alive) st.died++;
   if (f.proDebutAge !== null) st.proDebut.push(f.proDebutAge);
   if (f.majorDebutAge !== null) {
@@ -160,3 +228,11 @@ console.log(`Duração da carreira pro (anos) .. ${avg(st.careerLen).toFixed(1)}
 console.log(`Vitórias pro por método ......... ${Object.entries(st.methods).map(([k, v]) => `${k} ${((100 * v) / totalW).toFixed(0)}%`).join(' · ')}`);
 console.log(`Dinheiro aos ${MAX_AGE} (mediana) ...... R$ ${median(st.money).toLocaleString('pt-BR')}`);
 console.log(`Morreram antes dos ${MAX_AGE} ......... ${st.died}`);
+console.log('--- Relacionamentos ---');
+console.log(`Casou até os ${MAX_AGE} .............. ${pct(st.married)} | idade média ${avg(st.marriageAge).toFixed(1)}`);
+console.log(`Divorciou (dos casados) ......... ${((100 * st.divorced) / Math.max(1, st.married)).toFixed(1)}%`);
+console.log(`Filhos aos ${MAX_AGE} (média) .......... ${avg(st.children).toFixed(2)} | sem filhos ${pct(st.children.filter((c) => c === 0).length)}`);
+const rate = (x: [number, number]) => (x[1] ? `${((100 * x[0]) / x[1]).toFixed(1)}%` : '—');
+console.log(`Aproveitamento pro casado/solteiro ${rate(st.fightsMarried)} / ${rate(st.fightsSingle)}`);
+console.log(`Lutas pro por ano casado/solteiro ${(st.fightsMarried[1] / Math.max(1, st.yearsMarried)).toFixed(2)} / ${(st.fightsSingle[1] / Math.max(1, st.yearsSingle)).toFixed(2)}`);
+console.log(`Save aos 80 anos (${st.saveKB80.length} vidas) ... média ${avg(st.saveKB80).toFixed(0)} KB · máx ${Math.max(...st.saveKB80).toFixed(0)} KB · pessoas ativas ${avg(st.people80).toFixed(1)}`);

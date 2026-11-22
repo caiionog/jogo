@@ -225,3 +225,10 @@ export function enforcePeopleLimit(state: GameState): GameState {
 export function logRel(state: GameState, text: string): GameState {
   return appendLog(state, text);
 }
+
+/** Altera as configurações da vida (conteúdo adulto, interesse amoroso). */
+export function setRelationshipSettings(state: GameState, patch: Partial<RelationshipsState['settings']>): GameState {
+  return { ...state, relationships: { ...state.relationships, settings: { ...state.relationships.settings, ...patch } } };
+}
+
+export const STAGE_LABEL = { ficando: 'Ficando', namorando: 'Namorando', noivos: 'Noivos', casados: 'Casados' } as const;

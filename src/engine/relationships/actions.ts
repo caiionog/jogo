@@ -203,7 +203,8 @@ function runInteraction(state: GameState, person: Person, rel: Relation, kind: I
       return appendLog(s, `Você ensinou alguns golpes para ${n}.`);
     }
     case 'date': {
-      s = changeAffection(s, person.id, gain(rng, 5, 10, m), 'Saíram juntos.');
+      // depois de casados, encontros rendem um pouco menos (rotina)
+      s = changeAffection(s, person.id, gain(rng, 5, 10, m * (rel.romance?.stage === 'casados' ? 0.6 : 1)), 'Saíram juntos.');
       happy(3);
       return appendLog(s, `Você saiu com ${n} ${rng.pick(['para jantar', 'para o cinema', 'para ver o pôr do sol', 'para dançar'])}.`);
     }

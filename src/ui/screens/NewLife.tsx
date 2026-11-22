@@ -1,16 +1,19 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import type { Sex } from '../../engine';
+import type { PartnerPreference, Sex } from '../../engine';
+import { AdultToggle, PreferencePicker } from '../components/SettingsSheet';
 import { useGameStore } from '../store';
 
 export default function NewLife() {
   const startLife = useGameStore((s) => s.startLife);
   const [name, setName] = useState('');
   const [sex, setSex] = useState<Sex>('M');
+  const [preference, setPreference] = useState<PartnerPreference>('any');
+  const [adultContent, setAdultContent] = useState(false);
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    if (name.trim()) startLife(name.trim(), sex);
+    if (name.trim()) startLife(name.trim(), sex, { preference, adultContent });
   };
 
   return (
@@ -51,7 +54,14 @@ export default function NewLife() {
         </div>
       </fieldset>
 
-      <p className="text-center text-sm text-slate-500">País, cidade e atributos serão sorteados.</p>
+      <fieldset className="flex flex-col gap-2">
+        <legend className="mb-2 text-sm font-medium text-slate-300">Interesse amoroso</legend>
+        <PreferencePicker value={preference} onChange={setPreference} />
+      </fieldset>
+
+      <AdultToggle id="adult-new" value={adultContent} onChange={setAdultContent} />
+
+      <p className="text-center text-sm text-slate-500">País, cidade, família e atributos serão sorteados. Dá para mudar as opções depois em ⚙️.</p>
 
       <button
         type="submit"

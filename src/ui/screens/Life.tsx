@@ -9,6 +9,8 @@ import CareerPanel from '../components/CareerPanel';
 import FightScreen from '../components/FightScreen';
 import RankingPanel from '../components/RankingPanel';
 import { useState } from 'react';
+import RelationshipsPanel from '../components/RelationshipsPanel';
+import SettingsSheet from '../components/SettingsSheet';
 import StatBars from '../components/StatBars';
 import { useGameStore } from '../store';
 
@@ -22,7 +24,8 @@ export default function Life() {
   const advance = useGameStore((s) => s.advance);
   const choose = useGameStore((s) => s.choose);
   const newLife = useGameStore((s) => s.newLife);
-  const [tab, setTab] = useState<'vida' | 'carreira' | 'ranking'>('vida');
+  const [tab, setTab] = useState<'vida' | 'carreira' | 'relacoes' | 'ranking'>('vida');
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
   if (!game) return null;
 
@@ -50,16 +53,22 @@ export default function Life() {
           </div>
           <div className="text-right">
             <p className="font-semibold text-emerald-400 tabular-nums">{money.format(game.money)}</p>
-            <button onClick={confirmNewLife} className="mt-1 text-xs text-slate-400 underline">
-              Nova vida
-            </button>
+            <div className="mt-1 flex items-center justify-end gap-3">
+              <button onClick={() => setSettingsOpen(true)} className="text-base" aria-label="Configurações">
+                ⚙️
+              </button>
+              <button onClick={confirmNewLife} className="text-xs text-slate-400 underline">
+                Nova vida
+              </button>
+            </div>
           </div>
         </div>
-        <nav className="mt-3 grid grid-cols-3 gap-1" role="tablist">
+        <nav className="mt-3 grid grid-cols-4 gap-1" role="tablist">
           {(
             [
               ['vida', '🏠 Vida'],
               ['carreira', `🥊 Carreira${game.fighter.offers.length ? ` (${game.fighter.offers.length})` : ''}`],
+              ['relacoes', '❤️ Relações'],
               ['ranking', '🏆 Ranking'],
             ] as const
           ).map(([id, label]) => (
@@ -68,7 +77,7 @@ export default function Life() {
               role="tab"
               aria-selected={tab === id}
               onClick={() => setTab(id)}
-              className={`rounded-lg py-2 text-sm ${tab === id ? 'bg-slate-800 font-bold text-white' : 'text-slate-400'}`}
+              className={`rounded-lg px-1 py-2 text-[13px] leading-tight ${tab === id ? 'bg-slate-800 font-bold text-white' : 'text-slate-400'}`}
             >
               {label}
             </button>
@@ -88,6 +97,7 @@ export default function Life() {
           </>
         )}
         {tab === 'carreira' && game.alive && <CareerPanel game={game} />}
+        {tab === 'relacoes' && <RelationshipsPanel game={game} />}
         {tab === 'ranking' && <RankingPanel game={game} />}
       </main>
 
@@ -107,6 +117,7 @@ export default function Life() {
         )}
       </footer>
 
+      {settingsOpen && <SettingsSheet game={game} onClose={() => setSettingsOpen(false)} />}
       {confirming && (
         <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/70 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:items-center" role="dialog" aria-modal="true">
           <div className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-5">

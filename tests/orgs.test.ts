@@ -25,7 +25,7 @@ describe('requisitos de entrada', () => {
   it('liga principal exige vitórias pro, reputação, boa fase recente e idade de assinatura', () => {
     const good = { pro: rec(11, 2), reputation: 60, history: hist(['W', 'W', 'L', 'W', 'W', 'W', 'W', 'W', 'L', 'W']) };
     expect(meetsOrgRequirements(fighterGame(25, {}, good), org('titan'))).toBe(true);
-    expect(orgRequirementGap(fighterGame(25, {}, { ...good, pro: rec(9) }), org('titan'))).toBe('pro-wins');
+    expect(orgRequirementGap(fighterGame(25, {}, { ...good, pro: rec(8) }), org('titan'))).toBe('pro-wins');
     // as vitórias antigas não contam: só as últimas 10 lutas
     const slump = { ...good, history: hist(['W', 'W', 'W', 'W', 'W', 'W', 'L', 'L', 'L', 'W', 'L', 'L', 'W', 'L', 'W']) };
     expect(recentProWinRate(fighterGame(25, {}, slump))).toBeLessThan(0.6);

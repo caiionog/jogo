@@ -68,13 +68,23 @@ export function relationshipsYear(state: GameState, rng: Rng, content: GameConte
     }
   }
 
+  // rotina: casamentos e namoros longos se desgastam mesmo com carinho (crises e divórcios acontecem)
+  const cp = currentPartner(s);
+  if (cp?.rel.romance) {
+    const years = s.character.age - cp.rel.romance.since;
+    const wear = cp.rel.romance.stage === 'casados' ? rng.int(2, 11) : years >= 4 ? rng.int(0, 3) : 0;
+    if (wear) s = changeAffection(s, cp.person.id, -wear);
+  }
+
   // carreira de luta × família e amor
   const fights = s.fighter.history.filter((h) => h.year === lastYear).length;
   if (fights > 0) {
     const p = currentPartner(s);
     if (p) {
       const heavy = p.person.traits.some((t) => t === 'ciumento' || t === 'protetor');
-      s = changeAffection(s, p.person.id, -fights * (heavy ? 4 : 2), fights >= 3 ? 'Reclamou dos camps longe de casa.' : undefined);
+      // lutas frequentes cansam a relação: a 1ª do ano não pesa, as seguintes sim
+      const extra = Math.max(0, fights - 1);
+      if (extra) s = changeAffection(s, p.person.id, -extra * (heavy ? 3 : 2), fights >= 3 ? 'Reclamou dos camps longe de casa.' : undefined);
     }
     for (const { person } of relationsOf(s, ['pai', 'mae'])) {
       const stance = Math.sign(traitStance(content, person.traits));

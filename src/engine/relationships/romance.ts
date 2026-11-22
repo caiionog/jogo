@@ -1,6 +1,7 @@
 /** Namoro, casamento, divórcio, gravidez e filhos. Toda regra de idade passa por guards.ts. */
 import type { GameContent } from '../core/content';
 import type { Rng } from '../core/rng';
+import { createRng as createRngFrom } from '../core/rng';
 import type { GameState, Sex } from '../core/state';
 import { addStats, appendLog, clamp } from '../core/stats';
 import { canDate, canHaveSexualContent, canMarry, isValidPartnerAge, ADULT_AGE } from './guards';
@@ -214,4 +215,12 @@ export function payChildExpenses(state: GameState): GameState {
   if (state.money >= cost) return { ...state, money: state.money - cost };
   const s: GameState = { ...state, money: 0, character: { ...state.character, stats: addStats(state.character.stats, { happiness: -5 }) } };
   return appendLog(s, 'As contas com os filhos apertaram: faltou dinheiro este ano.');
+}
+
+/** Versão para a UI: usa e atualiza o RNG do próprio estado. */
+export function meetSomeoneAction(state: GameState, mode: MeetMode, content: GameContent): GameState {
+  if (meetBlockReason(state, mode) !== null) return state;
+  const rng = createRngFrom(state.rngState);
+  const s = meetSomeone(state, mode, content, rng);
+  return { ...s, rngState: rng.state };
 }

@@ -15,15 +15,18 @@ import {
   performAction,
   resolveEvent,
   trainFighter,
+  interact,
+  meetSomeoneAction,
+  setRelationshipSettings,
 } from '../engine';
-import type { GameState, Sex, SkillKey, Strategy, TrainingKind } from '../engine';
+import type { GameState, InteractionKind, MeetMode, PartnerPreference, Sex, SkillKey, Strategy, TrainingKind } from '../engine';
 import { clearGame, loadGame, saveGame } from '../save';
 
 interface GameStore {
   status: 'loading' | 'ready';
   game: GameState | null;
   init(): Promise<void>;
-  startLife(name: string, sex: Sex): void;
+  startLife(name: string, sex: Sex, opts?: { adultContent?: boolean; preference?: PartnerPreference }): void;
   doAction(actionId: string): void;
   joinClub(clubId: string): void;
   leaveClub(): void;
@@ -35,6 +38,9 @@ interface GameStore {
   chooseCorner(strategy: Strategy): void;
   skipFight(): void;
   closeFight(): void;
+  interact(personId: string, kind: InteractionKind): void;
+  meet(mode: MeetMode): void;
+  setSettings(patch: { adultContent?: boolean; preference?: PartnerPreference }): void;
   advance(): void;
   choose(eventId: string, choiceId: string): void;
   newLife(): Promise<void>;
@@ -53,10 +59,19 @@ export const useGameStore = create<GameStore>((setState, getState) => {
       const game = await loadGame();
       setState({ game, status: 'ready' });
     },
-    startLife(name, sex) {
+    startLife(name, sex, opts = {}) {
       // A seed vem da UI; a engine nunca usa fontes de aleatoriedade não determinísticas.
       const seed = `${Date.now()}-${Math.floor(performance.now() * 1000)}`;
-      setState({ game: newGame({ seed, name, sex }, GAME_CONTENT) });
+      setState({ game: newGame({ seed, name, sex, ...opts }, GAME_CONTENT) });
+    },
+    interact(personId, kind) {
+      update((g) => interact(g, personId, kind, GAME_CONTENT));
+    },
+    meet(mode) {
+      update((g) => meetSomeoneAction(g, mode, GAME_CONTENT));
+    },
+    setSettings(patch) {
+      update((g) => setRelationshipSettings(g, patch));
     },
     doAction(actionId) {
       update((g) => performAction(g, actionId, GAME_CONTENT));

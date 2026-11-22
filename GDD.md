@@ -109,7 +109,7 @@ Tudo é **fictício**: organizações, academias, eventos e lutadores.
 | Kids | Copa Dente-de-Leão de Artes Marciais · Copa Kids Faixa Colorida (jiu-jitsu) | 6–14 | treinar (academia ou clube de luta da escola) | grappling, 1 round |
 | Amador | Circuito Amador Punho de Ferro (MMA) · Copa Tatame Aberto (jiu-jitsu por faixa) | 15+ | treinar | MMA 3×; jiu-jitsu 1 round |
 | Regional | **LFM** – Liga Fronteira MMA (2 vitórias amadoras, reputação 10) · **ARC** – Arena Regional de Combate (3 vitórias amadoras, reputação 15) | 18+ | proposta (evento) | 3 rounds; 5 em disputa de cinturão; ranking top 10 + campeão |
-| Principal | **Circuito Titã** | 20+, assina até os 31 | 10 vitórias pro, reputação 50, aproveitamento ≥ 60% nas últimas 10 lutas pro | ranking top 15 + campeão por categoria |
+| Principal | **Circuito Titã** | 20+, assina até os 31 | 9 vitórias pro, reputação 45, aproveitamento ≥ 60% nas últimas 10 lutas pro (recalibrado na Etapa 4) | ranking top 15 + campeão por categoria; cinturão com 2 vitórias seguidas no top 3 |
 
 - Contratos chegam como **eventos automáticos** quando os requisitos são atendidos e o jogador pode aceitar ou recusar. Só são propostas organizações de nível acima do contrato atual.
 - **Ofertas de luta** são renovadas a cada ano e vencem no fim dele. Cada luta custa **energia de camp**: kids 1, amador 2, pro 3, título 4, substituição 1. Por isso dá para lutar 1–3 vezes por ano e ainda treinar.
@@ -210,7 +210,10 @@ Tudo é **fictício**: organizações, academias, eventos e lutadores.
   - lesão no treino, substituição de última hora, defesa de cinturão;
   - vídeo viral, media day e pensamentos de aposentadoria.
 
-### Balanceamento (`npm run sim`, 1000 vidas focadas em luta, até os 40 anos)
+### Balanceamento (`npm run sim`, 1000 vidas focadas em luta, até os 40 anos) — números da Etapa 3
+> Na Etapa 4 a família passou a disputar energia e eventos; com a recalibragem (seção 6), hoje: 97% estreiam,
+> **24%** chegam ao Titã e **2,7%** são campeões.
+
 A política do script entra na melhor academia cedo, treina com toda a energia, aceita todas as lutas e contratos e usa o córner automático.
 
 | Métrica | Resultado |
@@ -242,20 +245,163 @@ Os principais ajustes que levaram a esses números:
 - **Economia**: patrocínios hoje são eventos simples, a mensalidade é cobrada de forma básica, e ainda falta abrir uma academia própria.
 - **Talento** pode virar algo revelado aos poucos (olheiros, testes).
 
-## 6. Sistemas futuros
+## 6. Relacionamentos (Etapa 4)
+O personagem tem uma rede de pessoas que envelhecem, mudam e reagem às escolhas. A rede conversa com a carreira:
+disputa a mesma energia, gera apoio ou conflito e dá bônus de treino.
+
+### Modelo de pessoa (`engine/relationships/`)
+- **`Person`** é um modelo único para família, amigos, amores, filhos, colegas de treino, treinadores e rivais. Guarda:
+  - id estável, nome, sexo, idade, vivo/falecido (com idade da morte);
+  - atributos resumidos (aparência, inteligência, saúde, atletismo, de 0 a 100);
+  - 2–3 traços de personalidade;
+  - profissão e flags;
+  - `npcId` opcional, que referencia um lutador do elenco da Etapa 3 sem copiar as habilidades.
+- **`Relation`** guarda o tipo, o afeto (0–100), um histórico curto (3 linhas), quantos traços o personagem já descobriu e o
+  romance, quando há (ficando → namorando → noivos → casados).
+- **Tipos de relação**: pai, mãe, irmão(ã), amigo(a), colega de treino, treinador(a), rival, parceiro(a), cônjuge, ex e filho(a).
+- **Traços** (`src/content/relationships/traits.ts`): leal, ciumento, ambicioso, explosivo, carinhoso, protetor, aventureiro,
+  generoso, orgulhoso, tranquilo, religioso e competitivo. Cada traço define:
+  - multiplicadores das ações;
+  - ciúme;
+  - postura diante da carreira de luta (−1 reprova, +1 apoia).
+- **Save enxuto**: no máximo **40 pessoas ativas**. Ao estourar o limite, os menos importantes viram uma linha em
+  "pessoas do passado" (no máximo 30): mortos há tempo, ex com pouco afeto e amigos distantes. Família, cônjuge e
+  filhos nunca são arquivados. Aos 80 anos o save fica em ~56 KB em média (máximo de 74 KB).
+
+### Família
+- **Gerada ao nascer pelo seed**:
+  - pai e mãe de 19 a 42 anos mais velhos, com profissão pela renda da família;
+  - 20% de pais separados;
+  - 0–2 irmãos mais velhos;
+  - na infância, chance de 12% ao ano de nascer um irmão mais novo (até 3 irmãos no total).
+- **A cada ano** todos envelhecem e a saúde dos mais velhos cai. A chance de morte é quase nula antes dos 40 e cresce depois:
+  1,5% aos 60, 6% aos 70 e 10,5% aos 80.
+  - Morte de pai ou mãe: "Seu pai, Jorge, faleceu aos 71 anos." e −15 de felicidade (cônjuge −20, filho −25).
+  - Irmãos e filhos têm marcos de uma linha: escola, adolescência, primeiro emprego aos 18, casamento.
+- **Carreira**: pais com traços que reprovam a luta (protetor, religioso, ciumento) perdem afeto e tiram felicidade
+  quando o personagem luta; os que apoiam ganham afeto. Há eventos como "seus pais brigam pela sua carreira".
+
+### Ações (folha de detalhe da pessoa)
+| Ação | ⚡ | Efeito |
+|---|---|---|
+| Passar tempo · Conversar (revela traços) · Elogiar · Dar presente (R$ 200) | 1 | afeto +2 a +10, conforme os traços |
+| Discutir | 1 | afeto −8 a −15 (explosivo ×1,6, tranquilo ×0,6); namoro com afeto < 20 pode acabar |
+| Pedir dinheiro (pais, 1×/ano) | 1 | chance pela renda e pelo afeto |
+| Ensinar luta (filho ≥ 4) | 2 | +atletismo; chance de o filho ganhar `interesse_luta` |
+| Encontro · Pedir em namoro · Pedir em casamento (18+) · Terminar · Divórcio | 1/0 | ver abaixo |
+| Tentar ter um filho (casal M/F, ambos 18+) · Adotar (casados, R$ 10.000) | 1 | gravidez ou adoção |
+| Noite a dois, com ou sem proteção (**opção adulta ligada**, ambos 18+) | 1 | afeto; risco de gravidez/IST |
+
+- **Decaimento anual** sem interação: amigos e colegas −5, parceiro −4, cônjuge e treinador −3, família e filhos −2.
+  Amizade abaixo de 10 termina ("vocês se afastaram").
+- **Rival vira amigo** com afeto ≥ 60; amigo vira **inimigo** com afeto ≤ 5.
+
+### Amizades
+- **Escola**: a ação "Fazer amizade" tem 45% de chance de criar um amigo de verdade.
+- **Academia**: entrar cria o(a) treinador(a); treinar tem 12% de chance de render um colega de treino. Festas e eventos
+  também apresentam gente nova.
+- **Rivais**: o trash talk da Etapa 3 cria o rival como pessoa.
+- **Bônus**:
+  - amigos próximos (afeto ≥ 70): +2 de felicidade por ano cada, até +6;
+  - colega próximo na mesma academia: +8% no ganho de treino;
+  - treinador querido: +5%.
+
+### Namoro, sexo e casamento
+**Faixas de idade (aplicadas na engine, em `guards.ts`)**:
+- **< 14**: não namora.
+- **14–17**: namoro adolescente (encontros, primeiro beijo, ciúme, término), **sem nenhum conteúdo sexual**. Parceiros
+  sempre de 14 a 17 anos, com no máximo 2 anos de diferença e nunca com adultos. Se um dos dois fizer 18, o namoro termina.
+- **18+**: relacionamentos adultos. Noivado e casamento só com os dois maiores de idade.
+
+**Regra obrigatória**: `canHaveSexualContent(personagem, parceiro)` exige **as duas idades ≥ 18**. Toda ação, evento ou
+efeito sexual passa por ela, inclusive gravidez e IST, com uma segunda checagem dentro do efeito (defesa em profundidade).
+Eventos com a tag `adult` só aparecem com a opção **"Conteúdo adulto"**:
+- vem **desligada** por padrão, inclusive em saves migrados;
+- muda na criação ou em ⚙️;
+- o motor de eventos filtra pela opção e pela idade do personagem e do alvo.
+
+Os textos adultos são sugestivos e nunca gráficos.
+
+- **Conhecer alguém** (1⚡; app de namoro só 18+):
+  - gera alguém pela preferência (homens, mulheres ou ambos) e pela faixa de idade;
+  - **compatibilidade** pela postura dos traços diante da luta, ciúme, diferença de aparência, felicidade, dinheiro e reputação de lutador;
+  - a chance de começar a ficar vai de 10% a 85%.
+- **Etapas**: ficando → namorando (pedido aceito com chance de 30% + afeto/150) → noivos (pedido com afeto ≥ 50) →
+  casamento (cerimônia simples de R$ 3 mil ou grande de R$ 20 mil).
+- **Desgaste**: casamento perde de 1 a 10 de afeto por ano mesmo com carinho; namoro com 4+ anos perde de 0 a 3. Isso gera crises e divórcios.
+- **Fim**:
+  - término: −4 a −10 de felicidade;
+  - divórcio: −20 de felicidade e perda de metade do dinheiro (divisão simples).
+- **Carreira × amor**:
+  - lutas frequentes desgastam a relação: a 1ª luta do ano não pesa, cada uma das seguintes custa −2 (−3 com parceiro ciumento ou protetor);
+  - parceiro que apoia (afeto ≥ 70, sem traço que reprove a luta) dá +3 de felicidade por ano e +3 de cardio nas lutas;
+  - eventos de "pare de lutar", camp longe de casa e apoio no camp.
+
+### Filhos
+- **Gravidez**: só com ambos 18+ e casal M/F (mãe até 45 anos).
+  - Chance de 45% por tentativa, 25% numa noite sem proteção e 2% com proteção.
+  - Há um evento de decisão: ter o bebê ou entregar para adoção ao nascer.
+  - **Adoção**: qualquer casal casado, por R$ 10 mil.
+- **Nascimento** no ano seguinte. Atributos = média dos pais ± 12 (seed), e o atletismo vem de força e condicionamento.
+- **Despesa**: R$ 3 mil por ano por filho menor de 18. Sem dinheiro, −5 de felicidade.
+- **Eventos**: o filho quer lutar, sofre bullying (o tema da Etapa 2), tem notas ruins ou diz que você é o herói dele.
+
+### Eventos (39, em `src/content/events/relationships/`)
+- **Família** (7): briga pela carreira, pai/mãe orgulhoso(a), irmão pede dinheiro, parente adoece, pais se separam, briga de
+  irmãos, almoço de domingo.
+- **Amigos** (7): festa na véspera da luta, rival vira amigo, traição de amigo, amigo se muda, parceiro fixo de treino,
+  estudar juntos, gente nova na festa.
+- **Romance** (10): primeiro encontro (teen), primeiro beijo (teen), ciúme (teen e adulto), distância (teen), pedido de
+  casamento, casamento, crise no casamento, aniversário de casamento, ex volta.
+- **Adultos** (5, tag `adult`): encontro casual, noite romântica, camisinha esquecida, suspeita de traição, tentação na viagem.
+- **Filhos** (7): notícia da gravidez, nascimento, querer um filho, filho quer lutar, bullying, notas ruins, herói.
+- **Amor × carreira** (3): pare de lutar, apoio no camp, camp longe de casa.
+
+**Condições novas**:
+- `relationship`: escolhe uma pessoa-alvo `{pessoa}` por tipo, afeto, traço, idade, etapa do romance, mesma academia ou flag; follow-ups herdam o alvo;
+- `hasRelation` / `noRelation`, `civilStatus`, `children`, `partnerAge`;
+- a tag `adult`.
+
+### Balanceamento (`npm run sim`, 1000 vidas focadas em luta até os 40; ~90% procuram o sexo oposto)
+| Métrica | Resultado |
+|---|---|
+| Casou até os 40 | **52%**, aos 30,7 anos em média |
+| Divórcio (entre os casados, até os 40) | **12%** |
+| Filhos aos 40 | **0,43** em média (68% ainda sem filhos) |
+| Aproveitamento pro casado / solteiro | 54% / 46% (casados são mais velhos e experientes) |
+| Lutas pro por ano casado / solteiro | **0,70 / 1,30**: família disputa a energia do camp |
+| Save aos 80 anos | ~56 KB (máximo de 74 KB), ~8 pessoas ativas |
+
+A carreira foi recalibrada, porque os eventos de família diluem os de carreira e a energia vai para a família:
+- **Titã**: 9 vitórias pro, reputação 45, 60% nas últimas 10 lutas, adversários na faixa de 52–74 de habilidade, disputa de cinturão com 2 vitórias seguidas.
+- **Resultado**: 97% estreiam como profissionais, 24% chegam ao Titã e 2,7% são campeões.
+
+### Ganchos para as próximas etapas
+- **Etapa 5 (economia)**:
+  - divisão de bens no divórcio (hoje é metade do dinheiro);
+  - herança dos pais falecidos;
+  - despesas da família e da casa;
+  - pensão;
+  - dívidas: o dinheiro já pode ficar negativo por eventos com custo.
+- **Etapa 6 (legado)**:
+  - filhos com `interesse_luta` / `lutador_mirim`, atletismo herdado e afeto;
+  - jogar como herdeiro;
+  - netos;
+  - a pessoa `npcId` permite reencontrar rivais e lutadores do elenco.
+
+## 7. Sistemas futuros
 - **Faculdade:** vestibular, cursos e vida universitária (a partir da escolha `caminho_18 = 'faculdade'`).
-- **Relacionamentos:** família (pais, irmãos), amizades, namoro, casamento, divórcio, filhos.
 - **Emprego:** trabalhos paralelos antes de viver da luta; carreira pós-luta (técnico, comentarista).
 - **Economia e bens:** salário, bolsas, patrocínio, imóveis, carros, abrir academia/empresa.
 - **Saúde:** lesões, cirurgias, desgaste acumulado, doenças.
 - **Aposentadoria e legado:** fim da carreira, Hall da Fama, filhos herdando academia/fama; jogar como herdeiro.
 - **Meta:** conquistas, estatísticas de vidas anteriores.
 
-## 7. Arquitetura (resumo)
+## 8. Arquitetura (resumo)
 Engine TS pura e determinística (`src/engine`), conteúdo como dados (`src/content`), save versionado com
 migrações (`src/save`), UI React que apenas lê o estado e despacha ações (`src/ui`). Detalhes em `CLAUDE.md`.
 
-## 8. Roadmap
+## 9. Roadmap
 - **Etapa 1 — Esqueleto jogável** ✅ — projeto, GameState, criação de personagem, energia, 3 ações,
   avançar ano, motor de eventos + 10 eventos de infância, log, autosave em IndexedDB, testes.
 - **Etapa 2 — Escola** ✅ — fases escolares, matrícula automática, nota/disciplina/faltas/popularidade,
@@ -264,6 +410,7 @@ migrações (`src/save`), UI React que apenas lê o estado e despacha ações (`
 - **Etapa 3 — Carreira de luta** ✅ — perfil de lutador (habilidades, talento, corpo/categoria, faixas, reputação),
   academias e treino, 7 organizações fictícias (kids → amador → regionais → Circuito Titã), simulação round a round
   com córner, mundo vivo de NPCs com ranking e cinturão, ofertas/bolsas/lesões, 24 eventos, save v3 e `npm run sim`.
-- **Etapa 4 — Relacionamentos** — família, amizades, namoro, casamento, filhos.
+- **Etapa 4 — Relacionamentos** ✅ — modelo único de pessoa, família pelo seed, amizades (escola/academia), namoro com
+  faixas de idade e regra de conteúdo adulto, casamento, divórcio, filhos, 39 eventos, aba Relações, save v4.
 - **Etapa 5 — Economia e bens** — empregos, bolsas e patrocínios, imóveis, carros, empresas/academia.
 - **Etapa 6 — Polimento** — PWA (instalável/offline), conquistas, aposentadoria e legado (jogar como herdeiro).

@@ -112,7 +112,7 @@ export function generateOffers(state: GameState, rng: Rng, content: GameContent)
     const roster = s.world.rosters[key];
     if (roster) {
       const proFights = s.fighter.pro.wins + s.fighter.pro.losses + s.fighter.pro.draws;
-      for (const m of findMatches(roster, s.fighter.winStreak, contract.offersPerYear, rng, proFights)) {
+      for (const m of findMatches(roster, s.fighter.winStreak, contract.offersPerYear, rng, proFights, contract.titleShotStreak)) {
         const npc = roster.npcs.find((n) => n.id === m.npcId);
         if (npc) s = pushOffer(s, makeOffer(s, contract, m.title ? 'title' : 'regular', npcToOpponent(npc, roster), m.title), content);
       }
