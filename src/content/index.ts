@@ -1,3 +1,4 @@
+import { COACH_LINES } from './fightText/coach';
 import type { GameContent } from '../engine';
 import { ACTIONS } from './actions';
 import { CLUBS } from './clubs';
@@ -34,6 +35,7 @@ export const GAME_CONTENT: GameContent = {
     divisions: DIVISIONS,
     text: FIGHT_TEXT,
     nicknames: NICKNAMES,
+    coachLines: COACH_LINES,
     hooks: { weightMissEventId: 'fight_weight_miss', farewellEventId: 'retire_farewell', losingStreakEventId: 'retire_losing_streak', doctorRetireEventId: 'retire_doctor' },
   },
   relationships: RELATIONSHIPS_CONTENT,

@@ -23,7 +23,7 @@ export function conditionRisk(state: GameState, def: ConditionDef): number {
   f += h.sequelae.length * (def.risk.injuries ?? 0) + Math.min(10, h.history.length) * (def.risk.injuries ?? 0) * 0.2;
   if (state.economy.standard === 'simples' && state.character.age >= 18) f += def.risk.lowStandard ?? 0;
   if (state.economy.standard === 'luxo') f -= 0.15;
-  if (st.fitness < 30) f += def.risk.lowFitness ?? 0;
+  if (st.athletic < 30) f += def.risk.lowFitness ?? 0;
   if (h.habits.dietYear >= state.year - 1) f *= 0.7;
   if (h.habits.gymYear >= state.year - 1) f *= 0.8;
   return Math.max(0.2, f);
@@ -75,15 +75,15 @@ export function healthYear(state: GameState, rng: Rng, content: GameContent): Ga
   }
   if (brain >= 30 && age >= 30 && rng.chance(Math.min(0.4, brain / 200))) s = appendLog(s, rng.pick(BRAIN_HINTS));
   // hábitos e padrão de vida
-  const d: { health: number; fitness: number } = { health: 0, fitness: 0 };
+  const d: { health: number; athletic: number } = { health: 0, athletic: 0 };
   if (s.health.habits.gymYear === s.year) {
-    d.fitness += 2;
+    d.athletic += 2;
     d.health += 1;
   }
   if (s.health.habits.dietYear === s.year) d.health += 2;
   if (age >= 40 && s.economy.standard === 'luxo') d.health += 1;
   if (age >= 40 && s.economy.standard === 'simples' && s.character.stats.health > 40 && rng.chance(0.3)) d.health -= 1;
-  if (d.health || d.fitness) s = { ...s, character: { ...s.character, stats: addStats(s.character.stats, d) } };
+  if (d.health || d.athletic) s = { ...s, character: { ...s.character, stats: addStats(s.character.stats, d) } };
   return s;
 }
 
@@ -146,7 +146,7 @@ export function healthAction(state: GameState, content: GameContent, id: HealthA
     return appendLog(s, parts.join(' '));
   }
   const rng = createRng(s.rngState);
-  s = { ...s, rngState: rng.state, character: { ...s.character, stats: addStats(s.character.stats, id === 'gym' ? { fitness: rng.int(1, 3), health: 1 } : { health: rng.int(1, 2) }) } };
+  s = { ...s, rngState: rng.state, character: { ...s.character, stats: addStats(s.character.stats, id === 'gym' ? { athletic: rng.int(1, 3), health: 1 } : { health: rng.int(1, 2) }) } };
   return appendLog(s, id === 'gym' ? 'Você entrou numa rotina de academia.' : 'Você começou uma dieta equilibrada.');
 }
 

@@ -8,8 +8,8 @@ export const FRIEND_EVENTS: readonly GameEvent[] = [
     weight: 5,
     text: '{pessoa} te chama para uma festa... justo na véspera de uma luta importante.',
     choices: [
-      { id: 'go', label: 'Ir só um pouquinho', effects: { stats: { happiness: 5 }, fighter: { skills: { cardio: -2 } }, social: { affection: 6 } }, resultText: 'A festa foi ótima. O treino do dia seguinte, nem tanto.' },
-      { id: 'no', label: 'Recusar: foco total', effects: { fighter: { skills: { cardio: 1 } }, social: { affection: -4 } }, resultText: '{pessoa} disse que você anda sumido(a).' },
+      { id: 'go', label: 'Ir só um pouquinho', effects: { stats: { happiness: 5 }, fighter: { skills: { athletic: -2 } }, social: { affection: 6 } }, resultText: 'A festa foi ótima. O treino do dia seguinte, nem tanto.' },
+      { id: 'no', label: 'Recusar: foco total', effects: { fighter: { skills: { athletic: 1 } }, social: { affection: -4 } }, resultText: '{pessoa} disse que você anda sumido(a).' },
     ],
   },
   {
@@ -49,7 +49,7 @@ export const FRIEND_EVENTS: readonly GameEvent[] = [
     weight: 5,
     text: '{pessoa} quer ser seu parceiro(a) fixo(a) de treino na academia.',
     choices: [
-      { id: 'yes', label: 'Fechado!', effects: { social: { affection: 15 }, fighter: { skills: { defense: 1 } } }, resultText: 'Agora vocês se cobram todos os dias.' },
+      { id: 'yes', label: 'Fechado!', effects: { social: { affection: 15 }, fighter: { skills: { trocacao: 1 } } }, resultText: 'Agora vocês se cobram todos os dias.' },
       { id: 'no', label: 'Prefiro variar os parceiros', effects: { social: { affection: -5 } }, resultText: '{pessoa} entendeu, meio sem graça.' },
     ],
   },

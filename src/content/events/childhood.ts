@@ -43,13 +43,13 @@ export const CHILDHOOD_EVENTS: readonly GameEvent[] = [
       {
         id: 'judo',
         label: 'Quero fazer judô!',
-        effects: { stats: { fitness: 3, strength: 2, happiness: 2 }, setFlags: { artesMarciais: 'judo', gostaDeLuta: true } },
+        effects: { stats: { athletic: 3, happiness: 2 }, setFlags: { artesMarciais: 'judo', gostaDeLuta: true } },
         resultText: 'Você começou no judô e ganhou sua primeira faixa branca.',
       },
       {
         id: 'bjj',
         label: 'Quero fazer jiu-jitsu!',
-        effects: { stats: { fitness: 3, strength: 2, happiness: 2 }, setFlags: { artesMarciais: 'jiujitsu', gostaDeLuta: true } },
+        effects: { stats: { athletic: 3, happiness: 2 }, setFlags: { artesMarciais: 'jiujitsu', gostaDeLuta: true } },
         resultText: 'Você começou no jiu-jitsu e aprendeu sua primeira raspagem.',
       },
       {
@@ -117,14 +117,14 @@ export const CHILDHOOD_EVENTS: readonly GameEvent[] = [
       {
         id: 'stand',
         label: 'Encarar e não soltar a bola',
-        effects: { stats: { happiness: 4, strength: 1 }, setFlags: { corajoso: true } },
+        effects: { stats: { happiness: 4, athletic: 1 }, setFlags: { corajoso: true } },
         resultText: 'Você segurou firme. O valentão desistiu e foi embora.',
         risk: { chance: 0.45, effects: { stats: { health: -4, happiness: -3 } }, resultText: 'O valentão te derrubou e levou a bola.' },
       },
       {
         id: 'run',
         label: 'Correr para casa',
-        effects: { stats: { fitness: 1, happiness: -2 } },
+        effects: { stats: { athletic: 1, happiness: -2 } },
         resultText: 'Você correu mais rápido do que imaginava e chegou em casa a salvo.',
       },
       {
@@ -172,7 +172,7 @@ export const CHILDHOOD_EVENTS: readonly GameEvent[] = [
       {
         id: 'run',
         label: 'Fugir correndo',
-        effects: { stats: { fitness: 1 } },
+        effects: { stats: { athletic: 1 } },
         resultText: 'Ninguém descobriu... por enquanto.',
         risk: { chance: 0.4, effects: { stats: { happiness: -5 } }, resultText: 'Seus pais descobriram e você ficou de castigo por um mês.' },
       },
@@ -193,7 +193,7 @@ export const CHILDHOOD_EVENTS: readonly GameEvent[] = [
       {
         id: 'gloves',
         label: 'Pedir luvas de boxe de presente',
-        effects: { stats: { happiness: 3, strength: 1 }, setFlags: { temLuvas: true, gostaDeLuta: true } },
+        effects: { stats: { happiness: 3, athletic: 1 }, setFlags: { temLuvas: true, gostaDeLuta: true } },
         resultText: 'Você ganhou luvas de boxe infantis e não tirou mais das mãos.',
       },
       {

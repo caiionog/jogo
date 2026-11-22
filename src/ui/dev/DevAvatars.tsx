@@ -5,6 +5,10 @@ import type { AvatarDescriptor, Race } from '../../engine';
 import { RACE_LABEL, createRng, genesForRace, previewAvatar } from '../../engine';
 import AvatarStage from '../avatar/AvatarStage';
 import AvatarThumb from '../avatar/AvatarThumb';
+import PixelCanvas from '../avatar/pixel/PixelCanvas';
+import { composeAvatar } from '../avatar/pixel/compose';
+import { firstCharacter } from '../avatar/pixel/first';
+import { rgbHex, skinRgb } from '../../engine';
 
 const AGES = [1, 7, 15, 32, 74];
 const FATS = [0.08, 0.45, 0.88];
@@ -30,6 +34,20 @@ export default function DevAvatars() {
   return (
     <div className="mx-auto max-w-5xl p-4 text-slate-100">
       <h1 className="mb-1 text-xl font-bold">/dev/avatars</h1>
+      <section className="mb-6 rounded-xl bg-[#d6d0c4] p-4 text-slate-900" data-testid="pixel-first">
+        <h2 className="mb-2 text-sm font-semibold">Pixel art — primeiro personagem (adulto, corpo médio): 1× · 4× · 8×</h2>
+        <div className="flex items-end gap-6">
+          {[1, 4, 8].map((s) => (
+            <PixelCanvas key={s} img={composeAvatar(firstCharacter(rgbHex(skinRgb(0.55, 0.1))))} scale={s} label={`${s}×`} />
+          ))}
+        </div>
+        <h3 className="mb-2 mt-4 text-sm font-semibold">Rampa de pele (4×)</h3>
+        <div className="flex items-end gap-2">
+          {[0.02, 0.2, 0.4, 0.6, 0.8, 0.98].map((t) => (
+            <PixelCanvas key={t} img={composeAvatar(firstCharacter(rgbHex(skinRgb(t, 0.1))))} scale={4} />
+          ))}
+        </div>
+      </section>
       <p className="mb-4 text-sm text-slate-400">5 fases × 3 níveis de gordura × 6 combinações de genes/roupas. Toque para ver ao vivo.</p>
       {sel && (
         <div className="mb-4 flex items-center gap-4 rounded-xl bg-slate-900 p-3">

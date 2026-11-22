@@ -12,7 +12,7 @@ export const FUNDAMENTAL1_EVENTS: readonly GameEvent[] = [
       {
         id: 'fight',
         label: 'Revidar na hora',
-        effects: { stats: { happiness: 3, strength: 1 }, school: { discipline: -8 }, setFlags: { brigou_na_escola: true }, followUps: [{ eventId: 'f1_bully_returns', delayYears: 1 }] },
+        effects: { stats: { happiness: 3, athletic: 1 }, school: { discipline: -8 }, setFlags: { brigou_na_escola: true }, followUps: [{ eventId: 'f1_bully_returns', delayYears: 1 }] },
         resultText: 'Você partiu para cima e {colega} nunca esperou por isso. A diretoria só deu uma advertência.',
         risk: {
           chance: 0.4,

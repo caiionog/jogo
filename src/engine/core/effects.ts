@@ -1,3 +1,4 @@
+import { applySkillDelta } from '../fighting/profile';
 import type { GameContent } from './content';
 import type { Rng } from './rng';
 import type { ClubId, EventSource, EventVars, FlagValue, GameState, SchoolType, StatKey } from './state';
@@ -96,7 +97,7 @@ export function applyEffects(state: GameState, effects: Effects | undefined, ctx
     const needsCtx = fx.joinGym || fx.signWith || fx.injury || fx.offer;
     if (needsCtx && !ctx) throw new Error('applyEffects: efeitos de luta exigem EffectContext');
     if (ctx) next = applyFighterEffects(next, fx, ctx.rng, ctx.content, ctx.vars);
-    else next = { ...next, fighter: applyFighterEffectsNoCtx(next, fx) };
+    else next = applyFighterEffectsNoCtx(next, fx);
   }
   if (effects.social) {
     if (!ctx) throw new Error('applyEffects: efeitos sociais exigem EffectContext');
@@ -115,15 +116,10 @@ export function applyEffects(state: GameState, effects: Effects | undefined, ctx
 }
 
 /** Efeitos de luta que não precisam de RNG/conteúdo (ex.: bônus anual de clube). */
-function applyFighterEffectsNoCtx(state: GameState, fx: FighterEffects): GameState['fighter'] {
-  let f = state.fighter;
-  if (fx.skills) {
-    const skills = { ...f.skills };
-    for (const [k, v] of Object.entries(fx.skills) as [keyof typeof skills, number][]) skills[k] = Math.min(100, Math.max(0, skills[k] + v));
-    f = { ...f, skills };
-  }
-  if (fx.reputation) f = { ...f, reputation: Math.min(100, Math.max(0, f.reputation + fx.reputation)) };
-  return f;
+function applyFighterEffectsNoCtx(state: GameState, fx: FighterEffects): GameState {
+  let s = fx.skills ? applySkillDelta(state, fx.skills) : state;
+  if (fx.reputation) s = { ...s, fighter: { ...s.fighter, reputation: Math.min(100, Math.max(0, s.fighter.reputation + fx.reputation)) } };
+  return s;
 }
 
 function applySchoolEffects(state: GameState, fx: SchoolEffects, ctx?: EffectContext): GameState {

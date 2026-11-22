@@ -11,9 +11,9 @@ export const MILESTONE_EVENTS: readonly GameEvent[] = [
       {
         id: 'compete',
         label: 'Competir com tudo',
-        effects: { stats: { happiness: 8, strength: 1 }, school: { popularity: 6 }, setFlags: { medalha_interescolar: true, interesse_luta: true } },
+        effects: { stats: { happiness: 8, athletic: 1 }, school: { popularity: 6 }, setFlags: { medalha_interescolar: true, interesse_luta: true } },
         resultText: 'Você venceu três lutas e voltou com a medalha de ouro!',
-        risk: { chance: 0.5, effects: { stats: { happiness: -2, fitness: 1 }, setFlags: { interesse_luta: true } }, resultText: 'Você perdeu na semifinal, mas aprendeu muito com a derrota.' },
+        risk: { chance: 0.5, effects: { stats: { happiness: -2, athletic: 1 }, setFlags: { interesse_luta: true } }, resultText: 'Você perdeu na semifinal, mas aprendeu muito com a derrota.' },
       },
       { id: 'skip', label: 'Ficar na arquibancada', effects: { stats: { happiness: -1 } }, resultText: 'Você torceu pelos colegas, mas ficou com vontade de ter lutado.' },
     ],

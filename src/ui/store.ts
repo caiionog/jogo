@@ -73,7 +73,6 @@ import type {
   MetaState,
   PartnerPreference,
   Sex,
-  SkillKey,
   Strategy,
   TrainingKind,
   Treatment,
@@ -139,7 +138,7 @@ interface GameStore {
   leaveClub(): void;
   joinGym(gymId: string): void;
   leaveGym(): void;
-  train(kind: TrainingKind, skill?: SkillKey): void;
+  train(kind: TrainingKind): void;
   acceptOffer(offerId: string, aggressiveCut: boolean): void;
   declineOffer(offerId: string): void;
   chooseCorner(strategy: Strategy): void;
@@ -313,8 +312,8 @@ export const useGameStore = create<GameStore>((setState, getState) => {
     leaveGym() {
       update((g) => leaveGym(g, GAME_CONTENT));
     },
-    train(kind, skill) {
-      update((g) => trainFighter(g, kind, skill, GAME_CONTENT));
+    train(kind) {
+      update((g) => trainFighter(g, kind, GAME_CONTENT));
     },
     acceptOffer(offerId, aggressiveCut) {
       update((g) => acceptOffer(g, offerId, { aggressiveCut }, GAME_CONTENT));

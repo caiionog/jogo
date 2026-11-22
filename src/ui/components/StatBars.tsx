@@ -6,8 +6,7 @@ const LABELS: Record<StatKey, { label: string; emoji: string }> = {
   happiness: { label: 'Felicidade', emoji: '😊' },
   intelligence: { label: 'Inteligência', emoji: '🧠' },
   looks: { label: 'Aparência', emoji: '✨' },
-  strength: { label: 'Força', emoji: '💪' },
-  fitness: { label: 'Condicionamento', emoji: '🏃' },
+  athletic: { label: 'Capacidade atlética', emoji: '💪' },
 };
 
 function barColor(v: number): string {

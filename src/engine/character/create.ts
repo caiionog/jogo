@@ -17,8 +17,7 @@ export function randomStats(rng: Rng): Stats {
     happiness: rng.int(60, 100),
     intelligence: rng.int(20, 90),
     looks: rng.int(20, 95),
-    strength: rng.int(5, 20),
-    fitness: rng.int(5, 25),
+    athletic: rng.int(5, 22),
   };
 }
 

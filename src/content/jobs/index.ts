@@ -4,7 +4,7 @@ import type { JobDef } from '../../engine';
 export const JOBS: readonly JobDef[] = [
   // meio período (16+)
   { id: 'lanchonete', title: 'Atendente de lanchonete', category: 'meio_periodo', minAge: 16, education: 'nenhuma', salary: [9000, 14000], energy: 2 },
-  { id: 'entregador', title: 'Entregador de bike', category: 'meio_periodo', minAge: 16, education: 'nenhuma', minStats: { strength: 20 }, salary: [10000, 16000], energy: 2 },
+  { id: 'entregador', title: 'Entregador de bike', category: 'meio_periodo', minAge: 16, education: 'nenhuma', minStats: { athletic: 20 }, salary: [10000, 16000], energy: 2 },
   { id: 'repositor', title: 'Repositor de supermercado', category: 'meio_periodo', minAge: 16, education: 'fundamental', salary: [11000, 15000], energy: 2 },
   // formais
   { id: 'auxiliar_adm', title: 'Auxiliar administrativo', category: 'formal', minAge: 18, education: 'medio', salary: [26000, 42000], energy: 3 },
@@ -16,7 +16,7 @@ export const JOBS: readonly JobDef[] = [
   { id: 'engenheiro', title: 'Engenheiro', category: 'formal', minAge: 23, education: 'superior', minStats: { intelligence: 70 }, salary: [80000, 220000], energy: 4 },
   // ligados à luta
   { id: 'instrutor', title: 'Instrutor de academia', category: 'luta', minAge: 18, education: 'nenhuma', fightReq: { minBelt: 2, minProWins: 3 }, salary: [22000, 50000], energy: 2 },
-  { id: 'seguranca', title: 'Segurança de eventos', category: 'luta', minAge: 18, education: 'fundamental', minStats: { strength: 50 }, salary: [26000, 40000], energy: 3 },
+  { id: 'seguranca', title: 'Segurança de eventos', category: 'luta', minAge: 18, education: 'fundamental', minStats: { athletic: 50 }, salary: [26000, 40000], energy: 3 },
   { id: 'treinador', title: 'Treinador de luta', category: 'luta', minAge: 26, education: 'nenhuma', minReputation: 30, salary: [40000, 120000], energy: 3 },
   { id: 'comentarista', title: 'Comentarista de lutas na TV', category: 'luta', minAge: 24, education: 'medio', minReputation: 60, salary: [60000, 300000], energy: 1 },
 ];

@@ -16,14 +16,13 @@ export function heightAt(age: number, adultHeightCm: number): number {
   return Math.round(adultHeightCm * (GROWTH[age] ?? 1));
 }
 
-/** IMC por idade, força, condicionamento e biotipo. */
-export function bmiAt(age: number, stats: Pick<Stats, 'strength' | 'fitness'>, build: number): number {
+/** IMC por idade, Capacidade atlética e biotipo (sedentário engorda; atleta fica mais seco). */
+export function bmiAt(age: number, stats: Pick<Stats, 'athletic'>, build: number): number {
   let bmi: number;
   if (age <= 12) bmi = 16 + age * 0.1;
   else if (age < 18) bmi = 17.2 + (age - 12) * 0.75;
   else {
-    bmi = 21.5 + (stats.strength - 30) / 25;
-    bmi += stats.fitness < 40 ? (40 - stats.fitness) / 12 : -(stats.fitness - 40) / 40;
+    bmi = 22.4 + (stats.athletic < 40 ? (40 - stats.athletic) / 11 : -(stats.athletic - 40) / 70);
     if (age > 30) bmi += (age - 30) * 0.08;
   }
   return Math.min(34, Math.max(14, bmi + build * 0.8));

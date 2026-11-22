@@ -3,10 +3,11 @@ import type { GameContent } from '../core/content';
 import type { Rng } from '../core/rng';
 import type { GameState, Sex } from '../core/state';
 import { randomPersonName } from '../character/names';
-import { PLAYER_ID, clampSkill, skillRating } from './profile';
+import { PLAYER_ID, clampSkill } from './profile';
 import { rankOf } from './ranking';
-import type { FightStyle, Npc, Opponent, Roster } from './types';
-import { npcSkills } from './world';
+import type { Npc, Opponent, Roster } from './types';
+import { FIGHT_STYLES, npcSkills } from './world';
+import { playerRating } from './chin';
 
 export function npcToOpponent(n: Npc, roster: Roster | null): Opponent {
   return {
@@ -15,8 +16,9 @@ export function npcToOpponent(n: Npc, roster: Roster | null): Opponent {
     nickname: n.nickname,
     style: n.style,
     skills: n.skills,
-    strength: n.strength,
-    fitness: n.fitness,
+    athletic: n.athletic,
+    chinBase: n.chinBase,
+    age: n.age,
     record: n.record,
     rank: roster ? rankOf(roster, n.id) : null,
   };
@@ -29,11 +31,10 @@ export function opponentFullName(o: Pick<Opponent, 'name' | 'nickname'>): string
   return [first, `'${o.nickname}'`, ...rest].join(' ');
 }
 
-const STYLES: readonly FightStyle[] = ['striker', 'wrestler', 'grappler', 'allround'];
 
 /** Adversário efêmero (não persistido) em torno de `level`. */
 export function ephemeralOpponent(rng: Rng, id: string, level: number, sex: Sex, content: GameContent, opts: { nickname?: boolean; name?: string; nick?: string; age?: number } = {}): Opponent {
-  const style = rng.pick(STYLES);
+  const style = rng.pick(FIGHT_STYLES);
   const lv = clampSkill(level);
   const fights = opts.age && opts.age < 15 ? rng.int(0, 4) : rng.int(0, 8);
   const w = rng.int(0, fights);
@@ -43,15 +44,16 @@ export function ephemeralOpponent(rng: Rng, id: string, level: number, sex: Sex,
     nickname: opts.nick ?? (opts.nickname ? rng.pick(content.fighting.nicknames) : ''),
     style,
     skills: npcSkills(rng, lv, style),
-    strength: Math.round(20 + lv * 0.6 + rng.int(-6, 6)),
-    fitness: Math.round(25 + lv * 0.55 + rng.int(-6, 6)),
+    athletic: clampSkill(Math.round(22 + lv * 0.58 + rng.int(-6, 6))),
+    chinBase: clampSkill(40 + lv * 0.35 + rng.int(-10, 10)),
+    ...(opts.age !== undefined ? { age: opts.age } : {}),
     record: { w, l: fights - w, d: 0 },
     rank: null,
   };
 }
 
 export function playerLevel(state: GameState): number {
-  return skillRating(state.fighter.skills);
+  return playerRating(state);
 }
 
 /** Vitórias seguidas exigidas (estando no top 3) para disputar o cinturão. */

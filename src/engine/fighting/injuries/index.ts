@@ -11,7 +11,8 @@ import type { GameState } from '../../core/state';
 import { addStats, appendLog } from '../../core/stats';
 import { post, toMoney } from '../../economy/ledger';
 import type { ActiveInjury, InjuryDef, InjurySource, InjuryZone, SequelaDef, Treatment } from '../../health/types';
-import type { FightRules, SkillKey, Skills } from '../types';
+import type { FightRules, SkillDelta } from '../types';
+import { applySkillDelta } from '../profile';
 
 export const MONTHS_PER_YEAR = 12;
 /** Chance de agravar cada lesão ativa ao lutar antes de sarar. */
@@ -54,11 +55,11 @@ export function injuryVeto(state: GameState): ActiveInjury | null {
 }
 
 /** Penalidade nas habilidades durante a luta por lesões ativas (somada, negativa). */
-export function injuryFightPenalty(state: GameState, content: GameContent): Partial<Skills> {
-  const out: Partial<Record<SkillKey, number>> = {};
+export function injuryFightPenalty(state: GameState, content: GameContent): SkillDelta {
+  const out: SkillDelta = {};
   for (const i of state.health.injuries) {
     const def = injuryDef(content, i.defId);
-    for (const [k, v] of Object.entries(def?.effects.skills ?? {}) as [SkillKey, number][]) out[k] = (out[k] ?? 0) + v * (i.aggravated ? 1.5 : 1);
+    for (const [k, v] of Object.entries(def?.effects.skills ?? {}) as [keyof SkillDelta, number][]) out[k] = (out[k] ?? 0) + v * (i.aggravated ? 1.5 : 1);
   }
   return out;
 }
@@ -247,12 +248,10 @@ export function treatInjury(state: GameState, injuryId: string, t: Treatment, co
 export function applySequela(state: GameState, sequelaId: string, content: GameContent): GameState {
   const def = sequelaDef(content, sequelaId);
   if (!def || state.health.sequelae.includes(sequelaId)) return state;
-  const skills = { ...state.fighter.skills };
-  for (const [k, v] of Object.entries(def.skills ?? {}) as [SkillKey, number][]) skills[k] = Math.max(0, Math.min(100, skills[k] + v));
+  const base = applySkillDelta(state, def.skills ?? {});
   const s: GameState = {
-    ...state,
-    fighter: { ...state.fighter, skills },
-    character: { ...state.character, stats: addStats(state.character.stats, def.stats ?? {}) },
+    ...base,
+    character: { ...base.character, stats: addStats(base.character.stats, def.stats ?? {}) },
     health: { ...state.health, sequelae: [...state.health.sequelae, sequelaId] },
   };
   return appendLog(s, `Sequela permanente: ${def.name}.`);

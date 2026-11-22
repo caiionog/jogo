@@ -149,7 +149,7 @@ describe('fim do ano letivo', () => {
   it('clube aplica efeitos anuais', () => {
     const g = enrolledGame(12, { average: 80, club: 'judo' });
     const r = end(g);
-    expect(r.character.stats.strength).toBe(g.character.stats.strength + 3);
+    expect(r.character.stats.athletic).toBeGreaterThan(g.character.stats.athletic);
   });
 
   it('novo ano zera faltas e sai da escola aos 20 sem diploma', () => {

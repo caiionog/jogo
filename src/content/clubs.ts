@@ -10,7 +10,7 @@ export const CLUBS: readonly ClubDef[] = [
     combat: true,
     joinText: 'Você entrou no time de judô da escola.',
     joinEffects: { stats: { happiness: 2 }, setFlags: { interesse_luta: true, gostaDeLuta: true } },
-    yearlyEffects: { stats: { strength: 3, fitness: 3, health: 1 }, school: { discipline: 2 }, fighter: { skills: { wrestling: 3, grappling: 3, defense: 1 } } },
+    yearlyEffects: { stats: { athletic: 4, health: 1 }, school: { discipline: 2 }, fighter: { skills: { jiujitsu: 3, trocacao: 1 } } },
   },
   {
     id: 'wrestling',
@@ -20,7 +20,7 @@ export const CLUBS: readonly ClubDef[] = [
     combat: true,
     joinText: 'Você entrou na equipe de luta olímpica da escola.',
     joinEffects: { stats: { happiness: 2 }, setFlags: { interesse_luta: true, gostaDeLuta: true } },
-    yearlyEffects: { stats: { strength: 4, fitness: 3 }, school: { discipline: 1 }, fighter: { skills: { wrestling: 5, cardio: 2 } } },
+    yearlyEffects: { stats: { athletic: 4 }, school: { discipline: 1 }, fighter: { skills: { jiujitsu: 2.2, athletic: 2 } } },
   },
   {
     id: 'soccer',
@@ -30,7 +30,7 @@ export const CLUBS: readonly ClubDef[] = [
     combat: false,
     joinText: 'Você entrou no time de futebol da escola.',
     joinEffects: { stats: { happiness: 3 } },
-    yearlyEffects: { stats: { fitness: 4, happiness: 2 }, school: { popularity: 4 }, fighter: { skills: { cardio: 2 } } },
+    yearlyEffects: { stats: { athletic: 4, happiness: 2 }, school: { popularity: 4 }, fighter: { skills: { athletic: 2 } } },
   },
   {
     id: 'chess',

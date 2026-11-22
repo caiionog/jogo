@@ -97,7 +97,7 @@ export function newGame(options: NewGameOptions, content: GameContent): GameStat
     pendingEvents: [],
     scheduledEvents: [],
     education: emptyEducation(),
-    fighter: newFighterProfile({ ...baseSkills(), chin: rng.int(40, 75) }, talent),
+    fighter: newFighterProfile(baseSkills(), talent, rng.int(40, 75)),
     world: emptyWorld(),
     activeFight: null,
     relationships: { ...emptyRelationships(options.adultContent ?? false), settings: { adultContent: options.adultContent ?? false, preference: options.preference ?? 'any' } },
@@ -220,20 +220,9 @@ export function leaveClub(state: GameState, content: GameContent): GameState {
 function naturalAging(state: GameState, rng: Rng): GameState {
   const { age, stats } = state.character;
   const delta: Partial<Record<StatKey, number>> = {};
-  if (age <= 17) {
-    delta.strength = rng.int(0, 2);
-    delta.fitness = rng.int(0, 2);
-  }
+  // crescer deixa o corpo mais capaz; o declínio adulto vem de `trainingYear` (idade + sedentarismo)
+  if (age <= 17) delta.athletic = rng.int(0, 2);
   if (age >= 3 && age <= 22) delta.intelligence = rng.int(0, 2);
-  if (age >= 35) {
-    delta.fitness = -rng.int(0, 2);
-    delta.strength = -rng.int(0, 1);
-  }
-  // velhice: o declínio físico acelera
-  if (age >= 55) {
-    delta.fitness = -rng.int(1, 3);
-    delta.strength = -rng.int(0, 2);
-  }
   if (age >= 70) delta.looks = -rng.int(0, 1);
   // o corpo se recupera de pancadas, lesões e doenças rumo a um teto que cai com a idade (Etapa 6)
   const target = age < 45 ? 90 : Math.max(25, 90 - (age - 45) * 1.3);

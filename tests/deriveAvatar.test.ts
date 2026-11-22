@@ -31,11 +31,11 @@ describe('deriveAvatar', () => {
   });
 
   it('corpo: condicionamento baixo e padrão luxo engordam; força alta dá musculatura', () => {
-    const fit = deriveAvatar(at(base, 30, { fitness: 85, strength: 50 }), C);
-    const lazy = deriveAvatar({ ...at(base, 30, { fitness: 10, strength: 50 }), economy: { ...base.economy, standard: 'luxo' } }, C);
+    const fit = deriveAvatar(at(base, 30, { athletic: 85 }), C);
+    const lazy = deriveAvatar({ ...at(base, 30, { athletic: 10 }), economy: { ...base.economy, standard: 'luxo' } }, C);
     expect(lazy.fat).toBeGreaterThan(fit.fat);
-    const weak = deriveAvatar(at(base, 30, { strength: 15, fitness: 40 }), C);
-    const strong = deriveAvatar(at(base, 30, { strength: 90, fitness: 40 }), C);
+    const weak = deriveAvatar(at(base, 30, { athletic: 15 }), C);
+    const strong = deriveAvatar(at(base, 30, { athletic: 90 }), C);
     expect(strong.muscle).toBeGreaterThan(weak.muscle + 0.2);
   });
 
@@ -81,7 +81,7 @@ describe('deriveAvatar', () => {
     const p = base.relationships.people[0]!;
     const pd = derivePersonAvatar(p, C)!;
     expect(pd.age).toBe(p.age);
-    const npc = { id: 'n1', name: 'X', nickname: 'Y', age: 27, strength: 70, fitness: 70, style: 'grappler' } as never;
+    const npc = { id: 'n1', name: 'X', nickname: 'Y', age: 27, athletic: 70, style: 'grappler' } as never;
     expect(deriveNpcAvatar('s', npc, 'M', C)).toEqual(deriveNpcAvatar('s', npc, 'M', C));
     expect(previewAvatar(base.character.appearance, 'M', 80, C).stage).toBe('idoso');
   });

@@ -1,19 +1,18 @@
 /** Tipos do sistema de luta. Tudo JSON puro. */
 
-export const SKILL_KEYS = ['striking', 'wrestling', 'grappling', 'defense', 'cardio', 'chin'] as const;
+/**
+ * Habilidades de luta OCULTAS (Etapa 8): o jogador nunca vê estes números, só pistas qualitativas.
+ * jiujitsu = todo o jogo de chão e de agarre (quedas, controle, finalização); trocacao = todo o jogo em pé.
+ * O físico é o atributo visível `athletic` (Capacidade atlética); o queixo é derivado (`chinOf`).
+ */
+export const SKILL_KEYS = ['jiujitsu', 'trocacao'] as const;
 export type SkillKey = (typeof SKILL_KEYS)[number];
 export type Skills = Record<SkillKey, number>;
+/** Mudança em habilidades e físico (efeitos de evento, lesão e sequela): athletic vai para o atributo visível; chin, para o queixo inato. */
+export type SkillDelta = Partial<Record<SkillKey | 'athletic' | 'chin', number>>;
 
-export const SKILL_LABEL: Record<SkillKey, string> = {
-  striking: 'Trocação',
-  wrestling: 'Wrestling',
-  grappling: 'Jiu-jitsu',
-  defense: 'Defesa',
-  cardio: 'Cardio',
-  chin: 'Queixo',
-};
-
-export type FightStyle = 'striker' | 'wrestler' | 'grappler' | 'allround';
+/** Rótulo de estilo (só texto na UI): trocador, especialista em chão ou completo. */
+export type FightStyle = 'striker' | 'grappler' | 'allround';
 export type Strategy = 'pressure' | 'safe' | 'ground';
 export type FightRules = 'mma' | 'grappling';
 export type FinishMethod = 'KO' | 'TKO' | 'SUB' | 'DOC' | 'DEC';
@@ -26,8 +25,10 @@ export interface FighterSnapshot {
   name: string;
   fullName: string;
   skills: Skills;
-  strength: number;
-  fitness: number;
+  /** Capacidade atlética (0–100): estamina, força e explosão. */
+  athletic: number;
+  /** Queixo efetivo no dia da luta (derivado: base inata, idade, dano cerebral, saúde). */
+  chin: number;
   /** Vantagem de tamanho (corte de peso agressivo): 0–1. */
   sizeEdge: number;
   /** Estamina inicial (100 normal; menor se falhou o peso). */
@@ -181,7 +182,7 @@ export interface OrgDef {
   titleShotStreak?: number;
 }
 
-export type GymSpecialty = 'striking' | 'wrestling' | 'grappling' | 'mma';
+export type GymSpecialty = 'trocacao' | 'jiujitsu' | 'mma';
 
 export interface GymDef {
   id: string;
@@ -238,8 +239,9 @@ export interface Npc {
   age: number;
   style: FightStyle;
   skills: Skills;
-  strength: number;
-  fitness: number;
+  athletic: number;
+  /** Queixo inato (não treinável); o efetivo cai com a idade (`npcChin`). */
+  chinBase: number;
   record: { w: number; l: number; d: number };
 }
 
@@ -263,8 +265,10 @@ export interface Opponent {
   nickname: string;
   style: FightStyle;
   skills: Skills;
-  strength: number;
-  fitness: number;
+  athletic: number;
+  chinBase: number;
+  /** Idade (adversários do elenco); ausente nos antigos. */
+  age?: number;
   record: { w: number; l: number; d: number };
   /** Posição no ranking (1 = #1), 0 = campeão, null = sem ranking. */
   rank: number | null;
@@ -299,7 +303,14 @@ export interface ActiveFight {
 }
 
 export interface FighterProfile {
+  /** Ocultas: nunca aparecem como número na UI. */
   skills: Skills;
+  /** Queixo inato (0–100), não treinável. O efetivo é `chinOf(state)`. */
+  chinBase: number;
+  /** Carga de treino recente (0–1, média móvel anual): deixa o corpo mais definido no avatar. */
+  trainingLoad: number;
+  /** Treinos no ano corrente (zera na virada). */
+  sessionsThisYear: number;
   /** Potencial atlético (0,65–1,35, média 1): multiplica os ganhos de treino. */
   talent: number;
   /** Faixa de jiu-jitsu: 0 branca … 4 preta; `years` = anos treinando na faixa atual. */
@@ -332,6 +343,8 @@ export interface FightingContent {
   divisions: readonly DivisionDef[];
   text: FightTextPack;
   nicknames: readonly string[];
+  /** Frases do treinador depois do treino, por nível oculto (pista qualitativa; Etapa 8). */
+  coachLines?: Record<'jiujitsu' | 'trocacao' | 'fisico' | 'sparring', { low: readonly string[]; mid: readonly string[]; high: readonly string[] }>;
   hooks: {
     /** Evento disparado quando o jogador falha o corte de peso. */
     weightMissEventId?: string;

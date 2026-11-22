@@ -20,7 +20,7 @@ export const LOVE_CAREER_EVENTS: readonly GameEvent[] = [
     text: '{pessoa} cuidou da sua dieta no camp inteiro e ainda segurou a placa na plateia.',
     choices: [
       { id: 'thank', label: 'Dedicar a vitória a {pessoa}', effects: { stats: { happiness: 5 }, social: { affection: 10 } }, resultText: 'O apoio fez toda a diferença.' },
-      { id: 'focus', label: 'Focar só na luta', effects: { fighter: { skills: { cardio: 1 } }, social: { affection: 2 } }, resultText: 'Você agradeceu depois, com calma.' },
+      { id: 'focus', label: 'Focar só na luta', effects: { fighter: { skills: { athletic: 1 } }, social: { affection: 2 } }, resultText: 'Você agradeceu depois, com calma.' },
     ],
   },
   {
@@ -29,7 +29,7 @@ export const LOVE_CAREER_EVENTS: readonly GameEvent[] = [
     weight: 4,
     text: 'O camp para a próxima luta vai durar dois meses longe de casa. {pessoa} não está feliz.',
     choices: [
-      { id: 'go', label: 'Ir para o camp mesmo assim', effects: { fighter: { skills: { cardio: 2, striking: 1 } }, social: { affection: -8 } }, resultText: 'Você voltou em forma, mas com saudade e uma relação mais fria.' },
+      { id: 'go', label: 'Ir para o camp mesmo assim', effects: { fighter: { skills: { trocacao: 1, athletic: 2 } }, social: { affection: -8 } }, resultText: 'Você voltou em forma, mas com saudade e uma relação mais fria.' },
       { id: 'home', label: 'Fazer o camp perto de casa', effects: { social: { affection: 6 } }, resultText: 'Menos estrutura, mais jantares juntos.' },
     ],
   },

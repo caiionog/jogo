@@ -20,7 +20,7 @@ import {
 import type { GameState } from '../src/engine';
 import { fighterGame } from './fightHelpers';
 
-const strong = { striking: 90, wrestling: 90, grappling: 90, defense: 90, cardio: 90, chin: 90 };
+const strong = { trocacao: 90, jiujitsu: 90, athletic: 90, chin: 90 };
 
 function pro(seed = 'pro', skills = strong): GameState {
   const g = fighterGame(24, skills, { amateur: { ...emptyRecord(), wins: 5 }, reputation: 30, gymId: 'gen_bairro' }, seed);
@@ -102,7 +102,7 @@ describe('luta e resultado', () => {
   });
 
   it('derrota: cartel e reputação caem', () => {
-    const weak = generateOffers(pro('fraco', { striking: 5, wrestling: 5, grappling: 5, defense: 5, cardio: 5, chin: 20 }), createRng(5), GAME_CONTENT);
+    const weak = generateOffers(pro('fraco', { trocacao: 5, jiujitsu: 5, athletic: 5, chin: 20 }), createRng(5), GAME_CONTENT);
     const g = fightFirst(weak);
     expect(g.activeFight!.fight.result!.winner).toBe(1);
     expect(g.fighter.pro.losses).toBe(1);

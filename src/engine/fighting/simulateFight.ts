@@ -21,6 +21,36 @@ import type {
   Strategy,
 } from './types';
 
+/**
+ * Números internos da simulação derivados do modelo da Etapa 8 (nada disso é visível):
+ * em pé = trocação; clinch, quedas e chão = jiu-jitsu (com um pouco de físico nas quedas);
+ * estamina e potência = Capacidade atlética; resistência a nocaute = queixo derivado.
+ */
+export interface CombatProfile {
+  standUp: number;
+  standDefense: number;
+  takedown: number;
+  ground: number;
+  stamina: number;
+  chin: number;
+  power: number;
+}
+
+export function combat(f: FighterSnapshot): CombatProfile {
+  const j = f.skills.jiujitsu;
+  const t = f.skills.trocacao;
+  const a = f.athletic;
+  return {
+    standUp: t,
+    standDefense: t * 0.65 + j * 0.15 + a * 0.2,
+    takedown: j * 0.75 + a * 0.25,
+    ground: j,
+    stamina: a,
+    chin: f.chin,
+    power: a,
+  };
+}
+
 export const EXCHANGES_PER_ROUND = 12;
 const GRAPPLING_EXCHANGES = 16;
 const JUDGES = 3;
@@ -45,9 +75,9 @@ const emptyStats = (): RoundStats => ({ landed: 0, power: 0, takedowns: 0, contr
 export function aiStrategy(state: Pick<FightState, 'fighters' | 'live' | 'scorecards' | 'rules'>, idx: 0 | 1): Strategy {
   const me = state.fighters[idx];
   const op = state.fighters[idx === 0 ? 1 : 0];
-  if (state.rules === 'grappling') return me.skills.grappling >= op.skills.grappling ? 'ground' : 'safe';
-  const groundAdv = me.skills.wrestling + me.skills.grappling - (op.skills.wrestling + op.skills.grappling);
-  const strikeAdv = me.skills.striking - op.skills.striking;
+  if (state.rules === 'grappling') return combat(me).ground >= combat(op).ground ? 'ground' : 'safe';
+  const groundAdv = combat(me).takedown + combat(me).ground - (combat(op).takedown + combat(op).ground);
+  const strikeAdv = combat(me).standUp - combat(op).standUp;
   if (groundAdv > 20 && groundAdv / 2 > strikeAdv) return 'ground';
   const live = state.live[idx];
   const behind = scoreDiff(state.scorecards, idx) < 0;
@@ -179,7 +209,7 @@ export function playRound(state: FightState, text: FightTextPack): FightState {
   for (const i of [0, 1] as const) {
     const f = s.fighters[i];
     const live = s.live[i];
-    live.stamina = clamp(live.stamina + 8 + f.skills.cardio / 7, 0, 100);
+    live.stamina = clamp(live.stamina + 8 + combat(f).stamina / 7, 0, 100);
     live.damage = clamp(live.damage - 7, 0, 100);
   }
   return { ...s, phase: 'break', rngState: rng.state };
@@ -205,7 +235,7 @@ function spend(ctx: Ctx, i: 0 | 1, base: number) {
   const f = ctx.s.fighters[i];
   const st = ctx.s.strategy[i];
   const mult = st === 'pressure' ? 1.25 : st === 'safe' ? 0.8 : 1.05;
-  const cost = base * 1.6 * (1.45 - f.skills.cardio / 100) * mult * (1 + f.sizeEdge * 0.2);
+  const cost = base * 1.6 * (1.45 - combat(f).stamina / 100) * mult * (1 + f.sizeEdge * 0.2);
   ctx.s.live[i].stamina = clamp(ctx.s.live[i].stamina - cost, 0, 100);
 }
 
@@ -231,9 +261,9 @@ function exchange(ctx: Ctx) {
 }
 
 function takedownTendency(ctx: Ctx, a: 0 | 1, b: 0 | 1): number {
-  const A = ctx.s.fighters[a].skills;
-  const B = ctx.s.fighters[b].skills;
-  const adv = (A.wrestling - B.wrestling) / 60 + (A.grappling - B.grappling) / 120;
+  const A = combat(ctx.s.fighters[a]);
+  const B = combat(ctx.s.fighters[b]);
+  const adv = (A.takedown - B.takedown) / 60 + (A.ground - B.ground) / 120;
   let p = 0.1 + 0.2 * clamp(adv, -0.5, 1);
   const st = ctx.s.strategy[a];
   if (st === 'ground') p += 0.4;
@@ -266,9 +296,9 @@ function clinchExchange(ctx: Ctx, a: 0 | 1, b: 0 | 1) {
 }
 
 function topExchange(ctx: Ctx, a: 0 | 1, b: 0 | 1) {
-  const A = ctx.s.fighters[a].skills;
-  const B = ctx.s.fighters[b].skills;
-  const subBias = clamp((A.grappling - B.grappling) / 150, -0.1, 0.25) + (ctx.s.strategy[a] === 'ground' ? 0.05 : 0);
+  const A = combat(ctx.s.fighters[a]);
+  const B = combat(ctx.s.fighters[b]);
+  const subBias = clamp((A.ground - B.ground) / 150, -0.1, 0.25) + (ctx.s.strategy[a] === 'ground' ? 0.05 : 0);
   const roll = ctx.rng.next();
   if (roll < 0.17 + subBias) return submission(ctx, a, b, 1);
   if (roll < 0.62) return strike(ctx, a, b, 'ground');
@@ -278,16 +308,16 @@ function topExchange(ctx: Ctx, a: 0 | 1, b: 0 | 1) {
 }
 
 function bottomExchange(ctx: Ctx, a: 0 | 1, b: 0 | 1) {
-  const A = ctx.s.fighters[a].skills;
-  const B = ctx.s.fighters[b].skills;
+  const A = combat(ctx.s.fighters[a]);
+  const B = combat(ctx.s.fighters[b]);
   const ea = eff(ctx, a);
   const eb = eff(ctx, b);
-  const prefersGround = A.grappling > B.grappling + 10 && ctx.s.strategy[a] !== 'safe';
+  const prefersGround = A.ground > B.ground + 10 && ctx.s.strategy[a] !== 'safe';
   const roll = ctx.rng.next();
   if (prefersGround && roll < 0.35) return submission(ctx, a, b, 0.55);
   if (prefersGround && roll < 0.75) {
     spend(ctx, a, 2.5);
-    if (ctx.rng.chance(0.15 + 0.5 * sigmoid((A.grappling * ea - B.grappling * eb) / 12))) {
+    if (ctx.rng.chance(0.15 + 0.5 * sigmoid((A.ground * ea - B.ground * eb) / 12))) {
       ctx.s.top = a;
       ctx.stats[a].points += 2;
       return say(ctx, 'sweep', a);
@@ -295,7 +325,7 @@ function bottomExchange(ctx: Ctx, a: 0 | 1, b: 0 | 1) {
     return say(ctx, 'sub_escape', b);
   }
   spend(ctx, a, 3);
-  const p = 0.12 + 0.55 * sigmoid((A.wrestling * ea + A.defense * 0.3 - (B.wrestling * 0.8 + B.grappling * 0.4) * eb) / 14);
+  const p = 0.12 + 0.55 * sigmoid((A.takedown * ea + A.standDefense * 0.3 - (B.takedown * 0.8 + B.ground * 0.4) * eb) / 14);
   if (ctx.rng.chance(p)) {
     ctx.s.position = 'standing';
     ctx.s.top = null;
@@ -305,9 +335,9 @@ function bottomExchange(ctx: Ctx, a: 0 | 1, b: 0 | 1) {
 }
 
 function takedown(ctx: Ctx, a: 0 | 1, b: 0 | 1, bonus: number) {
-  const A = ctx.s.fighters[a].skills;
-  const B = ctx.s.fighters[b].skills;
-  const p = 0.08 + bonus + 0.7 * sigmoid((A.wrestling * eff(ctx, a) - (B.wrestling * 0.75 + B.defense * 0.35) * eff(ctx, b)) / 16);
+  const A = combat(ctx.s.fighters[a]);
+  const B = combat(ctx.s.fighters[b]);
+  const p = 0.08 + bonus + 0.7 * sigmoid((A.takedown * eff(ctx, a) - (B.takedown * 0.75 + B.standDefense * 0.35) * eff(ctx, b)) / 16);
   spend(ctx, a, 4);
   spend(ctx, b, 1.5);
   if (ctx.rng.chance(p)) {
@@ -325,12 +355,12 @@ function takedown(ctx: Ctx, a: 0 | 1, b: 0 | 1, bonus: number) {
 function strike(ctx: Ctx, a: 0 | 1, b: 0 | 1, where: 'standing' | 'clinch' | 'ground') {
   const FA = ctx.s.fighters[a];
   const FB = ctx.s.fighters[b];
-  const A = FA.skills;
-  const B = FB.skills;
+  const A = combat(FA);
+  const B = combat(FB);
   const ea = eff(ctx, a);
   const eb = eff(ctx, b);
-  let atk = (where === 'ground' ? A.striking * 0.5 + A.grappling * 0.5 : A.striking) * ea;
-  let def = (where === 'ground' ? B.defense * 0.6 + B.grappling * 0.4 : B.defense * 0.7 + B.striking * 0.3) * eb;
+  let atk = (where === 'ground' ? A.standUp * 0.5 + A.ground * 0.5 : A.standUp) * ea;
+  let def = (where === 'ground' ? B.standDefense * 0.6 + B.ground * 0.4 : B.standDefense * 0.7 + B.standUp * 0.3) * eb;
   if (ctx.s.strategy[a] === 'pressure') atk *= 1.05;
   if (ctx.s.strategy[b] === 'safe') def *= 1.12;
   if (ctx.s.strategy[b] === 'pressure') def *= 0.93;
@@ -341,13 +371,13 @@ function strike(ctx: Ctx, a: 0 | 1, b: 0 | 1, where: 'standing' | 'clinch' | 'gr
   const golpe = ctx.rng.pick(ctx.text.strikes[where]);
   if (!ctx.rng.chance(hitP)) return say(ctx, 'strike_miss', a, { golpe });
 
-  const heavyP = clamp(0.13 + (A.striking - 50) / 500 + (ctx.s.strategy[a] === 'pressure' ? 0.04 : 0) + FA.sizeEdge * 0.05, 0.03, 0.3);
+  const heavyP = clamp(0.13 + (A.standUp - 50) / 500 + (ctx.s.strategy[a] === 'pressure' ? 0.04 : 0) + FA.sizeEdge * 0.05, 0.03, 0.3);
   const heavy = where !== 'ground' && ctx.rng.chance(heavyP);
-  let dmg = (4 + A.striking / 18 + FA.strength / 30 + FA.sizeEdge * 2) * (0.6 + ctx.rng.next() * 0.8);
+  let dmg = (4 + A.standUp / 18 + A.power / 30 + FA.sizeEdge * 2) * (0.6 + ctx.rng.next() * 0.8);
   if (heavy) dmg *= 2.3;
   if (where === 'ground') dmg *= 0.85;
   if (where === 'clinch') dmg *= 0.9;
-  dmg *= (1.25 - B.chin / 200) * (1.1 - B.defense / 500);
+  dmg *= (1.25 - B.chin / 200) * (1.1 - B.standDefense / 500);
   const live = ctx.s.live[b];
   live.damage = clamp(live.damage + dmg, 0, 100);
   ctx.stats[a].landed += 1;
@@ -374,14 +404,14 @@ function strike(ctx: Ctx, a: 0 | 1, b: 0 | 1, where: 'standing' | 'clinch' | 'gr
 }
 
 function submission(ctx: Ctx, a: 0 | 1, b: 0 | 1, factor: number) {
-  const A = ctx.s.fighters[a].skills;
-  const B = ctx.s.fighters[b].skills;
+  const A = combat(ctx.s.fighters[a]);
+  const B = combat(ctx.s.fighters[b]);
   const fin = ctx.rng.pick(ctx.text.submissions);
   spend(ctx, a, 4);
   spend(ctx, b, 3);
   ctx.stats[a].subAttempts += 1;
   const tired = 1 + (100 - ctx.s.live[b].stamina) / 200;
-  const p = (0.05 + 0.28 * sigmoid((A.grappling * eff(ctx, a) - (B.grappling * 0.75 + B.defense * 0.3) * eff(ctx, b)) / 14)) * tired * factor;
+  const p = (0.05 + 0.28 * sigmoid((A.ground * eff(ctx, a) - (B.ground * 0.75 + B.standDefense * 0.3) * eff(ctx, b)) / 14)) * tired * factor;
   if (ctx.rng.chance(p)) return finish(ctx, a, 'SUB', a, 'sub_win', { finalizacao: fin });
   say(ctx, 'sub_attempt', a, { finalizacao: fin });
 }
@@ -402,11 +432,11 @@ function grapplingExchange(ctx: Ctx, a: 0 | 1, b: 0 | 1) {
     ctx.stats[a].points += 3;
     return say(ctx, 'control', a);
   }
-  const A = ctx.s.fighters[a].skills;
-  const B = ctx.s.fighters[b].skills;
+  const A = combat(ctx.s.fighters[a]);
+  const B = combat(ctx.s.fighters[b]);
   if (ctx.rng.chance(0.4)) return submission(ctx, a, b, 0.6);
   spend(ctx, a, 2);
-  if (ctx.rng.chance(0.1 + 0.5 * sigmoid((A.grappling * eff(ctx, a) - B.grappling * eff(ctx, b)) / 12))) {
+  if (ctx.rng.chance(0.1 + 0.5 * sigmoid((A.ground * eff(ctx, a) - B.ground * eff(ctx, b)) / 12))) {
     ctx.s.top = a;
     ctx.stats[a].points += 2;
     return say(ctx, 'sweep', a);

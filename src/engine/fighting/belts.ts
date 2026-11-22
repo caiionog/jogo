@@ -9,23 +9,23 @@ export interface BeltRequirement {
   minAge: number;
   /** Anos treinando jiu-jitsu na faixa anterior. */
   years: number;
-  grappling: number;
+  jiujitsu: number;
 }
 
 /** BELT_REQUIREMENTS[n] = requisito para chegar à faixa n. */
 export const BELT_REQUIREMENTS: readonly (BeltRequirement | null)[] = [
   null,
-  { minAge: 16, years: 2, grappling: 35 },
-  { minAge: 16, years: 2, grappling: 50 },
-  { minAge: 18, years: 2, grappling: 65 },
-  { minAge: 19, years: 1, grappling: 78 },
+  { minAge: 16, years: 2, jiujitsu: 35 },
+  { minAge: 16, years: 2, jiujitsu: 50 },
+  { minAge: 18, years: 2, jiujitsu: 65 },
+  { minAge: 19, years: 1, jiujitsu: 78 },
 ];
 
 export function beltPromotionReady(state: GameState): boolean {
   const { belt, skills } = state.fighter;
   const req = BELT_REQUIREMENTS[belt.rank + 1];
   if (!req) return false;
-  return state.character.age >= req.minAge && belt.years >= req.years && skills.grappling >= req.grappling;
+  return state.character.age >= req.minAge && belt.years >= req.years && skills.jiujitsu >= req.jiujitsu;
 }
 
 /** Promove para a próxima faixa se os requisitos forem atendidos. */

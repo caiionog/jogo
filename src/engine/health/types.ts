@@ -1,6 +1,6 @@
 /** Saúde: lesões, sequelas, dano cerebral, doenças da velhice e hábitos (Etapa 6). */
 import type { StatKey } from '../core/state';
-import type { SkillKey } from '../fighting/types';
+import type { SkillDelta } from '../fighting/types';
 
 export type InjuryZone = 'cabeca' | 'mao' | 'tronco' | 'joelho' | 'ombro' | 'coluna' | 'pele' | 'perna';
 export type InjurySource = 'luta' | 'sparring' | 'treino' | 'evento';
@@ -17,7 +17,7 @@ export interface InjuryDef {
   /** Custo base em R$ (× custo da cidade). */
   cost: { fisio: number; cirurgia?: number };
   /** Penalidade durante a recuperação (habilidades na luta e atributos). */
-  effects: { skills?: Partial<Record<SkillKey, number>>; stats?: Partial<Record<StatKey, number>> };
+  effects: { skills?: SkillDelta; stats?: Partial<Record<StatKey, number>> };
   /** Cirurgia: chance de sucesso e fator no tempo. Só para lesões graves. */
   surgery?: { successChance: number; monthsFactor: number };
   /** Chance base de deixar sequela ao sarar (sem tratamento). */
@@ -36,7 +36,7 @@ export interface SequelaDef {
   id: string;
   name: string;
   description: string;
-  skills?: Partial<Record<SkillKey, number>>;
+  skills?: SkillDelta;
   stats?: Partial<Record<StatKey, number>>;
   /** Pesa na decisão médica de aposentadoria (joelho, coluna). */
   careerThreatening?: boolean;

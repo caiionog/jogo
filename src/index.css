@@ -1,7 +1,7 @@
 @import "tailwindcss";
+@import "./ui/design/tokens.css";
 
 html, body, #root { min-height: 100%; }
-:root { color-scheme: dark; }
 /* faixa acima do cabeçalho fixo (notch/barra do sistema) */
 body::before {
   content: "";
@@ -9,17 +9,19 @@ body::before {
   inset: 0 0 auto;
   height: env(safe-area-inset-top, 0px);
   z-index: 20;
-  background: #020617;
+  background: var(--ds-bg);
 }
 body {
-  @apply bg-slate-950 text-slate-100 antialiased;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  @apply antialiased;
+  background: var(--ds-bg);
+  color: var(--ds-text);
+  font-family: var(--ds-font);
   -webkit-tap-highlight-color: transparent;
 }
 
 /* acessibilidade: foco visível na navegação por teclado (desktop) */
 :focus-visible {
-  outline: 2px solid #34d399;
+  outline: 2px solid var(--ds-accent);
   outline-offset: 2px;
   border-radius: 0.5rem;
 }

@@ -8,6 +8,7 @@ import type { Rng } from '../core/rng';
 import type { GameState, Sex } from '../core/state';
 import { randomPersonName } from '../character/names';
 import { PLAYER_ID, addSkills, clampSkill, skillRating } from './profile';
+import { npcChin } from './chin';
 import { applyRankingResult, removeFromRanking } from './ranking';
 import type { FightStyle, FinishMethod, Npc, OrgDef, Roster, Skills, World } from './types';
 
@@ -15,32 +16,32 @@ export const rosterKey = (orgId: string, divisionId: string) => `${orgId}:${divi
 const EXTRA_UNRANKED = 6;
 
 const STYLE_BONUS: Record<FightStyle, Partial<Skills>> = {
-  striker: { striking: 12, defense: 4, wrestling: -8, grappling: -8 },
-  wrestler: { wrestling: 14, cardio: 4, striking: -6, grappling: -2 },
-  grappler: { grappling: 14, wrestling: 4, striking: -8, chin: -2 },
+  striker: { trocacao: 12, jiujitsu: -8 },
+  grappler: { jiujitsu: 13, trocacao: -8 },
   allround: {},
 };
-const STYLES: readonly FightStyle[] = ['striker', 'wrestler', 'grappler', 'allround'];
+export const FIGHT_STYLES: readonly FightStyle[] = ['striker', 'grappler', 'allround'];
 
-export function npcRating(n: Pick<Npc, 'skills'>): number {
-  return skillRating(n.skills);
+export function npcRating(n: Pick<Npc, 'skills' | 'athletic' | 'chinBase'> & { age?: number }): number {
+  return skillRating(n.skills, n.athletic, npcChin(n));
 }
 
 export function npcSkills(rng: Rng, level: number, style: FightStyle): Skills {
   const base = (bonus = 0) => clampSkill(level + bonus + rng.int(-6, 6));
   const b = STYLE_BONUS[style];
+  return { jiujitsu: base(b.jiujitsu), trocacao: base(b.trocacao) };
+}
+
+/** Físico e queixo inato de um NPC em torno do nível. */
+export function npcBody(rng: Rng, level: number, style: FightStyle): { athletic: number; chinBase: number } {
   return {
-    striking: base(b.striking),
-    wrestling: base(b.wrestling),
-    grappling: base(b.grappling),
-    defense: base(b.defense),
-    cardio: base(b.cardio),
-    chin: clampSkill(40 + level * 0.35 + rng.int(-10, 10) + (b.chin ?? 0)),
+    athletic: clampSkill(Math.round(43 + level * 0.47 + rng.int(-8, 8))),
+    chinBase: clampSkill(40 + level * 0.35 + rng.int(-10, 10) + (style === 'grappler' ? -2 : 0)),
   };
 }
 
 export function generateNpc(rng: Rng, id: string, level: number, sex: Sex, content: GameContent, age?: number): Npc {
-  const style = rng.pick(STYLES);
+  const style = rng.pick(FIGHT_STYLES);
   const a = age ?? rng.int(21, 35);
   const fights = Math.max(0, Math.round((a - 19) * 1.3 + rng.int(-2, 3)));
   const winRate = Math.min(0.9, Math.max(0.35, 0.35 + level / 160 + rng.next() * 0.15));
@@ -52,8 +53,7 @@ export function generateNpc(rng: Rng, id: string, level: number, sex: Sex, conte
     age: a,
     style,
     skills: npcSkills(rng, level, style),
-    strength: Math.round(40 + level * 0.5 + rng.int(-8, 8)),
-    fitness: Math.round(45 + level * 0.45 + rng.int(-8, 8)),
+    ...npcBody(rng, level, style),
     record: { w, l: Math.max(0, fights - w - (rng.chance(0.2) ? 1 : 0)), d: rng.chance(0.15) ? 1 : 0 },
   };
 }
@@ -109,8 +109,7 @@ export function viewRoster(state: GameState, orgId: string, divisionId: string, 
 const METHOD_BY_STYLE: Record<FightStyle, [number, number]> = {
   // [P(KO/TKO), P(SUB)] — o resto é decisão
   striker: [0.5, 0.08],
-  wrestler: [0.28, 0.18],
-  grappler: [0.15, 0.45],
+  grappler: [0.2, 0.36],
   allround: [0.32, 0.22],
 };
 
@@ -133,12 +132,14 @@ export function quickFight(rng: Rng, a: Npc, b: Npc): QuickResult {
 function evolveNpc(rng: Rng, n: Npc, cap: number): Npc {
   const age = n.age + 1;
   let delta: Partial<Skills>;
-  if (age < 28) delta = { striking: rng.int(0, 3), wrestling: rng.int(0, 3), grappling: rng.int(0, 3), defense: rng.int(0, 2), cardio: rng.int(0, 2) };
-  else if (age <= 32) delta = { striking: rng.int(0, 1), wrestling: rng.int(0, 1), grappling: rng.int(0, 1), defense: rng.int(0, 1) };
-  else delta = { cardio: -rng.int(1, 3), chin: -rng.int(1, 3), striking: -rng.int(0, 2), wrestling: -rng.int(0, 2) };
+  let dAth = 0;
+  if (age < 28) { delta = { trocacao: rng.int(0, 3), jiujitsu: rng.int(0, 3) }; dAth = rng.int(0, 2); }
+  else if (age <= 32) delta = { trocacao: rng.int(0, 1), jiujitsu: rng.int(0, 1) };
+  else { delta = { trocacao: -rng.int(0, 2), jiujitsu: -rng.int(0, 1) }; dAth = -rng.int(1, 3); }
   const capped: Partial<Skills> = {};
   for (const [k, v] of Object.entries(delta) as [keyof Skills, number][]) capped[k] = v > 0 && n.skills[k] >= cap ? 0 : v;
-  return { ...n, age, skills: addSkills(n.skills, capped) };
+  const athletic = clampSkill(n.athletic + (dAth > 0 && n.athletic >= cap ? 0 : dAth));
+  return { ...n, age, athletic, skills: addSkills(n.skills, capped) };
 }
 
 function shouldRetire(rng: Rng, n: Npc): boolean {

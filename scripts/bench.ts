@@ -30,7 +30,7 @@ function buildSave(age: number): GameState {
         if (g) s = enterGym(s, g.id, C);
       }
       for (const o of s.fighter.offers.slice()) if (s.energy.current >= o.campCost + 1) s = drain(closeFight(autoFinishFight(acceptOffer(s, o.id, {}, C), C)), rng);
-      for (let k = 0; k < 4 && s.energy.current > 0; k++) s = trainFighter(s, k % 2 ? 'bjj' : 'technique', 'striking', C);
+      for (let k = 0; k < 4 && s.energy.current > 0; k++) s = trainFighter(s, k % 2 ? 'jiujitsu' : 'trocacao', C);
     }
     if (s.alive && s.character.age >= age) return s;
   }

@@ -1,4 +1,4 @@
-import type { Education, Enrollment, GameState, Skills } from '../engine';
+import type { Education, Enrollment, GameState, Skills, Stats } from '../engine';
 import {
   STATE_VERSION,
   bodyFor,
@@ -52,6 +52,7 @@ export const migrations: Record<number, (save: AnySave) => AnySave> = {
   4: migrateV4toV5,
   5: migrateV5toV6,
   6: migrateV6toV7,
+  7: migrateV7toV8,
 };
 
 export class SaveMigrationError extends Error {}
@@ -152,22 +153,25 @@ function migrateV2toV3(save: AnySave): AnySave {
   const c = s.character;
   const adultHeightCm = randomAdultHeight(rng, c.sex);
   const build = rng.int(-2, 2);
-  const body = bodyFor(c.age, { adultHeightCm, build, stats: c.stats });
+  // o corpo é calculado com o modelo atual (Capacidade atlética a partir de força e condicionamento antigos)
+  const old = c.stats as unknown as Record<string, number>;
+  const body = bodyFor(c.age, { adultHeightCm, build, stats: { ...c.stats, athletic: ((old.strength ?? 10) + (old.fitness ?? 10)) / 2 } as Stats });
   const flags = s.flags;
   const club = s.education.current?.club ?? null;
 
   // nível base pela idade (crianças pequenas quase nada; adultos jovens ~17)
   const base = c.age < 6 ? 5 : 5 + Math.min(c.age - 5, 15) * 0.8;
-  const skills: Skills = {
+  // formato de habilidades da v3 (convertido para jiu-jitsu/trocação na v8)
+  const skills: Record<string, number> = {
     striking: base,
     wrestling: base,
     grappling: base,
     defense: base,
-    cardio: base + c.stats.fitness / 10,
+    cardio: base + (old.fitness ?? 10) / 10,
     chin: 45 + rng.int(0, 10),
   };
-  const add = (k: keyof Skills, v: number) => {
-    skills[k] = clamp(skills[k] + v);
+  const add = (k: string, v: number) => {
+    skills[k] = clamp((skills[k] ?? 0) + v);
   };
   if (flags.artesMarciais === 'judo') { add('wrestling', 8); add('grappling', 5); }
   if (flags.artesMarciais === 'jiujitsu') add('grappling', 10);
@@ -177,7 +181,7 @@ function migrateV2toV3(save: AnySave): AnySave {
   if (flags.brigou_na_escola) { add('striking', 4); add('chin', 3); }
 
   const talent = Math.round((0.65 + 0.7 * ((rng.next() + rng.next()) / 2)) * 100) / 100;
-  const fighter = newFighterProfile(skills, talent);
+  const fighter = newFighterProfile(skills as unknown as Skills, talent);
   fighter.reputation = flags.medalha_interescolar ? 5 : 0;
   if (flags.artesMarciais === 'jiujitsu') fighter.belt = { rank: 0, years: Math.max(0, Math.min(6, c.age - 6)) };
   if (flags.artesMarciais) {
@@ -350,4 +354,66 @@ function migrateV6toV7(save: AnySave): AnySave {
   g = { ...g, relationships: { ...g.relationships, people: g.relationships.people.map((p) => people.get(p.id)!) } };
   const wardrobe = { ...defaultWardrobe(GAME_CONTENT), facialHair: appearance.facialHair };
   return { ...(g as unknown as AnySave), wardrobe, rngState: s0.rngState, version: 7 };
+}
+
+// ---------------------------------------------------------------------------
+// v7 → v8 (Etapa 8: atributos simplificados e habilidades ocultas)
+// ---------------------------------------------------------------------------
+
+type OldSkills = Partial<Record<'striking' | 'wrestling' | 'grappling' | 'defense' | 'cardio' | 'chin', number>>;
+const r1 = (x: number) => Math.round(Math.max(0, Math.min(100, x)) * 10) / 10;
+
+/** Habilidades antigas → jiu-jitsu (chão e agarre) e trocação (em pé). */
+export function convertSkills(o: OldSkills): Skills {
+  const g = o.grappling ?? 5;
+  const w = o.wrestling ?? 5;
+  const st = o.striking ?? 5;
+  const d = o.defense ?? 5;
+  return { jiujitsu: r1(g * 0.45 + w * 0.35 + ((g + w) / 2) * 0.2), trocacao: r1(st * 0.7 + d * 0.3) };
+}
+
+type OldNpc = Record<string, unknown> & { skills: OldSkills; strength?: number; fitness?: number; style?: string };
+
+function convertNpc<T extends OldNpc>(n: T): Record<string, unknown> {
+  const { strength, fitness, skills, ...rest } = n;
+  return {
+    ...rest,
+    style: rest.style === 'wrestler' ? 'grappler' : rest.style,
+    skills: convertSkills(skills),
+    athletic: r1(((strength ?? 50) + (fitness ?? 50)) / 2 * 0.75 + (skills.cardio ?? 50) * 0.25),
+    chinBase: r1(skills.chin ?? 55),
+  };
+}
+
+/**
+ * Capacidade atlética = 0,4·força + 0,35·condicionamento + 0,25·cardio; jiu-jitsu e trocação das habilidades antigas;
+ * queixo antigo vira o queixo inato (`chinBase`). O mesmo para os NPCs dos elencos, das ofertas e de uma luta em
+ * andamento. Força, condicionamento e as habilidades removidas saem do save.
+ */
+function migrateV7toV8(save: AnySave): AnySave {
+  const s0 = save as unknown as Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+  const st = s0.character.stats as Record<string, number>;
+  const f = s0.fighter as Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+  const oldSkills = f.skills as OldSkills;
+  const { strength, fitness, ...restStats } = st;
+  const athletic = r1((strength ?? 10) * 0.4 + (fitness ?? 10) * 0.35 + (oldSkills.cardio ?? 10) * 0.25);
+  const rosters: Record<string, unknown> = {};
+  for (const [k, r] of Object.entries((s0.world?.rosters ?? {}) as Record<string, { npcs: OldNpc[] }>)) rosters[k] = { ...r, npcs: r.npcs.map(convertNpc) };
+  const offers = (f.offers as { opponent: OldNpc }[]).map((o) => ({ ...o, opponent: convertNpc(o.opponent) }));
+  let activeFight = s0.activeFight;
+  if (activeFight) {
+    const snap = (x: Record<string, any>) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+      const { strength: sx, fitness: fx, skills, ...rest } = x;
+      return { ...rest, skills: convertSkills(skills), athletic: r1(((sx ?? 50) + (fx ?? 50)) / 2), chin: r1(skills.chin ?? 55) };
+    };
+    activeFight = { ...activeFight, offer: { ...activeFight.offer, opponent: convertNpc(activeFight.offer.opponent) }, fight: { ...activeFight.fight, fighters: activeFight.fight.fighters.map(snap) } };
+  }
+  return {
+    ...(s0 as AnySave),
+    version: 8,
+    character: { ...s0.character, stats: { ...restStats, athletic } },
+    fighter: { ...f, skills: convertSkills(oldSkills), chinBase: r1(oldSkills.chin ?? 55), trainingLoad: f.gymId ? 0.3 : 0, sessionsThisYear: 0, offers },
+    world: { ...s0.world, rosters },
+    activeFight,
+  };
 }

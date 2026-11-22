@@ -10,7 +10,7 @@ export const ACTIONS: readonly ActionDef[] = [
     category: 'vida',
     energyCost: 2,
     minAge: 3,
-    effects: { stats: { strength: 1, fitness: 2, health: 1, happiness: -1 } },
+    effects: { stats: { athletic: 2, health: 1, happiness: -1 } },
     variance: 1,
     logTexts: [
       'Você treinou até ficar sem fôlego.',
@@ -43,7 +43,7 @@ export const ACTIONS: readonly ActionDef[] = [
     category: 'vida',
     energyCost: 1,
     minAge: 3,
-    effects: { stats: { happiness: 3, fitness: 1 } },
+    effects: { stats: { happiness: 3, athletic: 1 } },
     variance: 2,
     logTexts: [
       'Você brincou com os amigos da rua.',

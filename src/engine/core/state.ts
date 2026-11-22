@@ -13,8 +13,8 @@ export const STAT_KEYS = [
   'happiness',
   'intelligence',
   'looks',
-  'strength',
-  'fitness',
+  /** Capacidade atlética (Etapa 8): fôlego, força, explosão e resistência. Substitui força e condicionamento. */
+  'athletic',
 ] as const;
 
 export type StatKey = (typeof STAT_KEYS)[number];
@@ -176,4 +176,4 @@ export interface GameState {
   wardrobe: Wardrobe;
 }
 
-export const STATE_VERSION = 7;
+export const STATE_VERSION = 8;

@@ -72,11 +72,11 @@ describe('lesões', () => {
     let withSeq = 0;
     let withSeqAggr = 0;
     for (let i = 1; i <= 200; i++) {
-      const g = withInjury(fighterGame(25, { wrestling: 60 }), 'lca', 6);
+      const g = withInjury(fighterGame(25, { jiujitsu: 60 }), 'lca', 6);
       const r = injuriesYear(g, createRng(i), C);
       if (r.health.sequelae.includes('joelho_instavel')) {
         withSeq++;
-        expect(r.fighter.skills.wrestling).toBeLessThan(60);
+        expect(r.fighter.skills.jiujitsu).toBeLessThan(60);
       }
       const r2 = injuriesYear(withInjury(fighterGame(25), 'lca', 6, { aggravated: true }), createRng(i), C);
       if (r2.health.sequelae.length) withSeqAggr++;
@@ -119,9 +119,9 @@ describe('dano cerebral', () => {
   });
 
   it('enfraquece o queixo e aumenta a chance de ser nocauteado de novo', () => {
-    const base = fighterGame(25, { striking: 55, wrestling: 55, grappling: 55, defense: 55, cardio: 60, chin: 60 });
+    const base = fighterGame(25, { trocacao: 55, jiujitsu: 55, athletic: 60, chin: 60 });
     const hurt: GameState = { ...base, health: { ...base.health, brainDamage: 80 } };
-    expect(playerSnapshot(hurt, 0).skills.chin).toBe(40);
+    expect(playerSnapshot(hurt, 0).chin).toBe(40);
     const opp = { ...playerSnapshot(base, 0), id: 'opp', name: 'Rival', fullName: 'Rival' };
     let koHealthy = 0;
     let koHurt = 0;
@@ -155,7 +155,7 @@ describe('saúde e doenças', () => {
     for (let i = 1; i <= 200; i++) {
       if (healthYear(fighterGame(30), createRng(i), C).health.conditions.length) young++;
       const g = fighterGame(75);
-      if (healthYear({ ...g, character: { ...g.character, stats: { ...g.character.stats, health: 25, fitness: 10 } } }, createRng(i), C).health.conditions.length) old++;
+      if (healthYear({ ...g, character: { ...g.character, stats: { ...g.character.stats, health: 25, athletic: 10 } } }, createRng(i), C).health.conditions.length) old++;
     }
     expect(old).toBeGreaterThan(young * 3);
     // check-up no ano: a doença nova já vem controlada

@@ -61,7 +61,7 @@ export const WORK_EVENTS: readonly GameEvent[] = [
     text: 'Abriu uma vaga de supervisão e seu nome foi lembrado.',
     choices: [
       { id: 'accept', label: 'Aceitar a promoção', effects: { stats: { happiness: 3 }, economy: { promote: true } }, resultText: 'Novo cargo, novo salário, mais responsabilidade.' },
-      { id: 'decline', label: 'Recusar: menos tempo para treinar', effects: { fighter: { skills: { cardio: 1 } } }, resultText: 'Você manteve a rotina para não perder treinos.' },
+      { id: 'decline', label: 'Recusar: menos tempo para treinar', effects: { fighter: { skills: { athletic: 1 } } }, resultText: 'Você manteve a rotina para não perder treinos.' },
     ],
   },
   {

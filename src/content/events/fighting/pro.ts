@@ -48,7 +48,7 @@ export const FIGHT_PRO_EVENTS: readonly GameEvent[] = [
         effects: { stats: { happiness: 2 }, fighter: { reputation: 4 }, social: { addFromVar: { var: 'lutador', type: 'rival', affection: 15 } }, followUps: [{ eventId: 'fight_rival_showdown', delayYears: 1 }] },
         resultText: 'A troca de farpas viralizou. Os fãs querem essa luta.',
       },
-      { id: 'ignore', label: 'Ignorar', effects: { fighter: { skills: { defense: 1 } } }, resultText: 'Você deixou o falatório para lá e foi treinar.' },
+      { id: 'ignore', label: 'Ignorar', effects: { fighter: { skills: { trocacao: 1 } } }, resultText: 'Você deixou o falatório para lá e foi treinar.' },
     ],
   },
   {
@@ -72,7 +72,7 @@ export const FIGHT_PRO_EVENTS: readonly GameEvent[] = [
       {
         id: 'take',
         label: 'Aceitar a substância',
-        effects: { fighter: { skills: { cardio: 4, striking: 2, wrestling: 2 } } },
+        effects: { fighter: { skills: { jiujitsu: 1, trocacao: 1.4, athletic: 4 } } },
         resultText: 'Você se sentiu mais forte do que nunca. Ninguém percebeu... por enquanto.',
         risk: { chance: 0.4, effects: { stats: { happiness: -10 }, fighter: { suspendYears: 1, reputation: -20, vacateTitles: true } }, resultText: 'O antidoping pegou! Suspensão de um ano e a reputação no chão.' },
       },
@@ -87,7 +87,7 @@ export const FIGHT_PRO_EVENTS: readonly GameEvent[] = [
     choices: [
       { id: 'supp', label: 'Marca de suplementos (R$ 5.000)', effects: { money: 5000, fighter: { reputation: 2 } }, resultText: 'Seu calção agora tem a logo dos suplementos.' },
       { id: 'energy', label: 'Energético famoso (R$ 12.000)', effects: { money: 12000, stats: { happiness: 2 } }, resultText: 'Contrato gordo! Só não pode ser fotografad{o/a} com outra marca.' },
-      { id: 'none', label: 'Recusar: quero foco total', effects: { fighter: { skills: { cardio: 1 } } }, resultText: 'Sem distrações neste ano.' },
+      { id: 'none', label: 'Recusar: quero foco total', effects: { fighter: { skills: { athletic: 1 } } }, resultText: 'Sem distrações neste ano.' },
     ],
   },
   {
@@ -110,11 +110,11 @@ export const FIGHT_PRO_EVENTS: readonly GameEvent[] = [
       {
         id: 'push',
         label: 'Treinar mesmo com dor',
-        effects: { fighter: { skills: { cardio: 2 } } },
+        effects: { fighter: { skills: { athletic: 2 } } },
         resultText: 'A dor passou. Ufa!',
         risk: { chance: 0.5, effects: { fighter: { injury: { name: 'joelho lesionado', years: 1 } } }, resultText: 'O joelho não aguentou. Lesão séria: fora das lutas por um ano.' },
       },
-      { id: 'rest', label: 'Parar e tratar', effects: { fighter: { skills: { cardio: -1 } } }, resultText: 'Você perdeu um pouco de ritmo, mas preservou o joelho.' },
+      { id: 'rest', label: 'Parar e tratar', effects: { fighter: { skills: { athletic: -1 } } }, resultText: 'Você perdeu um pouco de ritmo, mas preservou o joelho.' },
     ],
   },
   {
@@ -144,7 +144,7 @@ export const FIGHT_PRO_EVENTS: readonly GameEvent[] = [
     text: 'Um vídeo de um treino seu viralizou: milhões de visualizações em dois dias.',
     choices: [
       { id: 'ride', label: 'Aproveitar a onda nas redes', effects: { fighter: { reputation: 6 }, stats: { happiness: 3 } }, resultText: 'Seus seguidores explodiram.' },
-      { id: 'focus', label: 'Ignorar e voltar ao treino', effects: { fighter: { reputation: 2, skills: { striking: 1 } } }, resultText: 'A fama é passageira; o treino fica.' },
+      { id: 'focus', label: 'Ignorar e voltar ao treino', effects: { fighter: { reputation: 2, skills: { trocacao: 1 } } }, resultText: 'A fama é passageira; o treino fica.' },
     ],
   },
   {
@@ -165,7 +165,7 @@ export const FIGHT_PRO_EVENTS: readonly GameEvent[] = [
     text: 'O corpo já não responde como antes. À noite, você se pega pensando em aposentadoria.',
     choices: [
       { id: 'plan', label: 'Começar a planejar o pós-carreira', effects: { setFlags: { pensa_aposentar: true }, stats: { happiness: 2 } }, resultText: 'Você começou a pensar em abrir a própria academia um dia.' },
-      { id: 'never', label: '"Eu vou até o fim!"', effects: { fighter: { skills: { cardio: 1 } } }, resultText: 'Ainda há lenha para queimar.' },
+      { id: 'never', label: '"Eu vou até o fim!"', effects: { fighter: { skills: { athletic: 1 } } }, resultText: 'Ainda há lenha para queimar.' },
     ],
   },
 ];

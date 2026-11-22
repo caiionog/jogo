@@ -3,6 +3,7 @@ import { fighterAvatar } from '../avatar/descriptors';
 import { useState } from 'react';
 import { GAME_CONTENT } from '../../content';
 import {
+  coachAssessment,
   AGGRESSIVE_CUT_MISS_CHANCE,
   BELTS,
   BELT_EMOJI,
@@ -26,9 +27,9 @@ import {
   tierIndex,
   trainingBlockReason,
 } from '../../engine';
-import type { CareerRecord, FightOffer, GameState, OrgBlockReason, SkillKey, TrainingKind } from '../../engine';
+import type { CareerRecord, FightOffer, GameState, OrgBlockReason, TrainingKind } from '../../engine';
 import { useGameStore } from '../store';
-import { Bar, STYLE_LABEL, SkillBars, money } from './fightUi';
+import { Bar, STYLE_LABEL, money } from './fightUi';
 
 const C = GAME_CONTENT;
 
@@ -104,24 +105,23 @@ function NextStep({ game }: { game: GameState }) {
 
 function TrainingButtons({ game }: { game: GameState }) {
   const train = useGameStore((s) => s.train);
-  const [picker, setPicker] = useState(false);
   const items: { kind: TrainingKind; label: string; emoji: string }[] = [
-    { kind: 'technique', label: 'Treino técnico', emoji: '🎯' },
-    { kind: 'sparring', label: 'Sparring', emoji: '🥊' },
-    { kind: 'conditioning', label: 'Condicionamento', emoji: '🫀' },
-    { kind: 'bjj', label: 'Jiu-jitsu', emoji: '🥋' },
+    { kind: 'jiujitsu', label: 'Jiu-jitsu', emoji: '🥋' },
+    { kind: 'trocacao', label: 'Trocação', emoji: '🥊' },
+    { kind: 'fisico', label: 'Físico', emoji: '🫀' },
+    { kind: 'sparring', label: 'Sparring', emoji: '🤼' },
   ];
   return (
     <section>
       <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Treinar</h2>
       <div className="grid grid-cols-4 gap-2">
         {items.map((it) => {
-          const reason = trainingBlockReason(game, it.kind, it.kind === 'technique' ? 'striking' : undefined);
+          const reason = trainingBlockReason(game, it.kind);
           return (
             <button
               key={it.kind}
               disabled={reason !== null}
-              onClick={() => (it.kind === 'technique' ? setPicker((v) => !v) : train(it.kind))}
+              onClick={() => train(it.kind)}
               className="flex flex-col items-center gap-1 rounded-xl border border-slate-700 bg-slate-900 px-1 py-2 active:scale-95 disabled:opacity-40"
             >
               <span className="text-xl">{it.emoji}</span>
@@ -131,22 +131,6 @@ function TrainingButtons({ game }: { game: GameState }) {
           );
         })}
       </div>
-      {picker && (
-        <div className="mt-2 grid grid-cols-3 gap-2" data-testid="skill-picker">
-          {(['striking', 'wrestling', 'defense'] as SkillKey[]).map((k) => (
-            <button
-              key={k}
-              onClick={() => {
-                train('technique', k);
-                setPicker(false);
-              }}
-              className="rounded-lg border border-emerald-700 bg-emerald-500/10 px-2 py-2 text-xs text-emerald-200"
-            >
-              {k === 'striking' ? 'Trocação' : k === 'wrestling' ? 'Wrestling' : 'Defesa'}
-            </button>
-          ))}
-        </div>
-      )}
     </section>
   );
 }
@@ -156,7 +140,7 @@ function GymSection({ game }: { game: GameState }) {
   const leaveGym = useGameStore((s) => s.leaveGym);
   const [open, setOpen] = useState(false);
   const gym = C.fighting.gyms.find((g) => g.id === game.fighter.gymId);
-  const spec = { striking: 'trocação', wrestling: 'wrestling', grappling: 'jiu-jitsu', mma: 'MMA' } as const;
+  const spec = { trocacao: 'trocação', jiujitsu: 'jiu-jitsu', mma: 'MMA' } as const;
   return (
     <section className="rounded-2xl border border-slate-800 bg-slate-900/50 p-3">
       <div className="flex items-center justify-between gap-2">
@@ -249,9 +233,6 @@ function OfferCard({ game, offer }: { game: GameState; offer: FightOffer }) {
         </div>
         {KIND_BADGE[offer.kind] && <span className="shrink-0 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] text-amber-300">{KIND_BADGE[offer.kind]}</span>}
       </div>
-      <div className="mt-2">
-        <SkillBars skills={o.skills} keys={['striking', 'wrestling', 'grappling']} compact />
-      </div>
       <div className="mt-2 flex flex-wrap gap-x-3 text-[11px] text-slate-300">
         {offer.purse + offer.winBonus > 0 ? (
           <span>💰 {money.format(offer.purse)} + {money.format(offer.winBonus)} se vencer</span>
@@ -341,8 +322,10 @@ export default function CareerPanel({ game }: { game: GameState }) {
       <NextStep game={game} />
 
       <section className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
-        <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Habilidades</h2>
-        <SkillBars skills={f.skills} />
+        <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Avaliação do treinador</h2>
+        <p className="text-sm" data-testid="coach-assessment">
+          Geral: <b>{coachAssessment(game)}</b> · Chão: <b>{coachAssessment(game, 'jiujitsu')}</b> · Em pé: <b>{coachAssessment(game, 'trocacao')}</b>
+        </p>
       </section>
 
       <GymSection game={game} />

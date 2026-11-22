@@ -25,7 +25,7 @@ import type { GameState } from '../src/engine';
 import { fighterGame } from './fightHelpers';
 
 const C = GAME_CONTENT;
-const strong = { striking: 90, wrestling: 90, grappling: 90, defense: 90, cardio: 90, chin: 90 };
+const strong = { trocacao: 90, jiujitsu: 90, athletic: 90, chin: 90 };
 
 function pro(seed = 'apos'): GameState {
   const g = fighterGame(30, strong, { amateur: { ...emptyRecord(), wins: 5 }, pro: { ...emptyRecord(), wins: 8, losses: 2 }, reputation: 40, gymId: 'gen_bairro' }, seed);
@@ -51,7 +51,7 @@ describe('aposentadoria voluntária', () => {
       expect(r.champion).not.toBe(PLAYER_ID);
     }
     expect(trainingBlockReason(g, 'sparring')).toBe('retired');
-    expect(trainingBlockReason(g, 'bjj')).toBeNull();
+    expect(trainingBlockReason(g, 'jiujitsu')).toBeNull();
     // aposentado não recebe ofertas
     expect(generateOffers(g, createRng(4), C).fighter.offers).toEqual([]);
   });

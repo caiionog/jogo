@@ -13,9 +13,9 @@ describe('condições de evento', () => {
   });
 
   it('atributos', () => {
-    const s = { ...g, character: { ...g.character, stats: { ...g.character.stats, strength: 50 } } };
-    expect(isEligible(s, makeEvent('a', { conditions: { stats: { strength: { min: 40 } } } }))).toBe(true);
-    expect(isEligible(s, makeEvent('b', { conditions: { stats: { strength: { max: 40 } } } }))).toBe(false);
+    const s = { ...g, character: { ...g.character, stats: { ...g.character.stats, athletic: 50 } } };
+    expect(isEligible(s, makeEvent('a', { conditions: { stats: { athletic: { min: 40 } } } }))).toBe(true);
+    expect(isEligible(s, makeEvent('b', { conditions: { stats: { athletic: { max: 40 } } } }))).toBe(false);
   });
 
   it('flags', () => {

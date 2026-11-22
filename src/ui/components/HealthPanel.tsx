@@ -36,7 +36,8 @@ function InjuryCard({ game, inj }: { game: GameState; inj: ActiveInjury }) {
   const [modal, confirm] = useConfirm();
   const def = injuryDef(C, inj.defId);
   if (!def) return null;
-  const effects = Object.entries(def.effects.skills ?? {}).map(([k, v]) => `${k === 'striking' ? 'trocação' : k === 'wrestling' ? 'wrestling' : k === 'grappling' ? 'jiu-jitsu' : k === 'defense' ? 'defesa' : k === 'cardio' ? 'cardio' : 'queixo'} ${v}`);
+  // sem números: as habilidades de luta são ocultas
+  const effects = Object.keys(def.effects.skills ?? {}).map((k) => (k === 'jiujitsu' ? 'atrapalha o jogo de chão' : k === 'trocacao' ? 'atrapalha a trocação' : k === 'athletic' ? 'tira o fôlego' : 'deixa o queixo mais frágil'));
   const options: Treatment[] = def.surgery ? ['repouso', 'fisio', 'cirurgia'] : ['repouso', 'fisio'];
   const pick = (t: Treatment) => {
     const cost = treatmentCost(game, C, def, t);
@@ -108,10 +109,10 @@ export default function HealthPanel({ game }: { game: GameState }) {
           </div>
           <div>
             <div className="mb-1 flex justify-between text-slate-300">
-              <span>🏃 Condicionamento</span>
-              <span className="tabular-nums">{st.fitness}</span>
+              <span>🏃 Capacidade atlética</span>
+              <span className="tabular-nums">{st.athletic}</span>
             </div>
-            <Bar value={st.fitness} color="bg-sky-500" className="h-2" />
+            <Bar value={st.athletic} color="bg-sky-500" className="h-2" />
           </div>
         </div>
         {hint && <p className="mt-3 rounded-lg bg-violet-500/10 px-3 py-2 text-xs text-violet-200" data-testid="brain-hint">🧠 {hint}</p>}

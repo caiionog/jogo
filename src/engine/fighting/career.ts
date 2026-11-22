@@ -10,10 +10,11 @@ import { addStats, appendLog } from '../core/stats';
 import { beltPromotionReady, promoteBelt } from './belts';
 import { findMatches, ephemeralOpponent, npcToOpponent, opponentFullName, playerLevel } from './matchmaking';
 import { currentRosterKey, getOrg, leaveRankings, playerDivision, signWith, tierIndex } from './orgs';
-import { PLAYER_ID, addSkills, playerSnapshot, shortName } from './profile';
+import { PLAYER_ID, applySkillDelta, playerSnapshot, shortName } from './profile';
+import { npcChin } from './chin';
 import { applyRankingResult, rankOf } from './ranking';
 import { DECISION_TEXT, aiStrategy, chooseCorner, playRound, startFight } from './simulateFight';
-import { ageDecline, currentGym, fightExperience } from './training';
+import { ageDecline, currentGym, fightExperience, trainingYear } from './training';
 import type {
   CareerRecord,
   FightOffer,
@@ -22,7 +23,7 @@ import type {
   OfferKind,
   OrgDef,
   RetireReason,
-  Skills,
+  SkillDelta,
   Strategy,
 } from './types';
 import { ensureRoster, rosterKey, simulateWorldYear } from './world';
@@ -156,8 +157,8 @@ function opponentSnapshot(o: Opponent): FighterSnapshot {
     name: o.nickname || shortName(o.name),
     fullName: opponentFullName(o),
     skills: o.skills,
-    strength: o.strength,
-    fitness: o.fitness,
+    athletic: o.athletic,
+    chin: npcChin(o),
     sizeEdge: 0,
   };
 }
@@ -187,9 +188,10 @@ export function acceptOffer(state: GameState, offerId: string, opts: AcceptOptio
   }
   // lesões ativas pesam na luta (lutar machucado) e o dano cerebral enfraquece o queixo (em playerSnapshot)
   let player = playerSnapshot(s, aggressive ? AGGRESSIVE_CUT_EDGE : 0, missed ? 85 : 100);
-  player = { ...player, skills: addSk(player.skills, injuryFightPenalty(s, content)) };
-  // parceiro(a) que apoia a carreira: ânimo extra (+3 de cardio na luta)
-  if (partnerSupportsFighting(s, content)) player = { ...player, skills: addSk(player.skills, { cardio: 3 }) };
+  const pen = injuryFightPenalty(s, content);
+  player = { ...player, skills: addSk(player.skills, { jiujitsu: pen.jiujitsu ?? 0, trocacao: pen.trocacao ?? 0 }), athletic: Math.max(0, player.athletic + (pen.athletic ?? 0)), chin: Math.max(0, player.chin + (pen.chin ?? 0)) };
+  // parceiro(a) que apoia a carreira: ânimo extra (+3 de fôlego na luta)
+  if (partnerSupportsFighting(s, content)) player = { ...player, athletic: Math.min(100, player.athletic + 3) };
   let fight = startFight(player, opponentSnapshot(offer.opponent), {
     rounds: offer.rounds,
     rngState: rng.int(1, 0x7fffffff),
@@ -382,7 +384,7 @@ export function endFightingYear(state: GameState, content: GameContent): GameSta
   const f = state.fighter;
   const gym = currentGym(state, content);
   let s: GameState = state;
-  const trainedBjj = f.trainedBjjThisYear || gym?.specialty === 'grappling';
+  const trainedBjj = f.trainedBjjThisYear || gym?.specialty === 'jiujitsu';
   const foughtThisYear = f.history.some((h) => h.year === state.year);
   s = {
     ...s,
@@ -415,6 +417,7 @@ export function endFightingYear(state: GameState, content: GameContent): GameSta
 /** Início do ano de luta (depois de envelhecer e da escola): declínio, mundo e ofertas. */
 export function startFightingYear(state: GameState, rng: Rng, content: GameContent): GameState {
   let s: GameState = { ...state, fighter: { ...state.fighter, skills: ageDecline(state.fighter.skills, state.character.age, rng) } };
+  s = trainingYear(s, rng);
   // mudou de categoria? sai do ranking da antiga
   const key = currentRosterKey(s, content);
   const orgId = s.fighter.orgId;
@@ -433,7 +436,7 @@ export function startFightingYear(state: GameState, rng: Rng, content: GameConte
 // ---------------------------------------------------------------------------
 
 export interface FighterEffects {
-  skills?: Partial<Skills>;
+  skills?: SkillDelta;
   reputation?: number;
   /** 'local' = mais barata da cidade, 'best' = melhor que dá para pagar, ou um id. */
   joinGym?: string;
@@ -477,8 +480,8 @@ export function enterGym(state: GameState, gymId: string, content: GameContent):
 
 export function applyFighterEffects(state: GameState, fx: FighterEffects, rng: Rng, content: GameContent, vars?: EventVars): GameState {
   let s = state;
+  if (fx.skills) s = applySkillDelta(s, fx.skills);
   let f = s.fighter;
-  if (fx.skills) f = { ...f, skills: addSkills(f.skills, fx.skills) };
   if (fx.reputation) f = { ...f, reputation: Math.min(100, Math.max(0, f.reputation + fx.reputation)) };
   if (fx.leaveGym) f = { ...f, gymId: null };
   if (fx.suspendYears) f = { ...f, suspendedYears: f.suspendedYears + fx.suspendYears, offers: [] };

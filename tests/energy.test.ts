@@ -34,7 +34,7 @@ describe('gasto de energia', () => {
     const g = kid();
     const after = performAction(g, 'train', GAME_CONTENT);
     expect(after.energy.current).toBe(5 - train.energyCost);
-    expect(after.character.stats.fitness).toBeGreaterThan(g.character.stats.fitness);
+    expect(after.character.stats.athletic).toBeGreaterThan(g.character.stats.athletic);
     expect(after.log.at(-1)!.entries).toHaveLength(1);
     expect(after.log.at(-1)!.age).toBe(8);
   });

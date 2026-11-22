@@ -48,7 +48,7 @@ export function jobBlockReason(state: GameState, def: JobDef): JobBlockReason | 
   if (EDUCATION_ORDER.indexOf(educationLevel(state)) < EDUCATION_ORDER.indexOf(def.education)) return 'education';
   const st = state.character.stats;
   const m = def.minStats ?? {};
-  if ((m.intelligence ?? 0) > st.intelligence || (m.strength ?? 0) > st.strength || (m.looks ?? 0) > st.looks) return 'stats';
+  if ((m.intelligence ?? 0) > st.intelligence || (m.athletic ?? 0) > st.athletic || (m.looks ?? 0) > st.looks) return 'stats';
   if ((def.minReputation ?? 0) > state.fighter.reputation) return 'reputation';
   if (def.fightReq) {
     const okBelt = def.fightReq.minBelt !== undefined && state.fighter.belt.rank >= def.fightReq.minBelt;

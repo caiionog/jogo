@@ -202,7 +202,7 @@ export function resolvePregnancy(state: GameState, rng: Rng, content: GameConten
   let s: GameState = { ...state, relationships: { ...state.relationships, pregnancy: null } };
   const partner = getPerson(s, preg.partnerId);
   const c = s.character;
-  const charAthletic = (c.stats.strength + c.stats.fitness) / 2;
+  const charAthletic = c.stats.athletic;
   const pLooks = partner?.looks ?? rng.int(30, 80);
   const pSmarts = partner?.smarts ?? rng.int(30, 80);
   const pAth = partner?.athletic ?? rng.int(30, 70);

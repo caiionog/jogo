@@ -33,7 +33,7 @@ function reasonText(r: JobBlockReason, def: JobDef): string {
       return `exige ${EDUCATION_LABEL[def.education].toLowerCase()}`;
     case 'stats': {
       const m = def.minStats ?? {};
-      return [m.intelligence && `inteligência ${m.intelligence}`, m.strength && `força ${m.strength}`, m.looks && `aparência ${m.looks}`].filter(Boolean).join(', ');
+      return [m.intelligence && `inteligência ${m.intelligence}`, m.athletic && `capacidade atlética ${m.athletic}`, m.looks && `aparência ${m.looks}`].filter(Boolean).join(', ');
     }
     case 'reputation':
       return `reputação ${def.minReputation}`;

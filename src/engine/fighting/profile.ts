@@ -1,5 +1,6 @@
+import { chinOf } from './chin';
 import type { GameState } from '../core/state';
-import type { CareerRecord, FighterProfile, FighterSnapshot, Skills, World } from './types';
+import type { CareerRecord, FighterProfile, FighterSnapshot, SkillDelta, Skills, World } from './types';
 import { SKILL_KEYS } from './types';
 
 export const PLAYER_ID = 'player';
@@ -9,12 +10,15 @@ export function emptyRecord(): CareerRecord {
 }
 
 export function baseSkills(level = 5): Skills {
-  return { striking: level, wrestling: level, grappling: level, defense: level, cardio: level + 5, chin: 50 };
+  return { jiujitsu: level, trocacao: level };
 }
 
-export function newFighterProfile(skills: Skills = baseSkills(), talent = 1): FighterProfile {
+export function newFighterProfile(skills: Skills = baseSkills(), talent = 1, chinBase = 55): FighterProfile {
   return {
     skills,
+    chinBase,
+    trainingLoad: 0,
+    sessionsThisYear: 0,
     talent,
     belt: { rank: 0, years: 0 },
     reputation: 0,
@@ -52,9 +56,21 @@ export function addSkills(skills: Skills, delta: Partial<Skills>): Skills {
   return out;
 }
 
-/** Média ponderada das habilidades (0–100), usada como "nível" do lutador. */
-export function skillRating(s: Skills): number {
-  return s.striking * 0.2 + s.wrestling * 0.17 + s.grappling * 0.17 + s.defense * 0.18 + s.cardio * 0.14 + s.chin * 0.14;
+/**
+ * "Nível" geral do lutador (0–100), na mesma escala da Etapa 3: trocação e jiu-jitsu pesam mais, físico e queixo
+ * completam. Usado no matchmaking, na elegibilidade das ligas e na avaliação do treinador (nunca exibido).
+ */
+export function skillRating(s: Skills, athletic: number, chin: number): number {
+  return s.trocacao * 0.36 + s.jiujitsu * 0.36 + athletic * 0.14 + chin * 0.14;
+}
+
+/** Aplica um SkillDelta ao estado: habilidades ocultas, Capacidade atlética (visível) e queixo inato. */
+export function applySkillDelta(state: GameState, d: SkillDelta): GameState {
+  const { athletic, chin, ...skills } = d;
+  let s: GameState = { ...state, fighter: { ...state.fighter, skills: addSkills(state.fighter.skills, skills) } };
+  if (athletic) s = { ...s, character: { ...s.character, stats: { ...s.character.stats, athletic: Math.max(0, Math.min(100, s.character.stats.athletic + athletic)) } } };
+  if (chin) s = { ...s, fighter: { ...s.fighter, chinBase: clampSkill(s.fighter.chinBase + chin) } };
+  return s;
 }
 
 /** Nome curto do jogador para a narração (primeiro nome). */
@@ -68,10 +84,10 @@ export function playerSnapshot(state: GameState, sizeEdge: number, startStamina 
     id: PLAYER_ID,
     name: shortName(c.name),
     fullName: c.name,
-    // dano cerebral acumulado (oculto) deixa o queixo mais fraco: mais knockdowns e nocautes
-    skills: { ...state.fighter.skills, chin: Math.max(0, state.fighter.skills.chin - (state.health?.brainDamage ?? 0) / 4) },
-    strength: c.stats.strength,
-    fitness: c.stats.fitness,
+    skills: { ...state.fighter.skills },
+    athletic: c.stats.athletic,
+    // queixo derivado: base inata, idade, dano cerebral (oculto) e saúde
+    chin: chinOf(state),
     sizeEdge,
     startStamina,
   };

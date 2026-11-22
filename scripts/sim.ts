@@ -137,14 +137,14 @@ function playYear(s0: GameState, rng: Rng): GameState {
     }
     s = drain(s, rng);
   }
-  // treino com o resto da energia: técnica na habilidade mais fraca, jiu-jitsu, condicionamento
-  const weakest = () => (['striking', 'wrestling', 'defense'] as SkillKey[]).sort((a, b) => s.fighter.skills[a] - s.fighter.skills[b])[0]!;
-  const plan = ['technique', 'conditioning', 'bjj', 'technique', 'sparring', 'conditioning'] as const;
+  // treino com o resto da energia: técnica no mais fraco (jiu-jitsu/trocação), jiu-jitsu, físico, sparring
+  const weakest = (): SkillKey => (s.fighter.skills.jiujitsu < s.fighter.skills.trocacao ? 'jiujitsu' : 'trocacao');
+  const plan = ['tecnica', 'fisico', 'jiujitsu', 'tecnica', 'sparring', 'fisico'] as const;
   for (let i = 0; i < 8 && s.energy.current > 0; i++) {
     const before = s.energy.current;
-    const kind = s.energy.current >= 2 ? plan[(i + s.character.age) % plan.length]! : 'conditioning';
-    s = trainFighter(s, kind, weakest(), C);
-    if (s.energy.current === before) s = trainFighter(s, 'conditioning', undefined, C);
+    const p = s.energy.current >= 2 ? plan[(i + s.character.age) % plan.length]! : 'fisico';
+    s = trainFighter(s, p === 'tecnica' ? weakest() : p, C);
+    if (s.energy.current === before) s = trainFighter(s, 'fisico', C);
     if (s.energy.current === before) s = performAction(s, 'train', C);
     if (s.energy.current === before) break;
     s = drain(s, rng);

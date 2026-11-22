@@ -75,8 +75,7 @@ function statsFromPerson(p: Person, rng: Rng, age: number): Stats {
     happiness: clamp(45 + rng.int(-5, 10)),
     intelligence: clamp(p.smarts + rng.int(-4, 4)),
     looks: clamp(p.looks + rng.int(-3, 3)),
-    strength: clamp(Math.round(p.athletic * 0.6 * grown) + rng.int(0, 5)),
-    fitness: clamp(Math.round(p.athletic * 0.7 * grown) + rng.int(0, 5)),
+    athletic: clamp(Math.round(p.athletic * 0.65 * grown) + rng.int(0, 5)),
   };
 }
 
@@ -174,8 +173,7 @@ export function continueAsChild(state: GameState, personId: string, content: Gam
   const mirim = !!child.flags.lutador_mirim;
   const trainedYears = mirim ? Math.max(0, Math.min(age - 6, 12)) : 0;
   const skills = baseSkills(5 + Math.round(trainedYears * 2.2));
-  skills.chin = rng.int(40, 75);
-  let fighter = newFighterProfile(skills, talent);
+  let fighter = newFighterProfile(skills, talent, rng.int(40, 75));
   const famous = Math.min(content.legacy.famousRepMax, Math.round(Math.max(state.feats.peakRep ?? 0, state.fighter.reputation) / content.legacy.famousRepDivisor));
   fighter = { ...fighter, reputation: famous, belt: { rank: mirim && age >= 14 ? 1 : 0, years: mirim ? Math.min(3, trainedYears) : 0 } };
 
@@ -199,7 +197,7 @@ export function continueAsChild(state: GameState, personId: string, content: Gam
     looks: old.stats.looks,
     smarts: old.stats.intelligence,
     health: 0,
-    athletic: Math.round((old.stats.strength + old.stats.fitness) / 2),
+    athletic: old.stats.athletic,
     traits: [],
     flags: {},
     appearance: old.appearance,

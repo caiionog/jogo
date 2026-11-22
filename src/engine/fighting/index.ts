@@ -2,6 +2,7 @@
 export * from './types';
 export * from './simulateFight';
 export * from './profile';
+export * from './chin';
 export * from './body';
 export * from './training';
 export * from './belts';

@@ -4,7 +4,7 @@ import { BELT_REQUIREMENTS, advanceYear, beltPromotionReady, promoteBelt, resolv
 import { fighterGame } from './fightHelpers';
 
 const withBelt = (age: number, rank: number, years: number, grappling: number) =>
-  fighterGame(age, { grappling }, { belt: { rank, years } });
+  fighterGame(age, { jiujitsu: grappling }, { belt: { rank, years } });
 
 describe('faixas de jiu-jitsu', () => {
   it('respeita o tempo mínimo na faixa', () => {
@@ -32,10 +32,10 @@ describe('faixas de jiu-jitsu', () => {
   });
 
   it('o ano só conta se treinou jiu-jitsu (ação ou academia de grappling)', () => {
-    const base = fighterGame(16, { grappling: 40 }, { belt: { rank: 0, years: 0 }, gymId: 'gen_boxe' });
+    const base = fighterGame(16, { jiujitsu: 40 }, { belt: { rank: 0, years: 0 }, gymId: 'gen_boxe' });
     const idle = advanceYear(base, GAME_CONTENT);
     expect(idle.fighter.belt.years).toBe(0);
-    const trained = trainFighter(base, 'bjj', undefined, GAME_CONTENT);
+    const trained = trainFighter(base, 'jiujitsu', GAME_CONTENT);
     expect(trained.fighter.trainedBjjThisYear).toBe(true);
     const next = advanceYear(trained, GAME_CONTENT);
     expect(next.fighter.belt.years).toBe(1);
@@ -45,7 +45,7 @@ describe('faixas de jiu-jitsu', () => {
 
   it('o evento automático de exame de faixa aparece quando pronto e gradua', () => {
     // pronto no ano que vem: 17 anos, 1 ano de faixa + o ano atual treinando
-    let g = trainFighter(fighterGame(16, { grappling: 50 }, { belt: { rank: 0, years: 1 } }), 'bjj', undefined, GAME_CONTENT);
+    let g = trainFighter(fighterGame(16, { jiujitsu: 50 }, { belt: { rank: 0, years: 1 } }), 'jiujitsu', GAME_CONTENT);
     g = advanceYear(g, GAME_CONTENT);
     expect(g.pendingEvents.map((p) => p.eventId)).toContain('fight_belt_exam');
     g = resolveEvent(g, 'fight_belt_exam', 'exam', GAME_CONTENT);

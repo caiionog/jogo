@@ -74,7 +74,7 @@ describe('dinheiro e extrato', () => {
         }
         if (s.character.age >= 16 && !s.economy.job) s = applyJob(s, rng.pick(['lanchonete', 'entregador', 'vendedor', 'auxiliar_adm']), C);
         s = performAction(s, 'make_friends', C);
-        s = trainFighter(s, 'conditioning', undefined, C);
+        s = trainFighter(s, 'fisico', C);
         if (s.character.age >= 18) {
           const p = currentPartner(s);
           if (!p) s = meetSomeone(s, 'social', C, rng);

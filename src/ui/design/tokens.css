@@ -1,0 +1,76 @@
+/*
+ * Sistema de design (Etapa 8): tokens de cor, tipografia, espaço e raio.
+ * Modo claro/escuro pelo sistema do aparelho. A escala `slate` do Tailwind é remapeada para estes tokens, então as
+ * telas antigas também mudam de tema; componentes novos usam os tokens semânticos (--ds-*).
+ */
+@import "@fontsource/pixelify-sans/600.css";
+
+:root {
+  /* escala neutra (escuro: "tatame à noite", levemente arroxeado) */
+  --ds-n50: #faf9fc; --ds-n100: #f1eff6; --ds-n200: #e2dfec; --ds-n300: #c9c5d8; --ds-n400: #9a95b0;
+  --ds-n500: #6c6785; --ds-n600: #4a4560; --ds-n700: #353145; --ds-n800: #24212f; --ds-n900: #191722; --ds-n950: #0f0e14;
+  /* semânticos */
+  --ds-bg: var(--ds-n950);
+  --ds-surface: var(--ds-n900);
+  --ds-surface-2: var(--ds-n800);
+  --ds-border: var(--ds-n700);
+  --ds-text: var(--ds-n100);
+  --ds-text-muted: var(--ds-n400);
+  --ds-accent: #2fbf8f;        /* verde tatame */
+  --ds-accent-ink: #062b1f;    /* texto sobre o acento */
+  --ds-age: #f2b632;           /* botão + Idade */
+  --ds-age-ink: #2a1c00;
+  --ds-danger: #f0577a;
+  --ds-warning: #f5a524;
+  --ds-stat-happy: #f5b83d; --ds-stat-health: #ef5b6d; --ds-stat-smart: #6aa3ff; --ds-stat-looks: #d77cf0; --ds-stat-athletic: #39c48e;
+  --ds-avatar-bg: #cfc8ba;     /* fundo do avatar (contraste do contorno nos dois extremos de pele) */
+  /* tipografia */
+  --ds-font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --ds-font-pixel: "Pixelify Sans", var(--ds-font);
+  /* espaço e raio */
+  --ds-space-1: 4px; --ds-space-2: 8px; --ds-space-3: 12px; --ds-space-4: 16px; --ds-space-6: 24px;
+  --ds-radius-sm: 8px; --ds-radius: 14px; --ds-radius-lg: 22px;
+  --ds-touch: 44px;
+  --ds-dur: 180ms;
+  color-scheme: dark;
+
+  /* Tailwind: slate → neutros do sistema */
+  --color-slate-50: var(--ds-n50); --color-slate-100: var(--ds-n100); --color-slate-200: var(--ds-n200);
+  --color-slate-300: var(--ds-n300); --color-slate-400: var(--ds-n400); --color-slate-500: var(--ds-n500);
+  --color-slate-600: var(--ds-n600); --color-slate-700: var(--ds-n700); --color-slate-800: var(--ds-n800);
+  --color-slate-900: var(--ds-n900); --color-slate-950: var(--ds-n950);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    /* claro: "papel" quente; a escala é invertida (950 = fundo claro, 100 = texto escuro) */
+    --ds-n50: #0f0d0b; --ds-n100: #1c1916; --ds-n200: #2b2722; --ds-n300: #3f3a33; --ds-n400: #5b544a;
+    --ds-n500: #7a7266; --ds-n600: #a79e8f; --ds-n700: #d6cfc2; --ds-n800: #ebe6dc; --ds-n900: #ffffff; --ds-n950: #f6f2ea;
+    --ds-accent: #138a63;
+    --ds-accent-ink: #ffffff;
+    --ds-age: #e0a21a;
+    color-scheme: light;
+    /* textos de acento pensados para fundo escuro ficam mais escuros no claro (contraste AA) */
+    --color-emerald-200: #065f46; --color-emerald-300: #047857; --color-emerald-400: #059669;
+    --color-rose-200: #9f1239; --color-rose-300: #be123c; --color-rose-400: #e11d48;
+    --color-amber-200: #92400e; --color-amber-300: #b45309; --color-amber-400: #d97706;
+    --color-sky-300: #0369a1; --color-violet-300: #6d28d9;
+  }
+}
+
+.ds-pixel-title { font-family: var(--ds-font-pixel); letter-spacing: 0.02em; }
+
+/* animações curtas; desligadas com prefers-reduced-motion */
+@keyframes ds-slide-in { from { transform: translateX(14%); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes ds-rise { from { transform: translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes ds-pop { 0% { transform: scale(0.92); opacity: 0; } 100% { transform: none; opacity: 1; } }
+@keyframes ds-bump { 0% { transform: scale(1); } 40% { transform: scale(1.12); } 100% { transform: scale(1); } }
+.ds-anim-slide { animation: ds-slide-in var(--ds-dur) ease-out; }
+.ds-anim-rise { animation: ds-rise var(--ds-dur) ease-out; }
+.ds-anim-pop { animation: ds-pop var(--ds-dur) ease-out; }
+.ds-anim-bump { animation: ds-bump 320ms ease-out; }
+.ds-bar-fill { transition: width 400ms ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .ds-anim-slide, .ds-anim-rise, .ds-anim-pop, .ds-anim-bump { animation: none; }
+  .ds-bar-fill { transition: none; }
+}

@@ -166,7 +166,7 @@ export interface JobDef {
   category: JobCategory;
   minAge: number;
   education: EducationLevel;
-  minStats?: { intelligence?: number; strength?: number; looks?: number };
+  minStats?: { intelligence?: number; athletic?: number; looks?: number };
   minReputation?: number;
   /** Requisito alternativo de luta: faixa mínima OU vitórias pro mínimas. */
   fightReq?: { minBelt?: number; minProWins?: number };

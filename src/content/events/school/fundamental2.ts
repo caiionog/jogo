@@ -88,7 +88,7 @@ export const FUNDAMENTAL2_EVENTS: readonly GameEvent[] = [
   },
   {
     id: 'f2_wrestling_invite',
-    conditions: { schoolStages: ['fund2', 'medio'], stats: { strength: { min: 25 } } },
+    conditions: { schoolStages: ['fund2', 'medio'], stats: { athletic: { min: 25 } } },
     weight: 5,
     once: true,
     text: 'O técnico da equipe de luta olímpica viu você na aula de educação física e quer você no time.',

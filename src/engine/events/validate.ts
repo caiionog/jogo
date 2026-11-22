@@ -32,7 +32,7 @@ export function validateContent(content: GameContent): string[] {
     if (ff?.joinGym && !['local', 'best'].includes(ff.joinGym) && !gymIds.has(ff.joinGym)) errors.push(`${where}: academia inexistente "${ff.joinGym}"`);
     if (ff?.signWith && !orgIds.has(ff.signWith)) errors.push(`${where}: organização inexistente "${ff.signWith}"`);
     for (const k of Object.keys(ff?.skills ?? {})) {
-      if (!['striking', 'wrestling', 'grappling', 'defense', 'cardio', 'chin'].includes(k)) errors.push(`${where}: habilidade desconhecida "${k}"`);
+      if (!['jiujitsu', 'trocacao', 'athletic', 'chin'].includes(k)) errors.push(`${where}: habilidade desconhecida "${k}"`);
     }
     const he = fx.health;
     if (he?.injury && he.injury !== 'random' && !content.health.injuries.some((d) => d.id === he.injury)) errors.push(`${where}: lesão inexistente "${he.injury}"`);
