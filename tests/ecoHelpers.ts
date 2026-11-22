@@ -9,7 +9,8 @@ export function adult(age = 30, money = 100000, seed = 'eco'): GameState {
     ...g,
     year: 1990 + age,
     money,
-    character: { ...g.character, age, stats: { ...g.character.stats, intelligence: 80, strength: 60, looks: 60, health: 90 } },
+    // Goiânia: multiplicador de custo de vida 1,00 (valores dos testes sem ajuste de cidade)
+    character: { ...g.character, uf: 'GO', city: 'Goiânia', age, stats: { ...g.character.stats, intelligence: 80, strength: 60, looks: 60, health: 90 } },
     energy: { current: 8, max: 8, reserved: 0 },
     education: { ...g.education, graduated: true },
     economy: { ...g.economy, ledger: { year: 1990 + age, opening: money, entries: [] }, housing: 'aluguel', lastIncome: 80000 },

@@ -250,3 +250,56 @@ describe('migração v5 → v6 (lesões, aposentadoria, legado)', () => {
     }
   });
 });
+
+import fixturesV6 from './fixtures/saves-v6.json';
+import { cityDef, relationsOf as relsOf } from '../src/engine';
+const v6 = fixturesV6 as unknown as Record<string, Raw>;
+
+describe('migração v6 → v7 (Brasil e aparência)', () => {
+  it('fixtures são saves v6 reais (Etapa 6), com cidades estrangeiras', () => {
+    for (const s of Object.values(v6)) {
+      expect(s.version).toBe(6);
+      expect((s as unknown as { character: Record<string, unknown> }).character).not.toHaveProperty('appearance');
+    }
+  });
+
+  it.each(['5', '20', '45', '70', 'heir'])('save %s: UF/cidade válidas, aparência de todos, guarda-roupa e um ano jogável', (key) => {
+    const raw = structuredClone(v6[key]!) as unknown as { character: { country: string; city: string }; fighter: { gymId: string | null } };
+    const g = migrate(structuredClone(v6[key]!));
+    expect(g.version).toBe(CURRENT_VERSION);
+    expect(g.rngState).toBe(v6[key]!.rngState);
+    expect(g.character.country).toBe('Brasil');
+    expect(cityDef(GAME_CONTENT.geo, g.character.uf, g.character.city)).toBeDefined();
+    if (raw.character.country === 'Brasil') expect(g.character.city).toBe(raw.character.city);
+    expect(g.character.appearance.genes.skinTone).toBeGreaterThanOrEqual(0);
+    for (const p of g.relationships.people) expect(p.appearance).toBeDefined();
+    expect(g.wardrobe.unlocked.length).toBeGreaterThan(0);
+    if (g.fighter.gymId) expect(GAME_CONTENT.fighting.gyms.some((x) => x.id === g.fighter.gymId)).toBe(true);
+    if (raw.fighter.gymId === 'sd_coastline') expect(g.fighter.gymId).toBeNull();
+    if (raw.fighter.gymId === 'rj_irmandade') expect(g.fighter.gymId).toBe('rj_irmandade');
+    // irmãos coerentes: tom de pele perto dos pais
+    const pai = relsOf(g, ['pai'], false)[0]?.person.appearance;
+    const mae = relsOf(g, ['mae'], false)[0]?.person.appearance;
+    if (pai && mae) {
+      const t = g.character.appearance.genes.skinTone;
+      expect(t).toBeGreaterThanOrEqual(Math.min(pai.genes.skinTone, mae.genes.skinTone) - 0.01);
+      expect(t).toBeLessThanOrEqual(Math.max(pai.genes.skinTone, mae.genes.skinTone) + 0.01);
+    }
+    if (g.alive) expect(resolveAllFirst(advanceYear(g, GAME_CONTENT)).character.age).toBe(g.character.age + 1);
+    expect(JSON.parse(JSON.stringify(g))).toEqual(g);
+  });
+
+  it('é determinística', () => {
+    expect(migrate(structuredClone(v6['45']!))).toEqual(migrate(structuredClone(v6['45']!)));
+  });
+
+  it('cadeia v1 → v7: saves antigos ganham UF, cidade e aparência', () => {
+    for (const raw of [...Object.values(v1), ...Object.values(v3), ...Object.values(v5)]) {
+      const g = migrate(structuredClone(raw));
+      expect(g.version).toBe(CURRENT_VERSION);
+      expect(cityDef(GAME_CONTENT.geo, g.character.uf, g.character.city)).toBeDefined();
+      expect(g.character.appearance).toBeDefined();
+      expect(g.wardrobe).toBeDefined();
+    }
+  });
+});

@@ -1,3 +1,8 @@
+import { npcAppearance } from '../character/appearance/derive';
+import type { Appearance } from '../character/appearance/genes';
+import { lookRng, randomAppearance, ufOrDefault } from '../character/appearance/inherit';
+import { composeName, pickFirstName } from '../character/names';
+import { ufDef } from '../geo';
 /** Pessoas e relações: criação, consulta, histórico e limite de pessoas ativas. */
 import type { GameContent } from '../core/content';
 import type { Rng } from '../core/rng';
@@ -40,6 +45,12 @@ const LABELS: Record<RelType, [string, string]> = {
 
 export function relLabel(type: RelType, sex: Sex): string {
   return LABELS[type][sex === 'M' ? 0 : 1];
+}
+
+/** Sobrenome da mãe num nome "Nome Mãe Pai" (o penúltimo, se houver 3+ palavras). */
+export function motherSurnameOf(full: string): string | undefined {
+  const parts = full.trim().split(' ');
+  return parts.length >= 3 ? parts[parts.length - 2] : undefined;
 }
 
 export function lastName(full: string): string {
@@ -92,7 +103,10 @@ export function childrenOf(state: GameState): { person: Person; rel: Relation }[
 export interface NewPersonOptions {
   sex?: Sex;
   age: number;
+  /** Sobrenome do pai (o último do nome). */
   surname?: string;
+  /** Sobrenome da mãe (vem antes do do pai). */
+  motherSurname?: string;
   name?: string;
   looks?: number;
   smarts?: number;
@@ -102,6 +116,8 @@ export interface NewPersonOptions {
   npcId?: string;
   traits?: TraitId[];
   flags?: Person['flags'];
+  /** Aparência herdada/definida; sem ela, sorteada pela cor ou raça da UF atual do personagem. */
+  appearance?: Appearance;
 }
 
 export function randomTraits(rng: Rng, content: GameContent, n = rng.int(2, 3)): TraitId[] {
@@ -118,11 +134,13 @@ export function randomTraits(rng: Rng, content: GameContent, n = rng.int(2, 3)):
 /** Cria uma pessoa (sem relação) e devolve o estado atualizado e a pessoa. */
 export function createPerson(state: GameState, rng: Rng, content: GameContent, o: NewPersonOptions): [GameState, Person] {
   const sex: Sex = o.sex ?? (rng.chance(0.5) ? 'M' : 'F');
-  const first = rng.pick(sex === 'M' ? content.names.male : content.names.female);
+  // nome pela década de nascimento e pela região da UF atual (Etapa 7)
+  const regiao = ufDef(content.geo, state.character.uf)?.regiao;
+  const first = pickFirstName(rng, content.names, sex, state.year - o.age, regiao);
   const surname = o.surname ?? rng.pick(content.names.surnames);
   const person: Person = {
     id: `p${state.relationships.nextPersonId}`,
-    name: o.name ?? `${first} ${surname}`,
+    name: o.name ?? composeName(first, o.motherSurname, surname),
     sex,
     age: o.age,
     alive: true,
@@ -134,6 +152,8 @@ export function createPerson(state: GameState, rng: Rng, content: GameContent, o
     ...(o.job ? { job: o.job } : {}),
     ...(o.npcId ? { npcId: o.npcId } : {}),
     flags: o.flags ?? {},
+    // lutador do elenco: a mesma aparência derivada do busto do ranking; senão, pela UF atual do personagem
+    appearance: o.appearance ?? (o.npcId ? npcAppearance(state.seed, { id: o.npcId }, sex, content) : randomAppearance(lookRng(rng), ufOrDefault(content.geo, state.character.uf), sex)),
   };
   const rs = state.relationships;
   return [{ ...state, relationships: { ...rs, people: [...rs.people, person], nextPersonId: rs.nextPersonId + 1 } }, person];

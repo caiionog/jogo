@@ -225,7 +225,6 @@ export interface EconomyContent {
   sponsors: readonly SponsorDef[];
   taxBrackets: readonly TaxBracket[];
   /** Multiplicador de custo por cidade (padrão 1). */
-  cityCost: Readonly<Record<string, number>>;
   /** Nomes fictícios (bancos, empresários). */
   agents: readonly string[];
   hooks: { regimeEventId?: string };

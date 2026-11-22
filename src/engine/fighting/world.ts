@@ -47,7 +47,7 @@ export function generateNpc(rng: Rng, id: string, level: number, sex: Sex, conte
   const w = Math.round(fights * winRate);
   return {
     id,
-    name: randomPersonName(rng, content.names, sex),
+    name: randomPersonName(rng, content.names, sex, 2025 - a, rng.pick(['Norte', 'Nordeste', 'Sudeste', 'Sul', 'Centro-Oeste'])),
     nickname: rng.pick(content.fighting.nicknames),
     age: a,
     style,

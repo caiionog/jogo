@@ -1,3 +1,6 @@
+import { inheritAppearance, lookRng } from '../character/appearance/inherit';
+import { defaultWardrobe } from '../character/appearance/outfits';
+import { coupleSurnames } from '../relationships/romance';
 /**
  * Legado (Etapa 6): continuar a história como um dos filhos vivos.
  * O mundo (NPCs, organizações, ranking, ano, seed) continua; a vida é nova (log, eventos `once`, conquistas da vida).
@@ -126,7 +129,10 @@ function heirOwnFamily(state: GameState, rng: Rng, content: GameContent): GameSt
     const kidAge = age - (since + rng.int(1, Math.max(1, span)));
     if (kidAge < 0) continue;
     let kid: Person;
-    [s, kid] = createPerson(s, rng, content, { age: kidAge, surname: s.dynasty.surname });
+    const [fatherSurname, motherSurname] = coupleSurnames(s.character.sex, s.character.name, spouse);
+    const kidSex = rng.chance(0.5) ? 'M' : 'F';
+    const look = spouse.appearance ? (s.character.sex === 'M' ? inheritAppearance(lookRng(rng), s.character.appearance, spouse.appearance, kidSex) : inheritAppearance(lookRng(rng), spouse.appearance, s.character.appearance, kidSex)) : undefined;
+    [s, kid] = createPerson(s, rng, content, { age: kidAge, sex: kidSex, surname: fatherSurname, ...(motherSurname ? { motherSurname } : {}), ...(look ? { appearance: look } : {}) });
     s = addRelation(s, kid.id, 'filho', rng.int(65, 90), { since: age - kidAge });
   }
   return s;
@@ -146,7 +152,7 @@ export function continueAsChild(state: GameState, personId: string, content: Gam
   const gen = state.dynasty.generation + 1;
 
   // personagem (corpo sorteado pelo RNG; atributos vêm do que o filho já tinha)
-  const base = createCharacter(rng, { name: child.name, sex: child.sex }, content.locations, state.year - age);
+  const base = createCharacter(rng, { name: child.name, sex: child.sex }, content.geo, state.year - age, { uf: old.uf, city: old.city }, child.appearance);
   const estateGross = state.ending!.estate.gross;
   const familyWealth = estateGross >= 3_000_000 ? 92 : estateGross >= 500_000 ? 72 : estateGross >= 100_000 ? 50 : 25;
   const character: Character = {
@@ -154,7 +160,8 @@ export function continueAsChild(state: GameState, personId: string, content: Gam
     name: child.name,
     age,
     birthYear: state.year - age,
-    country: old.country,
+    country: 'Brasil',
+    uf: old.uf,
     city: old.city,
     familyWealth,
     stats: statsFromPerson(child, rng, age),
@@ -195,6 +202,7 @@ export function continueAsChild(state: GameState, personId: string, content: Gam
     athletic: Math.round((old.stats.strength + old.stats.fitness) / 2),
     traits: [],
     flags: {},
+    appearance: old.appearance,
   };
   add(deceased, { type: old.sex === 'M' ? 'pai' : 'mae', affection, since: 0, history: [`Faleceu aos ${old.age} anos.`], interactedYear: state.year });
   // o outro genitor: cônjuge vivo ou o ex mais recente
@@ -254,6 +262,7 @@ export function continueAsChild(state: GameState, personId: string, content: Gam
     feats: { gymGenerations: 0 },
     dynasty: { ...state.dynasty, generation: gen, members: [...state.dynasty.members, dynastyMember(state, child.name)].slice(-30) },
     ending: null,
+    wardrobe: { ...defaultWardrobe(content), facialHair: child.appearance?.facialHair ?? 'nenhuma' },
   };
   const items = pickInheritedItems(state, heir.amount);
   const cash = Math.max(0, heir.amount - items.used);

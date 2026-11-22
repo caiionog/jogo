@@ -1,3 +1,4 @@
+import { cityMultOf } from '../../geo';
 /**
  * Lesões (Etapa 6): catálogo injetado por `content.health`, origem em lutas/sparring/treino/eventos,
  * tratamento (repouso, fisioterapia, cirurgia), agravamento ao voltar cedo e sequelas permanentes.
@@ -191,7 +192,7 @@ export function sparringAggravation(state: GameState, rng: Rng, content: GameCon
 export type TreatBlockReason = 'not-found' | 'busy' | 'already' | 'no-money' | 'no-energy' | 'no-surgery';
 
 export function treatmentCost(state: GameState, content: GameContent, def: InjuryDef, t: Treatment): number {
-  const city = content.economy.cityCost[state.character.city] ?? 1;
+  const city = cityMultOf(state, content);
   if (t === 'fisio') return toMoney(def.cost.fisio * city);
   if (t === 'cirurgia') return toMoney((def.cost.cirurgia ?? 0) * city);
   return 0;

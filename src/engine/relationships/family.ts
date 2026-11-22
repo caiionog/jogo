@@ -1,9 +1,10 @@
+import { inheritAppearance, lookRng, parentsFor } from '../character/appearance/inherit';
 /** Família: geração ao nascer, envelhecimento e morte de NPCs. */
 import type { GameContent } from '../core/content';
 import type { Rng } from '../core/rng';
 import type { FlagValue, GameState, Sex } from '../core/state';
 import { addStats, appendLog } from '../core/stats';
-import { addRelation, createPerson, firstName, lastName, relationsOf, updatePerson } from './people';
+import { addRelation, createPerson, firstName, lastName, motherSurnameOf, relationsOf, updatePerson } from './people';
 import { inheritFrom, parentWealth } from '../economy/family';
 import type { Person } from './types';
 
@@ -22,19 +23,23 @@ export function randomJob(rng: Rng, content: GameContent, tier: 'low' | 'mid' | 
 export function generateFamily(state: GameState, rng: Rng, content: GameContent, charAge = state.character.age): GameState {
   let s = state;
   const c = state.character;
+  // sobrenomes: o último do nome é o do pai; o penúltimo (se houver) é o da mãe
   const surname = lastName(c.name);
+  const motherSurname = motherSurnameOf(c.name);
   const tier = jobTier(c.familyWealth);
   const fatherAge = charAge + rng.int(21, 42);
   const motherAge = charAge + rng.int(19, 40);
   const separated = rng.chance(0.2);
   const parentFlags: Record<string, FlagValue> = separated ? { separados: true } : {};
 
+  // aparência dos pais compatível com a do personagem (Etapa 7)
+  const looks = c.appearance ? parentsFor(lookRng(rng), c.appearance) : undefined;
   let father: Person;
-  [s, father] = createPerson(s, rng, content, { sex: 'M', age: fatherAge, surname, job: randomJob(rng, content, tier), flags: { ...parentFlags } });
+  [s, father] = createPerson(s, rng, content, { sex: 'M', age: fatherAge, surname, ...(looks ? { appearance: looks.father } : {}), job: randomJob(rng, content, tier), flags: { ...parentFlags } });
   s = updatePerson(s, father.id, (p) => ({ ...p, wealth: parentWealth(rng, c.familyWealth) }));
   s = addRelation(s, father.id, 'pai', rng.int(55, 85));
   let mother: Person;
-  [s, mother] = createPerson(s, rng, content, { sex: 'F', age: motherAge, job: randomJob(rng, content, tier), flags: { ...parentFlags } });
+  [s, mother] = createPerson(s, rng, content, { sex: 'F', age: motherAge, ...(motherSurname ? { surname: motherSurname } : {}), ...(looks ? { appearance: looks.mother } : {}), job: randomJob(rng, content, tier), flags: { ...parentFlags } });
   s = updatePerson(s, mother.id, (p) => ({ ...p, wealth: parentWealth(rng, c.familyWealth) }));
   s = addRelation(s, mother.id, 'mae', rng.int(60, 90));
 
@@ -44,18 +49,24 @@ export function generateFamily(state: GameState, rng: Rng, content: GameContent,
     const gap = rng.int(1, 8);
     const age = charAge + gap;
     if (motherAge - age < 18) continue;
-    s = addSibling(s, rng, content, age, surname);
+    s = addSibling(s, rng, content, age, surname, undefined, lastName(mother.name));
   }
   return s;
 }
 
-export function addSibling(state: GameState, rng: Rng, content: GameContent, age: number, surname: string, sex?: Sex): GameState {
+export function addSibling(state: GameState, rng: Rng, content: GameContent, age: number, surname: string, sex?: Sex, motherSurname?: string): GameState {
   let s = state;
   let sib: Person;
+  // irmãos herdam dos pais (quando eles estão no jogo)
+  const pai = relationsOf(s, ['pai'], false)[0]?.person.appearance;
+  const mae = relationsOf(s, ['mae'], false)[0]?.person.appearance;
+  const sibSex: Sex = sex ?? (rng.chance(0.5) ? 'M' : 'F');
   [s, sib] = createPerson(s, rng, content, {
-    ...(sex ? { sex } : {}),
+    sex: sibSex,
+    ...(pai && mae ? { appearance: inheritAppearance(lookRng(rng), pai, mae, sibSex) } : {}),
     age,
     surname,
+    ...(motherSurname ? { motherSurname } : {}),
     ...(age >= 18 ? { job: randomJob(rng, content, jobTier(state.character.familyWealth)) } : {}),
   });
   return addRelation(s, sib.id, 'irmao', rng.int(45, 80));

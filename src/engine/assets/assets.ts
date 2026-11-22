@@ -1,3 +1,4 @@
+import { cityMultOf } from '../geo';
 /**
  * Bens: imóveis, veículos e luxo. O mercado do ano é calculado pelo seed (não ocupa o save).
  * Taxas de compra/venda garantem que comprar e vender no mesmo ano sempre dá prejuízo.
@@ -33,7 +34,7 @@ export interface Offer {
 }
 
 export function cityMultiplier(state: GameState, content: GameContent): number {
-  return content.economy.cityCost[state.character.city] ?? 1;
+  return cityMultOf(state, content);
 }
 
 /** Ofertas do ano (determinísticas por seed + ano + cidade). */

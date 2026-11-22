@@ -9,7 +9,8 @@ import { setRegime } from './family';
 import { deposit } from './bank';
 import { relationsOf, updatePerson, firstName } from '../relationships/people';
 import { fireAgent, hireAgent, signSponsor } from './fightIncome';
-import { cityMultOf, jobDef, salaryOf } from './jobs';
+import { jobDef, salaryOf } from './jobs';
+import { cityMultOf } from '../geo';
 import { post, toMoney } from './ledger';
 import type { AssetKind, LedgerCategory, Regime } from './types';
 

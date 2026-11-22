@@ -28,8 +28,8 @@ describe('ganho de treino', () => {
     const base = { age: 27, health: 90 };
     const none = expectedGain(7, 'striking', 40, { ...base, gym: undefined });
     const weak = expectedGain(7, 'striking', 40, { ...base, gym: gym('gen_bairro') });
-    const strikingGym = expectedGain(7, 'striking', 40, { ...base, gym: gym('ny_iron_borough') });
-    const bjjGym = expectedGain(7, 'striking', 40, { ...base, gym: gym('mia_south_beach') });
+    const strikingGym = expectedGain(7, 'striking', 40, { ...base, gym: gym('sp_muay_zona_leste') });
+    const bjjGym = expectedGain(7, 'striking', 40, { ...base, gym: gym('sp_tatame_paulista') });
     expect(weak).toBeGreaterThan(none);
     expect(strikingGym).toBeGreaterThan(bjjGym); // especialidade
     expect(expectedGain(7, 'striking', 40, { ...base, gym: undefined, talent: 1.3 })).toBeCloseTo(none * 1.3);

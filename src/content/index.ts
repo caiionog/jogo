@@ -3,7 +3,8 @@ import { ACTIONS } from './actions';
 import { CLUBS } from './clubs';
 import { CHILDHOOD_EVENTS } from './events/childhood';
 import { SCHOOL_EVENTS } from './events/school';
-import { LOCATIONS } from './locations';
+import { GEO_CONTENT } from './geo/brasil';
+import { OUTFITS } from './outfits';
 import { NAMES } from './names';
 import { FIGHT_TEXT } from './fightText';
 import { NICKNAMES } from './fightText/nicknames';
@@ -24,7 +25,7 @@ import { LEGACY_EVENTS } from './events/legacy';
 export const GAME_CONTENT: GameContent = {
   actions: ACTIONS,
   events: [...CHILDHOOD_EVENTS, ...SCHOOL_EVENTS, ...FIGHTING_EVENTS, ...RELATIONSHIP_EVENTS, ...ECONOMY_EVENTS, ...HEALTH_EVENTS, ...LEGACY_EVENTS],
-  locations: LOCATIONS,
+  geo: GEO_CONTENT,
   clubs: CLUBS,
   names: NAMES,
   fighting: {
@@ -40,8 +41,10 @@ export const GAME_CONTENT: GameContent = {
   health: HEALTH_CONTENT,
   legacy: LEGACY_CONTENT,
   achievements: ACHIEVEMENTS,
+  outfits: OUTFITS,
 };
 
 export { HEALTH_EVENTS, LEGACY_EVENTS };
 export { RELATIONSHIP_EVENTS, RELATIONSHIPS_CONTENT, ECONOMY_CONTENT, ECONOMY_EVENTS };
-export { ACTIONS, CHILDHOOD_EVENTS, CLUBS, DIVISIONS, FIGHT_TEXT, FIGHTING_EVENTS, GYMS, LOCATIONS, NAMES, ORGANIZATIONS, SCHOOL_EVENTS };
+export { GEO_CONTENT };
+export { ACTIONS, CHILDHOOD_EVENTS, CLUBS, DIVISIONS, FIGHT_TEXT, FIGHTING_EVENTS, GYMS, NAMES, ORGANIZATIONS, SCHOOL_EVENTS };

@@ -1,3 +1,4 @@
+import { inheritAppearance, lookRng } from '../character/appearance/inherit';
 /** Namoro, casamento, divórcio, gravidez e filhos. Toda regra de idade passa por guards.ts. */
 import type { GameContent } from '../core/content';
 import type { Rng } from '../core/rng';
@@ -186,6 +187,14 @@ export function inherit(rng: Rng, a: number, b: number): number {
   return clamp((a + b) / 2 + rng.int(-12, 12));
 }
 
+/** Sobrenomes do filho de um casal: [do pai, da mãe]. Casal do mesmo sexo: o do personagem por último. */
+export function coupleSurnames(sex: Sex, name: string, partner: Person | undefined): [string, string | undefined] {
+  const mine = lastName(name);
+  const theirs = partner ? lastName(partner.name) : undefined;
+  if (partner && sex === 'F' && partner.sex === 'M') return [theirs!, mine];
+  return [mine, theirs];
+}
+
 /** Nascimento (ou chegada da adoção) quando a gravidez vence. */
 export function resolvePregnancy(state: GameState, rng: Rng, content: GameContent): GameState {
   const preg = state.relationships.pregnancy;
@@ -198,9 +207,17 @@ export function resolvePregnancy(state: GameState, rng: Rng, content: GameConten
   const pSmarts = partner?.smarts ?? rng.int(30, 80);
   const pAth = partner?.athletic ?? rng.int(30, 70);
   let child: Person;
+  // sobrenomes do casal: o do pai por último, o da mãe antes
+  const [fatherSurname, motherSurname] = coupleSurnames(c.sex, c.name, partner);
+  const childSex: Sex = rng.chance(0.5) ? 'M' : 'F';
+  const parentLook = partner?.appearance;
+  const look = !preg.adoption && parentLook ? (c.sex === 'M' ? inheritAppearance(lookRng(rng), c.appearance, parentLook, childSex) : inheritAppearance(lookRng(rng), parentLook, c.appearance, childSex)) : undefined;
   [s, child] = createPerson(s, rng, content, {
+    sex: childSex,
+    ...(look ? { appearance: look } : {}),
     age: preg.adoption ? rng.int(0, 5) : 0,
-    surname: lastName(c.name),
+    surname: fatherSurname,
+    ...(motherSurname ? { motherSurname } : {}),
     looks: preg.adoption ? rng.int(25, 90) : inherit(rng, c.stats.looks, pLooks),
     smarts: preg.adoption ? rng.int(25, 90) : inherit(rng, c.stats.intelligence, pSmarts),
     athletic: preg.adoption ? rng.int(20, 80) : inherit(rng, charAthletic, pAth),

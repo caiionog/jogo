@@ -23,7 +23,16 @@ import {
   emptyHealth,
   emptyDynasty,
   killCharacter,
+  pickBirthplace,
+  randomAppearance,
+  parentsFor,
+  inheritAppearance,
+  npcAppearance,
+  ufOrDefault,
+  defaultWardrobe,
+  appendLog,
 } from '../engine';
+import type { Appearance, Person } from '../engine';
 import { NAMES } from '../content/names';
 import { GYMS } from '../content/gyms';
 import { GAME_CONTENT } from '../content';
@@ -42,6 +51,7 @@ export const migrations: Record<number, (save: AnySave) => AnySave> = {
   3: migrateV3toV4,
   4: migrateV4toV5,
   5: migrateV5toV6,
+  6: migrateV6toV7,
 };
 
 export class SaveMigrationError extends Error {}
@@ -282,4 +292,62 @@ function migrateV5toV6(save: AnySave): AnySave {
   };
   if (!g.alive) g = killCharacter({ ...g, alive: true }, g.character.stats.health <= 0 ? 'complicações de saúde' : 'causas naturais', GAME_CONTENT);
   return g as unknown as AnySave;
+}
+
+// ---------------------------------------------------------------------------
+// v6 → v7 (Etapa 7: Brasil e aparência)
+// ---------------------------------------------------------------------------
+
+/**
+ * Local: cidade brasileira antiga → a UF dela; país estrangeiro → UF e cidade sorteadas pela seed.
+ * Academias estrangeiras removidas viram `null`. Aparência para o personagem e todas as pessoas, coerente com a
+ * família (pais compatíveis, irmãos e filhos herdando), e o guarda-roupa inicial. Nomes antigos não mudam.
+ * RNG próprio (`seed:v7`): o `rngState` do jogo não é alterado.
+ */
+function migrateV6toV7(save: AnySave): AnySave {
+  const s0 = save as unknown as GameState;
+  const geo = GAME_CONTENT.geo;
+  const rng = createRng(seedToState(`${s0.seed}:v7`));
+  const c0 = s0.character;
+  const home = geo.ufs.find((u) => u.cities.some((x) => x.name === c0.city));
+  const place = c0.country === 'Brasil' && home ? { uf: home.sigla, city: c0.city } : pickBirthplace(rng, geo);
+  const uf = ufOrDefault(geo, place.uf);
+  const appearance = randomAppearance(rng, uf, c0.sex);
+  if (c0.age < 16) appearance.facialHair = 'nenhuma';
+  let g: GameState = { ...s0, character: { ...c0, country: 'Brasil', uf: place.uf, city: place.city, appearance } };
+  if (place.city !== c0.city) g = appendLog(g, `Sua vida agora se passa em ${place.city} (${place.uf}).`);
+  if (g.fighter.gymId && !GYMS.some((x) => x.id === g.fighter.gymId)) {
+    g = appendLog({ ...g, fighter: { ...g.fighter, gymId: null } }, 'Sua antiga academia ficou para trás.');
+  }
+
+  const people = new Map(g.relationships.people.map((p) => [p.id, p] as const));
+  const set = (id: string, a: Appearance) => {
+    const p = people.get(id);
+    if (p) people.set(id, { ...p, appearance: p.age < 16 ? { ...a, facialHair: 'nenhuma' } : a });
+  };
+  const rels = g.relationships.relations;
+  const of = (type: string) => rels.filter((r) => r.type === type).map((r) => people.get(r.personId)).filter((p): p is Person => !!p);
+  // pais compatíveis com o personagem
+  const looks = parentsFor(rng, appearance);
+  const father = of('pai')[0];
+  const mother = of('mae')[0];
+  if (father) set(father.id, looks.father);
+  if (mother) set(mother.id, looks.mother);
+  for (const sib of of('irmao')) set(sib.id, inheritAppearance(rng, looks.father, looks.mother, sib.sex));
+  // filhos: do personagem com o cônjuge/ex (ou com um outro genitor sorteado pela UF)
+  const partner = of('conjuge')[0] ?? of('ex')[0] ?? of('parceiro')[0];
+  const partnerLook = partner ? randomAppearance(rng, uf, partner.sex) : randomAppearance(rng, uf, c0.sex === 'M' ? 'F' : 'M');
+  if (partner) set(partner.id, partnerLook);
+  for (const kid of of('filho')) {
+    const look = c0.sex === 'M' ? inheritAppearance(rng, appearance, partnerLook, kid.sex) : inheritAppearance(rng, partnerLook, appearance, kid.sex);
+    set(kid.id, look);
+  }
+  // demais pessoas: lutadores do elenco pela aparência derivada; o resto pela UF
+  for (const p of [...people.values()]) {
+    if (p.appearance) continue;
+    set(p.id, p.npcId ? npcAppearance(s0.seed, { id: p.npcId }, p.sex, GAME_CONTENT) : randomAppearance(rng, uf, p.sex));
+  }
+  g = { ...g, relationships: { ...g.relationships, people: g.relationships.people.map((p) => people.get(p.id)!) } };
+  const wardrobe = { ...defaultWardrobe(GAME_CONTENT), facialHair: appearance.facialHair };
+  return { ...(g as unknown as AnySave), wardrobe, rngState: s0.rngState, version: 7 };
 }

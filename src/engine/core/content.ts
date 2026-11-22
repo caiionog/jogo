@@ -4,6 +4,8 @@ import type { ClubId, SchoolStage } from './state';
 import type { FightingContent } from '../fighting/types';
 import type { RelationshipsContent } from '../relationships/types';
 import type { EconomyContent } from '../economy/types';
+import type { GeoContent } from '../geo/types';
+import type { OutfitDef } from '../character/appearance/outfits';
 import type { HealthContent } from '../health/types';
 import type { LegacyContent } from '../legacy/types';
 import type { AchievementDef } from '../meta/types';
@@ -56,17 +58,19 @@ export interface ClubDef {
 }
 
 export interface NamePools {
+  /**
+   * Nomes por década de nascimento e sexo (IBGE, Censo 2010): [nome, frequência]. Sem eles, usa `male`/`female`.
+   * Chave: década ('1930'…'2000').
+   */
+  byDecade?: Readonly<Record<'M' | 'F', Readonly<Record<string, readonly (readonly [string, number])[]>>>>;
+  /** Nomes por região e década (variação regional). */
+  byRegion?: Readonly<Record<string, Readonly<Record<'M' | 'F', Readonly<Record<string, readonly (readonly [string, number])[]>>>>>>;
   male: readonly string[];
   female: readonly string[];
   surnames: readonly string[];
   publicSchoolPrefixes: readonly string[];
   privateSchoolPrefixes: readonly string[];
   schoolNames: readonly string[];
-}
-
-export interface Location {
-  country: string;
-  cities: string[];
 }
 
 /**
@@ -76,7 +80,8 @@ export interface Location {
 export interface GameContent {
   actions: readonly ActionDef[];
   events: readonly GameEvent[];
-  locations: readonly Location[];
+  /** Geografia do Brasil: UFs, cidades, cor ou raça do Censo 2022 (Etapa 7). */
+  geo: GeoContent;
   clubs: readonly ClubDef[];
   names: NamePools;
   fighting: FightingContent;
@@ -85,4 +90,6 @@ export interface GameContent {
   health: HealthContent;
   legacy: LegacyContent;
   achievements: readonly AchievementDef[];
+  /** Catálogo de roupas do busto (Etapa 7). */
+  outfits: readonly OutfitDef[];
 }

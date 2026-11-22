@@ -53,7 +53,7 @@ export default function Life({ onShowObituary }: { onShowObituary?: () => void }
               {c.sex === 'M' ? '👦' : '👧'} {c.name}
             </h1>
             <p className="text-sm text-slate-400" data-testid="char-age">
-              {c.age} {c.age === 1 ? 'ano' : 'anos'} · {LIFE_STAGE_LABEL[lifeStage(c.age)]} · {c.city}, {c.country}
+              {c.age} {c.age === 1 ? 'ano' : 'anos'} · {LIFE_STAGE_LABEL[lifeStage(c.age)]} · {c.city} – {c.uf}
             </p>
           </div>
           <div className="text-right">

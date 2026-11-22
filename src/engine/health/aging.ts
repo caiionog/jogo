@@ -1,3 +1,4 @@
+import { cityMultOf } from '../geo';
 /** Envelhecimento, doenças da velhice, dano cerebral na velhice e hábitos de saúde (Etapa 6). */
 import type { GameContent } from '../core/content';
 import { createRng } from '../core/rng';
@@ -38,7 +39,7 @@ export function conditionRisk(state: GameState, def: ConditionDef): number {
 export function healthYear(state: GameState, rng: Rng, content: GameContent): GameState {
   let s = state;
   const age = s.character.age;
-  const city = content.economy.cityCost[s.character.city] ?? 1;
+  const city = cityMultOf(s, content);
   // doenças ativas
   for (const c of s.health.conditions) {
     const def = conditionDef(content, c.defId);
@@ -112,7 +113,7 @@ export type HealthActionId = 'checkup' | 'gym' | 'diet';
 export const HEALTH_ACTION_ENERGY = 1;
 
 export function healthActionCost(state: GameState, content: GameContent, id: HealthActionId): number {
-  return toMoney(content.health.actionCosts[id] * (content.economy.cityCost[state.character.city] ?? 1));
+  return toMoney(content.health.actionCosts[id] * cityMultOf(state, content));
 }
 
 export function healthActionBlock(state: GameState, content: GameContent, id: HealthActionId): 'busy' | 'too-young' | 'done' | 'no-energy' | 'no-money' | null {

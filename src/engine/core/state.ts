@@ -1,3 +1,5 @@
+import type { Appearance } from '../character/appearance/genes';
+import type { Wardrobe } from '../character/appearance/outfits';
 import type { HealthState } from '../health/types';
 import type { Dynasty, LifeEnding } from '../legacy/types';
 import type { ActiveFight, FighterProfile, World } from '../fighting/types';
@@ -25,7 +27,10 @@ export interface Character {
   sex: Sex;
   age: number;
   birthYear: number;
+  /** Sempre 'Brasil' desde a Etapa 7 (mantido por compatibilidade). */
   country: string;
+  /** Sigla da UF (Etapa 7). */
+  uf: string;
   city: string;
   /** Condição financeira da família (0–100). Influencia o tipo de escola. */
   familyWealth: number;
@@ -36,6 +41,8 @@ export interface Character {
   /** Biotipo: −2 (magro) … +2 (largo). Ajusta o IMC. */
   build: number;
   stats: Stats;
+  /** Genes de aparência, cor ou raça (IBGE) e barba (Etapa 7) — só aparência, nunca mecânica. */
+  appearance: Appearance;
   /** Preenchido na morte (Etapa 6). */
   death?: { age: number; year: number; cause: string };
 }
@@ -165,6 +172,8 @@ export interface GameState {
   dynasty: Dynasty;
   /** Fim da vida (obituário, nota, partilha) — preenchido na morte. */
   ending: LifeEnding | null;
+  /** Roupas desbloqueadas, roupa escolhida e barba (Etapa 7). */
+  wardrobe: Wardrobe;
 }
 
-export const STATE_VERSION = 6;
+export const STATE_VERSION = 7;

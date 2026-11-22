@@ -1,3 +1,4 @@
+import type { Appearance } from '../character/appearance/genes';
 /** Relacionamentos (Etapa 4). Tudo JSON puro. */
 import type { FlagValue, Sex } from '../core/state';
 
@@ -40,6 +41,8 @@ export interface Person {
   npcId?: string;
   /** Patrimônio (inteiro, R$) — pais, para herança e "pedir dinheiro" (Etapa 5). */
   wealth?: number;
+  /** Genes de aparência, cor ou raça e barba (Etapa 7) — só aparência, nunca mecânica. */
+  appearance?: Appearance;
   flags: Record<string, FlagValue>;
 }
 

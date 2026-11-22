@@ -1,3 +1,7 @@
+import type { Appearance } from '../character/appearance/genes';
+import { defaultWardrobe } from '../character/appearance/outfits';
+import { composeName } from '../character/names';
+import { ufDef } from '../geo';
 import { injuriesYear } from '../fighting/injuries';
 import { healthYear } from '../health/aging';
 import { deathCheck } from '../health/death';
@@ -48,6 +52,16 @@ export interface NewGameOptions {
   adultContent?: boolean;
   /** Interesse amoroso (padrão: ambos). */
   preference?: 'M' | 'F' | 'any';
+  /** Local de nascimento escolhido na criação (Etapa 7); sem ele, sorteado pelo peso populacional. */
+  uf?: string;
+  city?: string;
+  /**
+   * Sobrenomes digitados na criação (Etapa 7). Com eles, `name` é só o primeiro nome: o último sobrenome é o do pai;
+   * o penúltimo, o da mãe (com um só, o da mãe é sorteado). Nome final: "Nome Mãe Pai".
+   */
+  surnames?: string[];
+  /** Aparência escolhida na criação (Etapa 7); sem ela, sorteada pela cor ou raça da UF. */
+  appearance?: Appearance;
 }
 
 /** Executa `fn` com um RNG criado a partir do estado e grava o novo rngState. */
@@ -61,7 +75,14 @@ export function newGame(options: NewGameOptions, content: GameContent): GameStat
   const seed = String(options.seed);
   const rng = createRng(seedToState(seed));
   const birthYear = options.birthYear ?? rng.int(1995, 2010);
-  const character = createCharacter(rng, options, content.locations, birthYear);
+  let fullName = options.name;
+  if (options.surnames?.length) {
+    const sn = options.surnames.map((x) => x.trim()).filter(Boolean);
+    const father = sn[sn.length - 1] ?? rng.pick(content.names.surnames);
+    const mother = sn.length >= 2 ? sn[sn.length - 2] : rng.pick(content.names.surnames);
+    fullName = composeName(options.name.trim(), mother, father);
+  }
+  const character = createCharacter(rng, { ...options, name: fullName }, content.geo, birthYear, options.uf && options.city ? { uf: options.uf, city: options.city } : undefined, options.appearance);
   const talent = Math.round((0.65 + 0.7 * ((rng.next() + rng.next()) / 2)) * 100) / 100;
   const state: GameState = {
     version: STATE_VERSION,
@@ -87,6 +108,7 @@ export function newGame(options: NewGameOptions, content: GameContent): GameStat
     feats: {},
     dynasty: emptyDynasty(character.name.split(' ').slice(-1)[0] ?? character.name, birthYear),
     ending: null,
+    wardrobe: { ...defaultWardrobe(content), facialHair: options.appearance?.facialHair ?? 'nenhuma' },
   };
   const withFamily = generateFamily(state, rng, content, 0);
   state.relationships = withFamily.relationships;
@@ -95,7 +117,7 @@ export function newGame(options: NewGameOptions, content: GameContent): GameStat
   const pronoun = character.sex === 'M' ? 'um menino' : 'uma menina';
   return appendLog(
     { ...state, energy: { current: max, max } },
-    `Você nasceu ${pronoun} em ${character.city}, ${character.country}. Seu nome é ${character.name}.`,
+    `Você nasceu ${pronoun} em ${character.city} (${character.uf}). Seu nome é ${character.name}.`,
   );
 }
 
@@ -228,11 +250,12 @@ function naturalAging(state: GameState, rng: Rng): GameState {
 
 /** Variáveis de texto sorteadas para um evento ({colega}, {professor}, {clube}). */
 function makeEventVars(state: GameState, rng: Rng, content: GameContent): EventVars {
-  const fighterName = randomPersonName(rng, content.names, state.character.sex);
+  const regiao = ufDef(content.geo, state.character.uf)?.regiao;
+  const fighterName = randomPersonName(rng, content.names, state.character.sex, state.year - state.character.age, regiao);
   const fighterNick = rng.pick(content.fighting.nicknames);
   const [first, ...rest] = fighterName.split(' ');
   const vars: EventVars = {
-    colega: randomPersonName(rng, content.names),
+    colega: randomPersonName(rng, content.names, undefined, state.year - state.character.age, regiao),
     professor: randomTeacherName(rng, content.names),
     lutador: [first, `'${fighterNick}'`, ...rest].join(' '),
     lutador_nome: fighterName,

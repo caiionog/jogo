@@ -1,3 +1,4 @@
+import { cityMultOf } from '../geo';
 /** Custo de vida, moradia, mesada e dívida (cheque especial, falência). */
 import type { GameContent } from '../core/content';
 import type { GameState } from '../core/state';
@@ -18,7 +19,7 @@ export const BANKRUPTCY_YEARS = 3;
 export const BANKRUPTCY_MIN_DEBT = 25000;
 
 export function cityCost(state: GameState, content: GameContent): number {
-  return content.economy.cityCost[state.character.city] ?? 1;
+  return cityMultOf(state, content);
 }
 
 export function livingCost(state: GameState, content: GameContent): { standard: number; rent: number } {

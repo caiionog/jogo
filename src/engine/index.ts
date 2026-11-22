@@ -10,3 +10,4 @@ export * from './assets';
 export * from './health';
 export * from './legacy';
 export * from './meta';
+export * from './geo';

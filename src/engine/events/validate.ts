@@ -126,7 +126,7 @@ export function validateContent(content: GameContent): string[] {
     if (seenGyms.has(g.id)) errors.push(`id de academia duplicado: ${g.id}`);
     seenGyms.add(g.id);
     if (g.coach < 0 || g.coach > 100) errors.push(`academia ${g.id}: coach fora de 0–100`);
-    if (g.city && !content.locations.some((l) => l.cities.includes(g.city as string))) errors.push(`academia ${g.id}: cidade inexistente "${g.city}"`);
+    if (g.city && !content.geo.ufs.some((u) => u.cities.some((c) => c.name === g.city))) errors.push(`academia ${g.id}: cidade inexistente "${g.city}"`);
   }
   for (const k of FIGHT_TEXT_KEYS) if (!fc.text[k]?.length) errors.push(`fightText: sem textos para "${k}"`);
   for (const w of ['standing', 'clinch', 'ground'] as const) if (!fc.text.strikes[w].length) errors.push(`fightText: sem golpes "${w}"`);
@@ -171,6 +171,18 @@ export function validateContent(content: GameContent): string[] {
   if (traitIds.size !== content.relationships.traits.length) errors.push('ids de traço duplicados');
   for (const t of content.relationships.traits) for (const x of [...(t.likes ?? []), ...(t.dislikes ?? [])]) if (!traitIds.has(x)) errors.push(`traço ${t.id}: referência inexistente "${x}"`);
   for (const h of Object.values(content.relationships.hooks)) if (h && !allEventIds.has(h)) errors.push(`hook: evento inexistente "${h}"`);
+  // geografia (Etapa 7)
+  const siglas = new Set<string>();
+  for (const u of content.geo.ufs) {
+    if (siglas.has(u.sigla)) errors.push(`UF duplicada: ${u.sigla}`);
+    siglas.add(u.sigla);
+    const sum = Object.values(u.corRaca).reduce((t, v) => t + v, 0);
+    if (Math.abs(sum - 100) > 0.2) errors.push(`UF ${u.sigla}: cor ou raça soma ${sum}`);
+    if (u.cities.length < 5) errors.push(`UF ${u.sigla}: menos de 5 cidades`);
+    if (!u.cities.some((c) => c.name === u.capital)) errors.push(`UF ${u.sigla}: capital fora da lista de cidades`);
+    if (new Set(u.cities.map((c) => c.name)).size !== u.cities.length) errors.push(`UF ${u.sigla}: cidades duplicadas`);
+    for (const c of u.cities) if (!(c.populacao > 0) || !(c.custo >= 0.5 && c.custo <= 2)) errors.push(`cidade ${c.name}/${u.sigla}: dados inválidos`);
+  }
   // economia
   const ec = content.economy;
   const uniq = (label: string, ids: string[]) => {
@@ -194,7 +206,6 @@ export function validateContent(content: GameContent): string[] {
     if (b.upTo !== null && b.upTo <= last) errors.push('faixas de imposto fora de ordem');
     if (b.upTo !== null) last = b.upTo;
   });
-  for (const city of Object.keys(ec.cityCost)) if (!content.locations.some((l) => l.cities.includes(city))) errors.push(`custo de cidade inexistente: ${city}`);
   for (const h of Object.values(ec.hooks)) if (h && !allEventIds.has(h)) errors.push(`hook: evento inexistente "${h}"`);
   const jobIds = new Set(ec.jobs.map((j) => j.id));
   const bizIds = new Set(ec.businesses.map((b) => b.id));

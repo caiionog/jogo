@@ -1,3 +1,4 @@
+import { cityMultOf } from '../geo';
 /** Empregos: requisitos, contratação, salário por nível, promoção, demissão e energia reservada. */
 import type { GameContent } from '../core/content';
 import { createRng } from '../core/rng';
@@ -35,10 +36,6 @@ export function salaryOf(def: JobDef, level: number, cityMult = 1): number {
   return toMoney((lo + ((hi - lo) * (Math.max(1, Math.min(5, level)) - 1)) / 4) * cityMult);
 }
 
-/** Multiplicador da cidade do personagem (custo de vida e salários). */
-export function cityMultOf(state: GameState, content: GameContent): number {
-  return content.economy.cityCost[state.character.city] ?? 1;
-}
 
 export type JobBlockReason = 'dead' | 'busy' | 'age' | 'education' | 'stats' | 'reputation' | 'fight' | 'current' | 'no-energy';
 
