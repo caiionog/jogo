@@ -1,3 +1,5 @@
+import type { ActiveFight, FighterProfile, World } from '../fighting/types';
+
 /** Tipos do estado do jogo. Tudo aqui deve ser JSON puro (sem classes, Date, Map, funções). */
 
 export const STAT_KEYS = [
@@ -23,6 +25,12 @@ export interface Character {
   city: string;
   /** Condição financeira da família (0–100). Influencia o tipo de escola. */
   familyWealth: number;
+  heightCm: number;
+  weightKg: number;
+  /** Altura adulta-alvo (sorteada ao nascer). */
+  adultHeightCm: number;
+  /** Biotipo: −2 (magro) … +2 (largo). Ajusta o IMC. */
+  build: number;
   stats: Stats;
 }
 
@@ -130,9 +138,13 @@ export interface GameState {
   /** Eventos encadeados agendados para anos futuros. */
   scheduledEvents: ScheduledEvent[];
   education: Education;
+  fighter: FighterProfile;
+  world: World;
+  /** Luta em andamento (máquina de estados) — bloqueia o resto do jogo. */
+  activeFight: ActiveFight | null;
   /** Histórico ano a ano. O último item é o ano atual. */
   log: LogYear[];
   alive: boolean;
 }
 
-export const STATE_VERSION = 2;
+export const STATE_VERSION = 3;

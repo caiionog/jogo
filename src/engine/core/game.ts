@@ -20,6 +20,9 @@ import {
 } from '../lifeStages/school';
 import { autoEvents, conditionsMet, selectEvents } from '../events/select';
 import type { GameEvent } from '../events/types';
+import { baseSkills, emptyWorld, newFighterProfile } from '../fighting/profile';
+import { updateBody } from '../fighting/body';
+import { endFightingYear, startFightingYear } from '../fighting/career';
 
 export interface NewGameOptions {
   seed: string | number;
@@ -41,6 +44,7 @@ export function newGame(options: NewGameOptions, content: GameContent): GameStat
   const rng = createRng(seedToState(seed));
   const birthYear = options.birthYear ?? rng.int(1995, 2010);
   const character = createCharacter(rng, options, content.locations, birthYear);
+  const talent = Math.round((0.65 + 0.7 * ((rng.next() + rng.next()) / 2)) * 100) / 100;
   const state: GameState = {
     version: STATE_VERSION,
     seed,
@@ -54,6 +58,9 @@ export function newGame(options: NewGameOptions, content: GameContent): GameStat
     pendingEvents: [],
     scheduledEvents: [],
     education: emptyEducation(),
+    fighter: newFighterProfile({ ...baseSkills(), chin: rng.int(40, 75) }, talent),
+    world: emptyWorld(),
+    activeFight: null,
     log: [],
     alive: true,
   };
@@ -82,7 +89,7 @@ export type ActionBlockReason =
 export function actionBlockReason(state: GameState, action: ActionDef | undefined): ActionBlockReason | null {
   if (!action) return 'unknown';
   if (!state.alive) return 'dead';
-  if (state.pendingEvents.length > 0) return 'pending-event';
+  if (state.pendingEvents.length > 0 || state.activeFight) return 'pending-event';
   if (state.character.age < action.minAge) return 'too-young';
   if (action.maxAge !== undefined && state.character.age > action.maxAge) return 'too-old';
   const req = action.requires;
@@ -145,7 +152,7 @@ export function joinClub(state: GameState, clubId: string, content: GameContent)
 
 export function leaveClub(state: GameState, content: GameContent): GameState {
   const cur = state.education.current;
-  if (!state.alive || !cur?.club || state.pendingEvents.length > 0) return state;
+  if (!state.alive || !cur?.club || state.pendingEvents.length > 0 || state.activeFight) return state;
   if (state.energy.current < CLUB_ENERGY_COST) return state;
   const club = content.clubs.find((c) => c.id === cur.club);
   const next: GameState = {
@@ -173,6 +180,8 @@ function naturalAging(state: GameState, rng: Rng): GameState {
     delta.fitness = -rng.int(0, 2);
     delta.strength = -rng.int(0, 1);
   }
+  // o corpo se recupera de pancadas e lesões (até os 45)
+  if (age < 45 && stats.health < 90) delta.health = Math.round((90 - stats.health) * 0.35);
   if (age >= 50) delta.health = -rng.int(0, 3);
   if (age >= 70) delta.health = -rng.int(1, 5);
   // felicidade tende lentamente a 60
@@ -193,9 +202,15 @@ function deathCheck(state: GameState, rng: Rng): boolean {
 
 /** Variáveis de texto sorteadas para um evento ({colega}, {professor}, {clube}). */
 function makeEventVars(state: GameState, rng: Rng, content: GameContent): EventVars {
+  const fighterName = randomPersonName(rng, content.names, state.character.sex);
+  const fighterNick = rng.pick(content.fighting.nicknames);
+  const [first, ...rest] = fighterName.split(' ');
   const vars: EventVars = {
     colega: randomPersonName(rng, content.names),
     professor: randomTeacherName(rng, content.names),
+    lutador: [first, `'${fighterNick}'`, ...rest].join(' '),
+    lutador_nome: fighterName,
+    lutador_apelido: fighterNick,
   };
   const clubId = state.education.current?.club;
   const club = clubId ? content.clubs.find((c) => c.id === clubId) : undefined;
@@ -236,13 +251,13 @@ function pickYearEvents(state: GameState, content: GameContent, rng: Rng, target
 
   for (const s of due) {
     const ev = byId(s.eventId);
-    if (ev && !chosen.has(ev.id) && conditionsMet(state, ev)) add(ev, 'followUp', s.vars);
+    if (ev && !chosen.has(ev.id) && conditionsMet(state, ev, content)) add(ev, 'followUp', s.vars);
   }
-  for (const ev of autoEvents(state, content.events)) if (!chosen.has(ev.id)) add(ev, 'auto');
+  for (const ev of autoEvents(state, content.events, content)) if (!chosen.has(ev.id)) add(ev, 'auto');
 
   const randomCount = Math.max(0, target - pending.length);
   const pool = content.events.filter((e) => !chosen.has(e.id));
-  for (const ev of selectEvents(state, pool, randomCount, rng)) add(ev, 'random');
+  for (const ev of selectEvents(state, pool, randomCount, rng, content)) add(ev, 'random');
 
   return {
     ...state,
@@ -262,17 +277,19 @@ export function advanceYear(
   content: GameContent,
   options: AdvanceYearOptions = {},
 ): GameState {
-  if (!state.alive || state.pendingEvents.length > 0) return state;
+  if (!state.alive || state.pendingEvents.length > 0 || state.activeFight) return state;
   const twoEventChance = options.twoEventChance ?? 0.35;
 
   return withRng(state, (rng, s) => {
     let next = endSchoolYear(s, rng, content);
+    next = endFightingYear(next, content);
     next = {
       ...next,
       year: next.year + 1,
       character: { ...next.character, age: next.character.age + 1 },
     };
     next = naturalAging(next, rng);
+    next = updateBody(next);
     next = appendLog(next, `Você fez ${next.character.age} ${next.character.age === 1 ? 'ano' : 'anos'}.`);
 
     if (deathCheck(next, rng)) {
@@ -283,6 +300,7 @@ export function advanceYear(
     next = startSchoolYear(next, rng, content);
     const max = maxEnergy(next.character.age, next.character.stats.health);
     next = { ...next, energy: { current: max, max } };
+    next = startFightingYear(next, rng, content);
 
     const target = rng.chance(twoEventChance) ? 2 : 1;
     return pickYearEvents(next, content, rng, target);

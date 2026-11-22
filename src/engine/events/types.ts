@@ -1,5 +1,6 @@
 import type { Effects } from '../core/effects';
 import type { ClubId, SchoolStage, SchoolType, Sex, StatKey } from '../core/state';
+import type { Tier } from '../fighting/types';
 
 export interface StatRange {
   min?: number;
@@ -30,6 +31,35 @@ export interface EventConditions {
   club?: ClubId[] | 'any' | 'none';
   /** Resultado do último fim de ano letivo (basta uma tag bater). */
   schoolResult?: SchoolResultTag[];
+
+  // --- carreira de luta ---
+  fighting?: FightingConditions;
+}
+
+export interface FightingConditions {
+  /** Organização do contrato atual. */
+  orgs?: string[];
+  /** Nível da organização do contrato ('none' = sem contrato). */
+  tiers?: (Tier | 'none')[];
+  contracted?: boolean;
+  /** Está no ranking (ou é campeão) da categoria atual. */
+  ranked?: boolean;
+  /** Posição máxima no ranking (1 = #1; o campeão conta como 0). */
+  rankMax?: number;
+  champion?: boolean;
+  /** Faixa de jiu-jitsu: 0 branca … 4 preta. */
+  belt?: StatRange;
+  amateurWins?: StatRange;
+  proWins?: StatRange;
+  reputation?: StatRange;
+  hasGym?: boolean;
+  injured?: boolean;
+  suspended?: boolean;
+  /** Atende aos requisitos e pode receber proposta desta organização. */
+  orgEligible?: string;
+  beltPromotionReady?: boolean;
+  /** Já lutou alguma vez (qualquer cartel). */
+  hasFought?: boolean;
 }
 
 export interface EventRisk {

@@ -4,6 +4,8 @@ import type { ClubId, EventSource, EventVars, FlagValue, GameState, SchoolType, 
 import { addStats, clamp } from './stats';
 import { joinClubState, transferSchool } from '../lifeStages/school';
 import { withPreposition } from '../character/names';
+import { applyFighterEffects } from '../fighting/career';
+import type { FighterEffects } from '../fighting/career';
 
 /** Agenda um evento de continuação. delayYears = 0 → pendente imediatamente. */
 export interface FollowUp {
@@ -34,6 +36,8 @@ export interface Effects {
   setFlags?: Record<string, FlagValue>;
   clearFlags?: string[];
   school?: SchoolEffects;
+  /** Efeitos de carreira de luta (habilidades, reputação, academia, contrato, lesão, ofertas...). */
+  fighter?: FighterEffects;
   followUps?: FollowUp[];
 }
 
@@ -65,8 +69,27 @@ export function applyEffects(state: GameState, effects: Effects | undefined, ctx
       : state.character,
   };
   if (effects.school) next = applySchoolEffects(next, effects.school, ctx);
+  if (effects.fighter) {
+    const fx = effects.fighter;
+    const needsCtx = fx.joinGym || fx.signWith || fx.injury || fx.offer;
+    if (needsCtx && !ctx) throw new Error('applyEffects: efeitos de luta exigem EffectContext');
+    if (ctx) next = applyFighterEffects(next, fx, ctx.rng, ctx.content, ctx.vars);
+    else next = { ...next, fighter: applyFighterEffectsNoCtx(next, fx) };
+  }
   if (effects.followUps?.length) next = applyFollowUps(next, effects.followUps, ctx);
   return next;
+}
+
+/** Efeitos de luta que não precisam de RNG/conteúdo (ex.: bônus anual de clube). */
+function applyFighterEffectsNoCtx(state: GameState, fx: FighterEffects): GameState['fighter'] {
+  let f = state.fighter;
+  if (fx.skills) {
+    const skills = { ...f.skills };
+    for (const [k, v] of Object.entries(fx.skills) as [keyof typeof skills, number][]) skills[k] = Math.min(100, Math.max(0, skills[k] + v));
+    f = { ...f, skills };
+  }
+  if (fx.reputation) f = { ...f, reputation: Math.min(100, Math.max(0, f.reputation + fx.reputation)) };
+  return f;
 }
 
 function applySchoolEffects(state: GameState, fx: SchoolEffects, ctx?: EffectContext): GameState {

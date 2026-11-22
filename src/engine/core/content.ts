@@ -1,6 +1,7 @@
 import type { Effects } from './effects';
 import type { GameEvent } from '../events/types';
 import type { ClubId, SchoolStage } from './state';
+import type { FightingContent } from '../fighting/types';
 
 /** Risco de uma ação: efeitos ADICIONAIS aplicados com probabilidade `chance`. */
 export interface ActionRisk {
@@ -73,4 +74,5 @@ export interface GameContent {
   locations: readonly Location[];
   clubs: readonly ClubDef[];
   names: NamePools;
+  fighting: FightingContent;
 }

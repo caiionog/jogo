@@ -265,7 +265,7 @@ export type ClubBlockReason = 'unknown' | 'not-enrolled' | 'too-young' | 'alread
 export function clubBlockReason(state: GameState, club: ClubDef | undefined): ClubBlockReason | null {
   if (!club) return 'unknown';
   if (!state.alive) return 'dead';
-  if (state.pendingEvents.length > 0) return 'pending-event';
+  if (state.pendingEvents.length > 0 || state.activeFight) return 'pending-event';
   const cur = state.education.current;
   if (!cur) return 'not-enrolled';
   if (!stageAtLeast(stageOfGrade(cur.grade), club.minStage)) return 'too-young';

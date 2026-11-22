@@ -1,0 +1,1117 @@
+{
+ "2": {
+  "version": 2,
+  "seed": "fixture-v2",
+  "rngState": 734337262,
+  "year": 2002,
+  "character": {
+   "name": "Kauã Veterano",
+   "sex": "M",
+   "age": 2,
+   "birthYear": 2000,
+   "country": "México",
+   "city": "Tijuana",
+   "familyWealth": 39,
+   "stats": {
+    "health": 90,
+    "happiness": 92,
+    "intelligence": 49,
+    "looks": 28,
+    "strength": 21,
+    "fitness": 25
+   }
+  },
+  "money": 0,
+  "energy": {
+   "current": 0,
+   "max": 0
+  },
+  "flags": {},
+  "firedEvents": [],
+  "pendingEvents": [],
+  "scheduledEvents": [],
+  "education": {
+   "current": null,
+   "history": [],
+   "lastResult": null,
+   "repeats": 0,
+   "expulsions": 0,
+   "graduated": false
+  },
+  "log": [
+   {
+    "age": 0,
+    "year": 2000,
+    "entries": [
+     "Você nasceu um menino em Tijuana, México. Seu nome é Kauã Veterano."
+    ]
+   },
+   {
+    "age": 1,
+    "year": 2001,
+    "entries": [
+     "Você fez 1 ano."
+    ]
+   },
+   {
+    "age": 2,
+    "year": 2002,
+    "entries": [
+     "Você fez 2 anos."
+    ]
+   }
+  ],
+  "alive": true
+ },
+ "9": {
+  "version": 2,
+  "seed": "fixture-v2",
+  "rngState": 2422868081,
+  "year": 2009,
+  "character": {
+   "name": "Kauã Veterano",
+   "sex": "M",
+   "age": 9,
+   "birthYear": 2000,
+   "country": "México",
+   "city": "Tijuana",
+   "familyWealth": 39,
+   "stats": {
+    "health": 94,
+    "happiness": 71,
+    "intelligence": 65,
+    "looks": 28,
+    "strength": 46,
+    "fitness": 52
+   }
+  },
+  "money": 20,
+  "energy": {
+   "current": 1,
+   "max": 6
+  },
+  "flags": {
+   "brigou_na_escola": true,
+   "interesse_luta": true,
+   "gostaDeLuta": true,
+   "artesMarciais": "jiujitsu"
+  },
+  "firedEvents": [
+   "child_flu",
+   "pre_first_day",
+   "child_stray_dog",
+   "child_playground_fight",
+   "child_playground_fight",
+   "f1_strict_teacher",
+   "child_found_money"
+  ],
+  "pendingEvents": [],
+  "scheduledEvents": [],
+  "education": {
+   "current": {
+    "school": {
+     "name": "Escola Municipal Vale das Palmeiras",
+     "type": "publica"
+    },
+    "grade": 6,
+    "average": 64,
+    "discipline": 74,
+    "absences": 0,
+    "popularity": 63,
+    "club": "judo",
+    "suspensions": 0
+   },
+   "history": [
+    {
+     "age": 3,
+     "year": 2003,
+     "school": "Escola Municipal Vale das Palmeiras",
+     "gradeLabel": "Pré I",
+     "final": 57,
+     "passed": true
+    },
+    {
+     "age": 4,
+     "year": 2004,
+     "school": "Escola Municipal Vale das Palmeiras",
+     "gradeLabel": "Pré II",
+     "final": 53,
+     "passed": true
+    },
+    {
+     "age": 5,
+     "year": 2005,
+     "school": "Escola Municipal Vale das Palmeiras",
+     "gradeLabel": "Pré III",
+     "final": 59,
+     "passed": true
+    },
+    {
+     "age": 6,
+     "year": 2006,
+     "school": "Escola Municipal Vale das Palmeiras",
+     "gradeLabel": "1º ano",
+     "final": 66,
+     "passed": true
+    },
+    {
+     "age": 7,
+     "year": 2007,
+     "school": "Escola Municipal Vale das Palmeiras",
+     "gradeLabel": "2º ano",
+     "final": 54,
+     "passed": true
+    },
+    {
+     "age": 8,
+     "year": 2008,
+     "school": "Escola Municipal Vale das Palmeiras",
+     "gradeLabel": "3º ano",
+     "final": 70,
+     "passed": true
+    }
+   ],
+   "lastResult": {
+    "final": 70,
+    "passed": true,
+    "honors": false,
+    "graduated": false,
+    "expelled": false
+   },
+   "repeats": 0,
+   "expulsions": 0,
+   "graduated": false
+  },
+  "log": [
+   {
+    "age": 0,
+    "year": 2000,
+    "entries": [
+     "Você nasceu um menino em Tijuana, México. Seu nome é Kauã Veterano."
+    ]
+   },
+   {
+    "age": 1,
+    "year": 2001,
+    "entries": [
+     "Você fez 1 ano."
+    ]
+   },
+   {
+    "age": 2,
+    "year": 2002,
+    "entries": [
+     "Você fez 2 anos."
+    ]
+   },
+   {
+    "age": 3,
+    "year": 2003,
+    "entries": [
+     "Você fez 3 anos.",
+     "Você foi matriculado no Pré I da Escola Municipal Vale das Palmeiras (escola pública).",
+     "Você pegou uma gripe forte. Você descansou e se recuperou em poucos dias.",
+     "Você treinou socos num travesseiro velho.",
+     "Você puxou papo com colegas novos no intervalo.",
+     "Você concluiu o Pré I."
+    ]
+   },
+   {
+    "age": 4,
+    "year": 2004,
+    "entries": [
+     "Você fez 4 anos.",
+     "Primeiro dia na Escola Municipal Vale das Palmeiras. Sua mãe está indo embora e você sente um frio na barriga. Você chorou a manhã inteira, mas no fim do dia já estava rindo.",
+     "Você treinou socos num travesseiro velho.",
+     "Você dividiu o lanche e fez novos amigos.",
+     "Você concluiu o Pré II."
+    ]
+   },
+   {
+    "age": 5,
+    "year": 2005,
+    "entries": [
+     "Você fez 5 anos.",
+     "Um cachorro de rua começou a seguir você até em casa. Seus pais não deixaram ficar com o cachorro. Você chorou a noite toda.",
+     "Você treinou até ficar sem fôlego.",
+     "Você dividiu o lanche e fez novos amigos.",
+     "Você concluiu o Pré III."
+    ]
+   },
+   {
+    "age": 6,
+    "year": 2006,
+    "entries": [
+     "Você fez 6 anos.",
+     "Um colega empurrou você no recreio na frente de todo mundo. Você empurrou de volta e o colega recuou. A turma ficou impressionada.",
+     "Você fez uma pilha de exercícios para a prova.",
+     "Você passou a tarde correndo e fazendo flexões.",
+     "Você se enturmou com a galera da sala.",
+     "Você passou para o 2º ano com média 66."
+    ]
+   },
+   {
+    "age": 7,
+    "year": 2007,
+    "entries": [
+     "Você fez 7 anos.",
+     "Um colega empurrou você no recreio na frente de todo mundo. Você revidou, mas levou a pior e voltou para casa com o olho roxo.",
+     "Você entrou no time de judô da escola.",
+     "Você fez uma pilha de exercícios para a prova.",
+     "Você treinou até ficar sem fôlego.",
+     "Você dividiu o lanche e fez novos amigos.",
+     "Você passou para o 3º ano com média 54."
+    ]
+   },
+   {
+    "age": 8,
+    "year": 2008,
+    "entries": [
+     "Você fez 8 anos.",
+     "Profª Natália Pacheco é conhecido como o terror da escola: lição todo dia e prova surpresa toda semana. Foi puxado, mas você nunca aprendeu tanto.",
+     "Você revisou toda a matéria antes das provas.",
+     "Você treinou socos num travesseiro velho.",
+     "Você dividiu o lanche e fez novos amigos.",
+     "Você passou para o 4º ano com média 70."
+    ]
+   },
+   {
+    "age": 9,
+    "year": 2009,
+    "entries": [
+     "Você fez 9 anos.",
+     "Você encontrou uma nota de 20 no chão da praça. Você guardou o dinheiro no seu cofrinho.",
+     "Você revisou toda a matéria antes das provas.",
+     "Você treinou socos num travesseiro velho.",
+     "Você se enturmou com a galera da sala."
+    ]
+   }
+  ],
+  "alive": true
+ },
+ "16": {
+  "version": 2,
+  "seed": "fixture-v2",
+  "rngState": 1520115023,
+  "year": 2016,
+  "character": {
+   "name": "Kauã Veterano",
+   "sex": "M",
+   "age": 16,
+   "birthYear": 2000,
+   "country": "México",
+   "city": "Tijuana",
+   "familyWealth": 39,
+   "stats": {
+    "health": 100,
+    "happiness": 95,
+    "intelligence": 93,
+    "looks": 28,
+    "strength": 92,
+    "fitness": 98
+   }
+  },
+  "money": 20,
+  "energy": {
+   "current": 2,
+   "max": 7
+  },
+  "flags": {
+   "brigou_na_escola": true,
+   "interesse_luta": true,
+   "gostaDeLuta": true,
+   "artesMarciais": "jiujitsu",
+   "sonhaSerLutador": true,
+   "medalha_interescolar": true,
+   "premio_ciencias": true
+  },
+  "firedEvents": [
+   "child_flu",
+   "pre_first_day",
+   "child_stray_dog",
+   "child_playground_fight",
+   "child_playground_fight",
+   "f1_strict_teacher",
+   "child_found_money",
+   "child_fight_on_tv",
+   "f2_wrestling_invite",
+   "child_science_fair",
+   "school_interschool_champ",
+   "f2_classmate_party",
+   "f2_classmate_party",
+   "f2_math_olympiad",
+   "em_science_fair",
+   "em_science_fair_regional",
+   "f2_cheating"
+  ],
+  "pendingEvents": [],
+  "scheduledEvents": [],
+  "education": {
+   "current": {
+    "school": {
+     "name": "Escola Municipal Vale das Palmeiras",
+     "type": "publica"
+    },
+    "grade": 13,
+    "average": 85,
+    "discipline": 83,
+    "absences": 0,
+    "popularity": 100,
+    "club": "wrestling",
+    "suspensions": 0
+   },
+   "history": [
+    {
+     "age": 3,
+     "year": 2003,
+     "school": "Escola Municipal Vale das Palmeiras",
+     "gradeLabel": "Pré I",
+     "final": 57,
+     "passed": true
+    },
+    {
+     "age": 4,
+     "year": 2004,
+     "school": "Escola Municipal Vale das Palmeiras",
+     "gradeLabel": "Pré II",
+     "final": 53,
+     "passed": true
+    },
+    {
+     "age": 5,
+     "year": 2005,
+     "school": "Escola Municipal Vale das Palmeiras",
+     "gradeLabel": "Pré III",
+     "final": 59,
+     "passed": true
+    },
+    {
+     "age": 6,
+     "year": 2006,
+     "school": "Escola Municipal Vale das Palmeiras",
+     "gradeLabel": "1º ano",
+     "final": 66,
+     "passed": true
+    },
+    {
+     "age": 7,
+     "year": 2007,
+     "school": "Escola Municipal Vale das Palmeiras",
+     "gradeLabel": "2º ano",
+     "final": 54,
+     "passed": true
+    },
+    {
+     "age": 8,
+     "year": 2008,
+     "school": "Escola Municipal Vale das Palmeiras",
+     "gradeLabel": "3º ano",
+     "final": 70,
+     "passed": true
+    },
+    {
+     "age": 9,
+     "year": 2009,
+     "school": "Escola Municipal Vale das Palmeiras",
+     "gradeLabel": "4º ano",
+     "final": 72,
+     "passed": true
+    },
+    {
+     "age": 10,
+     "year": 2010,
+     "school": "Escola Municipal Vale das Palmeiras",
+     "gradeLabel": "5º ano",
+     "final": 65,
+     "passed": true
+    },
+    {
+     "age": 11,
+     "year": 2011,
+     "school": "Escola Municipal Vale das Palmeiras",
+     "gradeLabel": "6º ano",
+     "final": 74,
+     "passed": true
+    },
+    {
+     "age": 12,
+     "year": 2012,
+     "school": "Escola Municipal Vale das Palmeiras",
+     "gradeLabel": "7º ano",
+     "final": 67,
+     "passed": true
+    },
+    {
+     "age": 13,
+     "year": 2013,
+     "school": "Escola Municipal Vale das Palmeiras",
+     "gradeLabel": "8º ano",
+     "final": 75,
+     "passed": true
+    },
+    {
+     "age": 14,
+     "year": 2014,
+     "school": "Escola Municipal Vale das Palmeiras",
+     "gradeLabel": "9º ano",
+     "final": 75,
+     "passed": true
+    },
+    {
+     "age": 15,
+     "year": 2015,
+     "school": "Escola Municipal Vale das Palmeiras",
+     "gradeLabel": "1º ano do Ensino Médio",
+     "final": 85,
+     "passed": true
+    }
+   ],
+   "lastResult": {
+    "final": 85,
+    "passed": true,
+    "honors": false,
+    "graduated": false,
+    "expelled": false
+   },
+   "repeats": 0,
+   "expulsions": 0,
+   "graduated": false
+  },
+  "log": [
+   {
+    "age": 0,
+    "year": 2000,
+    "entries": [
+     "Você nasceu um menino em Tijuana, México. Seu nome é Kauã Veterano."
+    ]
+   },
+   {
+    "age": 1,
+    "year": 2001,
+    "entries": [
+     "Você fez 1 ano."
+    ]
+   },
+   {
+    "age": 2,
+    "year": 2002,
+    "entries": [
+     "Você fez 2 anos."
+    ]
+   },
+   {
+    "age": 3,
+    "year": 2003,
+    "entries": [
+     "Você fez 3 anos.",
+     "Você foi matriculado no Pré I da Escola Municipal Vale das Palmeiras (escola pública).",
+     "Você pegou uma gripe forte. Você descansou e se recuperou em poucos dias.",
+     "Você treinou socos num travesseiro velho.",
+     "Você puxou papo com colegas novos no intervalo.",
+     "Você concluiu o Pré I."
+    ]
+   },
+   {
+    "age": 4,
+    "year": 2004,
+    "entries": [
+     "Você fez 4 anos.",
+     "Primeiro dia na Escola Municipal Vale das Palmeiras. Sua mãe está indo embora e você sente um frio na barriga. Você chorou a manhã inteira, mas no fim do dia já estava rindo.",
+     "Você treinou socos num travesseiro velho.",
+     "Você dividiu o lanche e fez novos amigos.",
+     "Você concluiu o Pré II."
+    ]
+   },
+   {
+    "age": 5,
+    "year": 2005,
+    "entries": [
+     "Você fez 5 anos.",
+     "Um cachorro de rua começou a seguir você até em casa. Seus pais não deixaram ficar com o cachorro. Você chorou a noite toda.",
+     "Você treinou até ficar sem fôlego.",
+     "Você dividiu o lanche e fez novos amigos.",
+     "Você concluiu o Pré III."
+    ]
+   },
+   {
+    "age": 6,
+    "year": 2006,
+    "entries": [
+     "Você fez 6 anos.",
+     "Um colega empurrou você no recreio na frente de todo mundo. Você empurrou de volta e o colega recuou. A turma ficou impressionada.",
+     "Você fez uma pilha de exercícios para a prova.",
+     "Você passou a tarde correndo e fazendo flexões.",
+     "Você se enturmou com a galera da sala.",
+     "Você passou para o 2º ano com média 66."
+    ]
+   },
+   {
+    "age": 7,
+    "year": 2007,
+    "entries": [
+     "Você fez 7 anos.",
+     "Um colega empurrou você no recreio na frente de todo mundo. Você revidou, mas levou a pior e voltou para casa com o olho roxo.",
+     "Você entrou no time de judô da escola.",
+     "Você fez uma pilha de exercícios para a prova.",
+     "Você treinou até ficar sem fôlego.",
+     "Você dividiu o lanche e fez novos amigos.",
+     "Você passou para o 3º ano com média 54."
+    ]
+   },
+   {
+    "age": 8,
+    "year": 2008,
+    "entries": [
+     "Você fez 8 anos.",
+     "Profª Natália Pacheco é conhecido como o terror da escola: lição todo dia e prova surpresa toda semana. Foi puxado, mas você nunca aprendeu tanto.",
+     "Você revisou toda a matéria antes das provas.",
+     "Você treinou socos num travesseiro velho.",
+     "Você dividiu o lanche e fez novos amigos.",
+     "Você passou para o 4º ano com média 70."
+    ]
+   },
+   {
+    "age": 9,
+    "year": 2009,
+    "entries": [
+     "Você fez 9 anos.",
+     "Você encontrou uma nota de 20 no chão da praça. Você guardou o dinheiro no seu cofrinho.",
+     "Você revisou toda a matéria antes das provas.",
+     "Você treinou socos num travesseiro velho.",
+     "Você se enturmou com a galera da sala.",
+     "Você passou para o 5º ano com média 72."
+    ]
+   },
+   {
+    "age": 10,
+    "year": 2010,
+    "entries": [
+     "Você fez 10 anos.",
+     "Você assistiu na TV a uma luta do Circuito Titã de MMA. O campeão Rafael \"Trovão\" Mendes nocauteou o rival no primeiro round. Você decidiu que um dia vai ter o cinturão do Circuito Titã.",
+     "Você revisou toda a matéria antes das provas.",
+     "Você treinou até ficar sem fôlego.",
+     "Você se enturmou com a galera da sala.",
+     "Você passou para o 6º ano com média 65."
+    ]
+   },
+   {
+    "age": 11,
+    "year": 2011,
+    "entries": [
+     "Você fez 11 anos.",
+     "O técnico da equipe de luta olímpica viu você na aula de educação física e quer você no time. Você começou a treinar quedas e controle no tatame.",
+     "Você entrou na equipe de luta olímpica da escola.",
+     "A escola vai ter uma feira de ciências. Seu vulcão foi um sucesso e você ganhou uma menção honrosa.",
+     "Você revisou toda a matéria antes das provas.",
+     "Você passou a tarde correndo e fazendo flexões.",
+     "Você se enturmou com a galera da sala.",
+     "Você passou para o 7º ano com média 74."
+    ]
+   },
+   {
+    "age": 12,
+    "year": 2012,
+    "entries": [
+     "Você fez 12 anos.",
+     "Campeonato interescolar de judô! Sua escola conta com você no tatame. Você venceu três lutas e voltou com a medalha de ouro!",
+     "Você montou resumos coloridos e estudou para as provas.",
+     "Você treinou até ficar sem fôlego.",
+     "Você dividiu o lanche e fez novos amigos.",
+     "Você passou para o 8º ano com média 67."
+    ]
+   },
+   {
+    "age": 13,
+    "year": 2013,
+    "entries": [
+     "Você fez 13 anos.",
+     "Larissa Quintela vai dar uma festa no sábado, mas é véspera de prova. A festa foi incrível. A prova, nem tanto.",
+     "Você montou resumos coloridos e estudou para as provas.",
+     "Você passou a tarde correndo e fazendo flexões.",
+     "Você dividiu o lanche e fez novos amigos.",
+     "Você passou para o 9º ano com média 75."
+    ]
+   },
+   {
+    "age": 14,
+    "year": 2014,
+    "entries": [
+     "Você fez 14 anos.",
+     "Eduarda Figueira vai dar uma festa no sábado, mas é véspera de prova. A festa foi incrível. A prova, nem tanto.",
+     "Você fez uma pilha de exercícios para a prova.",
+     "Você treinou até ficar sem fôlego.",
+     "Você se enturmou com a galera da sala.",
+     "Você passou para o 1º ano do Ensino Médio com média 75."
+    ]
+   },
+   {
+    "age": 15,
+    "year": 2015,
+    "entries": [
+     "Você fez 15 anos.",
+     "Profª Isabela Esteves indicou você para a Olimpíada Regional de Matemática. Você foi bem, mas não passou de fase. Experiência valiosa.",
+     "Feira de ciências do Ensino Médio. Seu grupo precisa de um projeto. O projeto ganhou o 1º lugar e foi selecionado para a feira regional do ano que vem!",
+     "Você montou resumos coloridos e estudou para as provas.",
+     "Você treinou socos num travesseiro velho.",
+     "Você puxou papo com colegas novos no intervalo.",
+     "Você passou para o 2º ano do Ensino Médio com média 85."
+    ]
+   },
+   {
+    "age": 16,
+    "year": 2016,
+    "entries": [
+     "Você fez 16 anos.",
+     "Seu filtro de água solar está na feira regional de ciências. Os jurados se aproximam. Menção honrosa regional! Ótimo para o currículo.",
+     "Dia de prova difícil. Vitor Barreto oferece a cola com as respostas. Ninguém percebeu e você tirou uma nota ótima.",
+     "Você revisou toda a matéria antes das provas.",
+     "Você treinou até ficar sem fôlego.",
+     "Você se enturmou com a galera da sala."
+    ]
+   }
+  ],
+  "alive": true
+ },
+ "22": {
+  "version": 2,
+  "seed": "fixture-v2",
+  "rngState": 2712268866,
+  "year": 2022,
+  "character": {
+   "name": "Kauã Veterano",
+   "sex": "M",
+   "age": 22,
+   "birthYear": 2000,
+   "country": "México",
+   "city": "Tijuana",
+   "familyWealth": 39,
+   "stats": {
+    "health": 100,
+    "happiness": 80,
+    "intelligence": 98,
+    "looks": 28,
+    "strength": 100,
+    "fitness": 100
+   }
+  },
+  "money": 20,
+  "energy": {
+   "current": 6,
+   "max": 8
+  },
+  "flags": {
+   "brigou_na_escola": true,
+   "interesse_luta": true,
+   "gostaDeLuta": true,
+   "artesMarciais": "jiujitsu",
+   "sonhaSerLutador": true,
+   "medalha_interescolar": true,
+   "premio_ciencias": true,
+   "formado": true,
+   "baile_formatura": true,
+   "caminho_18": "faculdade"
+  },
+  "firedEvents": [
+   "child_flu",
+   "pre_first_day",
+   "child_stray_dog",
+   "child_playground_fight",
+   "child_playground_fight",
+   "f1_strict_teacher",
+   "child_found_money",
+   "child_fight_on_tv",
+   "f2_wrestling_invite",
+   "child_science_fair",
+   "school_interschool_champ",
+   "f2_classmate_party",
+   "f2_classmate_party",
+   "f2_math_olympiad",
+   "em_science_fair",
+   "em_science_fair_regional",
+   "f2_cheating",
+   "school_interschool_champ",
+   "school_graduation",
+   "adult_path_18"
+  ],
+  "pendingEvents": [],
+  "scheduledEvents": [],
+  "education": {
+   "current": null,
+   "history": [
+    {
+     "age": 3,
+     "year": 2003,
+     "school": "Escola Municipal Vale das Palmeiras",
+     "gradeLabel": "Pré I",
+     "final": 57,
+     "passed": true
+    },
+    {
+     "age": 4,
+     "year": 2004,
+     "school": "Escola Municipal Vale das Palmeiras",
+     "gradeLabel": "Pré II",
+     "final": 53,
+     "passed": true
+    },
+    {
+     "age": 5,
+     "year": 2005,
+     "school": "Escola Municipal Vale das Palmeiras",
+     "gradeLabel": "Pré III",
+     "final": 59,
+     "passed": true
+    },
+    {
+     "age": 6,
+     "year": 2006,
+     "school": "Escola Municipal Vale das Palmeiras",
+     "gradeLabel": "1º ano",
+     "final": 66,
+     "passed": true
+    },
+    {
+     "age": 7,
+     "year": 2007,
+     "school": "Escola Municipal Vale das Palmeiras",
+     "gradeLabel": "2º ano",
+     "final": 54,
+     "passed": true
+    },
+    {
+     "age": 8,
+     "year": 2008,
+     "school": "Escola Municipal Vale das Palmeiras",
+     "gradeLabel": "3º ano",
+     "final": 70,
+     "passed": true
+    },
+    {
+     "age": 9,
+     "year": 2009,
+     "school": "Escola Municipal Vale das Palmeiras",
+     "gradeLabel": "4º ano",
+     "final": 72,
+     "passed": true
+    },
+    {
+     "age": 10,
+     "year": 2010,
+     "school": "Escola Municipal Vale das Palmeiras",
+     "gradeLabel": "5º ano",
+     "final": 65,
+     "passed": true
+    },
+    {
+     "age": 11,
+     "year": 2011,
+     "school": "Escola Municipal Vale das Palmeiras",
+     "gradeLabel": "6º ano",
+     "final": 74,
+     "passed": true
+    },
+    {
+     "age": 12,
+     "year": 2012,
+     "school": "Escola Municipal Vale das Palmeiras",
+     "gradeLabel": "7º ano",
+     "final": 67,
+     "passed": true
+    },
+    {
+     "age": 13,
+     "year": 2013,
+     "school": "Escola Municipal Vale das Palmeiras",
+     "gradeLabel": "8º ano",
+     "final": 75,
+     "passed": true
+    },
+    {
+     "age": 14,
+     "year": 2014,
+     "school": "Escola Municipal Vale das Palmeiras",
+     "gradeLabel": "9º ano",
+     "final": 75,
+     "passed": true
+    },
+    {
+     "age": 15,
+     "year": 2015,
+     "school": "Escola Municipal Vale das Palmeiras",
+     "gradeLabel": "1º ano do Ensino Médio",
+     "final": 85,
+     "passed": true
+    },
+    {
+     "age": 16,
+     "year": 2016,
+     "school": "Escola Municipal Vale das Palmeiras",
+     "gradeLabel": "2º ano do Ensino Médio",
+     "final": 87,
+     "passed": true
+    },
+    {
+     "age": 17,
+     "year": 2017,
+     "school": "Escola Municipal Vale das Palmeiras",
+     "gradeLabel": "3º ano do Ensino Médio",
+     "final": 89,
+     "passed": true
+    }
+   ],
+   "lastResult": null,
+   "repeats": 0,
+   "expulsions": 0,
+   "graduated": true
+  },
+  "log": [
+   {
+    "age": 0,
+    "year": 2000,
+    "entries": [
+     "Você nasceu um menino em Tijuana, México. Seu nome é Kauã Veterano."
+    ]
+   },
+   {
+    "age": 1,
+    "year": 2001,
+    "entries": [
+     "Você fez 1 ano."
+    ]
+   },
+   {
+    "age": 2,
+    "year": 2002,
+    "entries": [
+     "Você fez 2 anos."
+    ]
+   },
+   {
+    "age": 3,
+    "year": 2003,
+    "entries": [
+     "Você fez 3 anos.",
+     "Você foi matriculado no Pré I da Escola Municipal Vale das Palmeiras (escola pública).",
+     "Você pegou uma gripe forte. Você descansou e se recuperou em poucos dias.",
+     "Você treinou socos num travesseiro velho.",
+     "Você puxou papo com colegas novos no intervalo.",
+     "Você concluiu o Pré I."
+    ]
+   },
+   {
+    "age": 4,
+    "year": 2004,
+    "entries": [
+     "Você fez 4 anos.",
+     "Primeiro dia na Escola Municipal Vale das Palmeiras. Sua mãe está indo embora e você sente um frio na barriga. Você chorou a manhã inteira, mas no fim do dia já estava rindo.",
+     "Você treinou socos num travesseiro velho.",
+     "Você dividiu o lanche e fez novos amigos.",
+     "Você concluiu o Pré II."
+    ]
+   },
+   {
+    "age": 5,
+    "year": 2005,
+    "entries": [
+     "Você fez 5 anos.",
+     "Um cachorro de rua começou a seguir você até em casa. Seus pais não deixaram ficar com o cachorro. Você chorou a noite toda.",
+     "Você treinou até ficar sem fôlego.",
+     "Você dividiu o lanche e fez novos amigos.",
+     "Você concluiu o Pré III."
+    ]
+   },
+   {
+    "age": 6,
+    "year": 2006,
+    "entries": [
+     "Você fez 6 anos.",
+     "Um colega empurrou você no recreio na frente de todo mundo. Você empurrou de volta e o colega recuou. A turma ficou impressionada.",
+     "Você fez uma pilha de exercícios para a prova.",
+     "Você passou a tarde correndo e fazendo flexões.",
+     "Você se enturmou com a galera da sala.",
+     "Você passou para o 2º ano com média 66."
+    ]
+   },
+   {
+    "age": 7,
+    "year": 2007,
+    "entries": [
+     "Você fez 7 anos.",
+     "Um colega empurrou você no recreio na frente de todo mundo. Você revidou, mas levou a pior e voltou para casa com o olho roxo.",
+     "Você entrou no time de judô da escola.",
+     "Você fez uma pilha de exercícios para a prova.",
+     "Você treinou até ficar sem fôlego.",
+     "Você dividiu o lanche e fez novos amigos.",
+     "Você passou para o 3º ano com média 54."
+    ]
+   },
+   {
+    "age": 8,
+    "year": 2008,
+    "entries": [
+     "Você fez 8 anos.",
+     "Profª Natália Pacheco é conhecido como o terror da escola: lição todo dia e prova surpresa toda semana. Foi puxado, mas você nunca aprendeu tanto.",
+     "Você revisou toda a matéria antes das provas.",
+     "Você treinou socos num travesseiro velho.",
+     "Você dividiu o lanche e fez novos amigos.",
+     "Você passou para o 4º ano com média 70."
+    ]
+   },
+   {
+    "age": 9,
+    "year": 2009,
+    "entries": [
+     "Você fez 9 anos.",
+     "Você encontrou uma nota de 20 no chão da praça. Você guardou o dinheiro no seu cofrinho.",
+     "Você revisou toda a matéria antes das provas.",
+     "Você treinou socos num travesseiro velho.",
+     "Você se enturmou com a galera da sala.",
+     "Você passou para o 5º ano com média 72."
+    ]
+   },
+   {
+    "age": 10,
+    "year": 2010,
+    "entries": [
+     "Você fez 10 anos.",
+     "Você assistiu na TV a uma luta do Circuito Titã de MMA. O campeão Rafael \"Trovão\" Mendes nocauteou o rival no primeiro round. Você decidiu que um dia vai ter o cinturão do Circuito Titã.",
+     "Você revisou toda a matéria antes das provas.",
+     "Você treinou até ficar sem fôlego.",
+     "Você se enturmou com a galera da sala.",
+     "Você passou para o 6º ano com média 65."
+    ]
+   },
+   {
+    "age": 11,
+    "year": 2011,
+    "entries": [
+     "Você fez 11 anos.",
+     "O técnico da equipe de luta olímpica viu você na aula de educação física e quer você no time. Você começou a treinar quedas e controle no tatame.",
+     "Você entrou na equipe de luta olímpica da escola.",
+     "A escola vai ter uma feira de ciências. Seu vulcão foi um sucesso e você ganhou uma menção honrosa.",
+     "Você revisou toda a matéria antes das provas.",
+     "Você passou a tarde correndo e fazendo flexões.",
+     "Você se enturmou com a galera da sala.",
+     "Você passou para o 7º ano com média 74."
+    ]
+   },
+   {
+    "age": 12,
+    "year": 2012,
+    "entries": [
+     "Você fez 12 anos.",
+     "Campeonato interescolar de judô! Sua escola conta com você no tatame. Você venceu três lutas e voltou com a medalha de ouro!",
+     "Você montou resumos coloridos e estudou para as provas.",
+     "Você treinou até ficar sem fôlego.",
+     "Você dividiu o lanche e fez novos amigos.",
+     "Você passou para o 8º ano com média 67."
+    ]
+   },
+   {
+    "age": 13,
+    "year": 2013,
+    "entries": [
+     "Você fez 13 anos.",
+     "Larissa Quintela vai dar uma festa no sábado, mas é véspera de prova. A festa foi incrível. A prova, nem tanto.",
+     "Você montou resumos coloridos e estudou para as provas.",
+     "Você passou a tarde correndo e fazendo flexões.",
+     "Você dividiu o lanche e fez novos amigos.",
+     "Você passou para o 9º ano com média 75."
+    ]
+   },
+   {
+    "age": 14,
+    "year": 2014,
+    "entries": [
+     "Você fez 14 anos.",
+     "Eduarda Figueira vai dar uma festa no sábado, mas é véspera de prova. A festa foi incrível. A prova, nem tanto.",
+     "Você fez uma pilha de exercícios para a prova.",
+     "Você treinou até ficar sem fôlego.",
+     "Você se enturmou com a galera da sala.",
+     "Você passou para o 1º ano do Ensino Médio com média 75."
+    ]
+   },
+   {
+    "age": 15,
+    "year": 2015,
+    "entries": [
+     "Você fez 15 anos.",
+     "Profª Isabela Esteves indicou você para a Olimpíada Regional de Matemática. Você foi bem, mas não passou de fase. Experiência valiosa.",
+     "Feira de ciências do Ensino Médio. Seu grupo precisa de um projeto. O projeto ganhou o 1º lugar e foi selecionado para a feira regional do ano que vem!",
+     "Você montou resumos coloridos e estudou para as provas.",
+     "Você treinou socos num travesseiro velho.",
+     "Você puxou papo com colegas novos no intervalo.",
+     "Você passou para o 2º ano do Ensino Médio com média 85."
+    ]
+   },
+   {
+    "age": 16,
+    "year": 2016,
+    "entries": [
+     "Você fez 16 anos.",
+     "Seu filtro de água solar está na feira regional de ciências. Os jurados se aproximam. Menção honrosa regional! Ótimo para o currículo.",
+     "Dia de prova difícil. Vitor Barreto oferece a cola com as respostas. Ninguém percebeu e você tirou uma nota ótima.",
+     "Você revisou toda a matéria antes das provas.",
+     "Você treinou até ficar sem fôlego.",
+     "Você se enturmou com a galera da sala.",
+     "Você passou para o 3º ano do Ensino Médio com média 87."
+    ]
+   },
+   {
+    "age": 17,
+    "year": 2017,
+    "entries": [
+     "Você fez 17 anos.",
+     "Campeonato interescolar de luta olímpica! Sua escola conta com você no tatame. Você perdeu na semifinal, mas aprendeu muito com a derrota.",
+     "Você fez uma pilha de exercícios para a prova.",
+     "Você passou a tarde correndo e fazendo flexões.",
+     "Você se enturmou com a galera da sala.",
+     "Você concluiu o 3º ano do Ensino Médio com média 89 e se formou!"
+    ]
+   },
+   {
+    "age": 18,
+    "year": 2018,
+    "entries": [
+     "Você fez 18 anos.",
+     "Formatura do Ensino Médio! Beca, diploma e, à noite, o baile. Uma noite inesquecível com a turma toda.",
+     "Você tem 18 anos. Hora de decidir o rumo da sua vida. Você decidiu seguir para a faculdade.",
+     "Você treinou socos num travesseiro velho."
+    ]
+   },
+   {
+    "age": 19,
+    "year": 2019,
+    "entries": [
+     "Você fez 19 anos.",
+     "Você passou a tarde correndo e fazendo flexões."
+    ]
+   },
+   {
+    "age": 20,
+    "year": 2020,
+    "entries": [
+     "Você fez 20 anos.",
+     "Você treinou até ficar sem fôlego."
+    ]
+   },
+   {
+    "age": 21,
+    "year": 2021,
+    "entries": [
+     "Você fez 21 anos.",
+     "Você treinou até ficar sem fôlego."
+    ]
+   },
+   {
+    "age": 22,
+    "year": 2022,
+    "entries": [
+     "Você fez 22 anos.",
+     "Você treinou até ficar sem fôlego."
+    ]
+   }
+  ],
+  "alive": true
+ }
+}

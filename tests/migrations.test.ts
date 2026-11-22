@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import fixtures from './fixtures/saves-v1.json';
+import fixturesV2 from './fixtures/saves-v2.json';
 import { GAME_CONTENT } from '../src/content';
 import { advanceYear, gradeForAge, performAction } from '../src/engine';
 import { CURRENT_VERSION, migrate, SaveMigrationError } from '../src/save/migrations';
 import { makeGame, resolveAllFirst } from './helpers';
 
-const v1 = fixtures as unknown as Record<string, Record<string, unknown> & { version: number }>;
+type Raw = Record<string, unknown> & { version: number; rngState: number };
+const v1 = fixtures as unknown as Record<string, Raw>;
+const v2 = fixturesV2 as unknown as Record<string, Raw>;
 
 describe('migrações de save', () => {
   it('save da versão atual passa intacto', () => {
@@ -26,12 +29,14 @@ describe('migrações de save', () => {
     }
   });
 
-  it.each(['1', '8', '16', '25'])('v1 → v2 com idade %s', (key) => {
+  it.each(['1', '8', '16', '25'])('v1 → atual com idade %s (cadeia v1→v2→v3)', (key) => {
     const raw = structuredClone(v1[key]!);
     const g = migrate(raw);
     const age = g.character.age;
-    expect(g.version).toBe(2);
+    expect(g.version).toBe(CURRENT_VERSION);
     expect(g.scheduledEvents).toEqual([]);
+    expect(g.fighter).toBeDefined();
+    expect(g.activeFight).toBeNull();
     expect(g.character.familyWealth).toBeGreaterThanOrEqual(0);
     expect(g.character.familyWealth).toBeLessThanOrEqual(100);
     expect(g.rngState).toBe(v1[key]!.rngState);
@@ -57,5 +62,55 @@ describe('migrações de save', () => {
 
   it('migração é determinística', () => {
     expect(migrate(structuredClone(v1['8']))).toEqual(migrate(structuredClone(v1['8'])));
+  });
+});
+
+describe('migração v2 → v3 (carreira de luta)', () => {
+  it('fixtures são saves v2 reais (Etapa 2)', () => {
+    for (const s of Object.values(v2)) {
+      expect(s.version).toBe(2);
+      expect(s).not.toHaveProperty('fighter');
+    }
+  });
+
+  it.each(['2', '9', '16', '22'])('idade %s: corpo, perfil de lutador e mundo coerentes', (key) => {
+    const raw = structuredClone(v2[key]!);
+    const g = migrate(raw);
+    const age = g.character.age;
+    expect(g.version).toBe(3);
+    expect(g.rngState).toBe(v2[key]!.rngState);
+    // corpo
+    expect(g.character.heightCm).toBeGreaterThan(age < 3 ? 60 : 100);
+    expect(g.character.weightKg).toBeGreaterThan(8);
+    expect(g.character.heightCm).toBeLessThanOrEqual(g.character.adultHeightCm);
+    // perfil
+    const f = g.fighter;
+    expect(f.pro.wins + f.amateur.wins).toBe(0);
+    expect(f.orgId).toBeNull();
+    expect(g.world.rosters).toEqual({});
+    for (const v of Object.values(f.skills)) {
+      expect(v).toBeGreaterThanOrEqual(0);
+      expect(v).toBeLessThanOrEqual(100);
+    }
+    // continua jogável
+    let s = resolveAllFirst(advanceYear(g, GAME_CONTENT));
+    s = resolveAllFirst(advanceYear(s, GAME_CONTENT));
+    expect(s.character.age).toBe(age + 2);
+    expect(JSON.parse(JSON.stringify(s))).toEqual(s);
+  });
+
+  it('flags e clubes da Etapa 2 viram vantagens de lutador', () => {
+    const plain = migrate(structuredClone(v2['2']!));
+    const veteran = migrate(structuredClone(v2['16']!)); // jiu-jitsu, luta olímpica, brigou na escola, medalha
+    expect(veteran.fighter.skills.grappling).toBeGreaterThan(plain.fighter.skills.grappling + 10);
+    expect(veteran.fighter.skills.wrestling).toBeGreaterThan(plain.fighter.skills.wrestling + 10);
+    expect(veteran.fighter.reputation).toBe(5);
+    expect(veteran.fighter.belt.years).toBeGreaterThan(0);
+    expect(veteran.fighter.gymId).toBe('gen_bairro');
+    expect(plain.fighter.gymId).toBeNull();
+  });
+
+  it('é determinística', () => {
+    expect(migrate(structuredClone(v2['9']!))).toEqual(migrate(structuredClone(v2['9']!)));
   });
 });

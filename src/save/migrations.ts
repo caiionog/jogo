@@ -1,14 +1,19 @@
-import type { Education, Enrollment, GameState } from '../engine';
+import type { Education, Enrollment, GameState, Skills } from '../engine';
 import {
   STATE_VERSION,
+  bodyFor,
   clamp,
   createRng,
   emptyEducation,
+  emptyWorld,
   gradeForAge,
+  newFighterProfile,
+  randomAdultHeight,
   randomSchool,
   seedToState,
 } from '../engine';
 import { NAMES } from '../content/names';
+import { GYMS } from '../content/gyms';
 
 export const CURRENT_VERSION = STATE_VERSION;
 
@@ -20,6 +25,7 @@ type AnySave = Record<string, unknown> & { version: number };
  */
 export const migrations: Record<number, (save: AnySave) => AnySave> = {
   1: migrateV1toV2,
+  2: migrateV2toV3,
 };
 
 export class SaveMigrationError extends Error {}
@@ -96,5 +102,69 @@ function migrateV1toV2(save: AnySave): AnySave {
     education,
     scheduledEvents: [],
     pendingEvents: (s.pendingEvents as GameState['pendingEvents'] | undefined) ?? [],
+  };
+}
+
+// ---------------------------------------------------------------------------
+// v2 → v3 (Etapa 3: carreira de luta)
+// ---------------------------------------------------------------------------
+
+interface V2Save extends AnySave {
+  seed: string;
+  character: Omit<GameState['character'], 'heightCm' | 'weightKg' | 'adultHeightCm' | 'build'>;
+  flags: GameState['flags'];
+  education: GameState['education'];
+}
+
+/**
+ * Adiciona corpo (altura/peso), perfil de lutador coerente com a idade e com as flags/clubes das
+ * etapas anteriores, mundo vazio (elencos são gerados sob demanda) e activeFight.
+ */
+function migrateV2toV3(save: AnySave): AnySave {
+  const s = save as V2Save;
+  const rng = createRng(seedToState(`${s.seed}:v3`));
+  const c = s.character;
+  const adultHeightCm = randomAdultHeight(rng, c.sex);
+  const build = rng.int(-2, 2);
+  const body = bodyFor(c.age, { adultHeightCm, build, stats: c.stats });
+  const flags = s.flags;
+  const club = s.education.current?.club ?? null;
+
+  // nível base pela idade (crianças pequenas quase nada; adultos jovens ~17)
+  const base = c.age < 6 ? 5 : 5 + Math.min(c.age - 5, 15) * 0.8;
+  const skills: Skills = {
+    striking: base,
+    wrestling: base,
+    grappling: base,
+    defense: base,
+    cardio: base + c.stats.fitness / 10,
+    chin: 45 + rng.int(0, 10),
+  };
+  const add = (k: keyof Skills, v: number) => {
+    skills[k] = clamp(skills[k] + v);
+  };
+  if (flags.artesMarciais === 'judo') { add('wrestling', 8); add('grappling', 5); }
+  if (flags.artesMarciais === 'jiujitsu') add('grappling', 10);
+  if (club === 'judo') { add('wrestling', 6); add('grappling', 4); }
+  if (club === 'wrestling') { add('wrestling', 8); add('cardio', 3); }
+  if (flags.interesse_luta) add('striking', 3);
+  if (flags.brigou_na_escola) { add('striking', 4); add('chin', 3); }
+
+  const talent = Math.round((0.65 + 0.7 * ((rng.next() + rng.next()) / 2)) * 100) / 100;
+  const fighter = newFighterProfile(skills, talent);
+  fighter.reputation = flags.medalha_interescolar ? 5 : 0;
+  if (flags.artesMarciais === 'jiujitsu') fighter.belt = { rank: 0, years: Math.max(0, Math.min(6, c.age - 6)) };
+  if (flags.artesMarciais) {
+    const gymId = flags.artesMarciais === 'judo' ? 'gen_judo_clube' : 'gen_bairro';
+    if (GYMS.some((g) => g.id === gymId)) fighter.gymId = gymId;
+  }
+
+  return {
+    ...s,
+    version: 3,
+    character: { ...c, adultHeightCm, build, ...body },
+    fighter,
+    world: emptyWorld(),
+    activeFight: null,
   };
 }

@@ -1,6 +1,7 @@
 import type { Rng } from '../core/rng';
 import type { Character, Sex, Stats } from '../core/state';
 import type { Location } from '../core/content';
+import { bodyFor, randomAdultHeight } from '../fighting/body';
 
 export interface CharacterInput {
   name: string;
@@ -34,8 +35,16 @@ export function createCharacter(
     country: loc.country,
     city: rng.pick(loc.cities),
     familyWealth: 0,
+    heightCm: 0,
+    weightKg: 0,
+    adultHeightCm: 0,
+    build: 0,
     stats: randomStats(rng),
   };
-  // sorteado por último para não alterar a sequência dos demais sorteios
-  return { ...character, familyWealth: rng.int(0, 100) };
+  // sorteados por último para não alterar a sequência dos demais sorteios
+  const familyWealth = rng.int(0, 100);
+  const adultHeightCm = randomAdultHeight(rng, input.sex);
+  const build = rng.int(-2, 2);
+  const withBody = { ...character, familyWealth, adultHeightCm, build };
+  return { ...withBody, ...bodyFor(0, withBody) };
 }
