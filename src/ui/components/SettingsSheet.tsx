@@ -83,6 +83,16 @@ export default function SettingsSheet({ game, onClose }: { game: GameState | nul
             ))}
           </div>
         </div>
+        <div className="rounded-xl border border-slate-700 p-3">
+          <p className="mb-2 text-sm font-semibold">Avatar</p>
+          <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Avatar">
+            {([true, false] as const).map((v) => (
+              <button key={String(v)} type="button" role="radio" aria-checked={(meta.settings.avatar3d !== false) === v} onClick={() => setMeta({ avatar3d: v })} className={`min-h-11 rounded-xl border px-2 text-sm ${(meta.settings.avatar3d !== false) === v ? 'border-emerald-500 bg-emerald-500/15 text-emerald-200' : 'border-slate-700 bg-slate-950'}`}>
+                {v ? '3D' : '2D (mais leve)'}
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="rounded-xl border border-rose-900 p-3">
           <p className="text-sm font-semibold text-rose-200">Apagar dados</p>
           <p className="text-xs text-slate-400">Apaga as 3 vidas salvas, as conquistas e o Hall da Fama deste aparelho. Não dá para desfazer.</p>

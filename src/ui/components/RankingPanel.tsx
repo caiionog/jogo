@@ -1,6 +1,8 @@
+import AvatarThumb from '../avatar/AvatarThumb';
+import { fighterAvatar } from '../avatar/descriptors';
 import { useState } from 'react';
 import { GAME_CONTENT } from '../../content';
-import { PLAYER_ID, opponentFullName, playerDivision, recordText, viewRoster } from '../../engine';
+import { PLAYER_ID, deriveAvatar, opponentFullName, playerDivision, recordText, viewRoster } from '../../engine';
 import type { GameState } from '../../engine';
 import { STYLE_LABEL } from './fightUi';
 
@@ -25,6 +27,7 @@ export default function RankingPanel({ game }: { game: GameState }) {
         data-testid={isMe ? 'ranking-me' : undefined}
       >
         <span className="w-8 shrink-0 text-center font-bold text-slate-400">{pos}</span>
+        {n ? <AvatarThumb d={fighterAvatar(game, n, pos === 'C' || pos === '🏆')} size={36} label={opponentFullName(n)} /> : isMe ? <AvatarThumb d={deriveAvatar(game, C)} size={36} /> : null}
         <span className="min-w-0 flex-1">
           <span className="block truncate">{isMe ? `${game.character.name} (você)` : n ? opponentFullName(n) : id}</span>
           {n && (

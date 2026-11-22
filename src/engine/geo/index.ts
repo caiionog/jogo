@@ -53,6 +53,29 @@ export function cityMultOf(state: GameState, content: GameContent): number {
   return cityDef(content.geo, state.character.uf, state.character.city)?.custo ?? 1;
 }
 
+/** Efeito de evento: mudança sorteada (outra capital pelo peso populacional, ou outra cidade da mesma UF). */
+export interface MoveEffect {
+  to: 'outra_capital' | 'mesma_uf';
+  /** Custo pago pelo personagem (padrão 0: quem convidou paga a mudança). */
+  cost?: number;
+}
+
+export function applyMoveEffect(state: GameState, fx: MoveEffect, rng: Rng, content: GameContent): GameState {
+  if (state.character.age < 16) return state;
+  const here = ufDef(content.geo, state.character.uf);
+  if (fx.to === 'mesma_uf') {
+    const options = here?.cities.filter((c) => c.name !== state.character.city) ?? [];
+    if (!here || !options.length) return state;
+    // de preferência uma cidade mais barata que a atual
+    const cur = cityMultOf(state, content);
+    const cheaper = options.filter((c) => c.custo < cur);
+    return relocate(state, content, here.sigla, weighted(rng, cheaper.length ? cheaper : options, (c) => c.populacao).name, fx.cost ?? 0);
+  }
+  const ufs = content.geo.ufs.filter((u) => u.sigla !== state.character.uf);
+  const uf = weighted(rng, ufs, (u) => u.populacao);
+  return relocate(state, content, uf.sigla, uf.capital, fx.cost ?? 0);
+}
+
 export const MOVE_COST_SAME_UF = 3000;
 export const MOVE_COST_OTHER_UF = 8000;
 
@@ -73,8 +96,11 @@ export function moveBlockReason(state: GameState, content: GameContent, uf: stri
  */
 export function moveTo(state: GameState, content: GameContent, uf: string, city: string): GameState {
   if (moveBlockReason(state, content, uf, city) !== null) return state;
-  const cost = uf === state.character.uf ? MOVE_COST_SAME_UF : MOVE_COST_OTHER_UF;
-  let s = post(state, 'moradia', -cost, `Mudança para ${city}`);
+  return relocate(state, content, uf, city, uf === state.character.uf ? MOVE_COST_SAME_UF : MOVE_COST_OTHER_UF);
+}
+
+function relocate(state: GameState, content: GameContent, uf: string, city: string, cost: number): GameState {
+  let s = cost > 0 ? post(state, 'moradia', -cost, `Mudança para ${city}`) : state;
   const gym = content.fighting.gyms.find((g) => g.id === s.fighter.gymId);
   s = { ...s, character: { ...s.character, uf, city } };
   if (gym?.city && gym.city !== city) s = { ...s, fighter: { ...s.fighter, gymId: null } };

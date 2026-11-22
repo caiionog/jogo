@@ -5,6 +5,8 @@ import { addStats, clamp } from './stats';
 import { joinClubState, transferSchool } from '../lifeStages/school';
 import { withPreposition } from '../character/names';
 import { post } from '../economy/ledger';
+import { applyMoveEffect } from '../geo';
+import type { MoveEffect } from '../geo';
 import { applyEconomyEffects } from '../economy/effects';
 import type { EconomyEffects } from '../economy/effects';
 import { applyFighterEffects } from '../fighting/career';
@@ -51,6 +53,8 @@ export interface Effects {
   economy?: EconomyEffects;
   /** Lesões, doenças, dano cerebral, morte por evento (Etapa 6). */
   health?: HealthEffects;
+  /** Mudança de cidade sorteada (Etapa 7). */
+  move?: MoveEffect;
   followUps?: FollowUp[];
 }
 
@@ -83,6 +87,10 @@ export function applyEffects(state: GameState, effects: Effects | undefined, ctx
   // dinheiro só via extrato (inteiro)
   if (effects.money) next = post(next, effects.money > 0 ? 'eventos' : 'eventos', effects.money, 'Evento');
   if (effects.school) next = applySchoolEffects(next, effects.school, ctx);
+  if (effects.move) {
+    if (!ctx) throw new Error('applyEffects: mudança exige EffectContext');
+    next = applyMoveEffect(next, effects.move, ctx.rng, ctx.content);
+  }
   if (effects.fighter) {
     const fx = effects.fighter;
     const needsCtx = fx.joinGym || fx.signWith || fx.injury || fx.offer;

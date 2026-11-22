@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { GAME_CONTENT } from '../src/content';
-import { RACES, REGIOES, cityMultOf, createRng, moveBlockReason, moveTo, newGame, pickBirthplace, pickRace, ufDef } from '../src/engine';
+import { RACES, REGIOES, applyEffects, cityMultOf, createRng, moveBlockReason, moveTo, newGame, pickBirthplace, pickRace, ufDef } from '../src/engine';
 import type { Race } from '../src/engine';
 import { adult, ledgerOk } from './ecoHelpers';
 
@@ -72,5 +72,20 @@ describe('geografia do Brasil (Censo 2022)', () => {
     expect([m.character.uf, m.character.city]).toEqual(['BA', 'Salvador']);
     expect(m.money).toBeLessThan(g.money);
     expect(ledgerOk(m)).toBe(true);
+  });
+
+  it('efeito de evento "move": outra capital ou cidade mais barata da UF, pelo extrato', () => {
+    const s = adult(30, 10000);
+    const ctx = { rng: createRng(4), content: GAME_CONTENT };
+    const a = applyEffects(s, { move: { to: 'outra_capital' } }, ctx);
+    expect(a.character.uf).not.toBe('GO');
+    expect(a.character.city).toBe(ufDef(GAME_CONTENT.geo, a.character.uf)!.capital);
+    expect(a.money).toBe(10000);
+    const b = applyEffects(s, { move: { to: 'mesma_uf', cost: 1500 } }, ctx);
+    expect(b.character.uf).toBe('GO');
+    expect(b.character.city).not.toBe('Goiânia');
+    expect(cityMultOf(b, GAME_CONTENT)).toBeLessThan(cityMultOf(s, GAME_CONTENT));
+    expect(b.money).toBe(8500);
+    expect(ledgerOk(b)).toBe(true);
   });
 });

@@ -1,3 +1,5 @@
+import AvatarThumb from '../avatar/AvatarThumb';
+import { personAvatar } from '../avatar/descriptors';
 import { useState } from 'react';
 import { GAME_CONTENT } from '../../content';
 import { STAGE_LABEL, civilStatus, meetBlockReason, relLabel } from '../../engine';
@@ -37,7 +39,7 @@ function Row({ person, rel, onOpen }: { person: Person; rel: Relation; onOpen: (
   return (
     <li>
       <button onClick={onOpen} className="flex w-full items-center gap-3 rounded-xl bg-slate-900/70 px-3 py-2.5 text-left active:bg-slate-800" data-testid="person-row">
-        <span className="text-xl">{!person.alive ? '🕯️' : person.sex === 'M' ? (person.age < 13 ? '👦' : person.age >= 60 ? '👴' : '👨') : person.age < 13 ? '👧' : person.age >= 60 ? '👵' : '👩'}</span>
+        <AvatarThumb d={personAvatar(person, rel.affection)} size={44} dim={!person.alive} label={person.name} />
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-semibold">{person.name}</span>
           <span className="text-[11px] text-slate-400">

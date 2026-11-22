@@ -1,6 +1,10 @@
 import { create } from 'zustand';
 import { GAME_CONTENT } from '../content';
 import {
+  buyOutfit,
+  moveTo,
+  selectOutfit,
+  setFacialHair,
   acceptOffer,
   advanceYear,
   autoFinishFight,
@@ -57,6 +61,8 @@ import {
 } from '../engine';
 import type {
   AchievementDef,
+  Appearance,
+  FacialHair,
   GameState,
   HealthActionId,
   Housing,
@@ -122,7 +128,12 @@ interface GameStore {
   setMetaSettings(patch: Partial<MetaSettings>): void;
   eraseAll(): Promise<void>;
   dismissToast(id: number): void;
-  startLife(name: string, sex: Sex, opts?: { adultContent?: boolean; preference?: PartnerPreference }): void;
+  startLife(name: string, sex: Sex, opts?: { adultContent?: boolean; preference?: PartnerPreference; surnames?: string[]; uf?: string; city?: string; appearance?: Appearance }): void;
+  // Etapa 7: guarda-roupa e mudança de cidade
+  selectOutfit(id: string, color: number): void;
+  buyOutfit(id: string): void;
+  setFacialHair(f: FacialHair): void;
+  moveCity(uf: string, city: string): void;
   doAction(actionId: string): void;
   joinClub(clubId: string): void;
   leaveClub(): void;
@@ -213,6 +224,10 @@ export const useGameStore = create<GameStore>((setState, getState) => {
       setState({ game: newGame({ seed, name, sex, ...opts }, GAME_CONTENT), meta });
       void saveMeta(meta);
     },
+    selectOutfit: (id, color) => update((g) => selectOutfit(g, GAME_CONTENT, id, color)),
+    buyOutfit: (id) => update((g) => buyOutfit(g, GAME_CONTENT, id)),
+    setFacialHair: (f) => update((g) => setFacialHair(g, f)),
+    moveCity: (uf, city) => update((g) => moveTo(g, GAME_CONTENT, uf, city)),
     retire: () => update((g) => retire(g, GAME_CONTENT)),
     treatInjury: (id, t) => update((g) => treatInjury(g, id, t, GAME_CONTENT)),
     healthAction: (id) => update((g) => healthAction(g, GAME_CONTENT, id)),

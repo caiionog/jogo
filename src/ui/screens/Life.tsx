@@ -8,7 +8,11 @@ import SchoolPanel from '../components/SchoolPanel';
 import CareerPanel from '../components/CareerPanel';
 import FightScreen from '../components/FightScreen';
 import RankingPanel from '../components/RankingPanel';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { deriveAvatar } from '../../engine';
+import AvatarStage from '../avatar/AvatarStage';
+import AvatarSheet from '../avatar/AvatarSheet';
+import MoveSheet from '../components/MoveSheet';
 import RelationshipsPanel from '../components/RelationshipsPanel';
 import MenuHost from '../components/MenuHost';
 import HealthPanel from '../components/HealthPanel';
@@ -32,7 +36,10 @@ export default function Life({ onShowObituary }: { onShowObituary?: () => void }
   const newLife = useGameStore((s) => s.newLife);
   const [tab, setTab] = useState<'vida' | 'saude' | 'carreira' | 'relacoes' | 'ranking' | 'financas' | 'trabalho' | 'bens' | 'empresas'>('vida');
   const [confirming, setConfirming] = useState(false);
-  if (!game) return null;
+  const [sheet, setSheet] = useState<'avatar' | 'move' | null>(null);
+  const avatar3d = useGameStore((s) => s.meta.settings.avatar3d !== false);
+  const desc = useMemo(() => (game ? deriveAvatar(game, GAME_CONTENT, game.activeFight ? 'luta' : 'principal') : null), [game]);
+  if (!game || !desc) return null;
 
   const { character: c } = game;
   const pending = game.pendingEvents[0];
@@ -48,13 +55,22 @@ export default function Life({ onShowObituary }: { onShowObituary?: () => void }
     <>
       <header className="sticky top-[env(safe-area-inset-top,0px)] z-10 border-b border-slate-800 bg-slate-950/95 px-4 pb-2 pt-4 backdrop-blur">
         <div className="flex items-start justify-between gap-2">
-          <div>
-            <h1 className="text-xl font-bold" data-testid="char-name">
-              {c.sex === 'M' ? '👦' : '👧'} {c.name}
-            </h1>
-            <p className="text-sm text-slate-400" data-testid="char-age">
-              {c.age} {c.age === 1 ? 'ano' : 'anos'} · {LIFE_STAGE_LABEL[lifeStage(c.age)]} · {c.city} – {c.uf}
-            </p>
+          <div className="flex min-w-0 items-center gap-3">
+            {/* um só canvas ao vivo por tela: com a tela cheia aberta, aqui fica o desenho 2D */}
+            <button onClick={() => setSheet('avatar')} aria-label="Ver e vestir seu avatar" className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-gradient-to-b from-slate-800 to-slate-900" data-testid="avatar-button">
+              <AvatarStage d={desc} enabled={avatar3d && sheet !== 'avatar'} className="h-full w-full" label={`Avatar de ${c.name}`} />
+            </button>
+            <div className="min-w-0">
+              <h1 className="text-xl font-bold leading-tight" data-testid="char-name">
+                {c.name}
+              </h1>
+              <p className="text-sm text-slate-400" data-testid="char-age">
+                {c.age} {c.age === 1 ? 'ano' : 'anos'} · {LIFE_STAGE_LABEL[lifeStage(c.age)]}
+              </p>
+              <button onClick={() => setSheet('move')} className="text-left text-sm text-slate-400 underline decoration-slate-700 underline-offset-2" data-testid="char-city">
+                📍 {c.city} – {c.uf}
+              </button>
+            </div>
           </div>
           <div className="text-right">
             <p className={`font-semibold tabular-nums ${game.money < 0 ? 'text-rose-400' : 'text-emerald-400'}`} data-testid="money">
@@ -162,6 +178,8 @@ export default function Life({ onShowObituary }: { onShowObituary?: () => void }
       )}
       {game.activeFight && <FightScreen key={game.activeFight.offer.id} af={game.activeFight} />}
       {!game.activeFight && pending && pendingEvent && <EventModal game={game} event={pendingEvent} pending={pending} onChoose={choose} />}
+      {sheet === 'avatar' && <AvatarSheet onClose={() => setSheet(null)} />}
+      {sheet === 'move' && <MoveSheet onClose={() => setSheet(null)} />}
     </>
   );
 }

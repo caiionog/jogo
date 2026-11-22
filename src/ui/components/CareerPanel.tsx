@@ -1,3 +1,5 @@
+import AvatarThumb from '../avatar/AvatarThumb';
+import { fighterAvatar } from '../avatar/descriptors';
 import { useState } from 'react';
 import { GAME_CONTENT } from '../../content';
 import {
@@ -233,7 +235,8 @@ function OfferCard({ game, offer }: { game: GameState; offer: FightOffer }) {
   return (
     <li className="rounded-2xl border border-slate-700 bg-slate-900 p-3" data-testid="offer">
       <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
+        <AvatarThumb d={fighterAvatar(game, o, o.rank === 0)} size={52} label={opponentFullName(o)} />
+        <div className="min-w-0 flex-1">
           <p className="text-[11px] uppercase tracking-wide text-slate-400">
             {org.short} · {offer.rounds} round{offer.rounds > 1 ? 's' : ''}
             {offer.rules === 'grappling' ? ' · regras de grappling' : ''}

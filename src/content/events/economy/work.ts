@@ -90,4 +90,36 @@ export const WORK_EVENTS: readonly GameEvent[] = [
       { id: 'agree', label: 'Aceitar o plano de demissão voluntária', effects: { economy: { loseJob: 'Você aderiu ao plano de demissão voluntária.', post: { cat: 'salario', amount: 8000, label: 'Indenização da demissão voluntária' } } }, resultText: 'Saiu com uma indenização no bolso.' },
     ],
   },
+  // mudança de cidade (Etapa 7)
+  {
+    id: 'geo_transfer_offer',
+    conditions: { minAge: 21, maxAge: 55, economy: { employed: true } },
+    weight: 2,
+    text: 'Sua empresa vai abrir uma filial em outra capital e quer você lá, com a mudança paga.',
+    choices: [
+      { id: 'go', label: 'Topar a mudança', effects: { move: { to: 'outra_capital' }, stats: { happiness: 3 } }, resultText: 'Caixas fechadas, vida nova. A cidade é outra, o sotaque também.' },
+      { id: 'stay', label: 'Ficar onde está', effects: { stats: { happiness: 1 } }, resultText: 'Você preferiu ficar perto de quem conhece.' },
+    ],
+  },
+  {
+    id: 'geo_team_invite',
+    conditions: { minAge: 18, maxAge: 34, fighting: { hasFought: true, suspended: false, retired: false } },
+    weight: 2,
+    once: true,
+    text: 'Um treinador de outra capital viu seus vídeos e te convidou para treinar na equipe dele. A mudança fica por sua conta.',
+    choices: [
+      { id: 'go', label: 'Mudar e treinar com a equipe (R$ 2.000)', effects: { move: { to: 'outra_capital', cost: 2000 }, fighter: { joinGym: 'best', reputation: 1 } }, resultText: 'Vida nova, academia nova e treinos duros desde o primeiro dia.' },
+      { id: 'stay', label: 'Agradecer e ficar', effects: {}, resultText: 'Sua base é aqui. Você agradeceu o convite.' },
+    ],
+  },
+  {
+    id: 'geo_cheaper_city',
+    conditions: { minAge: 25, economy: { debt: { min: 1 } } },
+    weight: 2,
+    text: 'As contas apertaram. Um parente sugere que você se mude para uma cidade mais barata do estado.',
+    choices: [
+      { id: 'go', label: 'Mudar para o interior (R$ 1.500)', effects: { move: { to: 'mesma_uf', cost: 1500 } }, resultText: 'Menos barulho, aluguel diferente e um recomeço.' },
+      { id: 'stay', label: 'Continuar na cidade', effects: { stats: { happiness: -1 } }, resultText: 'Você decidiu apertar o cinto onde está.' },
+    ],
+  },
 ];

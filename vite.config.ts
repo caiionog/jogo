@@ -41,6 +41,12 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    // 3D (three + R3F) em chunk próprio, carregado sob demanda; na versão de teste em arquivo único
+    // (VITE_SINGLE_FILE) tudo vai num só JS.
+    chunkSizeWarningLimit: 800,
+    ...(process.env.VITE_SINGLE_FILE ? { rolldownOptions: { output: { codeSplitting: false } } } : {}),
+  },
   test: {
     include: ['tests/**/*.test.ts'],
     environment: 'node',

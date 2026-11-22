@@ -213,6 +213,7 @@ export function validateContent(content: GameContent): string[] {
     for (const j of e.conditions.economy?.jobs ?? []) if (!jobIds.has(j)) errors.push(`${e.id}: emprego inexistente "${j}"`);
     for (const b of e.conditions.economy?.businessDefs ?? []) if (!bizIds.has(b)) errors.push(`${e.id}: empresa inexistente "${b}"`);
     for (const ch of e.choices) for (const fx of [ch.effects, ch.risk?.effects]) {
+      if (fx?.move && !['outra_capital', 'mesma_uf'].includes(fx.move.to)) errors.push(`${e.id}: mudança inválida "${fx.move.to}"`);
       const eco = fx?.economy;
       if (eco?.jobOffer && !jobIds.has(eco.jobOffer)) errors.push(`${e.id}: jobOffer inexistente "${eco.jobOffer}"`);
       if (eco?.sellBusinessOffer?.defId && !bizIds.has(eco.sellBusinessOffer.defId)) errors.push(`${e.id}: empresa inexistente`);

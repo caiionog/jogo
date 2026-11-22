@@ -1,3 +1,5 @@
+import AvatarThumb from '../avatar/AvatarThumb';
+import { personAvatar } from '../avatar/descriptors';
 import { INTERACTION_COST, INTERACTION_LABEL, STAGE_LABEL, applicableInteractions, interactionBlockReason, relLabel } from '../../engine';
 import type { GameState, InteractionKind, Person, Relation, TraitDef } from '../../engine';
 import { useGameStore } from '../store';
@@ -33,7 +35,8 @@ export default function PersonSheet({ game, person, rel, traits, onClose }: { ga
       >
         <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-slate-700" />
         <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
+          <AvatarThumb d={personAvatar(person, rel.affection)} size={72} dim={!person.alive} label={person.name} className="rounded-2xl" />
+          <div className="min-w-0 flex-1">
             <h2 className="truncate text-lg font-bold">{person.name}</h2>
             <p className="text-xs text-slate-400">
               {relLabel(rel.type, person.sex)}

@@ -1,7 +1,9 @@
-# GDD — Vida de Lutador (versão 1.0)
+# GDD — Vida de Lutador (versão 1.1)
 
 > Jogo completo: infância, escola, carreira de luta, relacionamentos, economia, lesões, aposentadoria, morte e legado
 > por gerações, com conquistas e Hall da Fama entre vidas. Funciona offline como app instalado (PWA).
+> Versão 1.1 (Etapa 7): o jogo se passa só no Brasil (27 UFs com dados do IBGE), com genética de aparência
+> herdável e um busto 3D que muda com a idade, o corpo, as lesões e a roupa.
 
 ## 1. Visão
 Simulador de vida em texto, no navegador e pensado para o celular, no estilo BitLife. O jogador nasce,
@@ -38,7 +40,9 @@ Pilares:
 Modificador de saúde: < 25 → −2 · < 50 → −1 · ≥ 85 → +1.
 
 ## 3. Personagem
-- Nome e sexo escolhidos; país/cidade e atributos iniciais sorteados.
+- Criação em 3 passos (Etapa 7): nome, sobrenomes e sexo → UF e cidade (escolhidas ou sorteadas pela população) →
+  aparência (cor ou raça pré-sorteada pela UF e ajustes finos), com prévia 3D "ver como bebê/criança/adulto/idoso".
+  Atributos iniciais sorteados. Ver seção 9.
 - Atributos (0–100): **Saúde, Felicidade, Inteligência, Aparência, Força, Condicionamento**.
 - Dinheiro, flags de história, histórico de eventos.
 - Altura, peso e biotipo (crescem com a idade) e família com renda (`familyWealth`).
@@ -704,10 +708,99 @@ morre, e o jogador pode continuar a história como um dos filhos. Conquistas e H
   média) sem ser punitiva demais (83% param por decisão própria). Doenças crescem com a idade, e tratar e fazer
   check-up compensa.
 
-## 9. Ideias futuras
+## 9. Brasil e aparência (Etapa 7)
+
+### Só no Brasil (`src/content/geo/brasil/`, `engine/geo/`)
+- **27 UFs** com sigla, nome, região, população e cor ou raça; cada UF tem a capital e as maiores cidades (5–8).
+  Os outros países saíram (ficam em "Ideias futuras"). As academias estrangeiras saíram e entraram academias em
+  Brasília, Fortaleza, Belém, Goiânia e Florianópolis.
+- **Fontes (consulta em 2026-11-22, gravadas como `.ts` versionados por `scripts/geo-fetch.ts`; o jogo não acessa a rede):**
+  - População e **cor ou raça por UF**: IBGE, Censo Demográfico 2022, SIDRA **tabela 9605** (população residente por
+    cor ou raça). Percentual = categoria ÷ soma das 5 categorias. Total do país: 203.069.637.
+    Exemplos: SP branca 57,79% · parda 32,96% · preta 7,99% · amarela 1,16%; BA parda 57,31% · preta 22,38%;
+    RS branca 78,42%; AM parda 68,80% · indígena 7,74%; RR indígena 14,14%.
+  - **Cidades**: população dos municípios do Censo 2022 (pacote `municipios-br`, dados do IBGE). O DF tem um só
+    município; as regiões administrativas (Ceilândia, Taguatinga…) entram com peso igual, por escolha do jogo.
+  - **Nomes**: IBGE, Censo 2010, API "Nomes no Brasil" — os mais frequentes por década de nascimento (1930–2000) e
+    sexo, e por região (décadas de 1960, 1980 e 2000). Nascidos depois de 2010 usam a década de 2000.
+  - **Sobrenomes**: o IBGE não publica ranking; lista editorial de 100 sobrenomes comuns (sem números).
+  - **Custo de vida** (gancho da Etapa 5): multiplicador **do jogo** por cidade, derivado do PIB per capita do
+    município relativo à média nacional (raiz quadrada, 0,8–1,35). Não é índice oficial. Escala salários, aluguel,
+    imóveis e custos de saúde.
+- **Nascimento**: UF sorteada pelo peso populacional, depois a cidade pelo peso dentro da UF (100 mil nascimentos ficam
+  a ±0,5 ponto percentual da população real em todas as UFs; testado).
+- **Mudança de cidade**: toque no 📍 do cabeçalho (18+, R$ 3.000 na mesma UF, R$ 8.000 para outra), ou por evento
+  (efeito `move`: transferência do emprego, convite de equipe de outra capital, ida para uma cidade mais barata).
+  Academias locais ficam para trás; pessoas criadas depois seguem a nova UF.
+- **Nomes e sobrenomes**: primeiro nome pela década de nascimento (30% da região, 70% nacional, peso pela raiz da
+  frequência para não repetir só "Maria" e "José"); nome completo = **nome + sobrenome da mãe + sobrenome do pai**.
+  Filhos do personagem recebem os sobrenomes do casal; irmãos, os da família.
+
+### Genética da aparência (`engine/character/appearance/`)
+- **Genes** (fixos, no save): tom de pele (contínuo) e subtom, tipo de cabelo (liso/ondulado/cacheado/crespo), cor do
+  cabelo + ruivo, cor e formato dos olhos, largura do nariz, volume dos lábios, formato do rosto, propensão à
+  calvície e ao ganho de peso. A barba é escolha do jogador.
+- **Sorteio pela cor ou raça** (`genesForRace`): faixas **amplas e sobrepostas**; todo tipo de cabelo e cor de olho
+  existe em todo grupo, só os pesos mudam. Não há "rosto padrão" de nenhum grupo (testado: cada grupo cobre mais de
+  0,3 de tom de pele e os grupos vizinhos se sobrepõem).
+- **Herança**: contínuos = média ponderada aleatória dos pais + ruído pequeno (o tom do filho fica entre os dos pais
+  ± 0,04); categóricos = de um dos pais (5% de variação); olhos escuros tendem a prevalecer. Cor ou raça do filho:
+  igual à dos pais quando iguais; pais diferentes tendem a ter filhos pardos.
+- **Família coerente**: na criação e na migração, `parentsFor` gera pais compatíveis com a aparência escolhida (um
+  mais claro e outro mais escuro que o filho, traços vindos de um deles); irmãos e filhos herdam. Amigos, colegas e
+  cônjuges seguem a UF atual; lutadores do elenco têm aparência **derivada** do id (não ocupam o save).
+
+### Regra de não discriminação (obrigatória)
+Cor ou raça é **só demografia e aparência**. Nunca altera atributos, chances, salários, eventos ou qualquer
+mecânica, e nenhum evento tem condição de cor ou raça. Garantido por `tests/fairness.test.ts`:
+1. varredura de todo o conteúdo de mecânica (eventos, ações, clubes, empregos, lesões…): nenhuma chave nem texto
+   fala de cor/raça/genes;
+2. varredura de código: nenhum módulo de mecânica (`fighting`, `economy`, `events`, `health`, `lifeStages`, `assets`,
+   `meta`, `legacy`, efeitos, ações sociais) importa a aparência ou lê `.race`/`.genes`/`.appearance`;
+3. simulação: 30 anos de vida com as mesmas escolhas e as 5 cores ou raças dão **exatamente** o mesmo estado (fora a
+   aparência); e a genética usa um RNG próprio (`lookRng`), então nunca muda o rumo do sorteio principal.
+
+### Aparência dinâmica (`deriveAvatar`)
+Função pura da engine que devolve um `AvatarDescriptor` a partir do estado; nada disso vai para o save.
+- **Idade**: fase (bebê 0–2, criança 3–11, adolescente 12–17, adulto 18–59, idoso 60+) com crescimento contínuo
+  (proporções interpoladas, sem salto entre fases); rugas, grisalho e calvície crescem com a idade e os genes.
+- **Corpo**: gordura pelo IMC da Etapa 3 (força, condicionamento, biotipo), genes, padrão de vida e saúde;
+  musculatura por força, condicionamento e habilidades de luta. Treinar ou parar de treinar muda o busto.
+- **Marcas da luta**: cicatriz, nariz torto e orelha de couve-flor (sequelas da Etapa 6), olho roxo depois de luta
+  perdida ou lesão na cabeça no ano. **Expressão**: feliz, neutra, triste, cansada ou machucada.
+- **Roupa**: automática pelo contexto (body de bebê, uniforme na escola, kimono com a **cor real da faixa** ou
+  rashguard na luta, terno/vestido de festa no casamento, camisa da formatura) ou a escolhida no guarda-roupa.
+
+### Roupas (`src/content/outfits/`)
+22 peças, todas para qualquer sexo e com variações de cor: bebê/criança, dia a dia (camiseta, regata, moletom, polo,
+social, jaqueta, vestido, blusa), luta (kimono, rashguard, regata de treino, roupão), ocasiões (terno, vestido de
+festa, camisa de formatura) e luxo de grifes fictícias ("Maison Arara", "Cronos Wear", R$ 6 mil a R$ 35 mil, compradas
+pelo extrato). As desbloqueadas ficam em `GameState.wardrobe` (gancho para cosméticos).
+
+### Avatar 3D (`src/ui/avatar/`)
+- **Fase A (atual)**: busto procedural low-poly feito em three.js (`buildBust`), com deformação por idade, gordura,
+  músculo e formato do rosto, 4 tipos de cabelo com calvície e grisalho, barba, rugas, marcas, expressões e roupas.
+  Até 6 mil triângulos (testado). React Three Fiber + drei num **chunk carregado sob demanda** (≈ 237 KB gzip); o
+  jogo abre sem esperar o 3D.
+- **Um canvas ao vivo por tela**: o busto no topo da tela principal (toque → tela cheia para girar e trocar de roupa);
+  `frameloop="demand"` — parado, zero desenhos por segundo; ao avançar o ano, transição suave de ~500 ms.
+- **Miniaturas dos NPCs** (Relações, Ranking, ofertas de luta, herdeiros): um renderizador oculto compartilhado
+  desenha cada busto uma vez; cache LRU de 300 imagens pelo hash do descriptor, fila em tempo ocioso.
+- **Fallback 2D** em SVG do mesmo descriptor (sem WebGL, aparelho fraco, enquanto o 3D carrega, ou pela opção
+  "Avatar: 2D" nas configurações).
+- **Fase B (pipeline documentado em `ASSETS.md`)**: GLB com shape keys; ainda sem asset.
+- Medidas (dev, iPhone 13 emulado, CPU 4× mais lenta): o busto 3D aparece em ~1,6 s; parado, 0 desenhos.
+
+### Página de desenvolvimento
+`npm run dev` → `/dev/avatars`: grade de 5 fases × 3 níveis de gordura × 6 combinações de genes e roupas, uma linha
+de musculatura e um busto ao vivo do item tocado. Fica fora do build de produção.
+
+## 10. Ideias futuras
 - **Outras carreiras**: boxe olímpico, wrestling universitário, árbitro, treinador de seleção, empresário de lutadores.
 - **Faculdade**: vestibular, cursos e vida universitária (a partir de `caminho_18 = 'faculdade'`).
-- **Novos países e ligas** (fictícios): circuitos asiáticos e europeus, transferências de cidade, idiomas.
+- **Outros países e ligas** (fictícios): o jogo hoje é só no Brasil (Etapa 7); circuitos asiáticos, europeus e
+  americanos voltariam como transferência de carreira, com idioma e dados demográficos próprios de cada país.
+- **Avatar Fase B**: modelos GLB com shape keys (pipeline em `ASSETS.md`), corpo inteiro na tela de luta.
 - **Aposentadoria financeira**: benefício da previdência que já é cobrada, investimento para a velhice.
 - **Modo desafio**: metas com regras (ex.: "campeão sem academia", "milionário sem lutar", "5 gerações de faixas pretas").
 - **Eventos sazonais**: copa de fim de ano, torneio beneficente, Dia das Mães/Pais com a família.
@@ -715,13 +808,13 @@ morre, e o jogador pode continuar a história como um dos filhos. Conquistas e H
 - **Talento revelado aos poucos**: olheiros, testes físicos, "promessa" no noticiário.
 - **Netos e bisnetos jogáveis** com árvore genealógica completa (hoje: antepassados jogados + filhos).
 
-## 10. Arquitetura (resumo)
+## 11. Arquitetura (resumo)
 Engine TS pura e determinística (`src/engine`), conteúdo como dados (`src/content`), save versionado com
 migrações (`src/save`: saves de vida em 3 slots e o armazenamento meta separado), UI React que apenas lê o estado e
 despacha ações (`src/ui`), PWA com service worker gerado no build. Detalhes em `CLAUDE.md`; como jogar e instalar no
 `README.md`.
 
-## 11. Roadmap
+## 12. Roadmap
 - **Etapa 1 — Esqueleto jogável** ✅ — projeto, GameState, criação de personagem, energia, 3 ações,
   avançar ano, motor de eventos + 10 eventos de infância, log, autosave em IndexedDB, testes.
 - **Etapa 2 — Escola** ✅ — fases escolares, matrícula automática, nota/disciplina/faltas/popularidade,
@@ -741,3 +834,8 @@ despacha ações (`src/ui`), PWA com service worker gerado no build. Detalhes em
   Gompertz com obituário e nota, testamento e partilha, continuar como filho(a) com dinastia e bônus de legado,
   rivais do elenco, 50 conquistas e Hall da Fama em armazenamento meta, PWA offline, 3 slots, exportar/importar,
   configurações e acessibilidade, save v6. **Versão 1.0.**
+- **Etapa 7 — Brasil e avatares 3D** ✅ — só Brasil com 27 UFs (população e cor ou raça do Censo 2022, nomes do
+  IBGE por década e região, sobrenome da mãe + do pai), custo de vida por cidade, mudança de cidade, genética de
+  aparência herdável com regra de não discriminação testada, `deriveAvatar`, 22 roupas com guarda-roupa e grifes,
+  busto 3D procedural com miniaturas e fallback 2D, criação de personagem em 3 passos com prévia de idade, save v7.
+  **Versão 1.1.**

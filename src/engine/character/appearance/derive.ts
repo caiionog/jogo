@@ -212,15 +212,18 @@ export function npcAppearance(seed: string, npc: Pick<Npc, 'id'>, sex: Sex, cont
 }
 
 /** Avatar de um lutador NPC: força/condicionamento e categoria de peso definem o corpo. */
-export function deriveNpcAvatar(seed: string, npc: Npc, sex: Sex, content: GameContent, opts: { heavy?: number; champion?: boolean } = {}): AvatarDescriptor {
+/** Dados mínimos de um lutador (NPC do elenco ou adversário de uma oferta; sem idade, 28). */
+export type NpcLike = Pick<Npc, 'id' | 'strength' | 'fitness' | 'style'> & { age?: number };
+
+export function deriveNpcAvatar(seed: string, npc: NpcLike, sex: Sex, content: GameContent, opts: { heavy?: number; champion?: boolean } = {}): AvatarDescriptor {
   const a = npcAppearance(seed, npc, sex, content);
   const muscle = clamp01((npc.strength + npc.fitness) / 200 + 0.1);
   const fat = clamp01(0.12 + (opts.heavy ?? 0.4) * 0.35 + (a.genes.weightGain - 0.5) * 0.15 - (npc.fitness - 60) / 300);
   const s = Number(npc.id.replace(/\D/g, '')) || 1;
-  const outfit = opts.champion ? wear(content, 'roupao', Math.floor(frac(s, 2) * 3)) : pickOutfit(content, npc.age, s, 'luta');
+  const outfit = opts.champion ? wear(content, 'roupao', Math.floor(frac(s, 2) * 3)) : pickOutfit(content, npc.age ?? 28, s, 'luta');
   return build({
     sex,
-    age: npc.age,
+    age: npc.age ?? 28,
     appearance: a,
     fat,
     muscle,

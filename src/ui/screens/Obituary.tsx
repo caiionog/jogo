@@ -1,3 +1,5 @@
+import AvatarThumb from '../avatar/AvatarThumb';
+import { personAvatar } from '../avatar/descriptors';
 /** Tela de fim de vida (Etapa 6): obituário, nota da vida, partilha e "Continuar como filho(a)". */
 import { useState } from 'react';
 import { continuableHeirs } from '../../engine';
@@ -105,7 +107,8 @@ export default function Obituary({ onViewLife }: { onViewLife: () => void }) {
                 onClick={() => continueAsChild(h.personId)}
                 className="flex min-h-14 items-center justify-between gap-2 rounded-xl bg-emerald-500 px-4 py-3 text-left font-bold text-slate-950 active:scale-[0.98]"
               >
-                <span>
+                <AvatarThumb d={(() => { const p = game.relationships.people.find((x) => x.id === h.personId); return p ? personAvatar(p) : null; })()} size={44} label={h.name} />
+                <span className="flex-1">
                   {h.name}
                   <span className="block text-xs font-normal">
                     {h.age} anos · herda {money.format(h.amount)}
