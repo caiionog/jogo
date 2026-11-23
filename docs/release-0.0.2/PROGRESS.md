@@ -15,7 +15,7 @@ Branch `release/0.0.2`, criada a partir de `release/0.0.1` (tag local `v0.0.1`).
 - [x] **7. Prisão e reintegração** (≥ 20 eventos) — 22 eventos `prisao_*`; 790 testes
 - [x] **8. Cruzamentos** entre polícia, crime, luta e relacionamentos — 794 testes
 - [x] **9. Interface**, fardas, uniformes e ícones — 798 testes
-- [ ] **10. Balanceamento** (`npm run sim`, tabelas no GDD)
+- [x] **10. Balanceamento** (`npm run sim`, tabelas no GDD) — `scripts/simCrime.ts`, GDD §10c
 - [ ] **11. Documentação e release** (CHANGELOG, versão 0.0.2, capturas, tag local `v0.0.2`)
 
 ## Notas da fase 1
@@ -166,11 +166,17 @@ Branch `release/0.0.2`, criada a partir de `release/0.0.1` (tag local `v0.0.1`).
   (`ficha`: situação, processo, pena, foragido, registros). Preso: aba inferior "Prisão", atalho da luta escondido.
 - Bundle: JS 1.161 kB (328 kB gzip), CSS 42 kB.
 
+## Notas da fase 10
+- `scripts/simCrime.ts` (chamado no fim do `npm run sim`; `SIM_CRIME_N=200 npx tsx scripts/simCrime.ts` sozinho).
+  Resultados e ajustes no GDD §10c.
+
 ## Próximo passo exato (para a sessão nova)
-1. `npm install`. Confira `npm run lint`, `npm test` (798 testes) e `npx tsc --noEmit`.
-2. **Fase 10 — Balanceamento**: estender `scripts/sim.ts` com a seção polícia/crime (perfis: "policial" tenta o
-   concurso aos 18–25 e trabalha com afinco; "criminoso" comete delitos e aceita convites) medindo % policial, idade
-   de entrada, % força especial, mortes em serviço; % que comete crimes, % presos, pena média, reincidência, % em
-   facção, expectativa de vida no crime, renda do crime × emprego comum. Metas no `PLAN.md`. Registrar no GDD.
+1. `npm install`. Confira `npm run lint`, `npm test` e `npx tsc --noEmit`.
+2. **Fase 11 — Documentação e release**: GDD (seções de treino invisível, polícia, crime, facções, justiça, prisão e
+   regras de conteúdo — o §10c já tem o balanceamento), CLAUDE.md (regras de conteúdo da 0.0.2, teste de nomes
+   proibidos, como adicionar cargo/evento policial/delito/facção/evento de prisão; save v15), CHANGELOG 0.0.2 (bundle
+   ~1.161 kB JS / 328 kB gzip), versão 0.0.2 em `package.json` e Configurações, capturas em
+   `docs/release-0.0.2/screenshots/` (carreira policial, troca de tiro, investigação, menu de crime, prisão, fardas),
+   HANDOFF, tag local `v0.0.2`. Sem push em main/merge/deploy sem perguntar.
 3. Depois da 0.0.2: o usuário pediu a **release 0.0.3** (texto completo no fim do pedido da sessão anterior; começa
    pela fase 0 = plano com aprovação).

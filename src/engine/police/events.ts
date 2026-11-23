@@ -144,7 +144,7 @@ export function specialStepChance(state: GameState, content: GameContent): numbe
   if (!c || !u) return 0;
   const st = state.character.stats;
   const k = (st.athletic - u.minAthletic) / 100 + (state.police.shooting - u.minShooting) / 120 + (st.health - u.minHealth) / 300;
-  return Math.max(0.15, Math.min(0.8, 0.26 + k + luckFactor(state) * 0.04));
+  return Math.max(0.15, Math.min(0.58, 0.22 + k + luckFactor(state) * 0.04));
 }
 
 export type SpecialBlockReason = 'busy' | 'no-career' | 'stage' | 'already' | 'service' | 'athletic' | 'shooting' | 'health' | 'tried';
@@ -161,7 +161,7 @@ export function specialBlockReason(state: GameState, content: GameContent): Spec
   if (state.character.stats.athletic < u.minAthletic) return 'athletic';
   if (state.police.shooting < u.minShooting) return 'shooting';
   if (state.character.stats.health < u.minHealth || state.health.injuries.some((i) => i.severity >= 2)) return 'health';
-  if (state.flags.curso_especial_ano === state.year) return 'tried';
+  if (state.flags.curso_especial_ano === state.year || c.specialTries >= 2) return 'tried';
   return null;
 }
 

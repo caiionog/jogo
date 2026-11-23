@@ -141,7 +141,7 @@ describe('força especial', () => {
     for (let i = 0; i < N; i++) {
       const r = createRng(9000 + i);
       const base = cop('pm', {}, `sp${i}`);
-      let s: GameState = withLuck({ ...base, rngState: 77 + i, police: { ...base.police, shooting: r.int(60, 85) }, character: { ...base.character, stats: { ...base.character.stats, athletic: r.int(65, 90), health: r.int(70, 100) } } }, r.int(0, 100));
+      let s: GameState = withLuck({ ...base, rngState: 77 + i, police: { ...base.police, shooting: r.int(65, 88) }, character: { ...base.character, stats: { ...base.character.stats, athletic: r.int(68, 92), health: r.int(70, 100) } } }, r.int(0, 100));
       s = trySpecialCourse(s, C);
       for (let step = 0; step < 3 && s.pendingEvents.length; step++) s = resolveEvent(s, s.pendingEvents[0]!.eventId, 'seguir', C);
       if (s.police.career?.unit === 'especial') passed++;

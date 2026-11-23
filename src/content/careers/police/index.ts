@@ -22,7 +22,7 @@ export const POLICE_TRACKS: readonly PoliceTrackDef[] = [
     ageRange: [18, 30],
     education: 'medio',
     fee: 90,
-    cut: { prova: 52, taf: 42, psico: 40 },
+    cut: { prova: 46, taf: 36, psico: 40 },
     course: 'Curso de Formação de Soldados',
     postings: BATALHOES,
     ranks: [
@@ -40,7 +40,7 @@ export const POLICE_TRACKS: readonly PoliceTrackDef[] = [
     ageRange: [18, 35],
     education: 'superior',
     fee: 0,
-    cut: { prova: 64, taf: 48, psico: 45 },
+    cut: { prova: 56, taf: 42, psico: 45 },
     course: 'Curso de Formação de Oficiais',
     postings: BATALHOES,
     ranks: [
@@ -59,7 +59,7 @@ export const POLICE_TRACKS: readonly PoliceTrackDef[] = [
     ageRange: [18, 30],
     education: 'superior',
     fee: 110,
-    cut: { prova: 60, taf: 38, psico: 42 },
+    cut: { prova: 54, taf: 32, psico: 42 },
     course: 'Curso de Formação de Investigadores',
     postings: DELEGACIAS,
     ranks: CLASSES.map((c, i) => ({ title: `Investigador ${c}`, titleF: `Investigadora ${c}`, salaryMW: [4.5, 5.5, 6.8, 8.5][i]!, minYears: [0, 5, 5, 6][i]!, minMerit: [0, 20, 40, 60][i]! })),
@@ -72,7 +72,7 @@ export const POLICE_TRACKS: readonly PoliceTrackDef[] = [
     ageRange: [18, 30],
     education: 'superior',
     fee: 110,
-    cut: { prova: 62, taf: 35, psico: 40 },
+    cut: { prova: 54, taf: 30, psico: 40 },
     course: 'Curso de Formação de Escrivães',
     postings: DELEGACIAS,
     ranks: CLASSES.map((c, i) => ({ title: `Escrivão ${c}`, titleF: `Escrivã ${c}`, salaryMW: [4.5, 5.5, 6.8, 8.5][i]!, minYears: [0, 5, 5, 6][i]!, minMerit: [0, 18, 36, 55][i]! })),
@@ -86,7 +86,7 @@ export const POLICE_TRACKS: readonly PoliceTrackDef[] = [
     education: 'superior',
     degree: ['direito'],
     fee: 180,
-    cut: { prova: 72, taf: 35, psico: 45 },
+    cut: { prova: 64, taf: 30, psico: 45 },
     course: 'Curso de Formação de Delegados',
     postings: DELEGACIAS,
     ranks: CLASSES.map((c, i) => ({ title: `Delegado ${c}`, titleF: `Delegada ${c}`, salaryMW: [12, 14.5, 17.5, 21][i]!, minYears: [0, 4, 5, 5][i]!, minMerit: [0, 25, 45, 70][i]! })),
@@ -110,8 +110,8 @@ export const POLICE: PoliceContent = {
   specialEvents: ['pol_especial_1', 'pol_especial_2', 'pol_especial_3'],
   specialText: SPECIAL_TEXT,
   special: [
-    { force: 'pm', name: 'Esquadrão Sentinela', course: 'Curso de Operações Sentinela', minServiceYears: 3, minAthletic: 65, minShooting: 60, minHealth: 70, salaryBonus: 0.2 },
-    { force: 'civil', name: 'Grupo Âncora', course: 'Seleção Âncora', minServiceYears: 3, minAthletic: 60, minShooting: 62, minHealth: 70, salaryBonus: 0.2 },
+    { force: 'pm', name: 'Esquadrão Sentinela', course: 'Curso de Operações Sentinela', minServiceYears: 4, minAthletic: 68, minShooting: 65, minHealth: 70, salaryBonus: 0.2 },
+    { force: 'civil', name: 'Grupo Âncora', course: 'Seleção Âncora', minServiceYears: 4, minAthletic: 62, minShooting: 66, minHealth: 70, salaryBonus: 0.2 },
   ],
 };
 

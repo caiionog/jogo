@@ -102,7 +102,6 @@ export function runCrime(state: GameState, def: CrimeDef, rng: Rng, content: Gam
     if (plan?.team) gain = Math.round(gain * (1 - TEAM_CUT[plan.team]));
     if (gain > 0) {
       s = post(s, 'crime', gain, def.label);
-      s = patchCrime(s, (c) => ({ ...c, earned: (c.earned ?? 0) + gain }));
     }
     s = patchCrime(s, (c) => ({ ...c, wanted: clamp100(c.wanted + wanted * 0.6), rep: clamp100(c.rep + def.repGain) }));
     s = { ...s, character: { ...s.character, stats: addStats(s.character.stats, { happiness: def.tier === 'grave' ? -1 : 1 }) } };

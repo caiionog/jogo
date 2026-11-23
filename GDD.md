@@ -1025,6 +1025,31 @@ de 20 lutas pro); dinastias chegam à 2ª geração em 30% e à 3ª em 10%.
 Ponto de atenção: casamentos até os 40 caíram (~27% na política do sim, contra 52% na Etapa 4). O sim tenta romance
 uma vez por ano; vale rever na próxima release se isso também acontece com jogadores reais.
 
+## 10c. Release 0.0.2 — treino invisível, polícia, crime e prisão
+
+### Balanceamento da polícia e do crime (`npm run sim`, 6º argumento = vidas por perfil; 200 vidas)
+Três perfis: **neutro** (escolhas aleatórias até os 40), **policial** (concurso todo ano dos 18 aos 30, trabalha com
+afinco, treina no estande, faz cursos e tenta a força especial em 40% dos anos elegíveis) e **criminoso** (a partir
+dos 18, dois delitos por ano — o maior disponível —, aceita facção, entra no tráfico).
+
+| Métrica | Resultado | Meta |
+|---|---|---|
+| Neutro: cometeu algum delito / ficha de adulto | 1,0% / 0% | crime é escolha, não acidente |
+| Virou policial (tentando) · idade média de entrada | 42% · 18,5 anos | carreira acessível com preparo |
+| Força especial (dos policiais) | 4,8% | rara (≤ 15%) |
+| Aprovação no curso de seleção (candidatos que cumprem os requisitos) | ~19% | 10–25% |
+| Mortes em serviço · exonerados/demitidos | 1,2% · 10,7% | estável, com picos de risco |
+| Criminoso: preso com pena > 1 ano | 94% | — |
+| Pena média · reincidência (2+ condenações) | 14,3 anos · 87,5% | — |
+| Passou por facção · morte violenta | 80,5% · 50% | — |
+| Renda média do crime × emprego comum (caixa, nível 1) | R$ 33,7 mil/ano × R$ 19,7 mil/ano | crime rende mais no curto prazo |
+| Carreira criminosa que terminou mal (prisão, morte ou ficha) | 100% | ≥ 80% |
+
+Ajustes desta fase: notas de corte da prova (PM 46, CFO 56, investigador/escrivão 54, delegado 64) e do TAF (PM 36,
+CFO 42, Civil 30–32), requisitos da força especial (4 anos, atlética 62–68, Tiro 65–66), chance por etapa do curso
+`0,22 + folga` limitada a 0,58 e no máximo 2 tentativas na carreira; `crime.earned` passou a somar tudo o que entra
+como dinheiro ilícito (delitos, tráfico, facção, propina).
+
 ## 11. Ideias futuras
 - **Outras carreiras**: boxe olímpico, wrestling universitário, árbitro, treinador de seleção, empresário de lutadores.
 - **Faculdade**: vestibular, cursos e vida universitária (a partir de `caminho_18 = 'faculdade'`).

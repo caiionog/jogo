@@ -78,7 +78,7 @@ export function post(state: GameState, cat: LedgerCategory, amount: number, labe
   if (value === 0) return state;
   const eco = state.economy;
   // dinheiro de crime/propina vira "dinheiro sujo" (release 0.0.2)
-  const crime = cat === 'crime' && value > 0 && state.crime ? { ...state.crime, dirty: state.crime.dirty + value } : state.crime;
+  const crime = cat === 'crime' && value > 0 && state.crime ? { ...state.crime, dirty: state.crime.dirty + value, earned: (state.crime.earned ?? 0) + value } : state.crime;
   return {
     ...state,
     crime,
