@@ -21,7 +21,8 @@ import type { ModalityId } from '../fighting/types';
 import { meetFriend } from '../relationships/social';
 import { relationsOf } from '../relationships/people';
 import { talentMod } from '../character/talents';
-import { bumpUse, sessionsLeft, usesThisYear, useSessions } from './sessions';
+import { bumpUse, usesThisYear, useSessions } from './sessions';
+import { isOvertraining, overtrainSession } from '../fighting/overtrain';
 
 export type SportId = 'futebol' | 'natacao' | 'atletismo' | 'volei' | 'basquete' | 'judo' | 'ginastica';
 
@@ -96,12 +97,11 @@ export function leaveSportsClub(state: GameState, content: GameContent): GameSta
 const SPORT_TEXT: Record<SportId, string> = { futebol: 'futebol', natacao: 'natação', atletismo: 'atletismo', volei: 'vôlei', basquete: 'basquete', judo: 'judô', ginastica: 'ginástica' };
 export const sportLabel = (s: SportId) => SPORT_TEXT[s];
 
-export type ClubTrainBlockReason = 'busy' | 'no-club' | 'no-sessions';
+export type ClubTrainBlockReason = 'busy' | 'no-club';
 
-export function clubTrainBlockReason(state: GameState, content: GameContent): ClubTrainBlockReason | null {
+export function clubTrainBlockReason(state: GameState, _content: GameContent): ClubTrainBlockReason | null {
   if (!state.alive || state.pendingEvents.length || state.activeFight) return 'busy';
   if (!state.sportsClub) return 'no-club';
-  if (sessionsLeft(state, content) < 1) return 'no-sessions';
   return null;
 }
 
@@ -110,6 +110,8 @@ export function trainAtClub(state: GameState, content: GameContent): GameState {
   if (clubTrainBlockReason(state, content) !== null) return state;
   const m = state.sportsClub!;
   const rng = createRng(state.rngState);
+  // sem sessões livres: treino sem ganho e com o aviso (release 0.0.2)
+  if (isOvertraining(state, content)) return { ...overtrainSession(state, rng, content), rngState: rng.state };
   const athletic = state.character.stats.athletic;
   const mult = 1 + talentMod(state, content, 'trainingGain');
   const raw = 2.4 * mult * Math.max(0.1, (100 - athletic) / 100) * (state.character.age < 12 ? 0.8 : 1) * (0.8 + rng.next() * 0.4);

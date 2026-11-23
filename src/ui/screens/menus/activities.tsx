@@ -1,10 +1,9 @@
-/** Atividades (treino com sessões; o resto sem limite, com retorno decrescente), Relacionamentos, Saúde, Testamento e Perfil. */
+/** Atividades (treino com limite oculto; o resto sem limite, com retorno decrescente), Relacionamentos, Saúde, Testamento e Perfil. */
 import { BookOpen, Car, Dumbbell, Heart, HeartPulse, MapPin, PartyPopper, Plane, ScrollText, Trophy } from 'lucide-react';
 import { useState } from 'react';
 import { GAME_CONTENT as C } from '../../../content';
 import type { GameState, TrainingKind } from '../../../engine';
-import { CNH_COST, TRAINING_MIN_AGE, actionBlockReason, actionUseKey, cnhBlockReason, coachAssessment, meetBlockReason, sessionsBreakdown, sessionsLeft, sessionsReserved, trainingBlockReason, usesThisYear } from '../../../engine';
-import { TrainingMeter } from '../Life';
+import { CNH_COST, TRAINING_MIN_AGE, actionBlockReason, actionUseKey, cnhBlockReason, coachAssessment, meetBlockReason, trainingBlockReason, usesThisYear } from '../../../engine';
 import { gymModalitiesText } from '../../text/fight';
 import { ListGroup, ListItem } from '../../design/components';
 import { useNav } from '../../nav';
@@ -23,7 +22,7 @@ const TRAIN: { kind: TrainingKind; title: string; sub: string; emoji: string }[]
   { kind: 'fisico', title: 'Treino físico', sub: 'Sobe a Capacidade atlética', emoji: '🏃' },
   { kind: 'sparring', title: 'Sparring', sub: 'Um pouco de tudo — risco de lesão', emoji: '🤼' },
 ];
-const TRAIN_REASON: Record<string, string> = { 'no-sessions': 'Sem sessões de treino livres neste ano', 'no-gym': 'Precisa de uma academia (Carreira de Luta)', 'not-offered': 'Sua academia não oferece esta modalidade', busy: 'Resolva o acontecimento pendente', injured: 'Lesionado(a): sparring vetado', retired: 'Aposentado(a)', dead: '—' };
+const TRAIN_REASON: Record<string, string> = { 'no-gym': 'Precisa de uma academia (Carreira de Luta)', 'not-offered': 'Sua academia não oferece esta modalidade', busy: 'Resolva o acontecimento pendente', injured: 'Lesionado(a): sparring vetado', retired: 'Aposentado(a)', dead: '—' };
 const MEET_REASON: Record<string, string> = { 'too-young': 'Disponível a partir dos 14 anos', 'app-adult': 'Disponível a partir dos 18 anos', taken: 'Você já está com alguém', busy: 'Resolva o acontecimento pendente', dead: '—' };
 const CNH_REASON: Record<string, string> = { age: 'Disponível a partir dos 18 anos', has: 'Você já tem CNH', 'no-money': `Custa ${money.format(CNH_COST)}`, busy: 'Resolva o acontecimento pendente', tried: 'Você já tentou este ano' };
 
@@ -53,10 +52,8 @@ export function AtividadesScreen({ game }: { game: GameState }) {
 export function TreinoScreen({ game }: { game: GameState }) {
   const train = useGameStore((s) => s.train);
   const gym = C.fighting.gyms.find((g) => g.id === game.fighter.gymId);
-  const limit = C.limits.trainingSessions;
   return (
     <>
-      <TrainingMeter left={sessionsLeft(game, C)} reserved={sessionsReserved(game, C)} limit={limit} notes={sessionsBreakdown(game, C).map((p) => p.text)} />
       {TRAIN.map((t) => {
         const r = trainingBlockReason(game, t.kind, C);
         return (
@@ -64,7 +61,7 @@ export function TreinoScreen({ game }: { game: GameState }) {
             key={t.kind}
             emoji={t.emoji}
             title={t.title}
-            subtitle={`1 sessão · ${t.sub}`}
+            subtitle={t.sub}
             disabled={!!r}
             reason={r === 'too-young' ? `Disponível a partir dos ${TRAINING_MIN_AGE[t.kind]} anos` : r ? TRAIN_REASON[r] : undefined}
             onClick={() => train(t.kind)}

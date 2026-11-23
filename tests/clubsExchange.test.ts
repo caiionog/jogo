@@ -42,7 +42,9 @@ describe('clube esportivo', () => {
     s = { ...s, character: { ...s.character, stats: { ...s.character.stats, athletic: 30 } } };
     for (let i = 0; i < 10; i++) s = trainAtClub(s, C);
     expect(sessionsLeft(s, C)).toBe(0);
-    expect(clubTrainBlockReason(s, C)).toBe('no-sessions');
+    // acima do limite continua disponível, mas não rende
+    expect(clubTrainBlockReason(s, C)).toBeNull();
+    expect(trainAtClub(s, C).character.stats.athletic).toBe(s.character.stats.athletic);
     expect(s.character.stats.athletic).toBeGreaterThan(30);
     expect(s.fighter.skills.grappling).toBe(makeGame('clube').fighter.skills.grappling);
   });

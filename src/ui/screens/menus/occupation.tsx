@@ -14,9 +14,9 @@ import SchoolPanel from '../../components/SchoolPanel';
 import { money } from '../../components/ecoUi';
 import { gradesSummary } from '../../text/fight';
 
-/** "Ocupa 4 sessões de treino por ano" (tempo integral) / 2 (meio período) / nenhuma. */
+/** Quanto o emprego pesa no tempo de treino, em palavras (release 0.0.2: nenhum número de sessões na UI). */
 export function sessionsText(n: number): string {
-  return n > 0 ? `ocupa ${n} sessões de treino/ano` : 'não ocupa sessões de treino';
+  return n >= 4 ? 'toma boa parte do tempo de treino' : n > 0 ? 'toma um pouco do tempo de treino' : 'não atrapalha os treinos';
 }
 
 export const ACTION_REASON: Record<string, string> = {
@@ -211,7 +211,7 @@ export function CarreiraScreen({ game, jobId }: { game: GameState; jobId: string
       )}
       {confirm && (
         <BottomSheet title={confirm === 'quit' ? 'Pedir demissão?' : 'Trocar de emprego?'} onClose={() => setConfirm(null)} testId="confirm-job">
-          <p className="mb-3 text-sm">{confirm === 'quit' ? `Você deixa de ser ${def.title.toLowerCase()} e libera as sessões de treino que ele ocupava.` : `Se for contratado(a), você pede demissão de ${currentDef?.title.toLowerCase()}. Só dá para ter um emprego por vez.`}</p>
+          <p className="mb-3 text-sm">{confirm === 'quit' ? `Você deixa de ser ${def.title.toLowerCase()} e libera o tempo de treino que ele ocupava.` : `Se for contratado(a), você pede demissão de ${currentDef?.title.toLowerCase()}. Só dá para ter um emprego por vez.`}</p>
           <div className="grid grid-cols-2 gap-2">
             <DsButton onClick={() => setConfirm(null)}>Cancelar</DsButton>
             <DsButton

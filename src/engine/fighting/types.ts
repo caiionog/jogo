@@ -414,6 +414,8 @@ export interface FightingContent {
   nicknames: readonly string[];
   /** Frases do treinador depois do treino, por nível oculto (pista qualitativa; Etapa 8). */
   coachLines?: Record<'grappling' | 'trocacao' | 'fisico' | 'sparring', { low: readonly string[]; mid: readonly string[]; high: readonly string[] }>;
+  /** Treino além do limite do ano: avisos e lesão por excesso (release 0.0.2). */
+  overtrain?: import('./overtrain').OvertrainContent;
   /** Modalidades e sistemas de graduação (release 0.0.1). */
   modalities: readonly ModalityDef[];
   graduations: readonly GraduationSystem[];

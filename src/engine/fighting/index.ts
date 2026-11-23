@@ -5,6 +5,7 @@ export * from './profile';
 export * from './chin';
 export * from './body';
 export * from './training';
+export * from './overtrain';
 export * from './belts';
 export * from './ranking';
 export * from './world';

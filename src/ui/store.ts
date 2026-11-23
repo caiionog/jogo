@@ -27,6 +27,7 @@ import {
   performAction,
   resolveEvent,
   trainFighter,
+  overtrainExtras,
   interact,
   meetSomeoneAction,
   setRelationshipSettings,
@@ -292,7 +293,9 @@ export const useGameStore = create<GameStore>((setState, getState) => {
     const line = d.lines.at(-1);
     if (!line) return;
     const text = d.deltas.map((x) => `${STAT_SHORT[x.key]} ${x.delta > 0 ? '+' : '−'}${Math.abs(x.delta)}`).join(' · ');
-    setState({ toasts: [...getState().toasts, { id: toastId++, icon: '✔', title: line, text }].slice(-3) });
+    // treino além do limite do ano: o aviso aparece como alerta (treino invisível, release 0.0.2)
+    const over = after.fighter.sessionsThisYear > before.fighter.sessionsThisYear && overtrainExtras(after, GAME_CONTENT) > 0;
+    setState({ toasts: [...getState().toasts, { id: toastId++, icon: over ? '⚠' : '✔', title: line, text }].slice(-3) });
   };
 
   return {

@@ -1,5 +1,6 @@
 import { JOB_EVENTS } from './events/jobs';
 import { COACH_LINES } from './fightText/coach';
+import { OVERTRAIN } from './fightText/overtrain';
 import type { GameContent } from '../engine';
 import { ACTIONS } from './actions';
 import { LIMITS } from './config';
@@ -56,6 +57,7 @@ export const GAME_CONTENT: GameContent = {
     text: FIGHT_TEXT,
     nicknames: NICKNAMES,
     coachLines: COACH_LINES,
+    overtrain: OVERTRAIN,
     modalities: MODALITIES,
     graduations: GRADUATIONS,
     hooks: { weightMissEventId: 'fight_weight_miss', farewellEventId: 'retire_farewell', losingStreakEventId: 'retire_losing_streak', doctorRetireEventId: 'retire_doctor' },

@@ -76,9 +76,9 @@ describe('ganho de treino', () => {
     expect(injured).toBeLessThan(40);
   });
 
-  it('bloqueios: sem sessões, muito novo, sparring lesionado', () => {
+  it('bloqueios: muito novo, sparring lesionado (sem sessões livres não bloqueia)', () => {
     const full = fighterGame(25, {}, { gymId: 'gen_bairro' });
-    expect(trainingBlockReason({ ...full, fighter: { ...full.fighter, sessionsThisYear: 10 } }, 'muaythai', GAME_CONTENT)).toBe('no-sessions');
+    expect(trainingBlockReason({ ...full, fighter: { ...full.fighter, sessionsThisYear: 10 } }, 'muaythai', GAME_CONTENT)).toBeNull();
     expect(trainingBlockReason(fighterGame(8), 'sparring', GAME_CONTENT)).toBe('too-young');
     expect(trainingBlockReason(withInjury(fighterGame(25, {}, { gymId: 'gen_bairro' }), 'lca', 12), 'sparring', GAME_CONTENT)).toBe('injured');
     expect(trainingBlockReason(withInjury(fighterGame(25, {}, { gymId: 'gen_bairro' }), 'distensao', 2), 'sparring', GAME_CONTENT)).toBe(null);

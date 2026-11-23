@@ -7,8 +7,6 @@ import { money } from '../../components/ecoUi';
 import { useGameStore } from '../../store';
 import { SPORT_LABEL } from '../../../content/sportsClubs';
 import { modalityLabel } from '../../text/fight';
-import { TrainingMeter } from '../Life';
-import { sessionsBreakdown, sessionsLeft, sessionsReserved } from '../../../engine';
 
 const CLUB_REASON: Record<string, string> = { busy: 'Indisponível agora', 'too-young': 'Muito novo(a)', 'other-city': 'Outra cidade', 'no-sport': '—', current: 'Você já treina aqui', 'no-money': 'Dinheiro insuficiente' };
 const EX_REASON: Record<string, string> = {
@@ -27,11 +25,10 @@ export function ClubeScreen({ game }: { game: GameState }) {
   const tr = clubTrainBlockReason(game, C);
   return (
     <>
-      <TrainingMeter left={sessionsLeft(game, C)} reserved={sessionsReserved(game, C)} limit={C.limits.trainingSessions} notes={sessionsBreakdown(game, C).map((p) => p.text)} />
       {m && club ? (
         <ListGroup title="Seu clube">
           <p className="text-sm" data-testid="club-current">{club.name} · {SPORT_LABEL[m.sport]} · {m.years} {m.years === 1 ? 'ano' : 'anos'} de clube</p>
-          <ListItem emoji="🏅" title={`Treinar ${SPORT_LABEL[m.sport]?.toLowerCase()}`} subtitle="1 sessão · Capacidade atlética e amizades" disabled={!!tr} reason={tr === 'no-sessions' ? 'Sem sessões de treino livres neste ano' : 'Indisponível agora'} onClick={st.trainAtClub} chevron={false} testId="club-train" />
+          <ListItem emoji="🏅" title={`Treinar ${SPORT_LABEL[m.sport]?.toLowerCase()}`} subtitle="Capacidade atlética e amizades" disabled={!!tr} reason="Indisponível agora" onClick={st.trainAtClub} chevron={false} testId="club-train" />
           <ListItem emoji="🚪" title="Sair do clube" tone="danger" onClick={st.leaveSportsClub} chevron={false} />
         </ListGroup>
       ) : null}
@@ -53,7 +50,7 @@ export function IntercambioScreen({ game }: { game: GameState }) {
   const ex = onExchange(game) ? C.exchangePrograms.find((p) => p.id === game.exchange!.programId) : undefined;
   return (
     <>
-      {ex && <p className="rounded-[var(--ds-radius)] bg-[var(--ds-surface)] p-3 text-sm" data-testid="exchange-current">✈️ Você está em {ex.city} ({ex.country}), na {ex.academy}. Treine {modalityLabel(ex.modality).toLowerCase()} nas suas sessões: o grande salto vem no fim do ano.</p>}
+      {ex && <p className="rounded-[var(--ds-radius)] bg-[var(--ds-surface)] p-3 text-sm" data-testid="exchange-current">✈️ Você está em {ex.city} ({ex.country}), na {ex.academy}. Treine {modalityLabel(ex.modality).toLowerCase()} ao longo do ano: o grande salto vem no fim do ano.</p>}
       <p className="text-sm text-[var(--ds-text-muted)]">Um ano treinando numa academia de referência no exterior. Você continua morando no Brasil; a escola fica em pausa e o emprego de tempo integral precisa de licença.</p>
       {age >= 16 && age < 18 && game.flags.autorizacao_intercambio !== game.year && <ListItem emoji="👪" title="Pedir autorização aos pais" subtitle="Uma vez por ano; eles podem pagar parte da viagem" onClick={st.askParentsForExchange} chevron={false} testId="exchange-parents" />}
       {game.economy.job && game.flags.licenca !== game.year && <ListItem emoji="📝" title="Pedir licença do trabalho por um ano" subtitle="Sem salário no ano; a chance depende do seu desempenho" onClick={st.askJobLeave} chevron={false} testId="exchange-leave" />}
