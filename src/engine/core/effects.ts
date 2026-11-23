@@ -1,3 +1,5 @@
+import { applyPoliceEffects } from '../police/events';
+import type { PoliceEffects } from '../police/events';
 import { examBlockReason, takeExamWith } from '../lifeStages/college';
 import { changeLuck, revealTalent } from '../character/talents';
 import { applySkillDelta } from '../fighting/profile';
@@ -66,6 +68,8 @@ export interface Effects {
   health?: HealthEffects;
   /** Mudança de cidade sorteada (Etapa 7). */
   move?: MoveEffect;
+  /** Carreira policial: mérito, troca de tiro, investigação, curso da força especial (release 0.0.2). */
+  police?: PoliceEffects;
   followUps?: FollowUp[];
 }
 
@@ -125,6 +129,10 @@ export function applyEffects(state: GameState, effects: Effects | undefined, ctx
   if (effects.health) {
     if (!ctx) throw new Error('applyEffects: efeitos de saúde exigem EffectContext');
     next = applyHealthEffects(next, effects.health, ctx.rng, ctx.content, ctx.vars);
+  }
+  if (effects.police) {
+    if (!ctx) throw new Error('applyEffects: efeitos policiais exigem EffectContext');
+    next = applyPoliceEffects(next, effects.police, ctx.rng, ctx.content);
   }
   if (effects.followUps?.length) next = applyFollowUps(next, effects.followUps, ctx);
   return next;

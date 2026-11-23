@@ -48,6 +48,7 @@ import {
   shootingRange,
   requestTransfer,
   resignPolice,
+  trySpecialCourse,
   askRaise,
   quitJob,
   fireAgent,
@@ -233,6 +234,7 @@ interface GameStore {
   /** Carreira policial (release 0.0.2). */
   takePoliceExam(track: PoliceTrackId): void;
   policeAction(kind: 'afinco' | 'curso' | 'estande' | 'transferencia' | 'exoneracao'): void;
+  trySpecialCourse(): void;
   askRaise(): void;
   quitJob(): void;
   /** Faculdade (release 0.0.1). */
@@ -475,6 +477,7 @@ export const useGameStore = create<GameStore>((setState, getState) => {
     },
     workHard: () => act((g) => economyAction(g, (x) => workHard(x, GAME_CONTENT))),
     takePoliceExam: (track) => act((g) => takePoliceExam(g, track, GAME_CONTENT)),
+    trySpecialCourse: () => update((g) => trySpecialCourse(g, GAME_CONTENT)),
     policeAction: (kind) => {
       const fn = { afinco: policeWorkHard, curso: policeCourse, estande: shootingRange, transferencia: requestTransfer, exoneracao: resignPolice }[kind];
       act((g) => fn(g, GAME_CONTENT));

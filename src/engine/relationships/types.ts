@@ -18,7 +18,9 @@ export type RelType =
   | 'colega_treino'
   | 'avo'
   /** Professor(a) ou instrutor(a) de faculdade, academia ou curso (release 0.0.1). Professores da ESCOLA nunca são alvo de romance. */
-  | 'professor';
+  | 'professor'
+  /** Conhecido(a) de fora do círculo próximo: detido por você, membro de facção, colega de cela (release 0.0.2). */
+  | 'conhecido';
 
 export type RomanceStage = 'ficando' | 'namorando' | 'noivos' | 'casados';
 export type CivilStatus = 'solteiro' | 'ficando' | 'namorando' | 'noivo' | 'casado' | 'divorciado';

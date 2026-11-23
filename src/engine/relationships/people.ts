@@ -43,6 +43,7 @@ const LABELS: Record<RelType, [string, string]> = {
   colega_treino: ['Colega de treino', 'Colega de treino'],
   avo: ['Avô', 'Avó'],
   professor: ['Professor', 'Professora'],
+  conhecido: ['Conhecido', 'Conhecida'],
 };
 
 export function relLabel(type: RelType, sex: Sex): string {

@@ -60,7 +60,7 @@ export function leavePolice(state: GameState, reason: PoliceLeaveReason, content
   if (!c) return state;
   const past = [...state.police.past, { force: c.force, track: c.track, rank: c.rank, until: state.character.age, reason }];
   const job = state.economy.job && Object.values(content.police.jobIds).includes(state.economy.job.jobId) ? null : state.economy.job;
-  return { ...state, police: { ...state.police, career: null, past }, economy: { ...state.economy, job } };
+  return { ...state, police: { ...state.police, career: null, case: null, past }, economy: { ...state.economy, job } };
 }
 
 export function addNotable(state: GameState, text: string): GameState {

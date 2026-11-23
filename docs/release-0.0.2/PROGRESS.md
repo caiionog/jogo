@@ -8,7 +8,7 @@ Branch `release/0.0.2`, criada a partir de `release/0.0.1` (tag local `v0.0.1`).
 - [x] **0. Plano** aprovado pelo usuário (`PLAN.md`)
 - [x] **1. Treino invisível** — `engine/fighting/overtrain.ts` + textos em `content/fightText/overtrain.ts`; sem contador em nenhuma tela; 703 testes
 - [x] **2. Base da carreira policial** (concurso, formação, Tiro, cargos, promoções; save v15; teste de nomes proibidos) — 732 testes
-- [ ] **3. Eventos da PM e da Civil**, dilemas e força especial (≥ 25 eventos)
+- [x] **3. Eventos da PM e da Civil**, dilemas e força especial (≥ 25 eventos) — 41 eventos `pol_*`; 748 testes
 - [ ] **4. Delitos**, nível de procurado, reputação no crime e dinheiro sujo
 - [ ] **5. Facções e tráfico**
 - [ ] **6. Justiça**, processo, sentença e ficha criminal
@@ -51,10 +51,29 @@ Branch `release/0.0.2`, criada a partir de `release/0.0.1` (tag local `v0.0.1`).
 - Patrocinador "Energético Choque" → "Energético Faísca" (id mantido). `tests/forbiddenNames.test.ts` varre
   `src/content` e `src/ui`.
 
+## Notas da fase 3
+- **Schema**: condição `police` (`force`, `track`, `stage`, `unit`, `minRank`, `serviceYears`, `inCase`, `noCase`,
+  `former`, `corregedoria`) e efeito `police` (`merit`, `shooting`, `corregedoria`, `promote`, `exonerate`,
+  `notable` (aceita `{o/a}`), `shootout: tática`, `caseStart`/`caseScore`/`caseEnd`, `specialStep`, `arrest`,
+  `subdue`) em `engine/police/events.ts`, ligados em `events/types.ts`, `select.ts`, `core/effects.ts` e
+  `validate.ts` (casos e eventos do curso existem). Campo opcional `police.case` (v15).
+- `engine/police/shootout.ts`: `shootoutOdds` (tática × Tiro/atlética/luta × sorte ±20% `SHOOTOUT_LUCK`; força
+  especial com perigo ×2), `rollShootout`; `applyShootout` registra mérito, lesão (catálogo, fonte `evento`) ou morte
+  (flag `morte_evento` → `killCharacter` no `resolveEvent`). Feats: `shootouts`, `arrests`, `casesSolved`,
+  `mortoEmServico`.
+- Investigação: placar oculto + `caseSolveChance` (sorte ±0,05); fim resolvido/arquivado/suspeito errado
+  (corregedoria +1). Etapas encadeadas por `followUps` `delayYears: 0` com `police.inCase`.
+- Força especial: `specialBlockReason`/`trySpecialCourse` (ação, 1 por ano) abre `pol_especial_1`; cada
+  `specialStep` sorteia `specialStepChance` (base 0,26 + atlética/Tiro/saúde acima do mínimo; ≈ 19% de aprovação
+  dos candidatos) e a engine enfileira a etapa seguinte. Botão `special-try` no `PolicePanel`.
+- `post('crime', +x)` soma em `crime.dirty` (categoria nova `crime` = "Dinheiro ilícito", não tributável).
+- RelType novo `conhecido` (grupo "Conhecidos" em Relações); `arrest` cria pessoa com `preso_por_voce`.
+- Eventos: `content/events/police/{pm,civil,life}.ts` (PM 9, Civil 14 em 4 casos, vida/dilemas/academia/curso 18).
+
 ## Próximo passo exato (para a sessão nova)
-1. `npm install`. Confira `npm run lint`, `npm test` (732 testes) e `npx tsc --noEmit`.
-2. **Fase 3 — Eventos policiais, dilemas e força especial** (≥ 25 eventos em `src/content/events/police/`), conforme
-   `PLAN.md`: condição `police` e efeito `police` no schema de eventos (`engine/events/types.ts`, `select.ts`,
-   `validate.ts`, `core/effects.ts`), `engine/police/shootout.ts` (troca de tiro com seed), casos encadeados da
-   Civil com placar oculto em `police.case` (campo opcional novo da v15), NPCs presos com flag `preso_por_voce`,
-   curso de seleção da força especial (aprovação 10–25%).
+1. `npm install`. Confira `npm run lint`, `npm test` (748 testes) e `npx tsc --noEmit`.
+2. **Fase 4 — Delitos, procurado, reputação no crime e dinheiro sujo**, conforme `PLAN.md`: `CrimeDef` em
+   `src/content/crime/index.ts`, `engine/crime/` (guarda única `crimeAllowed`, `commitCrime`, planejamento dos graves
+   em etapas abstratas, `wanted` −15/ano, pistas em palavras, suspeita por gastar dinheiro sujo, lavagem por
+   empreendimento, sorteio anual de investigação → por enquanto só registro de passagem; a justiça é a fase 6),
+   consequências socioeducativas para 12–17. `crime.dirty` já recebe os ganhos de `post('crime')`.

@@ -5,7 +5,8 @@
  */
 import { GAME_CONTENT as C } from '../../../content';
 import type { GameState, JobDef, PoliceExamBlockReason, PoliceTrackId } from '../../../engine';
-import { EDUCATION_LABEL, nextRankGap, policeActionBlock, policeAssessment, policeExamBlockReason, rankTitle, shootingHint, trackDef } from '../../../engine';
+import { EDUCATION_LABEL, nextRankGap, policeActionBlock, policeAssessment, policeExamBlockReason, rankTitle, shootingHint, specialBlockReason, specialDef, trackDef } from '../../../engine';
+import type { SpecialBlockReason } from '../../../engine';
 import { ListGroup, ListItem } from '../../design/components';
 import { useGameStore } from '../../store';
 
@@ -32,6 +33,30 @@ function examReason(r: PoliceExamBlockReason, track: PoliceTrackId): string {
       return 'Concurso interno: só para praça efetivo da Polícia Militar';
     case 'no-money':
       return `Inscrição: R$ ${def.fee}`;
+    case 'busy':
+      return 'Resolva o acontecimento pendente';
+    default:
+      return '—';
+  }
+}
+
+function specialReason(r: SpecialBlockReason, game: GameState): string {
+  const u = game.police.career ? specialDef(C, game.police.career.force) : undefined;
+  switch (r) {
+    case 'service':
+      return `Exige ${u?.minServiceYears ?? 3} anos de serviço`;
+    case 'stage':
+      return 'Só depois do estágio probatório';
+    case 'athletic':
+      return 'Exige Capacidade atlética alta';
+    case 'shooting':
+      return 'Exige mira muito boa (treine no estande)';
+    case 'health':
+      return 'Exige saúde boa e sem lesões';
+    case 'tried':
+      return 'Você já tentou este ano';
+    case 'already':
+      return 'Você já faz parte da unidade';
     case 'busy':
       return 'Resolva o acontecimento pendente';
     default:
@@ -77,6 +102,19 @@ export function PolicePanel({ game, def }: { game: GameState; def: JobDef }) {
             const r = policeActionBlock(game, k, C);
             return <ListItem key={k} emoji={emoji} title={title} subtitle={sub} tone={k === 'exoneracao' ? 'danger' : undefined} disabled={!!r} reason={r ? ACTION_REASON[r] : undefined} onClick={() => st.policeAction(k)} chevron={false} testId={`police-${k}`} />;
           })}
+        </ListGroup>
+      )}
+      {mine && specialDef(C, c.force) && (
+        <ListGroup title="Força especial">
+          {(() => {
+            const u = specialDef(C, c.force)!;
+            const r = specialBlockReason(game, C);
+            return c.unit === 'especial' ? (
+              <p className="text-sm" data-testid="special-member">Você faz parte do <b>{u.name}</b>.</p>
+            ) : (
+              <ListItem emoji="🦅" title={`Tentar o ${u.course}`} subtitle={`${u.name}: seleção muito difícil, poucos terminam`} disabled={!!r} reason={r ? specialReason(r, game) : undefined} onClick={st.trySpecialCourse} chevron={false} testId="special-try" />
+            );
+          })()}
         </ListGroup>
       )}
       <ListGroup title={mine ? 'Concurso interno' : 'Concurso público'}>

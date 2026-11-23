@@ -28,7 +28,9 @@ export type LedgerCategory =
   | 'agente'
   | 'pensao'
   | 'multas'
-  | 'eventos';
+  | 'eventos'
+  /** Dinheiro de crime, propina e tráfico (release 0.0.2): não tributável, vira "dinheiro sujo". */
+  | 'crime';
 
 export interface LedgerEntry {
   cat: LedgerCategory;

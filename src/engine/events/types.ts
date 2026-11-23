@@ -1,3 +1,4 @@
+import type { PoliceConditions } from '../police/events';
 import type { ModalityId } from '../fighting/types';
 import type { Effects } from '../core/effects';
 import type { ClubId, SchoolStage, SchoolType, Sex, StatKey } from '../core/state';
@@ -65,6 +66,9 @@ export interface EventConditions {
   // --- saúde e legado (Etapa 6) ---
   health?: HealthConditions;
   legacy?: LegacyConditions;
+
+  // --- polícia (release 0.0.2) ---
+  police?: PoliceConditions;
 }
 
 export interface EconomyConditions {

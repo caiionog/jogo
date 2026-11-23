@@ -5,6 +5,7 @@
  */
 import type { JobDef, PoliceContent, PoliceTrackDef } from '../../../engine';
 import { SALARIO_MINIMO } from '../../jobs/basic';
+import { CASE_TEXT, SHOOTOUT_TEXT, SPECIAL_TEXT } from './text';
 
 const anual = (mw: number) => Math.round(mw * SALARIO_MINIMO * 13);
 
@@ -98,6 +99,16 @@ export const POLICE: PoliceContent = {
   minimumWage: SALARIO_MINIMO,
   courses: ['Curso de Mediação de Conflitos', 'Curso de Direção Defensiva', 'Curso de Primeiros Socorros', 'Curso de Técnicas de Abordagem', 'Curso de Inteligência Policial', 'Curso de Atendimento a Vítimas', 'Curso de Gestão de Crises'],
   jobIds: { pm: 'policia_militar', civil: 'policia_civil' },
+  cases: [
+    { id: 'carga', label: 'o caso do furto de carga' },
+    { id: 'homicidio', label: 'o caso do homicídio no bairro' },
+    { id: 'desvio', label: 'o caso do desvio de dinheiro' },
+    { id: 'faccao', label: 'a investigação sobre a facção' },
+  ],
+  shootoutText: SHOOTOUT_TEXT,
+  caseText: CASE_TEXT,
+  specialEvents: ['pol_especial_1', 'pol_especial_2', 'pol_especial_3'],
+  specialText: SPECIAL_TEXT,
   special: [
     { force: 'pm', name: 'Esquadrão Sentinela', course: 'Curso de Operações Sentinela', minServiceYears: 3, minAthletic: 65, minShooting: 60, minHealth: 70, salaryBonus: 0.2 },
     { force: 'civil', name: 'Grupo Âncora', course: 'Seleção Âncora', minServiceYears: 3, minAthletic: 60, minShooting: 62, minHealth: 70, salaryBonus: 0.2 },

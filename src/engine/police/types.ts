@@ -55,6 +55,16 @@ export interface SpecialUnitDef {
   salaryBonus: number;
 }
 
+export type ShootoutTactic = 'avancar' | 'abrigar' | 'negociar' | 'recuar';
+export type ShootoutOutcome = 'preso' | 'fuga' | 'colega_ferido' | 'ferido' | 'morte';
+export type CaseOutcome = 'resolvido' | 'arquivado' | 'errado';
+
+export interface PoliceCaseDef {
+  id: string;
+  /** Nome curto do caso ("o furto de carga"). */
+  label: string;
+}
+
 export interface PoliceContent {
   tracks: readonly PoliceTrackDef[];
   special: readonly SpecialUnitDef[];
@@ -65,6 +75,16 @@ export interface PoliceContent {
   minimumWage: number;
   /** Cursos de aperfeiçoamento (ação "Fazer curso"). */
   courses: readonly string[];
+  /** Casos da Polícia Civil (investigação encadeada em eventos). */
+  cases: readonly PoliceCaseDef[];
+  /** Textos curtos (não gráficos) do resultado da troca de tiro. */
+  shootoutText: Record<ShootoutOutcome, readonly string[]>;
+  /** Fim de investigação; `{caso}` = rótulo do caso. */
+  caseText: Record<CaseOutcome, readonly string[]>;
+  /** Eventos das 3 etapas do curso de seleção da força especial. */
+  specialEvents: readonly [string, string, string];
+  /** Textos do curso: reprovação/desistência por etapa e aprovação (`{unidade}`). */
+  specialText: { fail: readonly string[]; pass: string };
 }
 
 export type ExamStage = 'prova' | 'taf' | 'saude' | 'psico' | 'social';
@@ -107,9 +127,18 @@ export interface PoliceCareer {
   startAge: number;
 }
 
+/** Investigação em andamento (placar oculto). */
+export interface PoliceCase {
+  id: string;
+  score: number;
+  step: number;
+}
+
 export interface PoliceState {
   /** Tiro, 0–100 (oculto). */
   shooting: number;
+  /** Investigação em andamento (Polícia Civil; opcional na v15). */
+  case?: PoliceCase | null;
   career: PoliceCareer | null;
   exams: ExamResult[];
   /** Carreiras anteriores (exoneração, aposentadoria). */

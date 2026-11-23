@@ -22,6 +22,7 @@ export function validateContent(content: GameContent): string[] {
   const talentIds = new Set(content.talents.map((x) => x.id));
   const gradIds = new Set(fc.graduations.map((g) => g.id));
   const traitIds = new Set(content.relationships.traits.map((t) => t.id));
+  for (const id of content.police.specialEvents) if (!allEventIds.has(id)) errors.push(`polícia: evento do curso especial inexistente "${id}"`);
 
   const checkEffects = (where: string, fx: Effects | undefined) => {
     if (!fx) return;
@@ -40,6 +41,9 @@ export function validateContent(content: GameContent): string[] {
     if (ff?.promoteGrade && !modIds.has(ff.promoteGrade)) errors.push(`${where}: modalidade inexistente "${ff.promoteGrade}"`);
     if (fx.revealTalent && !talentIds.has(fx.revealTalent)) errors.push(`${where}: talento inexistente "${fx.revealTalent}"`);
     if (fx.luck !== undefined && Math.abs(fx.luck) > content.luck.maxEventChange) errors.push(`${where}: efeito de sorte acima do limite`);
+    const pe = fx.police;
+    if (pe?.caseStart && !content.police.cases.some((c) => c.id === pe.caseStart)) errors.push(`${where}: caso policial inexistente "${pe.caseStart}"`);
+    if (pe?.shootout && !['avancar', 'abrigar', 'negociar', 'recuar'].includes(pe.shootout)) errors.push(`${where}: tática inexistente "${pe.shootout}"`);
     const he = fx.health;
     if (he?.injury && he.injury !== 'random' && !content.health.injuries.some((d) => d.id === he.injury)) errors.push(`${where}: lesão inexistente "${he.injury}"`);
     if (he?.condition && !content.health.conditions.some((d) => d.id === he.condition)) errors.push(`${where}: doença inexistente "${he.condition}"`);
@@ -67,7 +71,7 @@ export function validateContent(content: GameContent): string[] {
     for (const s of c.schoolStages ?? []) if (!STAGE_ORDER.includes(s)) errors.push(`${e.id}: fase escolar inválida "${s}"`);
     if (Array.isArray(c.club)) for (const id of c.club) if (!clubIds.has(id)) errors.push(`${e.id}: clube inexistente "${id}"`);
     // relacionamentos
-    const relTypes = ['pai', 'mae', 'irmao', 'amigo', 'parceiro', 'conjuge', 'ex', 'filho', 'treinador', 'rival', 'colega_treino'];
+    const relTypes = ['pai', 'mae', 'irmao', 'amigo', 'parceiro', 'conjuge', 'ex', 'filho', 'treinador', 'rival', 'colega_treino', 'avo', 'professor', 'conhecido'];
     for (const t of [...(c.relationship?.types ?? []), ...(c.hasRelation ?? []), ...(c.noRelation ?? [])]) if (!relTypes.includes(t)) errors.push(`${e.id}: tipo de relação inválido "${t}"`);
     for (const t of c.relationship?.traits ?? []) if (!traitIds.has(t)) errors.push(`${e.id}: traço inexistente "${t}"`);
     if (e.tags?.includes('adult')) {
@@ -78,6 +82,7 @@ export function validateContent(content: GameContent): string[] {
     if (!e.tags?.includes('adult') && c.maxAge !== undefined && c.maxAge < 18 && c.relationship?.types.some((t) => t === 'parceiro') && (c.relationship.personAge?.max ?? 99) > 17) {
       errors.push(`${e.id}: romance adolescente precisa limitar personAge a 14–17`);
     }
+    if (c.police?.inCase && !content.police.cases.some((x) => x.id === c.police!.inCase)) errors.push(`${e.id}: caso policial inexistente "${c.police.inCase}"`);
     if (c.fighting?.orgEligible && !orgIds.has(c.fighting.orgEligible)) errors.push(`${e.id}: organização inexistente "${c.fighting.orgEligible}"`);
     for (const o of c.fighting?.orgs ?? []) if (!orgIds.has(o)) errors.push(`${e.id}: organização inexistente "${o}"`);
     if (c.talent && !talentIds.has(c.talent.id)) errors.push(`${e.id}: talento inexistente "${c.talent.id}"`);
