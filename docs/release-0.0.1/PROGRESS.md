@@ -1,6 +1,7 @@
 # Release 0.0.1 — progresso
 
-Branch `release/0.0.1` (local; **sem push** até o usuário pedir). Plano aprovado em 2026-11-23 (fase 0).
+Branch `release/0.0.1` (local; **sem push** até o usuário pedir). Plano aprovado em 2026-11-23 (fase 0):
+[`PLAN.md`](./PLAN.md) — leia antes de continuar (decisões de modelagem de cada fase).
 Para retomar numa sessão nova: "Continue a release 0.0.1 a partir do docs/release-0.0.1/PROGRESS.md".
 
 ## Ponto de partida
@@ -68,3 +69,22 @@ Para retomar numa sessão nova: "Continue a release 0.0.1 a partir do docs/relea
 - Faixa preta caiu para ~4% no sim (exige grappling 78 e o sim divide sessões entre camps); rever na fase 11.
 - Scripts de apoio: `scripts/gen-fixtures.ts` (fixture da versão atual), `scripts/e2e/state.ts` (cenário) e
   `scripts/e2e/shot.mjs` (Playwright: injeta o save no IndexedDB e tira capturas; `URL` opcional).
+
+## Próximo passo exato (para a sessão nova)
+1. `npm install` (node_modules não vem no clone) e `git checkout release/0.0.1`; confira `npm test` (618 testes) e
+   `npx tsc --noEmit`.
+2. **Fase 4 — Talentos e sorte (save v11)**, conforme `PLAN.md`:
+   - Antes de mudar o formato: `npx tsx scripts/gen-fixtures.ts` → `src/save/__fixtures__/saves-v10.json`.
+   - `src/content/talents/` (TalentDef: chance, negative, heritBonus, mods) + `engine/character/talents.ts`;
+     `character.talents [{id, revealed}]`, `character.luck` (0–100, média de 3 uniformes) com RNG derivado
+     `createRng(seedToState(\`${seed}:talentos\`))` — nunca o `rngState` principal (fairness).
+   - Sorte: limites em `src/content/luck.ts`; `GameEvent.tone` e `risk.tone`; peso em `select.ts` (`selectEvents`,
+     ~linha 240), risco em `game.ts` (`performAction` e `resolveEvent`, `rng.chance(choice.risk.chance)`), lances de
+     KO/finalização em `simulateFight.ts`; efeitos `luck` e `revealTalent`, condição `talent`.
+   - `Person.talents`, herança em `relationships/family.ts`/`romance.ts` (nascimento), elenco derivado do id.
+   - Migração v10→v11 (`seed:v11:*`), testes de frequência (100 mil), herança, limite e estatística da sorte,
+     guarda do `ui.test` (sorte/talentos nunca como número), perfil mostra talentos revelados.
+3. Depois, fases 5 a 12 na ordem do checklist acima (fase 8 tem PAUSA para aprovação do usuário).
+
+Dev server para capturas: `npx vite --port 5173 &`, `npx tsx scripts/e2e/state.ts lutador20 tmp/e2e-state.json`,
+`node scripts/e2e/shot.mjs tmp/e2e-state.json tmp/x 375 667 shortcut-luta`.
