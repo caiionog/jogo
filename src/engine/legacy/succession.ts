@@ -250,6 +250,8 @@ export function continueAsChild(state: GameState, personId: string, content: Gam
     money: 0,
     yearUses: {},
     college: emptyCollege(),
+    sportsClub: null,
+    exchange: null,
     flags: {
       ...(child.flags.interesse_luta ? { interesse_luta: true, gostaDeLuta: true } : {}),
       ...(mirim ? { lutador_mirim: true, artesMarciais: true } : {}),

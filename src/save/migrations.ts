@@ -58,6 +58,7 @@ export const migrations: Record<number, (save: AnySave) => AnySave> = {
   9: migrateV9toV10,
   10: migrateV10toV11,
   11: migrateV11toV12,
+  12: migrateV12toV13,
 };
 
 export class SaveMigrationError extends Error {}
@@ -571,4 +572,14 @@ export function migrateV11toV12(save: AnySave): AnySave {
     else if (age >= 18) college.current = { courseId: 'administracao', type: 'particular', institution: GAME_CONTENT.college.privateNames[0], year: Math.min(4, age - 17), grade: null, status: 'cursando', funding: 'proprio', failures: 0, financed: 0 };
   }
   return { ...(s0 as AnySave), version: 12, college: s0.college ?? college };
+}
+
+// ---------------------------------------------------------------------------
+// v12 → v13 (release 0.0.1: clube esportivo e intercâmbio)
+// ---------------------------------------------------------------------------
+
+/** Sem clube esportivo e sem intercâmbio em andamento (sem RNG). */
+export function migrateV12toV13(save: AnySave): AnySave {
+  const s0 = save as unknown as AnyObj;
+  return { ...(s0 as AnySave), version: 13, sportsClub: s0.sportsClub ?? null, exchange: s0.exchange ?? null };
 }

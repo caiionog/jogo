@@ -235,6 +235,8 @@ export function jobYear(state: GameState, rng: Rng, content: GameContent, market
   const job = state.economy.job;
   const def = jobDef(content, job?.jobId);
   if (!job || !def) return state;
+  // licença não remunerada (intercâmbio): o emprego fica, o salário não vem
+  if (state.flags.licenca === state.year) return appendLog(state, `Licença do trabalho (${jobTitle(def, job.level).toLowerCase()}): sem salário este ano.`);
   let s = post(state, def.formal === false ? 'trabalho_informal' : 'salario', salaryOf(def, job.level, cityMultOf(state, content)), `${def.formal === false ? 'Trabalho' : 'Salário'}: ${jobTitle(def, job.level)}`);
   if (def.yearlyEffects) s = { ...s, character: { ...s.character, stats: addStats(s.character.stats, def.yearlyEffects) } };
   let next = { ...job, years: job.years + 1 };

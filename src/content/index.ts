@@ -5,6 +5,8 @@ import { ACTIONS } from './actions';
 import { LIMITS } from './config';
 import { LUCK, TALENTS } from './talents';
 import { COLLEGE } from './college';
+import { SPORTS_CLUBS } from './sportsClubs';
+import { EXCHANGE_PROGRAMS } from './exchange';
 import { CLUBS } from './clubs';
 import { CHILDHOOD_EVENTS } from './events/childhood';
 import { SCHOOL_EVENTS } from './events/school';
@@ -29,14 +31,17 @@ import { HEALTH_EVENTS } from './events/health';
 import { LEGACY_EVENTS } from './events/legacy';
 import { TALENT_EVENTS } from './events/talents';
 import { COLLEGE_EVENTS } from './events/college';
+import { CLUB_EXCHANGE_EVENTS } from './events/clubs';
 
 export const GAME_CONTENT: GameContent = {
   limits: LIMITS,
   talents: TALENTS,
   luck: LUCK,
   college: COLLEGE,
+  sportsClubs: SPORTS_CLUBS,
+  exchangePrograms: EXCHANGE_PROGRAMS,
   actions: ACTIONS,
-  events: [...CHILDHOOD_EVENTS, ...SCHOOL_EVENTS, ...FIGHTING_EVENTS, ...RELATIONSHIP_EVENTS, ...ECONOMY_EVENTS, ...JOB_EVENTS, ...HEALTH_EVENTS, ...LEGACY_EVENTS, ...TALENT_EVENTS, ...COLLEGE_EVENTS],
+  events: [...CHILDHOOD_EVENTS, ...SCHOOL_EVENTS, ...FIGHTING_EVENTS, ...RELATIONSHIP_EVENTS, ...ECONOMY_EVENTS, ...JOB_EVENTS, ...HEALTH_EVENTS, ...LEGACY_EVENTS, ...TALENT_EVENTS, ...COLLEGE_EVENTS, ...CLUB_EXCHANGE_EVENTS],
   geo: GEO_CONTENT,
   clubs: CLUBS,
   names: NAMES,

@@ -1,3 +1,4 @@
+import { exchangeYear, onExchange, sportsClubYear } from '../lifeStages/sportsClub';
 import { collegeYear, emptyCollege, inCollege } from '../lifeStages/college';
 import type { Appearance } from '../character/appearance/genes';
 import { defaultWardrobe } from '../character/appearance/outfits';
@@ -95,6 +96,8 @@ export function newGame(options: NewGameOptions, content: GameContent): GameStat
     money: 0,
     yearUses: {},
     college: emptyCollege(),
+    sportsClub: null,
+    exchange: null,
     flags: {},
     firedEvents: [],
     pendingEvents: [],
@@ -346,8 +349,11 @@ export function advanceYear(
   const twoEventChance = options.twoEventChance ?? 0.35;
 
   return withRng(state, (rng, s) => {
-    let next = endSchoolYear(s, rng, content);
+    // no intercâmbio, o ano letivo da escola fica em pausa (sem nota e sem reprovar)
+    let next = onExchange(s) ? s : endSchoolYear(s, rng, content);
     next = collegeYear(next, rng, content);
+    next = sportsClubYear(next, content);
+    next = exchangeYear(next, rng, content);
     next = endFightingYear(next, content);
     // lesões: 12 meses de recuperação (sequelas ao sarar)
     next = injuriesYear(next, rng, content);

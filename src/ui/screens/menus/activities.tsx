@@ -1,5 +1,5 @@
 /** Atividades (treino com sessões; o resto sem limite, com retorno decrescente), Relacionamentos, Saúde, Testamento e Perfil. */
-import { BookOpen, Car, Dumbbell, Heart, HeartPulse, MapPin, PartyPopper, ScrollText } from 'lucide-react';
+import { BookOpen, Car, Dumbbell, Heart, HeartPulse, MapPin, PartyPopper, Plane, ScrollText, Trophy } from 'lucide-react';
 import { useState } from 'react';
 import { GAME_CONTENT as C } from '../../../content';
 import type { GameState, TrainingKind } from '../../../engine';
@@ -36,6 +36,8 @@ export function AtividadesScreen({ game }: { game: GameState }) {
   return (
     <>
       <ListItem icon={Dumbbell} title="Treino" subtitle="Jiu-jitsu, trocação, físico e sparring" disabled={age < 4} reason="Disponível a partir dos 4 anos" onClick={() => nav.push('treino')} testId="act-treino" />
+      <ListItem icon={Trophy} title="Clube esportivo" subtitle={game.sportsClub ? 'Treinar no seu clube' : 'Futebol, natação, vôlei, judô…'} disabled={age < 6} reason="A partir dos 6 anos" onClick={() => nav.push('clube')} testId="act-clube" />
+      <ListItem icon={Plane} title="Intercâmbio de artes marciais" subtitle="Um ano treinando no exterior" disabled={age < 16} reason="A partir dos 16 anos" onClick={() => nav.push('intercambio')} testId="act-intercambio" />
       <ListItem icon={BookOpen} title="Estudo" subtitle="Estudar e se preparar para as provas" disabled={age < 5} reason="Disponível a partir dos 5 anos" onClick={() => nav.push('estudo')} testId="act-estudo" />
       <ListItem icon={HeartPulse} title="Saúde" subtitle="Check-up, médico, dieta, lesões" onClick={() => nav.push('saude')} testId="act-saude" />
       <ListItem icon={PartyPopper} title="Lazer" subtitle="Sair, festa, viagem" onClick={() => nav.push('lazer')} testId="act-lazer" />

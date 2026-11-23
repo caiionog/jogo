@@ -171,6 +171,14 @@ export function conditionsMet(state: GameState, event: GameEvent, content?: Game
   if (event.once && state.firedEvents.includes(event.id)) return false;
   if (c.minAge !== undefined && age < c.minAge) return false;
   if (c.maxAge !== undefined && age > c.maxAge) return false;
+  if (c.sportsClub !== undefined) {
+    const m = state.sportsClub;
+    if (c.sportsClub === false ? !!m : !m || (c.sportsClub.sports && !c.sportsClub.sports.includes(m.sport))) return false;
+  }
+  if (c.exchange !== undefined) {
+    const ex = state.exchange && state.exchange.year === state.year ? state.exchange : null;
+    if (c.exchange === false ? !!ex : !ex || (c.exchange.programs && !c.exchange.programs.includes(ex.programId))) return false;
+  }
   if (c.college) {
     const cur = state.college?.current;
     if (c.college.enrolled !== undefined && (cur?.status === 'cursando') !== c.college.enrolled) return false;

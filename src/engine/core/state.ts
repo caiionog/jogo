@@ -1,3 +1,4 @@
+import type { ExchangeState, SportsClubMembership } from '../lifeStages/sportsClub';
 import type { CollegeState } from '../lifeStages/college';
 import type { CharacterTalent } from '../character/talents';
 import type { Appearance } from '../character/appearance/genes';
@@ -150,6 +151,10 @@ export interface GameState {
   yearUses: Record<string, number>;
   /** Faculdade: matrícula atual, diplomas e nota do exame nacional (release 0.0.1). */
   college: CollegeState;
+  /** Clube esportivo (release 0.0.1). */
+  sportsClub: SportsClubMembership | null;
+  /** Intercâmbio de artes marciais em andamento (release 0.0.1). */
+  exchange: ExchangeState | null;
   flags: Record<string, FlagValue>;
   /** Ids de eventos que já aconteceram (para `once`). */
   firedEvents: string[];
@@ -181,4 +186,4 @@ export interface GameState {
   wardrobe: Wardrobe;
 }
 
-export const STATE_VERSION = 12;
+export const STATE_VERSION = 13;

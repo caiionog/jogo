@@ -407,7 +407,7 @@ export function endFightingYear(state: GameState, content: GameContent): GameSta
   s = graduationYear(s, content);
 
   // mensalidade (a partir dos 18; reputação ≥ 15 rende bolsa de atleta)
-  if (gym && state.character.age >= 18 && s.fighter.reputation < 15) {
+  if (gym && gym.fee > 0 && state.character.age >= 18 && s.fighter.reputation < 15) {
     if (s.money >= gym.fee) s = post(s, 'academia', -gym.fee, `Mensalidade: ${gym.name}`);
     else {
       s = { ...s, fighter: { ...s.fighter, gymId: null } };

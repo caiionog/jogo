@@ -10,6 +10,7 @@ import type { ScreenRef } from '../../nav';
 import RankingPanel from '../../components/RankingPanel';
 import { FightCareerScreen } from './fightCareer';
 import { FaculdadeScreen } from './college';
+import { ClubeScreen, IntercambioScreen } from './clubs';
 import { BemScreen, BensScreen, EmpresaScreen, FinancasScreen, MercadoCatScreen, MercadoScreen, MeusBensScreen } from './assets';
 import { AmorScreen, AtividadesScreen, EstudoScreen, LazerScreen, RelacoesScreen, SaudeScreen, TestamentoScreen, TreinoScreen } from './activities';
 import { CarreiraScreen, CarreirasCatScreen, CarreirasScreen, EscolaScreen, MinhaOcupacaoScreen, OcupacaoScreen } from './occupation';
@@ -40,6 +41,8 @@ function screenOf(r: ScreenRef, game: GameState): { title: string; body: ReactNo
     case 'relacoes': return { title: 'Relacionamentos', body: <RelacoesScreen game={game} /> };
     case 'atividades': return { title: 'Atividades', body: <AtividadesScreen game={game} /> };
     case 'treino': return { title: 'Treino', body: <TreinoScreen game={game} /> };
+    case 'clube': return { title: 'Clube esportivo', body: <ClubeScreen game={game} /> };
+    case 'intercambio': return { title: 'Intercâmbio', body: <IntercambioScreen game={game} /> };
     case 'estudo': return { title: 'Estudo', body: <EstudoScreen game={game} /> };
     case 'saude': return { title: 'Saúde', body: <SaudeScreen game={game} /> };
     case 'lazer': return { title: 'Lazer', body: <LazerScreen game={game} /> };

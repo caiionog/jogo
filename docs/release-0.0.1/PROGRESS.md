@@ -71,7 +71,15 @@ Para retomar numa sessão nova: "Continue a release 0.0.1 a partir do docs/relea
     fisioterapeuta e nutricionista com `trainingBonus` 5%; comentarista exige reputação. "Superior" = ter diploma.
   - UI: Ocupação → Carreiras → Estudos (tela da faculdade). Captura `screenshots/faculdade.png`.
   - Migração v11→v12 (fixture `saves-v11.json`); `tests/college.test.ts`.
-- [ ] **6. Clubes esportivos e intercâmbio** (save v13)
+- [x] **6. Clubes esportivos e intercâmbio** (save v13)
+  - `engine/lifeStages/sportsClub.ts` + `content/sportsClubs/` (8 clubes, 7 esportes, a partir dos 6, mensalidade
+    pelos pais até os 18 → categoria `educacao`). Treinar no clube = 1 sessão, atlética, chance de amizade; judô do
+    clube dá grappling e faixa de judô. Eventos: estadual, jogos escolares, amizade do clube.
+  - Intercâmbio (`content/exchange/`: Tailândia/muay thai, Japão/judô, EUA/wrestling, Holanda/kickboxing, San
+    Diego/jiu-jitsu, academias fictícias): 16+ com autorização dos pais (pedido 1×/ano; pais pagam parte pela renda),
+    bloqueio por emprego de tempo integral (pedir licença: sem salário no ano, ou demissão), escola em pausa, treino só
+    da modalidade na academia do programa (treinador de elite), ganho grande + reputação + flag na volta. 5 eventos.
+  - UI: Atividades → Clube esportivo / Intercâmbio. Migração v12→v13; `tests/clubsExchange.test.ts`.
 - [ ] **7. Vida noturna e interações adultas**
 - [ ] **8. Qualidade dos avatares** — PAUSA para aprovação do antes × depois
 - [ ] **9. Roupas de banho e ícones de negócios** (save v14)

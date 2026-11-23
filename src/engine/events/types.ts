@@ -13,6 +13,10 @@ export interface StatRange {
 export type SchoolResultTag = 'passed' | 'failed' | 'honors' | 'graduated' | 'expelled';
 
 export interface EventConditions {
+  /** Clube esportivo: é sócio (opcionalmente de um destes esportes). */
+  sportsClub?: { sports?: string[] } | false;
+  /** Está num intercâmbio (opcionalmente destes programas). */
+  exchange?: { programs?: string[] } | false;
   /** Faculdade: cursando (enrolled), cursos, diplomas. */
   college?: { enrolled?: boolean; courses?: string[]; diploma?: string[] };
   /** Talento de nascimento do personagem (revealed: só se ainda não/já revelado). */

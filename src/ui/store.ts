@@ -71,8 +71,14 @@ import {
   lockCollege,
   unlockCollege,
   dropCollege,
+  joinSportsClub,
+  leaveSportsClub,
+  trainAtClub,
+  askParentsForExchange,
+  askJobLeave,
+  startExchange,
 } from '../engine';
-import type { CollegeType } from '../engine';
+import type { CollegeType, SportId } from '../engine';
 import type {
   AchievementDef,
   StatKey,
@@ -220,6 +226,13 @@ interface GameStore {
   quitJob(): void;
   /** Faculdade (release 0.0.1). */
   takeExam(): void;
+  /** Clube esportivo e intercâmbio (release 0.0.1). */
+  joinSportsClub(clubId: string, sport: SportId): void;
+  leaveSportsClub(): void;
+  trainAtClub(): void;
+  askParentsForExchange(): void;
+  askJobLeave(): void;
+  startExchange(programId: string): void;
   enrollCollege(courseId: string, type: CollegeType, financing: boolean): void;
   lockCollege(): void;
   unlockCollege(): void;
@@ -449,6 +462,12 @@ export const useGameStore = create<GameStore>((setState, getState) => {
     askRaise: () => act((g) => economyAction(g, (x) => askRaise(x, GAME_CONTENT))),
     quitJob: () => eco((g) => quitJob(g, GAME_CONTENT)),
     takeExam: () => act((g) => takeExam(g, GAME_CONTENT)),
+    joinSportsClub: (id, sport) => update((g) => joinSportsClub(g, id, sport, GAME_CONTENT)),
+    leaveSportsClub: () => update((g) => leaveSportsClub(g, GAME_CONTENT)),
+    trainAtClub: () => act((g) => trainAtClub(g, GAME_CONTENT)),
+    askParentsForExchange: () => update((g) => askParentsForExchange(g)),
+    askJobLeave: () => update((g) => askJobLeave(g)),
+    startExchange: (id) => eco((g) => startExchange(g, id, GAME_CONTENT)),
     enrollCollege: (id, type, financing) => act((g) => enrollCollege(g, id, type, GAME_CONTENT, financing)),
     lockCollege: () => update((g) => lockCollege(g)),
     unlockCollege: () => update((g) => unlockCollege(g)),

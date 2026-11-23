@@ -1,3 +1,4 @@
+import { exchangeGym } from '../lifeStages/sportsClub';
 import { talentMod } from '../character/talents';
 import { addBrainDamage, addInjury, injuryVeto, pickInjury, sparringAggravation } from './injuries';
 import type { InjuryDef } from '../health/types';
@@ -92,6 +93,9 @@ export function gainFor(rng: Rng, base: number, skill: SkillKey | 'athletic', cu
 }
 
 export function currentGym(state: GameState, content: GameContent): GymDef | undefined {
+  // no intercâmbio, treina-se na academia do programa (só a modalidade dele)
+  const ex = exchangeGym(state, content);
+  if (ex) return ex as GymDef;
   const id = state.fighter.gymId;
   return id ? content.fighting.gyms.find((g) => g.id === id) : undefined;
 }

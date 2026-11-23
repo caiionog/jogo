@@ -1,3 +1,4 @@
+import type { ExchangeProgramDef, SportsClubDef } from '../lifeStages/sportsClub';
 import type { CollegeContent } from '../lifeStages/college';
 import type { Effects } from './effects';
 import type { GameEvent } from '../events/types';
@@ -103,4 +104,7 @@ export interface GameContent {
   luck: LuckConfig;
   /** Faculdade: exame, instituições e cursos (release 0.0.1). */
   college: CollegeContent;
+  /** Clubes esportivos e programas de intercâmbio (release 0.0.1). */
+  sportsClubs: readonly SportsClubDef[];
+  exchangePrograms: readonly ExchangeProgramDef[];
 }
