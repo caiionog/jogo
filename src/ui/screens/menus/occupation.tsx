@@ -1,19 +1,18 @@
 /** Ocupação: minha ocupação, Carreiras (categorias → cartões → detalhe), Escola e Carreira de luta. */
-import { Briefcase, Dumbbell, GraduationCap, Medal, School, Store, Swords, Trophy, UserRound } from 'lucide-react';
+import { Briefcase, GraduationCap, School, Store, Swords, UserRound } from 'lucide-react';
 import { useState } from 'react';
 import { GAME_CONTENT as C } from '../../../content';
 import type { CareerCategory, GameState, RequirementKey } from '../../../engine';
 import {
-  BELTS, actionBlockReason, careerCard, careersIn, cityMultOf, coachAssessment, fighterNextStep, gymBlockReason, gymsInCity, jobDef, jobTitle, salaryOf,
+  BELTS, actionBlockReason, careerCard, careersIn, cityMultOf, fighterNextStep, jobDef, jobTitle, salaryOf,
 } from '../../../engine';
 import { BottomSheet, DsButton, ListGroup, ListItem } from '../../design/components';
 import { useNav } from '../../nav';
 import { useGameStore } from '../../store';
 import { jobReasonText } from '../../text/jobs';
-import CareerPanel from '../../components/CareerPanel';
 import SchoolPanel from '../../components/SchoolPanel';
 import { money } from '../../components/ecoUi';
-import { gradesSummary, gymModalitiesText } from '../../text/fight';
+import { gradesSummary } from '../../text/fight';
 
 /** "Ocupa 4 sessões de treino por ano" (tempo integral) / 2 (meio período) / nenhuma. */
 export function sessionsText(n: number): string {
@@ -48,7 +47,7 @@ export function OcupacaoScreen({ game }: { game: GameState }) {
       <ListItem icon={UserRound} title="Minha ocupação" subtitle={[enrolled && 'Escola', def && jobTitle(def, job!.level), game.fighter.gymId && 'Treino de luta'].filter(Boolean).join(' · ') || 'Nada por enquanto'} onClick={() => nav.push('minha-ocupacao')} testId="occ-mine" />
       <ListItem icon={Briefcase} title="Carreiras" subtitle="Empregos, carreira de lutador, estudos e empreender" onClick={() => nav.push('carreiras')} testId="occ-careers" />
       <ListItem icon={School} title="Escola" subtitle={enrolled ? 'Série, nota, clube e ações escolares' : undefined} disabled={!enrolled} reason="Você não está matriculado(a)" onClick={() => nav.push('escola')} testId="occ-school" />
-      <ListItem icon={Swords} title="Carreira de luta" subtitle={`${STAGE_LABEL[fighterNextStep(game, C).stage]} · ${gradesSummary(game)}`} onClick={() => nav.push('luta')} testId="occ-fight" />
+      <ListItem icon={Swords} title="Carreira de Luta" subtitle={`${STAGE_LABEL[fighterNextStep(game, C).stage]} · ${gradesSummary(game)}`} onClick={() => nav.push('luta')} testId="occ-fight" />
     </>
   );
 }
@@ -85,7 +84,7 @@ export function CarreirasScreen({ game }: { game: GameState }) {
         ))}
       </ListGroup>
       <ListGroup title="Especiais">
-        <ListItem icon={Swords} title="Carreira de lutador" subtitle="Academia, faixas, lutas amadoras e profissionais" onClick={() => nav.push('carreira-luta')} testId="career-fighter" />
+        <ListItem icon={Swords} title="Carreira de lutador" subtitle="Academia, faixas, lutas amadoras e profissionais" onClick={() => nav.push('luta')} testId="career-fighter" />
         <ListItem icon={GraduationCap} title="Estudos" subtitle={path === 'faculdade' ? 'Você escolheu a faculdade aos 18' : 'Cursinho, curso técnico e faculdade'} disabled reason="Em breve" />
         <ListItem icon={Store} title="Empreender" subtitle="Comprar ou abrir um negócio" disabled={age < 18} reason="Disponível a partir dos 18 anos" onClick={() => nav.push({ id: 'mercado-cat', params: { cat: 'negocios' } })} />
       </ListGroup>
@@ -230,87 +229,8 @@ export function CarreiraScreen({ game, jobId }: { game: GameState; jobId: string
   );
 }
 
-const STAGES = ['sem_academia', 'aluno', 'amador', 'pro_regional', 'liga_principal'] as const;
 
-function nextStepText(game: GameState): string {
-  const { stage, nextOrg, gap } = fighterNextStep(game, C);
-  const f = game.fighter;
-  if (stage === 'aposentado') return 'Você está aposentado(a). Dá para voltar pela Carreira de luta.';
-  if (stage === 'sem_academia') return 'Matricule-se numa academia para começar a treinar de verdade.';
-  if (!nextOrg) return 'Você está no topo. Defenda o que conquistou.';
-  const r = nextOrg.requirements;
-  switch (gap) {
-    case 'age':
-      return `Continue treinando: a ${nextOrg.short} só aceita a partir dos ${nextOrg.minAge} anos.`;
-    case 'amateur-wins':
-      return `Faça ${Math.max(1, (r.minAmateurWins ?? 0) - f.amateur.wins)} vitória(s) amadora(s) a mais para receber convites da ${nextOrg.short}.`;
-    case 'pro-wins':
-      return `Vença mais ${Math.max(1, (r.minProWins ?? 0) - f.pro.wins)} luta(s) profissional(is) para chamar a atenção da ${nextOrg.short}.`;
-    case 'reputation':
-      return `Ganhe nome (vitórias, eventos) para a ${nextOrg.short} te notar.`;
-    case 'belt':
-      return `Chegue à faixa ${BELTS[r.minBelt ?? 0]} no jiu-jitsu.`;
-    case 'win-rate':
-      return 'Engate uma sequência de vitórias: a liga olha o seu aproveitamento recente.';
-    case 'signing-age':
-      return `A ${nextOrg.short} não contrata mais na sua idade.`;
-    default:
-      return `Requisitos da ${nextOrg.short} atendidos: aguarde a proposta.`;
-  }
-}
 
-export function CarreiraLutaScreen({ game }: { game: GameState }) {
-  const nav = useNav();
-  const joinGym = useGameStore((s) => s.joinGym);
-  const [gyms, setGyms] = useState(false);
-  const { stage } = fighterNextStep(game, C);
-  const idx = STAGES.indexOf(stage as (typeof STAGES)[number]);
-  const gym = C.fighting.gyms.find((g) => g.id === game.fighter.gymId);
-  return (
-    <>
-      <ol className="flex flex-col gap-1" aria-label="Etapas da carreira" data-testid="fighter-stages">
-        {STAGES.map((s, i) => (
-          <li key={s} className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${i === idx ? 'border border-[var(--ds-accent)] font-semibold' : i < idx ? 'text-[var(--ds-accent)]' : 'text-[var(--ds-text-muted)]'}`}>
-            <span aria-hidden>{i < idx ? '✓' : i === idx ? '●' : '○'}</span>
-            {STAGE_LABEL[s]}
-          </li>
-        ))}
-      </ol>
-      <p className="rounded-[var(--ds-radius)] bg-[var(--ds-surface)] p-3 text-sm" data-testid="fighter-next">
-        🎯 {nextStepText(game)}
-      </p>
-      {game.character.age >= 6 && <p className="text-sm">Avaliação do treinador: <b>{coachAssessment(game)}</b></p>}
-      <ListItem icon={Dumbbell} title={gym ? `Academia: ${gym.name}` : 'Matricular em academia'} subtitle={gym ? `${money.format(gym.fee)}/ano` : 'Escolha entre as academias da sua cidade'} onClick={() => setGyms(true)} testId="fighter-gyms" />
-      <ListItem icon={Trophy} title="Procurar lutas" subtitle={`${game.fighter.offers.length} oferta(s) neste ano`} onClick={() => nav.push('luta')} />
-      <ListItem icon={Medal} title="Ranking" onClick={() => nav.push('ranking')} />
-      <p className="text-xs text-[var(--ds-text-muted)]">Dá para lutar e trabalhar ao mesmo tempo, mas o emprego ocupa parte das 10 sessões de treino do ano.</p>
-      {gyms && (
-        <BottomSheet title="Academias da cidade" onClose={() => setGyms(false)} testId="gym-sheet">
-          <div className="flex flex-col gap-2">
-            {gymsInCity(game, C).map((g) => {
-              const r = gymBlockReason(game, g.id, C);
-              return (
-                <ListItem
-                  key={g.id}
-                  emoji="🥋"
-                  title={g.name}
-                  subtitle={`${money.format(g.fee)}/ano${game.character.age < 18 ? ' (pais pagam)' : ''} · treinador ${g.coach >= 75 ? 'renomado' : g.coach >= 55 ? 'experiente' : 'de bairro'} · ${gymModalitiesText(g)}`}
-                  disabled={!!r}
-                  reason={r === 'current' ? 'Você treina aqui' : r === 'no-money' ? 'Dinheiro insuficiente' : r === 'too-young' ? 'Muito novo(a)' : r ? 'Indisponível' : undefined}
-                  onClick={() => {
-                    joinGym(g.id);
-                    setGyms(false);
-                  }}
-                  chevron={false}
-                />
-              );
-            })}
-          </div>
-        </BottomSheet>
-      )}
-    </>
-  );
-}
 
 export function EscolaScreen({ game }: { game: GameState }) {
   const doAction = useGameStore((s) => s.doAction);
@@ -328,6 +248,3 @@ export function EscolaScreen({ game }: { game: GameState }) {
   );
 }
 
-export function LutaScreen({ game }: { game: GameState }) {
-  return <CareerPanel game={game} />;
-}

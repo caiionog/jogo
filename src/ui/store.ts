@@ -173,6 +173,8 @@ interface GameStore {
   exportCurrent(): { name: string; text: string } | null;
   importFile(text: string): Promise<{ ok: boolean; error?: string }>;
   setMetaSettings(patch: Partial<MetaSettings>): void;
+  /** "Entendi" numa explicação de primeira vez: não aparece de novo (meta). */
+  dismissTip(id: string): void;
   eraseAll(): Promise<void>;
   dismissToast(id: number): void;
   startLife(name: string, sex: Sex, opts?: { adultContent?: boolean; preference?: PartnerPreference; surnames?: string[]; uf?: string; city?: string; appearance?: Appearance }): void;
@@ -343,6 +345,13 @@ export const useGameStore = create<GameStore>((setState, getState) => {
       await saveGame(r.state);
       await getState().refreshSlots();
       return { ok: true };
+    },
+    dismissTip(id) {
+      const cur = getState().meta;
+      if (cur.seenTips.includes(id)) return;
+      const meta = { ...cur, seenTips: [...cur.seenTips, id] };
+      setState({ meta });
+      void saveMeta(meta);
     },
     setMetaSettings(patch) {
       const meta = { ...getState().meta, settings: { ...getState().meta.settings, ...patch } };

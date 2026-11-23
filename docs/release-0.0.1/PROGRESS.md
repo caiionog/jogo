@@ -38,7 +38,15 @@ Para retomar numa sessão nova: "Continue a release 0.0.1 a partir do docs/relea
   - Sim de carreira (300 vidas): Titã ~34%, campeão do Titã ~2,3%, faixa preta ~4% (Etapa 8: 28,6% / 2,8% / 12,6%).
   - Avatar: contexto `treino` (kimono + faixa da graduação com listra infantil; regata + shorts + prajied no braço).
   - Migração v9→v10 (+ fixture real `saves-v9.json` com luta em andamento).
-- [ ] **3. Tela central da Carreira de Luta** (meta: `seenTips`)
+- [x] **3. Tela central da Carreira de Luta** (meta: `seenTips`)
+  - `screens/menus/fightCareer.tsx`: avatar de treino, linha do tempo (Iniciante → Amador → Profissional regional →
+    Liga principal → Campeão), "Próximo passo" (`fighterNextStepText` na engine: frase + alvo do botão), modalidades e
+    graduação, academia, treinador, treinos do ano (com botões), cartel e ranking (abre o Ranking), ofertas, últimas
+    lutas e aposentadoria. `carreira-luta` e `luta` apontam para a mesma tela; telas antigas removidas.
+  - Atalho "🥊 Carreira de Luta" na tela principal (com nº de ofertas): treinar, ver ofertas e ranking em 2 toques.
+  - Dicas de primeira vez (graduação, cartel, ranking, bolsa/camp, treinador) com "Entendi": `meta.seenTips`
+    (META_VERSION 2 + migração). Testes de UI: 2 toques, dica some e não volta, nenhum número de habilidade.
+  - Captura: `docs/release-0.0.1/fase3-carreira-luta.png`.
 - [ ] **4. Talentos e sorte** (save v11)
 - [ ] **5. Faculdade, cursos e empregos de nível superior** (save v12)
 - [ ] **6. Clubes esportivos e intercâmbio** (save v13)

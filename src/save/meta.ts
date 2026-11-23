@@ -10,8 +10,10 @@ export const META_KEY = 'meta';
 
 type AnyMeta = Record<string, unknown> & { version: number };
 
-/** metaMigrations[n] converte o meta da versão n para n+1 (nenhuma ainda: versão 1). */
-export const metaMigrations: Record<number, (m: AnyMeta) => AnyMeta> = {};
+/** metaMigrations[n] converte o meta da versão n para n+1. v1→v2: dicas de primeira vez (`seenTips`). */
+export const metaMigrations: Record<number, (m: AnyMeta) => AnyMeta> = {
+  1: (m) => ({ ...m, version: 2, seenTips: [] }),
+};
 
 export function migrateMeta(raw: unknown): MetaState {
   if (typeof raw !== 'object' || raw === null || typeof (raw as AnyMeta).version !== 'number') return emptyMeta();
@@ -32,6 +34,7 @@ export function migrateMeta(raw: unknown): MetaState {
     settings: { ...base.settings, ...(meta.settings ?? {}) },
     achievements: meta.achievements ?? {},
     hallOfFame: meta.hallOfFame ?? [],
+    seenTips: meta.seenTips ?? [],
     version: META_VERSION,
   };
 }

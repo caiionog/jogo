@@ -92,6 +92,8 @@ export default function Life({ onShowObituary }: { onShowObituary?: () => void }
   const root = nav.stack[0]?.id;
   const busy = game.pendingEvents.length > 0 || !!game.activeFight;
   const limit = GAME_CONTENT.limits.trainingSessions;
+  // atalho para a tela central da luta: quem tem academia, interesse ou já lutou
+  const fightShortcut = !!game.fighter.gymId || game.fighter.history.length > 0 || !!game.flags.interesse_luta || !!game.flags.gostaDeLuta || Object.keys(game.fighter.grades).length > 0;
   const reserved = sessionsReserved(game, GAME_CONTENT);
   const left = sessionsLeft(game, GAME_CONTENT);
   const notes = sessionsBreakdown(game, GAME_CONTENT).map((p) => p.text);
@@ -116,6 +118,12 @@ export default function Life({ onShowObituary }: { onShowObituary?: () => void }
         </div>
         <MenuHost className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-xl" />
       </header>
+      {game.alive && fightShortcut && (
+        <button type="button" onClick={() => nav.open('luta')} disabled={busy} className="flex min-h-11 items-center justify-center gap-2 border-b border-[var(--ds-border)] bg-[var(--ds-surface-2)] text-sm font-semibold text-[var(--ds-accent)] disabled:opacity-50" data-testid="shortcut-luta">
+          <span aria-hidden>🥊</span> Carreira de Luta
+          {game.fighter.offers.length > 0 && <span className="rounded-full bg-[var(--ds-accent)] px-2 text-xs text-[var(--ds-on-accent,#fff)]">{game.fighter.offers.length} oferta{game.fighter.offers.length > 1 ? 's' : ''}</span>}
+        </button>
+      )}
 
       <LifeFeed log={game.log} />
 

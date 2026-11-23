@@ -7,7 +7,7 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GAME_CONTENT } from '../src/content';
 import type { GameState } from '../src/engine';
-import { newGame } from '../src/engine';
+import { createRng, emptyMeta, generateOffers, newGame } from '../src/engine';
 
 // jsdom não tem canvas: o app cai no desenho 2D (mesmo caminho de um aparelho sem WebGL)
 HTMLCanvasElement.prototype.getContext = (() => null) as unknown as HTMLCanvasElement['getContext'];
@@ -165,5 +165,67 @@ describe('habilidades ocultas', () => {
     const all = texts.join('\n');
     expect(all).not.toMatch(/87[.,]?3?|91[.,]?7?/);
     expect(all).toMatch(/Iniciante|Promissor|Sólido|Elite/);
+  });
+});
+
+describe('tela central da Carreira de Luta (release 0.0.1)', () => {
+  const fighter = () => {
+    const g = adult(22);
+    const withOffers = generateOffers({ ...g, fighter: { ...g.fighter, gymId: 'sp_leao_dourado', amateur: { ...g.fighter.amateur, wins: 1 } } }, createRng(3), GAME_CONTENT);
+    return withOffers;
+  };
+
+  it('treinar, procurar luta e ver o ranking ficam a 2 toques da tela principal', () => {
+    const g = fighter();
+    expect(g.fighter.offers.length).toBeGreaterThan(0);
+    start(g);
+    // 1º toque: atalho; 2º toque: treinar
+    fireEvent.click(screen.getByTestId('shortcut-luta'));
+    expect(screen.getByTestId('screen-luta')).toBeTruthy();
+    const before = useGameStore.getState().game!.fighter.sessionsThisYear;
+    fireEvent.click(screen.getByTestId('fc-train-jiujitsu'));
+    expect(useGameStore.getState().game!.fighter.sessionsThisYear).toBe(before + 1);
+    // ofertas já estão na mesma tela (2º toque aceita)
+    expect(screen.getAllByTestId('offer').length).toBeGreaterThan(0);
+    // 2º toque: ranking
+    fireEvent.click(screen.getByTestId('open-ranking'));
+    expect(screen.getByTestId('screen-ranking')).toBeTruthy();
+  });
+
+  it('mostra linha do tempo, próximo passo com botão, modalidades e graduação; nenhum número de habilidade', () => {
+    start(fighter());
+    fireEvent.click(screen.getByTestId('shortcut-luta'));
+    const tl = screen.getByTestId('fight-timeline');
+    expect(tl.textContent).toContain('Iniciante');
+    expect(tl.textContent).toContain('Campeão');
+    expect(tl.querySelector('[aria-current="step"]')!.textContent).toBe('Amador');
+    expect(screen.getByTestId('fighter-next').textContent).toMatch(/Próximo passo/);
+    expect(screen.getByTestId('next-step-go')).toBeTruthy();
+    expect(screen.getByTestId('fight-modalities').textContent).toContain('Jiu-jitsu');
+    const text = document.body.textContent ?? '';
+    expect(text).not.toMatch(/87[.,]3|91[.,]7|\b87\b|\b92\b|\b63\b/);
+  });
+
+  it('explicação de primeira vez some depois do "Entendi" e não volta', () => {
+    useGameStore.setState({ meta: { ...emptyMeta() } });
+    start(fighter());
+    fireEvent.click(screen.getByTestId('shortcut-luta'));
+    expect(screen.getByTestId('tip-graduacao')).toBeTruthy();
+    fireEvent.click(screen.getByTestId('tip-ok-graduacao'));
+    expect(screen.queryByTestId('tip-graduacao')).toBeNull();
+    expect(useGameStore.getState().meta.seenTips).toContain('graduacao');
+    cleanup();
+    start(fighter());
+    fireEvent.click(screen.getByTestId('shortcut-luta'));
+    expect(screen.queryByTestId('tip-graduacao')).toBeNull();
+    expect(screen.getByTestId('tip-cartel')).toBeTruthy();
+  });
+
+  it('Carreiras → Carreira de lutador abre a mesma tela central', () => {
+    start(fighter());
+    fireEvent.click(screen.getByTestId('nav-ocupacao'));
+    fireEvent.click(screen.getByTestId('occ-careers'));
+    fireEvent.click(screen.getByTestId('career-fighter'));
+    expect(screen.getByTestId('fight-career')).toBeTruthy();
   });
 });

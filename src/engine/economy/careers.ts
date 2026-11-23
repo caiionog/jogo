@@ -127,3 +127,54 @@ export function fighterNextStep(state: GameState, content: GameContent): { stage
       .sort((a, b) => tierIndex(a.tier) - tierIndex(b.tier) || (a.requirements.minReputation ?? 0) - (b.requirements.minReputation ?? 0))[0] ?? null;
   return { stage, nextOrg: next, gap: next ? orgRequirementGap(state, next) : null };
 }
+
+export type NextStepTarget = 'academia' | 'treino' | 'ofertas' | 'ranking';
+
+/** Nome da organização com a sigla explicada: "Liga Fronteira MMA (LFM)". */
+function orgName(o: OrgDef): string {
+  return o.short && o.short !== o.name ? `${o.name} (${o.short})` : o.name;
+}
+
+/**
+ * Próximo passo da carreira de luta em uma frase objetiva + para onde o botão leva (release 0.0.1, tela central).
+ * Nunca cita números de habilidade.
+ */
+export function fighterNextStepText(state: GameState, content: GameContent): { text: string; target: NextStepTarget | null } {
+  const { stage, nextOrg, gap } = fighterNextStep(state, content);
+  const f = state.fighter;
+  const hasOffers = f.offers.length > 0;
+  if (stage === 'aposentado') return { text: 'Você está aposentado(a). A volta só acontece por convite (com reputação alta, alguém pode te chamar).', target: null };
+  if (stage === 'sem_academia') return { text: 'Entre numa academia: é lá que você treina as modalidades e recebe convites para lutar.', target: 'academia' };
+  if (f.titles.length) return { text: 'Você é campeã(o)! Defenda o cinturão nas ofertas do ano.', target: 'ofertas' };
+  if (!nextOrg) return { text: 'Você está na liga principal. Vença no ranking até chegar ao top 3 e disputar o cinturão.', target: 'ranking' };
+  const r = nextOrg.requirements;
+  const name = orgName(nextOrg);
+  const fightOrTrain: NextStepTarget = hasOffers ? 'ofertas' : 'treino';
+  switch (gap) {
+    case 'age':
+      return {
+        text: hasOffers
+          ? `Dispute os campeonatos da sua idade (veja as ofertas) e continue treinando: a ${name} só chama a partir dos ${nextOrg.minAge} anos.`
+          : `Continue treinando: a ${name} só chama a partir dos ${nextOrg.minAge} anos.`,
+        target: fightOrTrain,
+      };
+    case 'amateur-wins': {
+      const n = Math.max(1, (r.minAmateurWins ?? 0) - f.amateur.wins);
+      return { text: `Vença mais ${n} ${n === 1 ? 'luta amadora' : 'lutas amadoras'} para receber convites profissionais da ${name}.`, target: fightOrTrain };
+    }
+    case 'pro-wins': {
+      const n = Math.max(1, (r.minProWins ?? 0) - f.pro.wins);
+      return { text: `Vença mais ${n} ${n === 1 ? 'luta profissional' : 'lutas profissionais'} para a ${name} te notar.`, target: fightOrTrain };
+    }
+    case 'reputation':
+      return { text: `Ganhe nome: vitórias (principalmente por finalização ou nocaute) aumentam sua reputação até a ${name} te notar.`, target: fightOrTrain };
+    case 'belt':
+      return { text: `Chegue à faixa ${['branca', 'azul', 'roxa', 'marrom', 'preta'][r.minBelt ?? 0]} no jiu-jitsu (adulto) para entrar na ${name}.`, target: 'treino' };
+    case 'win-rate':
+      return { text: `Engate uma sequência de vitórias: a ${name} olha o seu aproveitamento recente.`, target: fightOrTrain };
+    case 'signing-age':
+      return { text: `A ${name} não contrata mais na sua idade. Brilhe onde você está: suba no ranking e dispute o cinturão.`, target: 'ranking' };
+    default:
+      return { text: `Requisitos da ${name} atendidos: a proposta deve chegar na virada do ano.`, target: fightOrTrain };
+  }
+}
