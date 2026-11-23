@@ -14,7 +14,8 @@ if (!js || !css) throw new Error('NÃ£o encontrei os assets em dist/index.html â€
 const code = readFileSync(join('dist', js[1]), 'utf8').replaceAll('</script', '<\\/script');
 const style = readFileSync(join('dist', css[1]), 'utf8').replaceAll('</style', '<\\/style');
 
-const page = `<title>Vida de Lutador</title>
+const page = `<meta charset="utf-8">
+<title>Vida de Lutador</title>
 <meta name="theme-color" content="#0f172a">
 <style>${style}</style>
 <div id="root"></div>
