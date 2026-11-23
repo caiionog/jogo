@@ -151,7 +151,9 @@ function drawBelt(cv: Canvas, b: BodySprite, color: string, accent?: string) {
   // faixa infantil de duas cores: a linha de baixo leva a listra (branca ou preta)
   if (accent) cv.ramp('faixa_listra', accent, { satCap: 0.6 });
   const y0 = b.anchors.waist[1] - 1;
-  for (let y = y0; y <= y0 + 1; y++) for (let x = 0; x < W; x++) if (cv.r(x, y) === 't' || cv.r(x, y) === 'c') cv.set(x, y, accent && y === y0 + 1 ? 'faixa_listra' : 'faixa', undefined, y === y0 ? 2 : 1);
+  // faixa infantil de duas cores: 3 linhas (cor / listra / cor) para a listra não sumir no kimono branco
+  const top = accent ? y0 - 1 : y0;
+  for (let y = top; y <= y0 + 1; y++) for (let x = 0; x < W; x++) if (cv.r(x, y) === 't' || cv.r(x, y) === 'c') cv.set(x, y, accent && y === y0 ? 'faixa_listra' : 'faixa', undefined, y === top ? 2 : 1);
   // nó e pontas
   for (const [x, y] of [[13, y0 + 2], [13, y0 + 3], [12, y0 + 3]] as const) if (cv.inside(x, y)) cv.set(x, y, 'faixa', 'c', 1);
 }
@@ -199,11 +201,28 @@ function hairMask(d: AvatarDescriptor, b: BodySprite): Map<number, HairCell> {
     put(L + 1, hairline + 1, 'f');
     put(R - 1, hairline + 1, 'f');
   };
+  // laterais afinando para baixo, com pontas irregulares (fios), nunca uma barra reta
   const sides = (toY: number, layer: HairCell, width = 1) => {
-    for (let y = hairline; y <= toY; y++) for (let k = 0; k < width; k++) { put(L - k, y, layer); put(R + k, y, layer); }
+    for (let y = hairline; y <= toY; y++) {
+      const left = toY - y;
+      for (let k = 0; k < width; k++) {
+        // a coluna de fora termina antes (afina); as pontas variam por coluna
+        const end = k > 0 ? 2 + Math.round(h01(k, toY, 7) * 2) : Math.round(h01(L, toY, 5) * 1.5);
+        if (left < end) continue;
+        put(L - k, y, layer);
+        put(R + k, y, layer);
+      }
+    }
   };
+  // volume de trás arredondado: cantos de cima recolhidos e ponta de baixo em "V" suave
   const back = (toY: number, extra = 1) => {
-    for (let y = hy; y <= toY; y++) for (let x = L - extra; x <= R + extra; x++) put(x, y, 'b');
+    for (let y = hy; y <= toY; y++) {
+      const top = y - hy;
+      const left = toY - y;
+      const inset = top === 0 ? extra + 2 : top === 1 ? extra : 0;
+      const tail = left === 0 ? 2 : left === 1 ? 1 : 0;
+      for (let x = L - extra + inset + tail; x <= R + extra - inset - tail; x++) put(x, y, 'b');
+    }
   };
   switch (style) {
     case 'careca':
@@ -220,7 +239,11 @@ function hairMask(d: AvatarDescriptor, b: BodySprite): Map<number, HairCell> {
       break;
     case 'franja':
       capRows(false, false);
-      for (let y = hairline + 1; y <= b.anchors.eyeL[1] - 3; y++) for (let x = hx; x < hx + hw; x++) put(x, y, 'f');
+      // franja de lado (diagonal), não "cuia": cobre a testa de um lado e sobe do outro
+      for (let y = hairline + 1; y <= b.anchors.eyeL[1] - 3; y++) {
+        const k = y - hairline;
+        for (let x = hx; x < hx + hw - 1 - k * 2; x++) put(x, y, 'f');
+      }
       sides(hy + Math.round(hh * 0.55), 'f');
       back(hy + Math.round(hh * 0.7));
       break;
@@ -289,13 +312,19 @@ function hairMask(d: AvatarDescriptor, b: BodySprite): Map<number, HairCell> {
 function hairTone(d: AvatarDescriptor, x: number, y: number, cv: Canvas): Tone {
   const above = cv.m(x, y - 1) === 'cabelo';
   const below = cv.m(x, y + 1) === 'cabelo';
-  if (!below) return 1;
+  const left = cv.m(x - 1, y) === 'cabelo';
+  const right = cv.m(x + 1, y) === 'cabelo';
+  // borda de baixo e borda direita na sombra (luz de cima à esquerda)
+  if (!below || !right) return 1;
+  // brilho: faixa logo abaixo do topo, do lado esquerdo
+  if (!above) return x < 18 ? 3 : 2;
+  if (!cv.m(x, y - 2) || cv.m(x, y - 2) !== 'cabelo') if (x < 16 && left) return 3;
   const t = d.hair.type;
-  if (!above) return 3;
-  if (t === 'liso') return (x + y) % 5 === 0 && x < 16 ? 3 : x > 18 && (x + 2 * y) % 4 === 0 ? 1 : 2;
-  if (t === 'ondulado') return (x + Math.floor(y / 2)) % 4 === 0 ? 3 : (x + Math.floor(y / 2)) % 4 === 2 ? 1 : 2;
-  if (t === 'cacheado') return ((x >> 1) + (y >> 1)) % 2 === 0 ? (h01(x, y, 2) < 0.5 ? 3 : 2) : 1;
-  return (x + y) % 2 === 0 ? 2 : h01(x, y, 4) < 0.3 ? 3 : 1;
+  // textura pelo tipo, discreta: fios verticais (liso), ondas (ondulado), cachos em blocos (cacheado), pontos (crespo)
+  if (t === 'liso') return x > 18 ? 1 : (x % 4 === 1 && y % 3 !== 0 ? 1 : 2);
+  if (t === 'ondulado') return (x + (y % 4 < 2 ? 0 : 2)) % 4 === 0 ? 1 : (x + (y % 4 < 2 ? 2 : 0)) % 4 === 0 && x < 17 ? 3 : 2;
+  if (t === 'cacheado') return ((x >> 1) + (y >> 1)) % 2 === 0 ? (x < 16 && h01(x, y, 2) < 0.4 ? 3 : 2) : 1;
+  return h01(x, y, 4) < 0.25 ? 1 : x < 15 && h01(x, y, 6) < 0.2 ? 3 : 2;
 }
 
 // ---------------------------------------------------------------------------
@@ -435,6 +464,8 @@ export function renderAvatar(d: AvatarDescriptor, opts: RenderOptions = {}): Pix
     paint(x, y - 1, lash);
     paint(x + 1, y - 1, lash);
     if (shape === 'alongado' || shape === 'palpebra_lisa') paint(inner > 0 ? x - 1 : x + 2, y - 1, lash);
+    // cílios marcados no canto de fora (mulheres, da adolescência em diante): sinal de sexo legível em 2×
+    if (d.sex === 'F' && !baby && d.stage !== 'crianca') paint(inner > 0 ? x - 1 : x + 2, y - 2, lash);
     paint(sx, y, tired || shape === 'palpebra_lisa' ? skin[1] : SCLERA);
     paint(ix, y, baby ? eye[0] : eye[1]);
     if (shape === 'alongado' && !tired) paint(inner > 0 ? x - 1 : x + 2, y, skin[1]);
@@ -458,6 +489,8 @@ export function renderAvatar(d: AvatarDescriptor, opts: RenderOptions = {}): Pix
         const innerK = dir > 0 ? 2 : 0;
         const dy = slope === 0 ? 0 : k === innerK ? slope : 0;
         paint(x, by + dy, browC);
+        // homens: sobrancelha mais grossa no meio
+        if (d.sex === 'M' && d.stage !== 'crianca' && k === 1) paint(x, by + dy + 1, browC);
       }
     }
   }
@@ -472,14 +505,22 @@ export function renderAvatar(d: AvatarDescriptor, opts: RenderOptions = {}): Pix
     if (nw >= 3) { paint(mx - 1 + nb, my - 2, skin[1]); paint(mx + 2 + nb, my - 2, skin[1]); }
   } else paint(mx + 1, my - 2, skin[1]);
   // boca: expressão e volume dos lábios
-  const lipHex = mix(d.skin, '#a8434f', 0.38);
-  const lip = makeRamp(lipHex, { satCap: 0.55 });
-  const lw = baby ? 2 : d.lipVolume < 0.34 ? 3 : 4;
+  // lábios: rosados nas mulheres; discretos (tom da pele mais escuro) nos homens e nas crianças
+  const grownF = d.sex === 'F' && !baby && d.stage !== 'crianca';
+  const lipHex = grownF ? mix(d.skin, '#b3404f', 0.4) : mix(d.skin, '#7d3b3b', d.stage === 'crianca' || baby ? 0.22 : 0.2);
+  const lip = makeRamp(lipHex, { satCap: grownF ? 0.55 : 0.35 });
+  const lw = baby ? 2 : d.sex === 'M' ? 3 : d.lipVolume < 0.34 ? 3 : 4;
   const lx0 = mx - (lw === 4 ? 1 : lw === 3 ? 0 : 0);
   const ex = d.expression;
   const curve = (k: number) => (ex === 'feliz' ? (k === 0 || k === lw - 1 ? -1 : 0) : ex === 'triste' ? (k === 0 || k === lw - 1 ? 1 : 0) : ex === 'machucado' ? (k === lw - 1 ? 1 : 0) : 0);
   for (let k = 0; k < lw; k++) paint(lx0 + k, my + curve(k), ex === 'bravo' ? lip[0] : lip[1]);
-  if (d.lipVolume >= 0.34 && !baby) for (let k = 1; k < lw - 1; k++) paint(lx0 + k, my + 1, lip[2]);
+  if (d.lipVolume >= 0.34 && !baby && (grownF || d.lipVolume >= 0.67)) for (let k = 1; k < lw - 1; k++) paint(lx0 + k, my + 1, lip[2]);
+  // homem adulto sem barba: maxilar marcado (sombra nos cantos de baixo do rosto)
+  if (d.sex === 'M' && (d.stage === 'adulto' || d.stage === 'idoso') && d.facialHair === 'nenhuma') {
+    const [hx0, hy0, hw0, hh0] = b.headBox;
+    const jawY = hy0 + hh0 - 1;
+    for (const jx of [hx0, hx0 + 1, hx0 + hw0 - 2, hx0 + hw0 - 1]) if (cv.m(jx, jawY) === 'pele') paint(jx, jawY, skin[1]);
+  }
   if (d.lipVolume >= 0.67 && !baby) paint(lx0, my + 1, lip[1]);
   // bochecha iluminada
   if (!baby) paint(elx - 1, ely + 2, skin[3]);

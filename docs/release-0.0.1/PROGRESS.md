@@ -94,7 +94,23 @@ Para retomar numa sessão nova: "Continue a release 0.0.1 a partir do docs/relea
   - Validador: eventos dos locais existem; evento `adult` só em local adulto 18+.
   - `adultSafety` ampliado: +1000 vidas com flerte/noite juntos em todos os tipos, menores e professor da escola
     injetados, opção ligada/desligada e todos os locais → 0 violações. `tests/nightlife.test.ts`.
-- [ ] **8. Qualidade dos avatares** — PAUSA para aprovação do antes × depois
+- [~] **8. Qualidade dos avatares** — **AGUARDANDO APROVAÇÃO do usuário** (capturas em `screenshots/avatars-*`)
+  - 10 piores casos do "antes": (1) cabelos médio/longo/franja/grisalho em bloco retangular ("capacete");
+    (2) textura de cabelo em riscas diagonais; (3) corpos M e F iguais (só o cabelo diferenciava); (4) boca vermelha
+    "de batom" em todos, inclusive homens e crianças; (5) rosto sem traço de sexo (cílios, maxilar, sobrancelha);
+    (6) grisalho de idoso como quadrado com contorno; (7) homem de cabelo longo frequente parecendo mulher;
+    (8) olhos pouco legíveis na pele escura; (9) sem pescoço visível no homem; (10) listra da faixa infantil sumindo
+    no kimono branco.
+  - Rodada 1 (cabelo): laterais afinando com pontas irregulares, volume de trás arredondado, franja de lado,
+    sombreamento por luz (brilho em cima à esquerda, sombra embaixo/direita) e textura por tipo sem riscas.
+  - Rodada 2 (sexo e rosto): `bodygen` com ombro +1/quadril −1 no homem e ombro −1/cintura −1/quadril +2 na mulher
+    a partir da adolescência, pescoço mais largo no homem adulto (corpos regenerados); cílios no canto externo
+    (mulher), sobrancelha mais grossa (homem), lábios discretos no homem e na criança, maxilar marcado no homem
+    adulto sem barba; faixa infantil em 3 linhas (cor/listra/cor).
+  - `scripts/sprites/avatar-audit.ts` (grades: 48 NPCs, fases × sexo, rampa de pele, cabelos);
+    `tests/avatarQuality.test.ts` (ombro−quadril M > F em todos os tipos, olhos ≥ 2 px, cabelo sem bloco).
+  - Pendente se o usuário pedir: roupas variadas na amostra de auditoria (o `previewAvatar` usa sempre a mesma),
+    pescoço da mulher, ajuste fino por fase.
 - [ ] **9. Roupas de banho e ícones de negócios** (save v14)
 - [ ] **10. Eventos novos (≥ 40) e intervalo de repetição**
 - [ ] **11. Balanceamento geral** (`npm run sim`, GDD)

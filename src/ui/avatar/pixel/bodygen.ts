@@ -65,13 +65,19 @@ export function bodyParams(stage: AgeStage, sex: 'M' | 'F', build: Build): BodyP
   p.armW = Math.max(2, p.armW + adj(d.armW));
   p.forearmW = Math.max(2, p.forearmW + adj(d.forearmW));
   p.legW = Math.max(3, p.legW + adj(d.legW));
-  if (sex === 'F' && stage !== 'bebe' && stage !== 'crianca') {
+  // dimorfismo legível a partir da adolescência (release 0.0.1): ombro largo × quadril e cintura marcados
+  const grown = stage !== 'bebe' && stage !== 'crianca';
+  if (sex === 'F' && grown) {
     p.shoulder -= 1;
     p.waist -= 1;
-    p.hip += 1;
+    p.hip += stage === 'adolescente' ? 1 : 2;
     p.armW = Math.max(2, p.armW - 1);
   }
-  return { ...p, neckW: (stage === 'bebe' ? 2 : stage === 'crianca' ? 2 : 3) + adj(d.neckW), cheek: adj(d.cheek) };
+  if (sex === 'M' && grown) {
+    p.shoulder += 1;
+    p.hip -= 1;
+  }
+  return { ...p, neckW: (stage === 'bebe' ? 2 : stage === 'crianca' ? 2 : 3) + adj(d.neckW) + (sex === 'M' && grown && stage !== 'adolescente' ? 1 : 0), cheek: adj(d.cheek) };
 }
 
 /** Gera a silhueta (grade de regiões) e as âncoras. */

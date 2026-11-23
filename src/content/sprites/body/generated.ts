@@ -1474,8 +1474,8 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '............hhhhhhhh............',
       '.............nnnnnn.............', // 24
       '.............nnnnnn.............',
-      '...........tttttttttt...........',
-      '.........atttttttttttta.........',
+      '..........tttttttttttt..........',
+      '.........tttttttttttttt.........',
       '.........aattttttttttaa.........', // 28
       '.........aattttttttttaa.........',
       '.........aattttttttttaa.........',
@@ -1487,10 +1487,10 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '.........aa.tttttttt.aa.........', // 36
       '.........aa.tttttttt.aa.........',
       '.........aa.tttttttt.aa.........',
-      '.........aa.cccccccc.aa.........',
-      '.........mm.cccccccc.mm.........', // 40
-      '.........mm.cccccccc.mm.........',
-      '..........m.cccccccc..m.........',
+      '.........aa..cccccc..aa.........',
+      '.........mm..cccccc..mm.........', // 40
+      '.........mm..cccccc..mm.........',
+      '..........m..cccccc...m.........',
       '............llllrrrr............',
       '............llllrrrr............', // 44
       '............llllrrrr............',
@@ -1513,7 +1513,7 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '..........ppppp..ppppp..........',
       '................................',
     ],
-    anchors: {head: [15,16],eyeL: [12,17],eyeR: [18,17],mouth: [15,20],neck: [15,24],shoulderL: [10,27],shoulderR: [21,27],chest: [15,30],waist: [15,39],elbowL: [10,34],elbowR: [21,34],wristL: [10,39],wristR: [21,39],hipL: [13,42],hipR: [18,42],kneeL: [13,52],kneeR: [18,52],ankleL: [13,60],ankleR: [18,60]},
+    anchors: {head: [15,16],eyeL: [12,17],eyeR: [18,17],mouth: [15,20],neck: [15,24],shoulderL: [9,27],shoulderR: [22,27],chest: [15,30],waist: [15,39],elbowL: [10,34],elbowR: [21,34],wristL: [10,39],wristR: [21,39],hipL: [13,42],hipR: [18,42],kneeL: [13,52],kneeR: [18,52],ankleL: [13,60],ankleR: [18,60]},
     headBox: [9,9,14,15],
   },
   adolescente_M_medio: {
@@ -1546,8 +1546,8 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '............hhhhhhhh............',
       '.............nnnnnn.............', // 24
       '.............nnnnnn.............',
-      '..........tttttttttttt..........',
-      '........atttttttttttttta........',
+      '.........tttttttttttttt.........',
+      '.......atttttttttttttttta.......',
       '.......aaattttttttttttaaa.......', // 28
       '.......aaattttttttttttaaa.......',
       '.......aaattttttttttttaaa.......',
@@ -1559,10 +1559,10 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '.......aaa.tttttttttt.aaa.......', // 36
       '.......aaa.tttttttttt.aaa.......',
       '.......aaa.tttttttttt.aaa.......',
-      '.......aaa.cccccccccc.aaa.......',
-      '.......mmm.cccccccccc.mmm.......', // 40
-      '.......mmm.cccccccccc.mmm.......',
-      '........m..cccccccccc..m........',
+      '.......aaa..cccccccc..aaa.......',
+      '.......mmm..cccccccc..mmm.......', // 40
+      '.......mmm..cccccccc..mmm.......',
+      '........m...cccccccc...m........',
       '...........lllllrrrrr...........',
       '...........lllllrrrrr...........', // 44
       '...........lllllrrrrr...........',
@@ -1585,7 +1585,7 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '.........pppppp..pppppp.........',
       '................................',
     ],
-    anchors: {head: [15,16],eyeL: [12,17],eyeR: [18,17],mouth: [15,20],neck: [15,24],shoulderL: [9,27],shoulderR: [22,27],chest: [15,30],waist: [15,39],elbowL: [8,34],elbowR: [23,34],wristL: [8,39],wristR: [23,39],hipL: [13,42],hipR: [18,42],kneeL: [13,52],kneeR: [18,52],ankleL: [13,60],ankleR: [18,60]},
+    anchors: {head: [15,16],eyeL: [12,17],eyeR: [18,17],mouth: [15,20],neck: [15,24],shoulderL: [8,27],shoulderR: [23,27],chest: [15,30],waist: [15,39],elbowL: [8,34],elbowR: [23,34],wristL: [8,39],wristR: [23,39],hipL: [13,42],hipR: [18,42],kneeL: [13,52],kneeR: [18,52],ankleL: [13,60],ankleR: [18,60]},
     headBox: [9,9,14,15],
   },
   adolescente_M_atletico: {
@@ -1618,8 +1618,8 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '............hhhhhhhh............',
       '.............nnnnnn.............', // 24
       '.............nnnnnn.............',
-      '.........tttttttttttttt.........',
-      '.......atttttttttttttttta.......',
+      '........tttttttttttttttt........',
+      '......atttttttttttttttttta......',
       '......aaattttttttttttttaaa......', // 28
       '......aaattttttttttttttaaa......',
       '......aaattttttttttttttaaa......',
@@ -1631,10 +1631,10 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '......aaa.tttttttttttt.aaa......', // 36
       '......aaa..tttttttttt..aaa......',
       '......aaa..tttttttttt..aaa......',
-      '......aaa..cccccccccc..aaa......',
-      '......mmm..cccccccccc..mmm......', // 40
-      '......mmm..cccccccccc..mmm......',
-      '.......m...cccccccccc...m.......',
+      '......aaa...cccccccc...aaa......',
+      '......mmm...cccccccc...mmm......', // 40
+      '......mmm...cccccccc...mmm......',
+      '.......m....cccccccc....m.......',
       '...........lllllrrrrr...........',
       '...........lllllrrrrr...........', // 44
       '...........lllllrrrrr...........',
@@ -1657,7 +1657,7 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '.........pppppp..pppppp.........',
       '................................',
     ],
-    anchors: {head: [15,16],eyeL: [12,17],eyeR: [18,17],mouth: [15,20],neck: [15,24],shoulderL: [8,27],shoulderR: [23,27],chest: [15,30],waist: [15,39],elbowL: [7,34],elbowR: [24,34],wristL: [7,39],wristR: [24,39],hipL: [13,42],hipR: [18,42],kneeL: [13,52],kneeR: [18,52],ankleL: [13,60],ankleR: [18,60]},
+    anchors: {head: [15,16],eyeL: [12,17],eyeR: [18,17],mouth: [15,20],neck: [15,24],shoulderL: [7,27],shoulderR: [24,27],chest: [15,30],waist: [15,39],elbowL: [7,34],elbowR: [24,34],wristL: [7,39],wristR: [24,39],hipL: [13,42],hipR: [18,42],kneeL: [13,52],kneeR: [18,52],ankleL: [13,60],ankleR: [18,60]},
     headBox: [9,9,14,15],
   },
   adolescente_M_musculoso: {
@@ -1690,8 +1690,8 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '............hhhhhhhh............',
       '............nnnnnnnn............', // 24
       '............nnnnnnnn............',
-      '........tttttttttttttttt........',
-      '......atttttttttttttttttta......',
+      '.......tttttttttttttttttt.......',
+      '.....atttttttttttttttttttta.....',
       '....aaaattttttttttttttttaaaa....', // 28
       '....aaaattttttttttttttttaaaa....',
       '....aaaattttttttttttttttaaaa....',
@@ -1703,10 +1703,10 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '....aaaa..tttttttttttt..aaaa....', // 36
       '....aaaa...tttttttttt...aaaa....',
       '....aaaa...tttttttttt...aaaa....',
-      '....aaaa...cccccccccc...aaaa....',
-      '....mmmm...cccccccccc...mmmm....', // 40
-      '....mmmm...cccccccccc...mmmm....',
-      '.....mm....cccccccccc....mm.....',
+      '....aaaa....cccccccc....aaaa....',
+      '....mmmm....cccccccc....mmmm....', // 40
+      '....mmmm....cccccccc....mmmm....',
+      '.....mm.....cccccccc.....mm.....',
       '..........llllllrrrrrr..........',
       '..........llllllrrrrrr..........', // 44
       '..........llllllrrrrrr..........',
@@ -1729,7 +1729,7 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '........ppppppp..ppppppp........',
       '................................',
     ],
-    anchors: {head: [15,16],eyeL: [12,17],eyeR: [18,17],mouth: [15,20],neck: [15,24],shoulderL: [7,27],shoulderR: [24,27],chest: [15,30],waist: [15,39],elbowL: [6,34],elbowR: [25,34],wristL: [6,39],wristR: [25,39],hipL: [12,42],hipR: [19,42],kneeL: [12,52],kneeR: [19,52],ankleL: [12,60],ankleR: [19,60]},
+    anchors: {head: [15,16],eyeL: [12,17],eyeR: [18,17],mouth: [15,20],neck: [15,24],shoulderL: [6,27],shoulderR: [25,27],chest: [15,30],waist: [15,39],elbowL: [6,34],elbowR: [25,34],wristL: [6,39],wristR: [25,39],hipL: [12,42],hipR: [19,42],kneeL: [12,52],kneeR: [19,52],ankleL: [12,60],ankleR: [19,60]},
     headBox: [9,9,14,15],
   },
   adolescente_M_acima: {
@@ -1762,8 +1762,8 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '...........hhhhhhhhhh...........',
       '.............nnnnnn.............', // 24
       '.............nnnnnn.............',
-      '.........tttttttttttttt.........',
-      '.......atttttttttttttttta.......',
+      '........tttttttttttttttt........',
+      '......atttttttttttttttttta......',
       '....aaaattttttttttttttttaaaa....', // 28
       '....aaaattttttttttttttttaaaa....',
       '....aaaattttttttttttttttaaaa....',
@@ -1775,15 +1775,15 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '....aaaattttttttttttttttaaaa....', // 36
       '....aaaattttttttttttttttaaaa....',
       '....aaaattttttttttttttttaaaa....',
-      '....aaaa.cccccccccccccc.aaaa....',
-      '....mmmm.cccccccccccccc.mmmm....', // 40
-      '....mmmm.cccccccccccccc.mmmm....',
-      '.....mm..cccccccccccccc..mm.....',
-      '.........lllllllrrrrrrr.........',
-      '.........lllllllrrrrrrr.........', // 44
-      '.........lllllllrrrrrrr.........',
-      '.........lllllllrrrrrrr.........',
-      '.........lllllllrrrrrrr.........',
+      '....aaaa..cccccccccccc..aaaa....',
+      '....mmmm..cccccccccccc..mmmm....', // 40
+      '....mmmm..cccccccccccc..mmmm....',
+      '.....mm...cccccccccccc...mm.....',
+      '..........llllllrrrrrr..........',
+      '..........llllllrrrrrr..........', // 44
+      '..........llllllrrrrrr..........',
+      '..........llllllrrrrrr..........',
+      '..........llllllrrrrrr..........',
       '.........llllll..rrrrrr.........', // 48
       '.........llllll..rrrrrr.........',
       '.........llllll..rrrrrr.........',
@@ -1801,7 +1801,7 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '........ppppppp..ppppppp........',
       '................................',
     ],
-    anchors: {head: [15,16],eyeL: [12,17],eyeR: [18,17],mouth: [15,20],neck: [15,24],shoulderL: [8,27],shoulderR: [23,27],chest: [15,30],waist: [15,39],elbowL: [6,34],elbowR: [25,34],wristL: [6,39],wristR: [25,39],hipL: [12,42],hipR: [19,42],kneeL: [12,52],kneeR: [19,52],ankleL: [12,60],ankleR: [19,60]},
+    anchors: {head: [15,16],eyeL: [12,17],eyeR: [18,17],mouth: [15,20],neck: [15,24],shoulderL: [7,27],shoulderR: [24,27],chest: [15,30],waist: [15,39],elbowL: [6,34],elbowR: [25,34],wristL: [6,39],wristR: [25,39],hipL: [12,42],hipR: [19,42],kneeL: [12,52],kneeR: [19,52],ankleL: [12,60],ankleR: [19,60]},
     headBox: [9,9,14,15],
   },
   adolescente_F_magro: {
@@ -2187,10 +2187,10 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '...........hhhhhhhhhh...........', // 16
       '...........hhhhhhhhhh...........',
       '............hhhhhhhh............',
-      '.............nnnnnn.............',
-      '.............nnnnnn.............', // 20
-      '...........tttttttttt...........',
-      '........atttttttttttttta........',
+      '............nnnnnnnn............',
+      '............nnnnnnnn............', // 20
+      '..........tttttttttttt..........',
+      '.......atttttttttttttttta.......',
       '.......aaattttttttttttaaa.......',
       '.......aaattttttttttttaaa.......', // 24
       '.......aaattttttttttttaaa.......',
@@ -2204,16 +2204,16 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '.......aa..tttttttttt..aa.......',
       '.......aa..tttttttttt..aa.......',
       '.......aa..tttttttttt..aa.......',
-      '.......aa..cccccccccc..aa.......', // 36
-      '.......mm..cccccccccc..mm.......',
-      '.......mm..cccccccccc..mm.......',
-      '........m..cccccccccc...m.......',
-      '...........cccccccccc...........', // 40
-      '...........lllllrrrrr...........',
-      '...........lllllrrrrr...........',
-      '...........lllllrrrrr...........',
-      '...........lllllrrrrr...........', // 44
-      '...........lllllrrrrr...........',
+      '.......aa...cccccccc...aa.......', // 36
+      '.......mm...cccccccc...mm.......',
+      '.......mm...cccccccc...mm.......',
+      '........m...cccccccc....m.......',
+      '............cccccccc............', // 40
+      '............llllrrrr............',
+      '............llllrrrr............',
+      '............llllrrrr............',
+      '............llllrrrr............', // 44
+      '............llllrrrr............',
       '...........llll..rrrr...........',
       '...........llll..rrrr...........',
       '...........llll..rrrr...........', // 48
@@ -2233,7 +2233,7 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '..........ppppp..ppppp..........',
       '................................',
     ],
-    anchors: {head: [15,11],eyeL: [12,11],eyeR: [18,11],mouth: [15,15],neck: [15,19],shoulderL: [9,22],shoulderR: [22,22],chest: [15,26],waist: [15,36],elbowL: [8,30],elbowR: [23,30],wristL: [8,36],wristR: [23,36],hipL: [13,40],hipR: [18,40],kneeL: [13,51],kneeR: [18,51],ankleL: [13,60],ankleR: [18,60]},
+    anchors: {head: [15,11],eyeL: [12,11],eyeR: [18,11],mouth: [15,15],neck: [15,19],shoulderL: [8,22],shoulderR: [23,22],chest: [15,26],waist: [15,36],elbowL: [8,30],elbowR: [23,30],wristL: [8,36],wristR: [23,36],hipL: [13,40],hipR: [18,40],kneeL: [13,51],kneeR: [18,51],ankleL: [13,60],ankleR: [18,60]},
     headBox: [9,3,14,16],
   },
   adulto_M_medio: {
@@ -2259,10 +2259,10 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '...........hhhhhhhhhh...........', // 16
       '...........hhhhhhhhhh...........',
       '............hhhhhhhh............',
-      '.............nnnnnn.............',
-      '.............nnnnnn.............', // 20
-      '..........tttttttttttt..........',
-      '.......atttttttttttttttta.......',
+      '............nnnnnnnn............',
+      '............nnnnnnnn............', // 20
+      '.........tttttttttttttt.........',
+      '......atttttttttttttttttta......',
       '.....aaaattttttttttttttaaaa.....',
       '.....aaaattttttttttttttaaaa.....', // 24
       '.....aaaattttttttttttttaaaa.....',
@@ -2276,16 +2276,16 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '.....aaa..tttttttttttt..aaa.....',
       '.....aaa..tttttttttttt..aaa.....',
       '.....aaa..tttttttttttt..aaa.....',
-      '.....aaa..cccccccccccc..aaa.....', // 36
-      '.....mmm..cccccccccccc..mmm.....',
-      '.....mmm..cccccccccccc..mmm.....',
-      '......m...cccccccccccc...m......',
-      '..........cccccccccccc..........', // 40
-      '..........llllllrrrrrr..........',
-      '..........llllllrrrrrr..........',
-      '..........llllllrrrrrr..........',
-      '..........llllllrrrrrr..........', // 44
-      '..........llllllrrrrrr..........',
+      '.....aaa...cccccccccc...aaa.....', // 36
+      '.....mmm...cccccccccc...mmm.....',
+      '.....mmm...cccccccccc...mmm.....',
+      '......m....cccccccccc....m......',
+      '...........cccccccccc...........', // 40
+      '...........lllllrrrrr...........',
+      '...........lllllrrrrr...........',
+      '...........lllllrrrrr...........',
+      '...........lllllrrrrr...........', // 44
+      '...........lllllrrrrr...........',
       '..........lllll..rrrrr..........',
       '..........lllll..rrrrr..........',
       '..........lllll..rrrrr..........', // 48
@@ -2305,7 +2305,7 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '.........pppppp..pppppp.........',
       '................................',
     ],
-    anchors: {head: [15,11],eyeL: [12,11],eyeR: [18,11],mouth: [15,15],neck: [15,19],shoulderL: [8,22],shoulderR: [23,22],chest: [15,26],waist: [15,36],elbowL: [7,30],elbowR: [24,30],wristL: [7,36],wristR: [24,36],hipL: [13,40],hipR: [18,40],kneeL: [13,51],kneeR: [18,51],ankleL: [13,60],ankleR: [18,60]},
+    anchors: {head: [15,11],eyeL: [12,11],eyeR: [18,11],mouth: [15,15],neck: [15,19],shoulderL: [7,22],shoulderR: [24,22],chest: [15,26],waist: [15,36],elbowL: [7,30],elbowR: [24,30],wristL: [7,36],wristR: [24,36],hipL: [13,40],hipR: [18,40],kneeL: [13,51],kneeR: [18,51],ankleL: [13,60],ankleR: [18,60]},
     headBox: [9,3,14,16],
   },
   adulto_M_atletico: {
@@ -2331,10 +2331,10 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '...........hhhhhhhhhh...........', // 16
       '...........hhhhhhhhhh...........',
       '............hhhhhhhh............',
-      '.............nnnnnn.............',
-      '.............nnnnnn.............', // 20
-      '.........tttttttttttttt.........',
-      '......atttttttttttttttttta......',
+      '............nnnnnnnn............',
+      '............nnnnnnnn............', // 20
+      '........tttttttttttttttt........',
+      '.....atttttttttttttttttttta.....',
       '....aaaattttttttttttttttaaaa....',
       '....aaaattttttttttttttttaaaa....', // 24
       '....aaaattttttttttttttttaaaa....',
@@ -2348,16 +2348,16 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '....aaa..tttttttttttttt..aaa....',
       '....aaa...tttttttttttt...aaa....',
       '....aaa...tttttttttttt...aaa....',
-      '....aaa...cccccccccccc...aaa....', // 36
-      '....mmm...cccccccccccc...mmm....',
-      '....mmm...cccccccccccc...mmm....',
-      '.....m....cccccccccccc....m.....',
-      '..........cccccccccccc..........', // 40
-      '..........llllllrrrrrr..........',
-      '..........llllllrrrrrr..........',
-      '..........llllllrrrrrr..........',
-      '..........llllllrrrrrr..........', // 44
-      '..........llllllrrrrrr..........',
+      '....aaa....cccccccccc....aaa....', // 36
+      '....mmm....cccccccccc....mmm....',
+      '....mmm....cccccccccc....mmm....',
+      '.....m.....cccccccccc.....m.....',
+      '...........cccccccccc...........', // 40
+      '...........lllllrrrrr...........',
+      '...........lllllrrrrr...........',
+      '...........lllllrrrrr...........',
+      '...........lllllrrrrr...........', // 44
+      '...........lllllrrrrr...........',
       '..........lllll..rrrrr..........',
       '..........lllll..rrrrr..........',
       '..........lllll..rrrrr..........', // 48
@@ -2377,7 +2377,7 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '.........pppppp..pppppp.........',
       '................................',
     ],
-    anchors: {head: [15,11],eyeL: [12,11],eyeR: [18,11],mouth: [15,15],neck: [15,19],shoulderL: [7,22],shoulderR: [24,22],chest: [15,26],waist: [15,36],elbowL: [6,30],elbowR: [25,30],wristL: [6,36],wristR: [25,36],hipL: [13,40],hipR: [18,40],kneeL: [13,51],kneeR: [18,51],ankleL: [13,60],ankleR: [18,60]},
+    anchors: {head: [15,11],eyeL: [12,11],eyeR: [18,11],mouth: [15,15],neck: [15,19],shoulderL: [6,22],shoulderR: [25,22],chest: [15,26],waist: [15,36],elbowL: [6,30],elbowR: [25,30],wristL: [6,36],wristR: [25,36],hipL: [13,40],hipR: [18,40],kneeL: [13,51],kneeR: [18,51],ankleL: [13,60],ankleR: [18,60]},
     headBox: [9,3,14,16],
   },
   adulto_M_musculoso: {
@@ -2403,10 +2403,10 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '...........hhhhhhhhhh...........', // 16
       '...........hhhhhhhhhh...........',
       '............hhhhhhhh............',
-      '............nnnnnnnn............',
-      '............nnnnnnnn............', // 20
-      '........tttttttttttttttt........',
-      '.....atttttttttttttttttttta.....',
+      '...........nnnnnnnnnn...........',
+      '...........nnnnnnnnnn...........', // 20
+      '.......tttttttttttttttttt.......',
+      '....atttttttttttttttttttttta....',
       '..aaaaattttttttttttttttttaaaaa..',
       '..aaaaattttttttttttttttttaaaaa..', // 24
       '..aaaaattttttttttttttttttaaaaa..',
@@ -2420,11 +2420,11 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '..aaaa...tttttttttttttt...aaaa..',
       '..aaaa....tttttttttttt....aaaa..',
       '..aaaa....tttttttttttt....aaaa..',
-      '..aaaa....cccccccccccc....aaaa..', // 36
-      '..mmmm....cccccccccccc....mmmm..',
-      '..mmmm....cccccccccccc....mmmm..',
-      '...mm.....cccccccccccc.....mm...',
-      '..........cccccccccccc..........', // 40
+      '..aaaa.....cccccccccc.....aaaa..', // 36
+      '..mmmm.....cccccccccc.....mmmm..',
+      '..mmmm.....cccccccccc.....mmmm..',
+      '...mm......cccccccccc......mm...',
+      '...........cccccccccc...........', // 40
       '..........llllllrrrrrr..........',
       '..........llllllrrrrrr..........',
       '..........llllllrrrrrr..........',
@@ -2449,7 +2449,7 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '........ppppppp..ppppppp........',
       '................................',
     ],
-    anchors: {head: [15,11],eyeL: [12,11],eyeR: [18,11],mouth: [15,15],neck: [15,19],shoulderL: [6,22],shoulderR: [25,22],chest: [15,26],waist: [15,36],elbowL: [4,30],elbowR: [27,30],wristL: [4,36],wristR: [27,36],hipL: [12,40],hipR: [19,40],kneeL: [12,51],kneeR: [19,51],ankleL: [12,60],ankleR: [19,60]},
+    anchors: {head: [15,11],eyeL: [12,11],eyeR: [18,11],mouth: [15,15],neck: [15,19],shoulderL: [5,22],shoulderR: [26,22],chest: [15,26],waist: [15,36],elbowL: [4,30],elbowR: [27,30],wristL: [4,36],wristR: [27,36],hipL: [12,40],hipR: [19,40],kneeL: [12,51],kneeR: [19,51],ankleL: [12,60],ankleR: [19,60]},
     headBox: [9,3,14,16],
   },
   adulto_M_acima: {
@@ -2475,10 +2475,10 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '..........hhhhhhhhhhhh..........', // 16
       '..........hhhhhhhhhhhh..........',
       '...........hhhhhhhhhh...........',
-      '.............nnnnnn.............',
-      '.............nnnnnn.............', // 20
-      '.........tttttttttttttt.........',
-      '......atttttttttttttttttta......',
+      '............nnnnnnnn............',
+      '............nnnnnnnn............', // 20
+      '........tttttttttttttttt........',
+      '.....atttttttttttttttttttta.....',
       '..aaaaattttttttttttttttttaaaaa..',
       '..aaaaattttttttttttttttttaaaaa..', // 24
       '..aaaaattttttttttttttttttaaaaa..',
@@ -2492,19 +2492,19 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '..aaaa.tttttttttttttttttt.aaaa..',
       '..aaaa.tttttttttttttttttt.aaaa..',
       '..aaaa.tttttttttttttttttt.aaaa..',
-      '..aaaa..cccccccccccccccc..aaaa..', // 36
-      '..mmmm..cccccccccccccccc..mmmm..',
-      '..mmmm..cccccccccccccccc..mmmm..',
-      '...mm...cccccccccccccccc...mm...',
-      '........cccccccccccccccc........', // 40
-      '........llllllllrrrrrrrr........',
-      '........llllllllrrrrrrrr........',
-      '........llllllllrrrrrrrr........',
-      '........llllllllrrrrrrrr........', // 44
-      '........llllllllrrrrrrrr........',
-      '........lllllll..rrrrrrr........',
-      '........lllllll..rrrrrrr........',
-      '........lllllll..rrrrrrr........', // 48
+      '..aaaa...cccccccccccccc...aaaa..', // 36
+      '..mmmm...cccccccccccccc...mmmm..',
+      '..mmmm...cccccccccccccc...mmmm..',
+      '...mm....cccccccccccccc....mm...',
+      '.........cccccccccccccc.........', // 40
+      '.........lllllllrrrrrrr.........',
+      '.........lllllllrrrrrrr.........',
+      '.........lllllllrrrrrrr.........',
+      '.........lllllllrrrrrrr.........', // 44
+      '.........lllllllrrrrrrr.........',
+      '.........llllll..rrrrrr.........',
+      '.........llllll..rrrrrr.........',
+      '.........llllll..rrrrrr.........', // 48
       '.........llllll..rrrrrr.........',
       '.........llllll..rrrrrr.........',
       '.........llllll..rrrrrr.........',
@@ -2521,7 +2521,7 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '........ppppppp..ppppppp........',
       '................................',
     ],
-    anchors: {head: [15,11],eyeL: [12,11],eyeR: [18,11],mouth: [15,15],neck: [15,19],shoulderL: [7,22],shoulderR: [24,22],chest: [15,26],waist: [15,36],elbowL: [4,30],elbowR: [27,30],wristL: [4,36],wristR: [27,36],hipL: [12,40],hipR: [19,40],kneeL: [12,51],kneeR: [19,51],ankleL: [12,60],ankleR: [19,60]},
+    anchors: {head: [15,11],eyeL: [12,11],eyeR: [18,11],mouth: [15,15],neck: [15,19],shoulderL: [6,22],shoulderR: [25,22],chest: [15,26],waist: [15,36],elbowL: [4,30],elbowR: [27,30],wristL: [4,36],wristR: [27,36],hipL: [12,40],hipR: [19,40],kneeL: [12,51],kneeR: [19,51],ankleL: [12,60],ankleR: [19,60]},
     headBox: [9,3,14,16],
   },
   adulto_F_magro: {
@@ -2567,16 +2567,16 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '........aaccccccccccccaa........', // 36
       '........mmccccccccccccmm........',
       '........mmccccccccccccmm........',
-      '.........mcccccccccccc.m........',
-      '..........cccccccccccc..........', // 40
-      '..........llllllrrrrrr..........',
-      '..........llllllrrrrrr..........',
-      '..........llllllrrrrrr..........',
-      '..........llllllrrrrrr..........', // 44
-      '..........llllllrrrrrr..........',
-      '..........lllll..rrrrr..........',
-      '..........lllll..rrrrr..........',
-      '..........lllll..rrrrr..........', // 48
+      '.........mcccccccccccccm........',
+      '.........cccccccccccccc.........', // 40
+      '.........lllllllrrrrrrr.........',
+      '.........lllllllrrrrrrr.........',
+      '.........lllllllrrrrrrr.........',
+      '.........lllllllrrrrrrr.........', // 44
+      '.........lllllllrrrrrrr.........',
+      '.........llllll..rrrrrr.........',
+      '.........llllll..rrrrrr.........',
+      '.........llllll..rrrrrr.........', // 48
       '...........llll..rrrr...........',
       '...........llll..rrrr...........',
       '...........llll..rrrr...........',
@@ -2639,16 +2639,16 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '......aaaccccccccccccccaaa......', // 36
       '......mmmccccccccccccccmmm......',
       '......mmmccccccccccccccmmm......',
-      '.......m.cccccccccccccc.m.......',
-      '.........cccccccccccccc.........', // 40
-      '.........lllllllrrrrrrr.........',
-      '.........lllllllrrrrrrr.........',
-      '.........lllllllrrrrrrr.........',
-      '.........lllllllrrrrrrr.........', // 44
-      '.........lllllllrrrrrrr.........',
-      '.........llllll..rrrrrr.........',
-      '.........llllll..rrrrrr.........',
-      '.........llllll..rrrrrr.........', // 48
+      '.......mccccccccccccccccm.......',
+      '........cccccccccccccccc........', // 40
+      '........llllllllrrrrrrrr........',
+      '........llllllllrrrrrrrr........',
+      '........llllllllrrrrrrrr........',
+      '........llllllllrrrrrrrr........', // 44
+      '........llllllllrrrrrrrr........',
+      '........lllllll..rrrrrrr........',
+      '........lllllll..rrrrrrr........',
+      '........lllllll..rrrrrrr........', // 48
       '..........lllll..rrrrr..........',
       '..........lllll..rrrrr..........',
       '..........lllll..rrrrr..........',
@@ -2708,19 +2708,19 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '.....aaa..tttttttttttt..aaa.....',
       '.....aaa...tttttttttt...aaa.....',
       '.....aaa...tttttttttt...aaa.....',
-      '.....aaa.cccccccccccccc.aaa.....', // 36
-      '.....mmm.cccccccccccccc.mmm.....',
-      '.....mmm.cccccccccccccc.mmm.....',
-      '......m..cccccccccccccc..m......',
-      '.........cccccccccccccc.........', // 40
-      '.........lllllllrrrrrrr.........',
-      '.........lllllllrrrrrrr.........',
-      '.........lllllllrrrrrrr.........',
-      '.........lllllllrrrrrrr.........', // 44
-      '.........lllllllrrrrrrr.........',
-      '.........llllll..rrrrrr.........',
-      '.........llllll..rrrrrr.........',
-      '.........llllll..rrrrrr.........', // 48
+      '.....aaaccccccccccccccccaaa.....', // 36
+      '.....mmmccccccccccccccccmmm.....',
+      '.....mmmccccccccccccccccmmm.....',
+      '......m.cccccccccccccccc.m......',
+      '........cccccccccccccccc........', // 40
+      '........llllllllrrrrrrrr........',
+      '........llllllllrrrrrrrr........',
+      '........llllllllrrrrrrrr........',
+      '........llllllllrrrrrrrr........', // 44
+      '........llllllllrrrrrrrr........',
+      '........lllllll..rrrrrrr........',
+      '........lllllll..rrrrrrr........',
+      '........lllllll..rrrrrrr........', // 48
       '..........lllll..rrrrr..........',
       '..........lllll..rrrrr..........',
       '..........lllll..rrrrr..........',
@@ -2780,19 +2780,19 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '...aaaa...tttttttttttt...aaaa...',
       '...aaaa...tttttttttttt...aaaa...',
       '...aaaa....tttttttttt....aaaa...',
-      '...aaaa..cccccccccccccc..aaaa...', // 36
-      '...mmmm..cccccccccccccc..mmmm...',
-      '...mmmm..cccccccccccccc..mmmm...',
-      '....mm...cccccccccccccc...mm....',
-      '.........cccccccccccccc.........', // 40
-      '.........lllllllrrrrrrr.........',
-      '.........lllllllrrrrrrr.........',
-      '.........lllllllrrrrrrr.........',
-      '.........lllllllrrrrrrr.........', // 44
-      '.........lllllllrrrrrrr.........',
-      '.........llllll..rrrrrr.........',
-      '.........llllll..rrrrrr.........',
-      '.........llllll..rrrrrr.........', // 48
+      '...aaaa.cccccccccccccccc.aaaa...', // 36
+      '...mmmm.cccccccccccccccc.mmmm...',
+      '...mmmm.cccccccccccccccc.mmmm...',
+      '....mm..cccccccccccccccc..mm....',
+      '........cccccccccccccccc........', // 40
+      '........llllllllrrrrrrrr........',
+      '........llllllllrrrrrrrr........',
+      '........llllllllrrrrrrrr........',
+      '........llllllllrrrrrrrr........', // 44
+      '........llllllllrrrrrrrr........',
+      '........lllllll..rrrrrrr........',
+      '........lllllll..rrrrrrr........',
+      '........lllllll..rrrrrrr........', // 48
       '.........llllll..rrrrrr.........',
       '.........llllll..rrrrrr.........',
       '.........llllll..rrrrrr.........',
@@ -2855,16 +2855,16 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '...aaaaccccccccccccccccccaaaa...', // 36
       '...mmmmccccccccccccccccccmmmm...',
       '...mmmmccccccccccccccccccmmmm...',
-      '....mm.cccccccccccccccccc.mm....',
-      '.......cccccccccccccccccc.......', // 40
-      '.......lllllllllrrrrrrrrr.......',
-      '.......lllllllllrrrrrrrrr.......',
-      '.......lllllllllrrrrrrrrr.......',
-      '.......lllllllllrrrrrrrrr.......', // 44
-      '.......lllllllllrrrrrrrrr.......',
-      '.......llllllll..rrrrrrrr.......',
-      '.......llllllll..rrrrrrrr.......',
-      '.......llllllll..rrrrrrrr.......', // 48
+      '....mmccccccccccccccccccccmm....',
+      '......cccccccccccccccccccc......', // 40
+      '......llllllllllrrrrrrrrrr......',
+      '......llllllllllrrrrrrrrrr......',
+      '......llllllllllrrrrrrrrrr......',
+      '......llllllllllrrrrrrrrrr......', // 44
+      '......llllllllllrrrrrrrrrr......',
+      '......lllllllll..rrrrrrrrr......',
+      '......lllllllll..rrrrrrrrr......',
+      '......lllllllll..rrrrrrrrr......', // 48
       '.........llllll..rrrrrr.........',
       '.........llllll..rrrrrr.........',
       '.........llllll..rrrrrr.........',
@@ -2909,9 +2909,9 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '...........hhhhhhhhhh...........',
       '...........hhhhhhhhhh...........',
       '............hhhhhhhh............', // 20
-      '.............nnnnnn.............',
-      '.............tttttt.............',
-      '.........atttttttttttta.........',
+      '............nnnnnnnn............',
+      '............tttttttt............',
+      '........atttttttttttttta........',
       '.......aaattttttttttttaaa.......', // 24
       '.......aaattttttttttttaaa.......',
       '.......aaattttttttttttaaa.......',
@@ -2925,16 +2925,16 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '.......aa..tttttttttt..aa.......',
       '.......aa..tttttttttt..aa.......',
       '.......aa..tttttttttt..aa.......', // 36
-      '.......aa..cccccccccc..aa.......',
-      '.......mm..cccccccccc..mm.......',
-      '.......mm..cccccccccc..mm.......',
-      '........m..cccccccccc...m.......', // 40
-      '...........cccccccccc...........',
-      '...........lllllrrrrr...........',
-      '...........lllllrrrrr...........',
-      '...........lllllrrrrr...........', // 44
-      '...........lllllrrrrr...........',
-      '...........lllllrrrrr...........',
+      '.......aa...cccccccc...aa.......',
+      '.......mm...cccccccc...mm.......',
+      '.......mm...cccccccc...mm.......',
+      '........m...cccccccc....m.......', // 40
+      '............cccccccc............',
+      '............llllrrrr............',
+      '............llllrrrr............',
+      '............llllrrrr............', // 44
+      '............llllrrrr............',
+      '............llllrrrr............',
       '...........llll..rrrr...........',
       '...........llll..rrrr...........', // 48
       '...........llll..rrrr...........',
@@ -2953,7 +2953,7 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '..........ppppp..ppppp..........',
       '................................',
     ],
-    anchors: {head: [15,13],eyeL: [12,13],eyeR: [18,13],mouth: [15,17],neck: [15,21],shoulderL: [10,23],shoulderR: [21,23],chest: [15,27],waist: [15,37],elbowL: [8,31],elbowR: [23,31],wristL: [8,37],wristR: [23,37],hipL: [13,41],hipR: [18,41],kneeL: [13,51],kneeR: [18,51],ankleL: [13,60],ankleR: [18,60]},
+    anchors: {head: [15,13],eyeL: [12,13],eyeR: [18,13],mouth: [15,17],neck: [15,21],shoulderL: [9,23],shoulderR: [22,23],chest: [15,27],waist: [15,37],elbowL: [8,31],elbowR: [23,31],wristL: [8,37],wristR: [23,37],hipL: [13,41],hipR: [18,41],kneeL: [13,51],kneeR: [18,51],ankleL: [13,60],ankleR: [18,60]},
     headBox: [9,5,14,16],
   },
   idoso_M_medio: {
@@ -2981,9 +2981,9 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '...........hhhhhhhhhh...........',
       '...........hhhhhhhhhh...........',
       '............hhhhhhhh............', // 20
-      '.............nnnnnn.............',
-      '............tttttttt............',
-      '........atttttttttttttta........',
+      '............nnnnnnnn............',
+      '...........tttttttttt...........',
+      '.......atttttttttttttttta.......',
       '.....aaaattttttttttttttaaaa.....', // 24
       '.....aaaattttttttttttttaaaa.....',
       '.....aaaattttttttttttttaaaa.....',
@@ -2997,16 +2997,16 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '.....aaa..tttttttttttt..aaa.....',
       '.....aaa..tttttttttttt..aaa.....',
       '.....aaa..tttttttttttt..aaa.....', // 36
-      '.....aaa..cccccccccccc..aaa.....',
-      '.....mmm..cccccccccccc..mmm.....',
-      '.....mmm..cccccccccccc..mmm.....',
-      '......m...cccccccccccc...m......', // 40
-      '..........cccccccccccc..........',
-      '..........llllllrrrrrr..........',
-      '..........llllllrrrrrr..........',
-      '..........llllllrrrrrr..........', // 44
-      '..........llllllrrrrrr..........',
-      '..........llllllrrrrrr..........',
+      '.....aaa...cccccccccc...aaa.....',
+      '.....mmm...cccccccccc...mmm.....',
+      '.....mmm...cccccccccc...mmm.....',
+      '......m....cccccccccc....m......', // 40
+      '...........cccccccccc...........',
+      '...........lllllrrrrr...........',
+      '...........lllllrrrrr...........',
+      '...........lllllrrrrr...........', // 44
+      '...........lllllrrrrr...........',
+      '...........lllllrrrrr...........',
       '..........lllll..rrrrr..........',
       '..........lllll..rrrrr..........', // 48
       '..........lllll..rrrrr..........',
@@ -3025,7 +3025,7 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '.........pppppp..pppppp.........',
       '................................',
     ],
-    anchors: {head: [15,13],eyeL: [12,13],eyeR: [18,13],mouth: [15,17],neck: [15,21],shoulderL: [9,23],shoulderR: [22,23],chest: [15,27],waist: [15,37],elbowL: [7,31],elbowR: [24,31],wristL: [7,37],wristR: [24,37],hipL: [13,41],hipR: [18,41],kneeL: [13,51],kneeR: [18,51],ankleL: [13,60],ankleR: [18,60]},
+    anchors: {head: [15,13],eyeL: [12,13],eyeR: [18,13],mouth: [15,17],neck: [15,21],shoulderL: [8,23],shoulderR: [23,23],chest: [15,27],waist: [15,37],elbowL: [7,31],elbowR: [24,31],wristL: [7,37],wristR: [24,37],hipL: [13,41],hipR: [18,41],kneeL: [13,51],kneeR: [18,51],ankleL: [13,60],ankleR: [18,60]},
     headBox: [9,5,14,16],
   },
   idoso_M_atletico: {
@@ -3053,9 +3053,9 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '...........hhhhhhhhhh...........',
       '...........hhhhhhhhhh...........',
       '............hhhhhhhh............', // 20
-      '.............nnnnnn.............',
-      '...........tttttttttt...........',
-      '.......atttttttttttttttta.......',
+      '............nnnnnnnn............',
+      '..........tttttttttttt..........',
+      '......atttttttttttttttttta......',
       '....aaaattttttttttttttttaaaa....', // 24
       '....aaaattttttttttttttttaaaa....',
       '....aaaattttttttttttttttaaaa....',
@@ -3069,16 +3069,16 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '....aaa..tttttttttttttt..aaa....',
       '....aaa...tttttttttttt...aaa....',
       '....aaa...tttttttttttt...aaa....', // 36
-      '....aaa...cccccccccccc...aaa....',
-      '....mmm...cccccccccccc...mmm....',
-      '....mmm...cccccccccccc...mmm....',
-      '.....m....cccccccccccc....m.....', // 40
-      '..........cccccccccccc..........',
-      '..........llllllrrrrrr..........',
-      '..........llllllrrrrrr..........',
-      '..........llllllrrrrrr..........', // 44
-      '..........llllllrrrrrr..........',
-      '..........llllllrrrrrr..........',
+      '....aaa....cccccccccc....aaa....',
+      '....mmm....cccccccccc....mmm....',
+      '....mmm....cccccccccc....mmm....',
+      '.....m.....cccccccccc.....m.....', // 40
+      '...........cccccccccc...........',
+      '...........lllllrrrrr...........',
+      '...........lllllrrrrr...........',
+      '...........lllllrrrrr...........', // 44
+      '...........lllllrrrrr...........',
+      '...........lllllrrrrr...........',
       '..........lllll..rrrrr..........',
       '..........lllll..rrrrr..........', // 48
       '..........lllll..rrrrr..........',
@@ -3097,7 +3097,7 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '.........pppppp..pppppp.........',
       '................................',
     ],
-    anchors: {head: [15,13],eyeL: [12,13],eyeR: [18,13],mouth: [15,17],neck: [15,21],shoulderL: [8,23],shoulderR: [23,23],chest: [15,27],waist: [15,37],elbowL: [6,31],elbowR: [25,31],wristL: [6,37],wristR: [25,37],hipL: [13,41],hipR: [18,41],kneeL: [13,51],kneeR: [18,51],ankleL: [13,60],ankleR: [18,60]},
+    anchors: {head: [15,13],eyeL: [12,13],eyeR: [18,13],mouth: [15,17],neck: [15,21],shoulderL: [7,23],shoulderR: [24,23],chest: [15,27],waist: [15,37],elbowL: [6,31],elbowR: [25,31],wristL: [6,37],wristR: [25,37],hipL: [13,41],hipR: [18,41],kneeL: [13,51],kneeR: [18,51],ankleL: [13,60],ankleR: [18,60]},
     headBox: [9,5,14,16],
   },
   idoso_M_musculoso: {
@@ -3125,9 +3125,9 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '...........hhhhhhhhhh...........',
       '...........hhhhhhhhhh...........',
       '............hhhhhhhh............', // 20
-      '............nnnnnnnn............',
-      '..........tttttttttttt..........',
-      '......atttttttttttttttttta......',
+      '...........nnnnnnnnnn...........',
+      '.........tttttttttttttt.........',
+      '.....atttttttttttttttttttta.....',
       '..aaaaattttttttttttttttttaaaaa..', // 24
       '..aaaaattttttttttttttttttaaaaa..',
       '..aaaaattttttttttttttttttaaaaa..',
@@ -3141,11 +3141,11 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '..aaaa...tttttttttttttt...aaaa..',
       '..aaaa....tttttttttttt....aaaa..',
       '..aaaa....tttttttttttt....aaaa..', // 36
-      '..aaaa....cccccccccccc....aaaa..',
-      '..mmmm....cccccccccccc....mmmm..',
-      '..mmmm....cccccccccccc....mmmm..',
-      '...mm.....cccccccccccc.....mm...', // 40
-      '..........cccccccccccc..........',
+      '..aaaa.....cccccccccc.....aaaa..',
+      '..mmmm.....cccccccccc.....mmmm..',
+      '..mmmm.....cccccccccc.....mmmm..',
+      '...mm......cccccccccc......mm...', // 40
+      '...........cccccccccc...........',
       '..........llllllrrrrrr..........',
       '..........llllllrrrrrr..........',
       '..........llllllrrrrrr..........', // 44
@@ -3169,7 +3169,7 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '........ppppppp..ppppppp........',
       '................................',
     ],
-    anchors: {head: [15,13],eyeL: [12,13],eyeR: [18,13],mouth: [15,17],neck: [15,21],shoulderL: [7,23],shoulderR: [24,23],chest: [15,27],waist: [15,37],elbowL: [4,31],elbowR: [27,31],wristL: [4,37],wristR: [27,37],hipL: [12,41],hipR: [19,41],kneeL: [12,51],kneeR: [19,51],ankleL: [12,60],ankleR: [19,60]},
+    anchors: {head: [15,13],eyeL: [12,13],eyeR: [18,13],mouth: [15,17],neck: [15,21],shoulderL: [6,23],shoulderR: [25,23],chest: [15,27],waist: [15,37],elbowL: [4,31],elbowR: [27,31],wristL: [4,37],wristR: [27,37],hipL: [12,41],hipR: [19,41],kneeL: [12,51],kneeR: [19,51],ankleL: [12,60],ankleR: [19,60]},
     headBox: [9,5,14,16],
   },
   idoso_M_acima: {
@@ -3197,9 +3197,9 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '..........hhhhhhhhhhhh..........',
       '..........hhhhhhhhhhhh..........',
       '...........hhhhhhhhhh...........', // 20
-      '.............nnnnnn.............',
-      '...........tttttttttt...........',
-      '........tttttttttttttttt........',
+      '............nnnnnnnn............',
+      '..........tttttttttttt..........',
+      '......atttttttttttttttttta......',
       '..aaaaattttttttttttttttttaaaaa..', // 24
       '..aaaaattttttttttttttttttaaaaa..',
       '..aaaaattttttttttttttttttaaaaa..',
@@ -3213,19 +3213,19 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '..aaaa.tttttttttttttttttt.aaaa..',
       '..aaaa.tttttttttttttttttt.aaaa..',
       '..aaaa.tttttttttttttttttt.aaaa..', // 36
-      '..aaaa..cccccccccccccccc..aaaa..',
-      '..mmmm..cccccccccccccccc..mmmm..',
-      '..mmmm..cccccccccccccccc..mmmm..',
-      '...mm...cccccccccccccccc...mm...', // 40
-      '........cccccccccccccccc........',
-      '........llllllllrrrrrrrr........',
-      '........llllllllrrrrrrrr........',
-      '........llllllllrrrrrrrr........', // 44
-      '........llllllllrrrrrrrr........',
-      '........llllllllrrrrrrrr........',
-      '........lllllll..rrrrrrr........',
-      '........lllllll..rrrrrrr........', // 48
-      '........lllllll..rrrrrrr........',
+      '..aaaa...cccccccccccccc...aaaa..',
+      '..mmmm...cccccccccccccc...mmmm..',
+      '..mmmm...cccccccccccccc...mmmm..',
+      '...mm....cccccccccccccc....mm...', // 40
+      '.........cccccccccccccc.........',
+      '.........lllllllrrrrrrr.........',
+      '.........lllllllrrrrrrr.........',
+      '.........lllllllrrrrrrr.........', // 44
+      '.........lllllllrrrrrrr.........',
+      '.........lllllllrrrrrrr.........',
+      '.........llllll..rrrrrr.........',
+      '.........llllll..rrrrrr.........', // 48
+      '.........llllll..rrrrrr.........',
       '.........llllll..rrrrrr.........',
       '.........llllll..rrrrrr.........',
       '.........llllll..rrrrrr.........', // 52
@@ -3241,7 +3241,7 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '........ppppppp..ppppppp........',
       '................................',
     ],
-    anchors: {head: [15,13],eyeL: [12,13],eyeR: [18,13],mouth: [15,17],neck: [15,21],shoulderL: [8,23],shoulderR: [23,23],chest: [15,27],waist: [15,37],elbowL: [4,31],elbowR: [27,31],wristL: [4,37],wristR: [27,37],hipL: [12,41],hipR: [19,41],kneeL: [12,51],kneeR: [19,51],ankleL: [12,60],ankleR: [19,60]},
+    anchors: {head: [15,13],eyeL: [12,13],eyeR: [18,13],mouth: [15,17],neck: [15,21],shoulderL: [7,23],shoulderR: [24,23],chest: [15,27],waist: [15,37],elbowL: [4,31],elbowR: [27,31],wristL: [4,37],wristR: [27,37],hipL: [12,41],hipR: [19,41],kneeL: [12,51],kneeR: [19,51],ankleL: [12,60],ankleR: [19,60]},
     headBox: [9,5,14,16],
   },
   idoso_F_magro: {
@@ -3288,16 +3288,16 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '........aaccccccccccccaa........',
       '........mmccccccccccccmm........',
       '........mmccccccccccccmm........',
-      '.........mcccccccccccc.m........', // 40
-      '..........cccccccccccc..........',
-      '..........llllllrrrrrr..........',
-      '..........llllllrrrrrr..........',
-      '..........llllllrrrrrr..........', // 44
-      '..........llllllrrrrrr..........',
-      '..........llllllrrrrrr..........',
-      '..........lllll..rrrrr..........',
-      '..........lllll..rrrrr..........', // 48
-      '..........lllll..rrrrr..........',
+      '.........mcccccccccccccm........', // 40
+      '.........cccccccccccccc.........',
+      '.........lllllllrrrrrrr.........',
+      '.........lllllllrrrrrrr.........',
+      '.........lllllllrrrrrrr.........', // 44
+      '.........lllllllrrrrrrr.........',
+      '.........lllllllrrrrrrr.........',
+      '.........llllll..rrrrrr.........',
+      '.........llllll..rrrrrr.........', // 48
+      '.........llllll..rrrrrr.........',
       '...........llll..rrrr...........',
       '...........llll..rrrr...........',
       '...........llll..rrrr...........', // 52
@@ -3360,16 +3360,16 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '......aaaccccccccccccccaaa......',
       '......mmmccccccccccccccmmm......',
       '......mmmccccccccccccccmmm......',
-      '.......m.cccccccccccccc.m.......', // 40
-      '.........cccccccccccccc.........',
-      '.........lllllllrrrrrrr.........',
-      '.........lllllllrrrrrrr.........',
-      '.........lllllllrrrrrrr.........', // 44
-      '.........lllllllrrrrrrr.........',
-      '.........lllllllrrrrrrr.........',
-      '.........llllll..rrrrrr.........',
-      '.........llllll..rrrrrr.........', // 48
-      '.........llllll..rrrrrr.........',
+      '.......mccccccccccccccccm.......', // 40
+      '........cccccccccccccccc........',
+      '........llllllllrrrrrrrr........',
+      '........llllllllrrrrrrrr........',
+      '........llllllllrrrrrrrr........', // 44
+      '........llllllllrrrrrrrr........',
+      '........llllllllrrrrrrrr........',
+      '........lllllll..rrrrrrr........',
+      '........lllllll..rrrrrrr........', // 48
+      '........lllllll..rrrrrrr........',
       '..........lllll..rrrrr..........',
       '..........lllll..rrrrr..........',
       '..........lllll..rrrrr..........', // 52
@@ -3429,19 +3429,19 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '.....aaa..tttttttttttt..aaa.....',
       '.....aaa...tttttttttt...aaa.....',
       '.....aaa...tttttttttt...aaa.....', // 36
-      '.....aaa.cccccccccccccc.aaa.....',
-      '.....mmm.cccccccccccccc.mmm.....',
-      '.....mmm.cccccccccccccc.mmm.....',
-      '......m..cccccccccccccc..m......', // 40
-      '.........cccccccccccccc.........',
-      '.........lllllllrrrrrrr.........',
-      '.........lllllllrrrrrrr.........',
-      '.........lllllllrrrrrrr.........', // 44
-      '.........lllllllrrrrrrr.........',
-      '.........lllllllrrrrrrr.........',
-      '.........llllll..rrrrrr.........',
-      '.........llllll..rrrrrr.........', // 48
-      '.........llllll..rrrrrr.........',
+      '.....aaaccccccccccccccccaaa.....',
+      '.....mmmccccccccccccccccmmm.....',
+      '.....mmmccccccccccccccccmmm.....',
+      '......m.cccccccccccccccc.m......', // 40
+      '........cccccccccccccccc........',
+      '........llllllllrrrrrrrr........',
+      '........llllllllrrrrrrrr........',
+      '........llllllllrrrrrrrr........', // 44
+      '........llllllllrrrrrrrr........',
+      '........llllllllrrrrrrrr........',
+      '........lllllll..rrrrrrr........',
+      '........lllllll..rrrrrrr........', // 48
+      '........lllllll..rrrrrrr........',
       '..........lllll..rrrrr..........',
       '..........lllll..rrrrr..........',
       '..........lllll..rrrrr..........', // 52
@@ -3501,19 +3501,19 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '...aaaa...tttttttttttt...aaaa...',
       '...aaaa...tttttttttttt...aaaa...',
       '...aaaa....tttttttttt....aaaa...', // 36
-      '...aaaa..cccccccccccccc..aaaa...',
-      '...mmmm..cccccccccccccc..mmmm...',
-      '...mmmm..cccccccccccccc..mmmm...',
-      '....mm...cccccccccccccc...mm....', // 40
-      '.........cccccccccccccc.........',
-      '.........lllllllrrrrrrr.........',
-      '.........lllllllrrrrrrr.........',
-      '.........lllllllrrrrrrr.........', // 44
-      '.........lllllllrrrrrrr.........',
-      '.........lllllllrrrrrrr.........',
-      '.........llllll..rrrrrr.........',
-      '.........llllll..rrrrrr.........', // 48
-      '.........llllll..rrrrrr.........',
+      '...aaaa.cccccccccccccccc.aaaa...',
+      '...mmmm.cccccccccccccccc.mmmm...',
+      '...mmmm.cccccccccccccccc.mmmm...',
+      '....mm..cccccccccccccccc..mm....', // 40
+      '........cccccccccccccccc........',
+      '........llllllllrrrrrrrr........',
+      '........llllllllrrrrrrrr........',
+      '........llllllllrrrrrrrr........', // 44
+      '........llllllllrrrrrrrr........',
+      '........llllllllrrrrrrrr........',
+      '........lllllll..rrrrrrr........',
+      '........lllllll..rrrrrrr........', // 48
+      '........lllllll..rrrrrrr........',
       '.........llllll..rrrrrr.........',
       '.........llllll..rrrrrr.........',
       '.........llllll..rrrrrr.........', // 52
@@ -3576,16 +3576,16 @@ export const GENERATED_BODIES: Record<string, BodySprite> = {
       '...aaaaccccccccccccccccccaaaa...',
       '...mmmmccccccccccccccccccmmmm...',
       '...mmmmccccccccccccccccccmmmm...',
-      '....mm.cccccccccccccccccc.mm....', // 40
-      '.......cccccccccccccccccc.......',
-      '.......lllllllllrrrrrrrrr.......',
-      '.......lllllllllrrrrrrrrr.......',
-      '.......lllllllllrrrrrrrrr.......', // 44
-      '.......lllllllllrrrrrrrrr.......',
-      '.......lllllllllrrrrrrrrr.......',
-      '.......llllllll..rrrrrrrr.......',
-      '.......llllllll..rrrrrrrr.......', // 48
-      '.......llllllll..rrrrrrrr.......',
+      '....mmccccccccccccccccccccmm....', // 40
+      '......cccccccccccccccccccc......',
+      '......llllllllllrrrrrrrrrr......',
+      '......llllllllllrrrrrrrrrr......',
+      '......llllllllllrrrrrrrrrr......', // 44
+      '......llllllllllrrrrrrrrrr......',
+      '......llllllllllrrrrrrrrrr......',
+      '......lllllllll..rrrrrrrrr......',
+      '......lllllllll..rrrrrrrrr......', // 48
+      '......lllllllll..rrrrrrrrr......',
       '.........llllll..rrrrrr.........',
       '.........llllll..rrrrrr.........',
       '.........llllll..rrrrrr.........', // 52
