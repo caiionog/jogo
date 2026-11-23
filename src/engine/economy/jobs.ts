@@ -14,6 +14,9 @@ import { stageOfGrade } from '../lifeStages/school';
 import { post, toMoney } from './ledger';
 import type { MarketYear } from './market';
 import type { EducationLevel, JobDef } from './types';
+import { policeSalary, rankTitle } from '../police/defs';
+import { leavePolice } from '../police/career';
+import { hasConviction } from '../crime/record';
 
 export const EDUCATION_ORDER: readonly EducationLevel[] = ['nenhuma', 'fundamental', 'medio', 'superior'];
 export const EDUCATION_LABEL: Record<EducationLevel, string> = {
@@ -61,7 +64,11 @@ export type JobBlockReason =
   /** Exige diploma de um curso específico. */
   | 'degree'
   /** Exige registro profissional (exame da ordem, CRM). */
-  | 'license';
+  | 'license'
+  /** Entrada só por concurso público (polícia). */
+  | 'public-exam'
+  /** Exige ficha criminal limpa. */
+  | 'record';
 
 /** Requisitos de perfil (sem vagas e emprego atual): usados nos cartões ✓/✗ da tela Carreiras. */
 export function jobRequirementGaps(state: GameState, def: JobDef): JobBlockReason[] {
@@ -79,6 +86,7 @@ export function jobRequirementGaps(state: GameState, def: JobDef): JobBlockReaso
   if (r?.cnh && !state.flags.cnh) gaps.push('cnh');
   if (r?.degree && !r.degree.some((d) => state.college?.diplomas.includes(d))) gaps.push('degree');
   if (r?.license && !state.flags[r.license]) gaps.push('license');
+  if (r?.cleanRecord && hasConviction(state)) gaps.push('record');
   const st = state.character.stats;
   const m = def.minStats ?? {};
   if ((m.intelligence ?? 0) > st.intelligence || (m.athletic ?? 0) > st.athletic || (m.looks ?? 0) > st.looks) gaps.push('stats');
@@ -106,6 +114,9 @@ export function jobBlockReason(state: GameState, def: JobDef, content?: GameCont
   if (!state.alive) return 'dead';
   if (state.pendingEvents.length > 0 || state.activeFight) return 'busy';
   if (state.economy.job?.jobId === def.id) return 'current';
+  if (def.publicExam) return 'public-exam';
+  // preso em regime fechado ou semiaberto não se candidata
+  if (state.prison && state.prison.regime !== 'aberto') return 'busy';
   const gap = jobRequirementGaps(state, def)[0];
   if (gap) return gap;
   if (content && !jobOpenings(state, content).includes(def.id)) return 'no-opening';
@@ -118,7 +129,9 @@ export function jobBlockReason(state: GameState, def: JobDef, content?: GameCont
 export function hireChance(state: GameState, def: JobDef, market: MarketYear): number {
   const st = state.character.stats;
   const surplus = (st.intelligence - (def.minStats?.intelligence ?? 0)) / 200 + (st.looks - (def.minStats?.looks ?? 0)) / 400;
-  return Math.min(0.95, Math.max(0.15, (def.hireChance ?? 0.6) + surplus - (market.kind === 'crise' ? 0.25 : 0)));
+  // ficha criminal com condenação derruba a chance nos demais empregos (release 0.0.2)
+  const record = hasConviction(state) ? (state.flags.portas_abertas ? 0.1 : 0.25) : 0;
+  return Math.min(0.95, Math.max(0.05, (def.hireChance ?? 0.6) + surplus - (market.kind === 'crise' ? 0.25 : 0) - record));
 }
 
 /** Cargo atual na escada (ex.: "Supervisor"), pelo nível 1–5. */
@@ -207,7 +220,7 @@ export function workHard(state: GameState, content: GameContent): GameState {
 export function askRaise(state: GameState, content: GameContent): GameState {
   const job = state.economy.job;
   const def = jobDef(content, job?.jobId);
-  if (!job || !def || state.flags.pediu_aumento === state.year || state.pendingEvents.length || state.activeFight) return state;
+  if (!job || !def || def.publicExam || state.flags.pediu_aumento === state.year || state.pendingEvents.length || state.activeFight) return state;
   const rng = createRng(state.rngState);
   let s: GameState = { ...state, rngState: rng.state, flags: { ...state.flags, pediu_aumento: state.year } };
   if (job.level < 5 && rng.chance((job.performance / 100) * 0.6)) {
@@ -221,6 +234,8 @@ export function askRaise(state: GameState, content: GameContent): GameState {
 export function quitJob(state: GameState, content: GameContent): GameState {
   const def = jobDef(content, state.economy.job?.jobId);
   if (!def || state.activeFight) return state;
+  // polícia: pedir demissão = pedir exoneração
+  if (def.publicExam && state.police.career) return leavePolice(appendLog(state, `Você pediu exoneração e deixou a polícia (${rankTitle(state, content).toLowerCase()}).`), 'pedido', content);
   const s: GameState = { ...state, economy: { ...state.economy, job: null } };
   return appendLog(s, `Você pediu demissão (${def.title.toLowerCase()}).`);
 }
@@ -237,6 +252,12 @@ export function jobYear(state: GameState, rng: Rng, content: GameContent, market
   if (!job || !def) return state;
   // licença não remunerada (intercâmbio): o emprego fica, o salário não vem
   if (state.flags.licenca === state.year) return appendLog(state, `Licença do trabalho (${jobTitle(def, job.level).toLowerCase()}): sem salário este ano.`);
+  if (def.publicExam) {
+    // servidor público (polícia): salário do posto; promoção e saída ficam em `policeYear`
+    if (!state.police.career) return { ...state, economy: { ...state.economy, job: null } };
+    const ps = post(state, 'salario', policeSalary(state, content), `Salário: ${rankTitle(state, content)}`);
+    return { ...ps, economy: { ...ps.economy, job: { ...job, years: job.years + 1 } } };
+  }
   let s = post(state, def.formal === false ? 'trabalho_informal' : 'salario', salaryOf(def, job.level, cityMultOf(state, content)), `${def.formal === false ? 'Trabalho' : 'Salário'}: ${jobTitle(def, job.level)}`);
   if (def.yearlyEffects) s = { ...s, character: { ...s.character, stats: addStats(s.character.stats, def.yearlyEffects) } };
   let next = { ...job, years: job.years + 1 };

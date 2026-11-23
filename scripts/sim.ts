@@ -2,7 +2,8 @@
  * Balanceamento da carreira de luta: simula N vidas focadas em luta usando só a engine + conteúdo.
  *   npm run sim            (500 vidas)
  *   npm run sim -- 500     (N vidas)
- *   npm run sim -- N M L D (N carreiras até 40, M vidas por perfil econômico, L vidas completas por perfil, D dinastias)
+ *   npm run sim -- N M L D P (N carreiras até 40, M vidas por perfil econômico, L vidas completas por perfil, D dinastias,
+ *                            P vidas por perfil de polícia e crime)
  */
 import { GAME_CONTENT } from '../src/content';
 import {
@@ -677,3 +678,6 @@ console.log(`Dinastias: chegaram à 2ª geração ${pctN(genReached.filter((g) =
 console.log(`Conquistas (% das ${achLives} vidas/dinastias que desbloquearam):`);
 const rows = C.achievements.map((a) => [a.id, achCount[a.id] ?? 0] as const).sort((a, b) => b[1] - a[1]);
 console.log(rows.map(([id, n]) => `${id} ${((n / achLives) * 100).toFixed(0)}%`).join(' · '));
+
+// release 0.0.2: polícia e crime (6º argumento = vidas por perfil, padrão 150)
+await import('./simCrime');

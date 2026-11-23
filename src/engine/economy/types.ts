@@ -28,7 +28,9 @@ export type LedgerCategory =
   | 'agente'
   | 'pensao'
   | 'multas'
-  | 'eventos';
+  | 'eventos'
+  /** Dinheiro de crime, propina e tráfico (release 0.0.2): não tributável, vira "dinheiro sujo". */
+  | 'crime';
 
 export interface LedgerEntry {
   cat: LedgerCategory;
@@ -57,7 +59,7 @@ export type LivingStandard = 'simples' | 'confortavel' | 'luxo';
 export type EconYearKind = 'normal' | 'crise' | 'boom';
 export type EducationLevel = 'nenhuma' | 'fundamental' | 'medio' | 'superior';
 /** aprendiz = jovem aprendiz/estágio (14+/16+); meio_periodo; formal e luta = tempo integral. */
-export type JobCategory = 'aprendiz' | 'meio_periodo' | 'formal' | 'luta';
+export type JobCategory = 'aprendiz' | 'meio_periodo' | 'formal' | 'luta' | 'seguranca';
 export type LoanKind = 'pessoal' | 'imobiliario' | 'veiculo';
 export type Regime = 'parcial' | 'separacao';
 
@@ -205,6 +207,8 @@ export interface JobDef {
     degree?: readonly string[];
     /** Registro profissional (flag): `oab` (exame da ordem fictício) ou `crm` (medicina). */
     license?: 'oab' | 'crm';
+    /** Ficha criminal limpa (sem condenação; release 0.0.2). */
+    cleanRecord?: boolean;
   };
   /** Carteira assinada (padrão true). Informal paga 15% a mais, sem INSS e sem imposto retido. */
   formal?: boolean;
@@ -215,6 +219,8 @@ export interface JobDef {
   /** Efeitos anuais nos atributos (servente: +Capacidade atlética, −Saúde). */
   yearlyEffects?: Partial<Record<'health' | 'happiness' | 'intelligence' | 'looks' | 'athletic', number>>;
   description?: string;
+  /** Entrada só por concurso público (polícia; release 0.0.2): não aceita candidatura comum, sem demissão por crise. */
+  publicExam?: boolean;
 }
 
 export interface AssetDef {

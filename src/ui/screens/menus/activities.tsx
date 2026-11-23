@@ -1,14 +1,14 @@
-/** Atividades (treino com sessões; o resto sem limite, com retorno decrescente), Relacionamentos, Saúde, Testamento e Perfil. */
-import { BookOpen, Car, Dumbbell, Heart, HeartPulse, MapPin, PartyPopper, Plane, ScrollText, Trophy } from 'lucide-react';
+/** Atividades (treino com limite oculto; o resto sem limite, com retorno decrescente), Relacionamentos, Saúde, Testamento e Perfil. */
+import { BookOpen, Car, Dumbbell, Heart, HeartPulse, MapPin, PartyPopper, Plane, ScrollText, Siren, Trophy } from 'lucide-react';
 import { useState } from 'react';
 import { GAME_CONTENT as C } from '../../../content';
 import type { GameState, TrainingKind } from '../../../engine';
-import { CNH_COST, TRAINING_MIN_AGE, actionBlockReason, actionUseKey, cnhBlockReason, coachAssessment, meetBlockReason, sessionsBreakdown, sessionsLeft, sessionsReserved, trainingBlockReason, usesThisYear } from '../../../engine';
-import { TrainingMeter } from '../Life';
+import { behindBars, CNH_COST, TRAINING_MIN_AGE, actionBlockReason, actionUseKey, cnhBlockReason, coachAssessment, meetBlockReason, trainingBlockReason, usesThisYear } from '../../../engine';
 import { gymModalitiesText } from '../../text/fight';
 import { ListGroup, ListItem } from '../../design/components';
 import { useNav } from '../../nav';
 import { useGameStore } from '../../store';
+import { PrisaoScreen } from './prison';
 import { ACTION_REASON } from './occupation';
 import HealthPanel from '../../components/HealthPanel';
 import RelationshipsPanel from '../../components/RelationshipsPanel';
@@ -23,11 +23,17 @@ const TRAIN: { kind: TrainingKind; title: string; sub: string; emoji: string }[]
   { kind: 'fisico', title: 'Treino físico', sub: 'Sobe a Capacidade atlética', emoji: '🏃' },
   { kind: 'sparring', title: 'Sparring', sub: 'Um pouco de tudo — risco de lesão', emoji: '🤼' },
 ];
-const TRAIN_REASON: Record<string, string> = { 'no-sessions': 'Sem sessões de treino livres neste ano', 'no-gym': 'Precisa de uma academia (Carreira de Luta)', 'not-offered': 'Sua academia não oferece esta modalidade', busy: 'Resolva o acontecimento pendente', injured: 'Lesionado(a): sparring vetado', retired: 'Aposentado(a)', dead: '—' };
+const TRAIN_REASON: Record<string, string> = { 'no-gym': 'Precisa de uma academia (Carreira de Luta)', 'not-offered': 'Sua academia não oferece esta modalidade', busy: 'Resolva o acontecimento pendente', injured: 'Lesionado(a): sparring vetado', retired: 'Aposentado(a)', dead: '—' };
 const MEET_REASON: Record<string, string> = { 'too-young': 'Disponível a partir dos 14 anos', 'app-adult': 'Disponível a partir dos 18 anos', taken: 'Você já está com alguém', busy: 'Resolva o acontecimento pendente', dead: '—' };
 const CNH_REASON: Record<string, string> = { age: 'Disponível a partir dos 18 anos', has: 'Você já tem CNH', 'no-money': `Custa ${money.format(CNH_COST)}`, busy: 'Resolva o acontecimento pendente', tried: 'Você já tentou este ano' };
 
 export function AtividadesScreen({ game }: { game: GameState }) {
+  // preso (fechado/semiaberto): as atividades viram as ações da prisão
+  if (behindBars(game)) return <PrisaoScreen game={game} />;
+  return <AtividadesLivre game={game} />;
+}
+
+function AtividadesLivre({ game }: { game: GameState }) {
   const nav = useNav();
   const [move, setMove] = useState(false);
   const getCnh = useGameStore((s) => s.getDriversLicense);
@@ -44,6 +50,7 @@ export function AtividadesScreen({ game }: { game: GameState }) {
       <ListItem icon={Heart} title="Amor" subtitle="Conhecer alguém, encontros" disabled={age < 14} reason="Disponível a partir dos 14 anos" onClick={() => nav.push('amor')} testId="act-amor" />
       <ListItem icon={MapPin} title="Mudar de cidade" subtitle={`Hoje: ${game.character.city} – ${game.character.uf}`} disabled={age < 18} reason="Disponível a partir dos 18 anos" onClick={() => setMove(true)} testId="act-mudar" />
       <ListItem icon={ScrollText} title="Testamento" subtitle="Quem fica com o quê" disabled={age < 18} reason="Disponível a partir dos 18 anos" onClick={() => nav.push('testamento')} />
+      <ListItem icon={Siren} title="Crime" subtitle={age >= 18 ? 'Delitos, risco e dinheiro sujo' : 'Só infrações leves (12–17)'} disabled={age < 12} reason="Disponível a partir dos 12 anos" onClick={() => nav.push('crime')} testId="act-crime" />
       <ListItem icon={Car} title="Tirar a CNH" subtitle={`${money.format(CNH_COST)} · uma tentativa por ano · pode reprovar`} disabled={!!cnh} reason={cnh ? CNH_REASON[cnh] : undefined} onClick={getCnh} chevron={false} testId="act-cnh" />
       {move && <MoveSheet onClose={() => setMove(false)} />}
     </>
@@ -53,10 +60,8 @@ export function AtividadesScreen({ game }: { game: GameState }) {
 export function TreinoScreen({ game }: { game: GameState }) {
   const train = useGameStore((s) => s.train);
   const gym = C.fighting.gyms.find((g) => g.id === game.fighter.gymId);
-  const limit = C.limits.trainingSessions;
   return (
     <>
-      <TrainingMeter left={sessionsLeft(game, C)} reserved={sessionsReserved(game, C)} limit={limit} notes={sessionsBreakdown(game, C).map((p) => p.text)} />
       {TRAIN.map((t) => {
         const r = trainingBlockReason(game, t.kind, C);
         return (
@@ -64,7 +69,7 @@ export function TreinoScreen({ game }: { game: GameState }) {
             key={t.kind}
             emoji={t.emoji}
             title={t.title}
-            subtitle={`1 sessão · ${t.sub}`}
+            subtitle={t.sub}
             disabled={!!r}
             reason={r === 'too-young' ? `Disponível a partir dos ${TRAINING_MIN_AGE[t.kind]} anos` : r ? TRAIN_REASON[r] : undefined}
             onClick={() => train(t.kind)}

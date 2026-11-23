@@ -27,6 +27,7 @@ import {
   performAction,
   resolveEvent,
   trainFighter,
+  overtrainExtras,
   interact,
   meetSomeoneAction,
   setRelationshipSettings,
@@ -41,6 +42,20 @@ import {
   setHousing,
   applyJob,
   workHard,
+  takePoliceExam,
+  policeWorkHard,
+  policeCourse,
+  shootingRange,
+  requestTransfer,
+  resignPolice,
+  trySpecialCourse,
+  commitCrime,
+  startPlan,
+  launderMoney,
+  tryLeaveFaction,
+  prisonAction,
+  startTrafficking,
+  stopTrafficking,
   askRaise,
   quitJob,
   fireAgent,
@@ -79,7 +94,7 @@ import {
   startExchange,
   goOut,
 } from '../engine';
-import type { CollegeType, SportId } from '../engine';
+import type { CollegeType, PoliceTrackId, PrisonAction, SportId, TraffickingLevel } from '../engine';
 import type {
   AchievementDef,
   StatKey,
@@ -223,6 +238,17 @@ interface GameStore {
   setHousing(housing: Housing): void;
   applyJob(jobId: string, replace?: boolean): void;
   workHard(): void;
+  /** Carreira policial (release 0.0.2). */
+  takePoliceExam(track: PoliceTrackId): void;
+  policeAction(kind: 'afinco' | 'curso' | 'estande' | 'transferencia' | 'exoneracao'): void;
+  trySpecialCourse(): void;
+  /** Crime (release 0.0.2). */
+  commitCrime(id: string): void;
+  startPlan(id: string): void;
+  launderMoney(): void;
+  tryLeaveFaction(): void;
+  prisonAction(a: PrisonAction): void;
+  setTrafficking(level: TraffickingLevel | null): void;
   askRaise(): void;
   quitJob(): void;
   /** Faculdade (release 0.0.1). */
@@ -292,7 +318,9 @@ export const useGameStore = create<GameStore>((setState, getState) => {
     const line = d.lines.at(-1);
     if (!line) return;
     const text = d.deltas.map((x) => `${STAT_SHORT[x.key]} ${x.delta > 0 ? '+' : '−'}${Math.abs(x.delta)}`).join(' · ');
-    setState({ toasts: [...getState().toasts, { id: toastId++, icon: '✔', title: line, text }].slice(-3) });
+    // treino além do limite do ano: o aviso aparece como alerta (treino invisível, release 0.0.2)
+    const over = after.fighter.sessionsThisYear > before.fighter.sessionsThisYear && overtrainExtras(after, GAME_CONTENT) > 0;
+    setState({ toasts: [...getState().toasts, { id: toastId++, icon: over ? '⚠' : '✔', title: line, text }].slice(-3) });
   };
 
   return {
@@ -462,6 +490,23 @@ export const useGameStore = create<GameStore>((setState, getState) => {
       if (before && after && after !== before) setState({ outcome: diffOf(before, after) });
     },
     workHard: () => act((g) => economyAction(g, (x) => workHard(x, GAME_CONTENT))),
+    takePoliceExam: (track) => act((g) => takePoliceExam(g, track, GAME_CONTENT)),
+    trySpecialCourse: () => update((g) => trySpecialCourse(g, GAME_CONTENT)),
+    commitCrime: (id) => {
+      const before = getState().game;
+      update((g) => commitCrime(g, id, GAME_CONTENT));
+      const after = getState().game;
+      if (before && after && after !== before) setState({ outcome: diffOf(before, after) });
+    },
+    startPlan: (id) => update((g) => startPlan(g, id, GAME_CONTENT)),
+    launderMoney: () => act((g) => launderMoney(g, GAME_CONTENT)),
+    tryLeaveFaction: () => update((g) => tryLeaveFaction(g, GAME_CONTENT)),
+    prisonAction: (a) => act((g) => prisonAction(g, a, GAME_CONTENT)),
+    setTrafficking: (level) => act((g) => (level ? startTrafficking(g, level) : stopTrafficking(g))),
+    policeAction: (kind) => {
+      const fn = { afinco: policeWorkHard, curso: policeCourse, estande: shootingRange, transferencia: requestTransfer, exoneracao: resignPolice }[kind];
+      act((g) => fn(g, GAME_CONTENT));
+    },
     askRaise: () => act((g) => economyAction(g, (x) => askRaise(x, GAME_CONTENT))),
     quitJob: () => eco((g) => quitJob(g, GAME_CONTENT)),
     takeExam: () => act((g) => takeExam(g, GAME_CONTENT)),

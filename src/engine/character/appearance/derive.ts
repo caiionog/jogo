@@ -24,7 +24,7 @@ export type Expression = 'feliz' | 'neutro' | 'triste' | 'cansado' | 'bravo' | '
 export type Build = 'magro' | 'medio' | 'atletico' | 'musculoso' | 'acima';
 export const BUILDS: readonly Build[] = ['magro', 'medio', 'atletico', 'musculoso', 'acima'];
 /** `treino`: roupa da modalidade principal (kimono + faixa, shorts + prajied…). */
-export type AvatarContext = 'principal' | 'luta' | 'treino' | 'casamento' | 'formatura' | 'lista';
+export type AvatarContext = 'principal' | 'luta' | 'treino' | 'casamento' | 'formatura' | 'lista' | 'policia' | 'prisao';
 
 export interface OutfitPiece {
   id: string;
@@ -250,6 +250,20 @@ export function swimOutfit(content: GameContent, age: number, sex: Sex, seed: nu
   return { cima: safe('camiseta_uv', c % 3)!, baixo: safe('bermuda_infantil', c % 3)!, calcado: feet };
 }
 
+/** Farda conforme a força e a unidade. */
+export function policeOutfit(state: GameState, content: GameContent): AvatarOutfit {
+  const c = state.police.career!;
+  const boots = piece(content, 'coturno', 0)!;
+  if (c.unit === 'especial') return { cima: piece(content, 'farda_tatica', 0)!, agasalho: piece(content, 'colete_pm', 0)!, baixo: piece(content, 'calca_farda', 2)!, calcado: boots, acessorio: piece(content, 'capacete', 0)! };
+  if (c.force === 'pm') return { cima: piece(content, 'farda_pm', 0)!, agasalho: piece(content, 'colete_pm', 0)!, baixo: piece(content, 'calca_farda', 0)!, calcado: boots, acessorio: piece(content, 'bone_pm', 0)! };
+  return { cima: piece(content, 'camisa_civil', 0)!, agasalho: piece(content, 'colete_civil', 0)!, baixo: piece(content, 'calca_farda', 1)!, calcado: boots };
+}
+
+function wornOrCasual(state: GameState, content: GameContent): AvatarOutfit {
+  const worn = wornToOutfit(content, state.wardrobe.worn ?? {}, state.character.age);
+  return !worn.cima && !worn.inteira ? casualOutfit(content, state.character.age, state.character.sex, state.character.birthYear) : worn;
+}
+
 /** Roupa do personagem: contexto automático (bebê, escola, luta, casamento, formatura) ou o guarda-roupa. */
 export function playerOutfit(state: GameState, content: GameContent, context: AvatarContext = 'principal'): AvatarOutfit {
   const age = state.character.age;
@@ -269,6 +283,14 @@ export function playerOutfit(state: GameState, content: GameContent, context: Av
   }
   if (context === 'formatura') return { cima: piece(content, 'camisa_formatura', 0)!, baixo: piece(content, 'calca_jeans', 0)!, calcado: piece(content, 'tenis', 0)! };
   if (age <= 2) return { inteira: piece(content, 'body', 0)!, calcado: piece(content, 'meia', 0)! };
+  // prisão (release 0.0.2): uniforme de presidiário atrás das grades; algemas no evento de prisão
+  if (context === 'prisao' || (state.prison && state.prison.regime !== 'aberto')) {
+    const cuffs = context === 'prisao' ? { acessorio: piece(content, 'algemas', 0)! } : {};
+    if (state.prison && state.prison.regime !== 'aberto') return { inteira: piece(content, 'uniforme_presidiario', 0)!, calcado: piece(content, 'chinelo', 0)!, ...cuffs };
+    return { ...wornOrCasual(state, content), ...cuffs };
+  }
+  // farda (release 0.0.2): na tela da polícia
+  if (context === 'policia' && state.police.career) return policeOutfit(state, content);
   if (context === 'principal' && state.scene && state.scene.year === state.year) return swimOutfit(content, age, state.character.sex, state.character.birthYear);
   const worn = wornToOutfit(content, state.wardrobe.worn ?? {}, age);
   if (state.education.current && age >= 6 && age <= 17) {

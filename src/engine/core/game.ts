@@ -1,3 +1,8 @@
+import { prisonYear } from '../crime/justice';
+import { crimeYear } from '../crime/crimes';
+import { policeYear } from '../police/career';
+import { emptyPolice } from '../police/types';
+import { emptyCrime } from '../crime/types';
 import { exchangeYear, onExchange, sportsClubYear } from '../lifeStages/sportsClub';
 import { collegeYear, emptyCollege, inCollege } from '../lifeStages/college';
 import type { Appearance } from '../character/appearance/genes';
@@ -117,6 +122,9 @@ export function newGame(options: NewGameOptions, content: GameContent): GameStat
     dynasty: emptyDynasty(character.name.split(' ').slice(-1)[0] ?? character.name, birthYear),
     ending: null,
     wardrobe: { ...defaultWardrobe(content), facialHair: options.appearance?.facialHair ?? 'nenhuma' },
+    police: emptyPolice(),
+    crime: emptyCrime(),
+    prison: null,
   };
   const withFamily = generateFamily(state, rng, content, 0);
   state.relationships = withFamily.relationships;
@@ -139,12 +147,15 @@ export type ActionBlockReason =
   | 'too-young'
   | 'too-old'
   | 'not-enrolled'
-  | 'wrong-stage';
+  | 'wrong-stage'
+  | 'prison';
 
 export function actionBlockReason(state: GameState, action: ActionDef | undefined): ActionBlockReason | null {
   if (!action) return 'unknown';
   if (!state.alive) return 'dead';
   if (state.pendingEvents.length > 0 || state.activeFight) return 'pending-event';
+  // preso (fechado/semiaberto): só as ações da prisão (release 0.0.2)
+  if (state.prison && state.prison.regime !== 'aberto') return 'prison';
   if (state.character.age < action.minAge) return 'too-young';
   if (action.maxAge !== undefined && state.character.age > action.maxAge) return 'too-old';
   const req = action.requires;
@@ -361,8 +372,15 @@ export function advanceYear(
     next = endFightingYear(next, content);
     // lesões: 12 meses de recuperação (sequelas ao sarar)
     next = injuriesYear(next, rng, content);
+    // crime: investigação pelo procurado, suspeita do dinheiro sujo, procurado cai (release 0.0.2)
+    next = crimeYear(next, rng, content);
+    if (!next.alive) return next;
+    // pena: tempo cumprido, progressão de regime, condicional, soltura (release 0.0.2)
+    next = prisonYear(next, rng, content);
     // fecha o ano econômico (salário, custos, impostos, dívida) e abre o extrato do novo ano
     next = closeEconomicYear(next, rng, content);
+    // carreira policial: formação, estágio, promoção, aposentadoria (release 0.0.2)
+    next = policeYear(next, rng, content);
     next = {
       ...next,
       year: next.year + 1,

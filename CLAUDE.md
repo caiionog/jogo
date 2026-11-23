@@ -40,7 +40,9 @@ Antes de commitar: `npm run lint && npm test && npm run build`.
    detalhado abaixo) e são validados por `validateContent` (`engine/events/validate.ts`) nos testes.
 4. **`GameState` é JSON puro** com campo `version`. Ao mudar o formato: incremente `STATE_VERSION`
    (`engine/core/state.ts`) e adicione a migração `n → n+1` em `src/save/migrations.ts` + teste.
-   Versão atual: **14**. Release 0.0.1: v8→v9 `energy` sai, entra `yearUses` e ofertas com `campSessions`; v9→v10
+   Versão atual: **15** (release 0.0.2: v14→v15 cria `police`, `crime` e `prison: null`; a flag antiga `preso`
+   vira passagem leve na ficha; campos opcionais `police.case`, `crime.plan/case/committed/earned`; fixture
+   `saves-v14.json`). Release 0.0.1: v8→v9 `energy` sai, entra `yearUses` e ofertas com `campSessions`; v9→v10
    `skills.jiujitsu` → `grappling`, `belt` → `fighter.grades` por modalidade, academias com `modalities`; v10→v11
    talentos e sorte (RNG `seed:v11:*`); v11→v12 `college` e `character.diplomas`; v12→v13 `sportsClub` e `exchange`;
    v13→v14 `character.scene` (praia/piscina) e `eventLastAge` (intervalo de repetição). Fixtures novas em
@@ -135,6 +137,8 @@ scripts/sim.ts            # balanceamento (Node/tsx, só engine + conteúdo); be
   content/geo/ content/outfits/ content/sprites/   # Brasil (UFs/cidades/IBGE), roupas, grades de pixel art (corpos, regras de roupa, ícones)
   engine/geo/ engine/character/appearance/          # sorteio de local; genes, herança, deriveAvatar, guarda-roupa
   engine/economy/careers.ts content/jobs/basic/ content/events/jobs/   # carreiras, empregos básicos, eventos de trabalho
+  engine/police/ engine/crime/   # release 0.0.2: carreira policial (defs, exam, career, events, shootout); crime (crimes, plan, faction, arrest, justice, prison, record)
+  content/careers/police/ content/crime/ content/events/{police,crime,prison}/ content/sprites/crimeIcons.ts   # dados da 0.0.2
 scripts/sprites/          # gen-bodies.ts (gera body/generated.ts), png-to-grid.ts (importa PNG do Aseprite)
 public/icons/             # ícones originais do PWA (SVG + PNGs gerados)
 tests/                    # Vitest; fixtures/saves-v1.json = saves reais da Etapa 1 para testar migração
@@ -381,13 +385,65 @@ tests/                    # Vitest; fixtures/saves-v1.json = saves reais da Etap
 - **Evento**: marque `tone` (bom ou ruim) para a sorte agir, e `cooldownYears` se 5 anos não servir.
   `tests/eventsCoverage.test.ts` confere que toda idade tem eventos elegíveis.
 
+## Polícia, crime, justiça e prisão (release 0.0.2)
+- **Regras de conteúdo (obrigatórias):**
+  - tudo fictício: facções, forças especiais, operações, presídios, pessoas;
+  - "Polícia Militar" e "Polícia Civil" sem sigla nem estado;
+  - crime é mecânica (escolha, chance, risco, consequência), **nunca manual**: nada de método, técnica, receita ou
+    detalhe operacional real;
+  - violência curta e não gráfica;
+  - **prisão sem violência sexual**, nem como insinuação (`tests/prison.test.ts`);
+  - nenhum lado glamourizado.
+- **Teste de nomes proibidos:** `tests/forbiddenNames.test.ts` varre `src/content` e `src/ui` atrás de nomes e siglas
+  de facções e unidades reais (PCC, CV, BOPE, ROTA, "Choque"…) e de "Polícia Militar/Civil" ao lado de UF ou de sigla
+  de UF (`PMSP`). Não use essas palavras nem em comentários.
+- **Menores:** a guarda única `crimeAllowed(state, def | 'faccao' | 'trafico')` (`engine/crime/crimes.ts`) libera
+  delitos leves a partir dos 12 e médios, graves, facção, tráfico e plano só a partir dos 18. Menor pego recebe medida
+  socioeducativa (`juvenileMeasure`) e entra na ficha juvenil, que não conta depois dos 18. O validador barra evento de
+  facção, tráfico ou plano com `minAge < 18`. `tests/adultSafety.test.ts` (1000 vidas) falha se um menor fizer algo
+  disso.
+- **Ocultos:** Tiro (`police.shooting`), procurado (`crime.wanted`) e reputação no crime (`crime.rep`) nunca aparecem
+  como número. A UI usa `shootingHint`, `wantedHint` e `crimeRepHint`.
+- **Dinheiro ilícito** entra só por `post(s, 'crime', +x)`, que soma em `crime.dirty` e `crime.earned`.
+- **Ordem no `advanceYear`:** `crimeYear` (facção, tráfico, investigação, suspeita, procurado −15), depois
+  `prisonYear`, depois o fechamento econômico, depois `policeYear`. Atrás das grades (fechado ou semiaberto), só eventos
+  com `conditions.crime.imprisoned` são sorteados e as ações comuns devolvem `'prison'`.
+- **Esquemas novos de evento:**
+  - condição `police`: `force`, `track`, `stage`, `unit`, `minRank`, `serviceYears`, `inCase`, `noCase`, `former`,
+    `corregedoria`;
+  - efeito `police`: `merit`, `shooting`, `corregedoria`, `promote`, `exonerate`, `notable`, `shootout`, `caseStart`,
+    `caseScore`, `caseEnd`, `specialStep`, `arrest`, `subdue`;
+  - condição `crime`: `wanted`, `rep`, `dirty`, `record`, `juvenile`, `planning`, `faction`, `trafficking`,
+    `factionWar`, `factionHere`, `inCase`, `imprisoned`, `wing`, `regime`, `committed`;
+  - efeito `crime`: `wanted`, `rep`, `planTeam`, `planTarget`, `planTime`, `planGo`, `arrest`, `seizeDirty`,
+    `joinFaction`, `leaveFaction`, `factionDebt`, `stopTrafficking`, `plea`, `lawyer`, `verdict`, `behavior`,
+    `remission`, `escape`, `protection`.
+
+### Como adicionar (release 0.0.2)
+- **Cargo policial:** um posto em `ranks` da trilha em `src/content/careers/police/index.ts` (`title`, `titleF?`,
+  `salaryMW`, `minYears`, `minMerit`). Trilha nova: `PoliceTrackDef` (`entry`, `ageRange`, `education`, `degree?`,
+  `cut`, `course`, `postings`) e o id em `PoliceTrackId`.
+- **Evento policial:** em `src/content/events/police/` (`pm.ts`, `civil.ts`, `life.ts`), com id `pol_*`, condição
+  `police` e efeito `police`. Caso novo da Civil: id em `POLICE.cases`, 1ª etapa com `caseStart` e `noCase: true`,
+  etapas `trigger: 'followUp'` com `inCase`, encadeadas por `followUps` com `delayYears: 0`, e a última com `caseEnd`.
+- **Delito:** `CrimeDef` em `src/content/crime/index.ts` (`tier`, `minAge` 12 ou 18, `baseSuccess`, `gain`, `risk`,
+  `wantedGain`, `repGain`, `minCrimeRep?`, `plan?`, `text` sem método) + faixa de pena em `crime/sentences.ts` + ícone
+  em `sprites/crimeIcons.ts` (o teste de ícones exige os três).
+- **Facção:** `FactionDef` em `src/content/crime/factions/index.ts` (nome e símbolo inventados, `territory`, `rivals`
+  existentes, `rules`) + glifo em `FACTION_GLYPHS`. Rode `tests/forbiddenNames.test.ts`.
+- **Evento de prisão:** em `src/content/events/prison/index.ts`, id `prisao_*`, `minAge: 18` e
+  `crime: { imprisoned: true }` (com `wing`/`regime` se quiser). Nada de violência sexual.
+- **Balanceamento:** `npm run sim` (6º argumento = vidas por perfil de polícia e crime) ou
+  `SIM_CRIME_N=200 npx tsx scripts/simCrime.ts`. Metas e tabela no GDD §10c.
+
 ## Flags importantes (ganchos entre etapas)
 `interesse_luta`, `brigou_na_escola`, `medalha_interescolar`, `caminho_18` ('faculdade' | 'trabalho' | 'luta'),
 `gostaDeLuta`, `artesMarciais`, `sonhaSerLutador`, `formado`, `repetente`, `expulso`, `suspenso`, `bolsista`,
 `pensa_aposentar` (gancho de aposentadoria), `casado`, `divorciado`, `viuvo`, `recem_nascido`, `primeiro_beijo`,
 `pais_separados`, `ist`, `falencia`, `empresa_faliu`, `academia_propria`, `sonegar_ano`, `aposentado`,
 `academia_herdada`, `filho_de_campeao`, `lutador_mirim` (herdado), `pensou_parar_derrotas`/`medico_parar` (controle dos
-eventos de aposentadoria); nas pessoas: `interesse_luta`, `lutador_mirim` (gancho do legado), `academia`, `separados`, `pediu_dinheiro`.
+eventos de aposentadoria), `egresso`, `portas_abertas`, `recomecou`, `foragido`, `ex_faccao`, `turma_viaduto`,
+`internacao_ano`, `curso_especial_ano`; nas pessoas: `interesse_luta`, `lutador_mirim` (gancho do legado), `academia`, `separados`, `pediu_dinheiro`, `preso_por_voce`, `crime`, `faccao`, `policial`, `detento`.
 
 ## Regras de conteúdo
 - Use **somente organizações, ligas, academias, eventos e lutadores fictícios** (ex.: "Circuito Titã", "ARC").

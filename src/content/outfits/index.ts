@@ -66,6 +66,18 @@ export const OUTFITS: readonly OutfitDef[] = [
   { id: 'arara_social', name: 'Camisa de seda Maison Arara', layer: 'cima', minAge: 16, maxAge: 120, context: 'luxo', colors: ['#f4e3b1', '#1e1b4b', '#7f1d1d'], price: 9000, unlockedByDefault: false },
   { id: 'cronos_terno', name: 'Paletó sob medida Cronos Wear', layer: 'agasalho', minAge: 18, maxAge: 120, context: 'luxo', colors: ['#0f172a', '#334155', '#78350f'], price: 35000, unlockedByDefault: false },
   { id: 'cronos_moletom', name: 'Moletom Cronos Wear Edição Ouro', layer: 'cima', minAge: 14, maxAge: 120, context: 'luxo', colors: ['#e3b52f', '#0b0b0b'], price: 6000, unlockedByDefault: false },
+  // ---- fardas e uniforme de presidiário (release 0.0.2; nunca no guarda-roupa: vêm da carreira/prisão) ----
+  { id: 'farda_pm', name: 'Farda da Polícia Militar', layer: 'cima', minAge: 18, maxAge: 120, context: 'farda', colors: ['#5b6b4e'], unlockedByDefault: false },
+  { id: 'calca_farda', name: 'Calça da farda', layer: 'baixo', minAge: 18, maxAge: 120, context: 'farda', colors: ['#4a5640', '#1d2230', '#14161f'], unlockedByDefault: false },
+  { id: 'colete_pm', name: 'Colete balístico', layer: 'agasalho', minAge: 18, maxAge: 120, context: 'farda', colors: ['#2b2f2a'], unlockedByDefault: false },
+  { id: 'coturno', name: 'Coturno', layer: 'calcado', minAge: 18, maxAge: 120, context: 'farda', colors: ['#14161f'], unlockedByDefault: false },
+  { id: 'bone_pm', name: 'Boné da farda', layer: 'acessorio', minAge: 18, maxAge: 120, context: 'farda', colors: ['#4a5640', '#14161f'], unlockedByDefault: false },
+  { id: 'camisa_civil', name: 'Camisa da Polícia Civil', layer: 'cima', minAge: 18, maxAge: 120, context: 'farda', colors: ['#d9d6cc'], unlockedByDefault: false },
+  { id: 'colete_civil', name: 'Colete preto com distintivo', layer: 'agasalho', minAge: 18, maxAge: 120, context: 'farda', colors: ['#14161f'], unlockedByDefault: false },
+  { id: 'farda_tatica', name: 'Farda tática da força especial', layer: 'cima', minAge: 18, maxAge: 120, context: 'farda', colors: ['#1f2328'], unlockedByDefault: false },
+  { id: 'capacete', name: 'Capacete tático', layer: 'acessorio', minAge: 18, maxAge: 120, context: 'farda', colors: ['#1f2328'], unlockedByDefault: false },
+  { id: 'uniforme_presidiario', name: 'Uniforme de presidiário', layer: 'inteira', minAge: 12, maxAge: 120, context: 'prisao', colors: ['#d9c49a'], unlockedByDefault: false },
+  { id: 'algemas', name: 'Algemas', layer: 'acessorio', minAge: 12, maxAge: 120, context: 'prisao', colors: ['#9aa1ab'], unlockedByDefault: false },
   // ---- praia e piscina (release 0.0.1): roupas de banho adultas só 18+; crianças e adolescentes usam peças fechadas ----
   { id: 'biquini', name: 'Biquíni', layer: 'inteira', minAge: 18, maxAge: 120, context: 'praia', colors: ['#d8485e', '#2f7fd0', '#f0b030', '#1f2a44', '#3fa06a'], unlockedByDefault: true },
   { id: 'maio', name: 'Maiô', layer: 'inteira', minAge: 18, maxAge: 120, context: 'praia', colors: ['#1f2a44', '#c23a3a', '#2f7fd0', '#e070a8'], unlockedByDefault: true },

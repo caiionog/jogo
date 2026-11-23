@@ -41,7 +41,8 @@ export type ClothingDetail =
   | 'prajied' // prajied do muay thai no braço (acessório; `accent` = ponta)
   | 'aba' // boné
   | 'lentes' // óculos
-  | 'vinco';
+  | 'vinco'
+  | 'algemas'; // algemas nos pulsos (contexto da prisão)
 
 export interface ClothingRule {
   cover: readonly CoverRule[];
@@ -109,6 +110,18 @@ export const CLOTHING_RULES: Readonly<Record<string, ClothingRule>> = {
   maio_infantil: { cover: [{ regions: ['t', 'c'] }], details: ['alcas'] },
   camiseta_uv: { cover: TOP_SHORT, details: ['gola', 'manga'] },
   bermuda_infantil: { cover: [{ regions: ['c', 'l', 'r'], to: { a: 'kneeL', dy: -1 } }], details: ['cos'] },
+  // fardas e prisão (release 0.0.2)
+  farda_pm: { cover: TOP_SHORT, details: ['gola', 'botoes', 'manga', 'emblema'] },
+  calca_farda: { cover: LEGS_FULL, details: ['cos', 'bolso'] },
+  colete_pm: { cover: TORSO, details: ['ziper', 'emblema'] },
+  coturno: { cover: [{ regions: ['p'] }, { regions: ['l', 'r'], from: { a: 'ankleL', dy: -3 } }], details: ['sola'] },
+  camisa_civil: { cover: TOP_SHORT, details: ['gola', 'botoes', 'manga'] },
+  colete_civil: { cover: TORSO, details: ['emblema', 'bolso'] },
+  farda_tatica: { cover: TOP_LONG, details: ['gola', 'bolso', 'manga'] },
+  uniforme_presidiario: { cover: [{ regions: ['t', 'c', 'l', 'r'], to: { a: 'ankleL', dy: -1 } }, { regions: ['a'], to: { a: 'elbowL', dy: -2 } }], details: ['gola', 'barra'] },
+  bone_pm: { cover: [], details: ['aba'] },
+  capacete: { cover: [], details: ['aba'] },
+  algemas: { cover: [], details: ['algemas'] },
   // acessórios (desenhados por cima do cabelo/rosto)
   faixa: { cover: [], details: ['faixa'] },
   prajied: { cover: [], details: ['prajied'] },

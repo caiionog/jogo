@@ -49,15 +49,17 @@ describe('sem energia', () => {
 });
 
 describe('limite de 10 sessões de treino por ano', () => {
-  it('10 treinos e depois bloqueia', () => {
+  it('10 treinos rendem; depois o treino continua disponível, mas sem ganho', () => {
     let g = adult();
     for (let i = 0; i < 10; i++) {
       expect(trainingBlockReason(g, 'fisico', C)).toBeNull();
       g = trainFighter(g, 'fisico', C);
     }
     expect(sessionsLeft(g, C)).toBe(0);
-    expect(trainingBlockReason(g, 'fisico', C)).toBe('no-sessions');
-    expect(trainFighter(g, 'fisico', C)).toBe(g);
+    expect(trainingBlockReason(g, 'fisico', C)).toBeNull();
+    const next = trainFighter(g, 'fisico', C);
+    expect(next).not.toBe(g);
+    expect(next.character.stats.athletic).toBe(g.character.stats.athletic);
   });
 
   it('as modalidades e o físico dividem as mesmas sessões', () => {
@@ -85,7 +87,7 @@ describe('limite de 10 sessões de treino por ano', () => {
     const g = adult();
     expect(sessionsLeft(withJob(g, full.id), C)).toBe(6);
     expect(sessionsLeft(withJob(g, part.id), C)).toBe(8);
-    expect(sessionsBreakdown(withJob(g, full.id), C)[0]!.text).toBe('Seu emprego ocupa 4 sessões de treino');
+    expect(sessionsBreakdown(withJob(g, full.id), C)[0]!.text).toBe('Seu emprego toma boa parte do seu tempo de treino');
   });
 
   it('todo emprego ocupa 0, 2 ou 4 sessões', () => {

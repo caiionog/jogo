@@ -2,11 +2,12 @@
  * Tela principal (Etapa 8): busto do personagem no topo, o log da vida como feed por ano, energia, barras dos
  * atributos visíveis (recolhíveis) e a barra inferior com os menus e o botão "+ Idade".
  */
+import { PrisonBanner } from './menus/prison';
 import { Briefcase, ChevronDown, ChevronUp, HeartHandshake, Sparkles, Wallet } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { GAME_CONTENT } from '../../content';
 import type { LogYear, StatKey } from '../../engine';
-import { LIFE_STAGE_LABEL, deriveAvatar, lifeStage, sessionsBreakdown, sessionsLeft, sessionsReserved } from '../../engine';
+import { LIFE_STAGE_LABEL, deriveAvatar, lifeStage } from '../../engine';
 import { AgeButton, BottomNav, StatBar } from '../design/components';
 import { EventModal, ResultModal } from '../design/modals';
 import FightScreen from '../components/FightScreen';
@@ -53,28 +54,6 @@ function LifeFeed({ log }: { log: LogYear[] }) {
   );
 }
 
-/** "Treinos: 7/10": sessões de treino livres no ano; as ocupadas pelo emprego/faculdade aparecem riscadas. */
-export function TrainingMeter({ left, reserved, limit, notes }: { left: number; reserved: number; limit: number; notes: string[] }) {
-  const used = limit - reserved - left;
-  return (
-    <div className="flex min-w-0 flex-col gap-0.5 text-xs text-[var(--ds-text-muted)]" data-testid="sessions">
-      <div className="flex items-center gap-2" role="meter" aria-label="Sessões de treino livres no ano" aria-valuemin={0} aria-valuemax={limit} aria-valuenow={left}>
-        <span aria-hidden>🥋</span>
-        <span className="flex gap-1">
-          {Array.from({ length: limit }, (_, i) => {
-            const cls = i < used ? 'bg-[var(--ds-surface-2)]' : i < used + left ? 'bg-[var(--ds-age)]' : 'border border-dashed border-[var(--ds-text-muted)] bg-transparent';
-            return <span key={i} className={`h-2.5 w-2.5 rounded-full ${cls}`} />;
-          })}
-        </span>
-        <span className="tabular-nums font-medium text-[var(--ds-text)]">
-          Treinos: {left}/{limit}
-        </span>
-      </div>
-      {notes.length > 0 && <span className="truncate" data-testid="sessions-notes">{notes.join(' · ')}</span>}
-    </div>
-  );
-}
-
 export default function Life({ onShowObituary }: { onShowObituary?: () => void }) {
   const game = useGameStore((s) => s.game);
   const advance = useGameStore((s) => s.advance);
@@ -84,19 +63,15 @@ export default function Life({ onShowObituary }: { onShowObituary?: () => void }
   const nav = useNav();
   const [profile, setProfile] = useState(false);
   const [statsOpen, setStatsOpen] = useState(true);
-  const desc = useMemo(() => (game ? deriveAvatar(game, GAME_CONTENT, game.activeFight ? 'luta' : 'principal') : null), [game]);
+  const desc = useMemo(() => (game ? deriveAvatar(game, GAME_CONTENT, game.activeFight ? 'luta' : game.pendingEvents[0]?.eventId.startsWith('justica_') ? 'prisao' : 'principal') : null), [game]);
   if (!game || !desc) return null;
   const c = game.character;
   const pending = game.pendingEvents[0];
   const pendingEvent = pending ? GAME_CONTENT.events.find((e) => e.id === pending.eventId) : undefined;
   const root = nav.stack[0]?.id;
   const busy = game.pendingEvents.length > 0 || !!game.activeFight;
-  const limit = GAME_CONTENT.limits.trainingSessions;
   // atalho para a tela central da luta: quem tem academia, interesse ou já lutou
   const fightShortcut = !!game.fighter.gymId || game.fighter.history.length > 0 || !!game.flags.interesse_luta || !!game.flags.gostaDeLuta || Object.keys(game.fighter.grades).length > 0;
-  const reserved = sessionsReserved(game, GAME_CONTENT);
-  const left = sessionsLeft(game, GAME_CONTENT);
-  const notes = sessionsBreakdown(game, GAME_CONTENT).map((p) => p.text);
 
   return (
     <div className="flex h-dvh flex-col">
@@ -118,18 +93,24 @@ export default function Life({ onShowObituary }: { onShowObituary?: () => void }
         </div>
         <MenuHost className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-xl" />
       </header>
-      {game.alive && fightShortcut && (
+      {game.alive && fightShortcut && !(game.prison && game.prison.regime !== 'aberto') && (
         <button type="button" onClick={() => nav.open('luta')} disabled={busy} className="flex min-h-11 items-center justify-center gap-2 border-b border-[var(--ds-border)] bg-[var(--ds-surface-2)] text-sm font-semibold text-[var(--ds-accent)] disabled:opacity-50" data-testid="shortcut-luta">
           <span aria-hidden>🥊</span> Carreira de Luta
           {game.fighter.offers.length > 0 && <span className="rounded-full bg-[var(--ds-accent)] px-2 text-xs text-[var(--ds-on-accent,#fff)]">{game.fighter.offers.length} oferta{game.fighter.offers.length > 1 ? 's' : ''}</span>}
         </button>
       )}
 
+      {game.alive && game.police.career && (
+        <button type="button" onClick={() => nav.open('policia')} disabled={busy} className="flex min-h-11 items-center justify-center gap-2 border-b border-[var(--ds-border)] bg-[var(--ds-surface-2)] text-sm font-semibold text-[var(--ds-accent)] disabled:opacity-50" data-testid="shortcut-policia">
+          <span aria-hidden>🚓</span> {game.police.career.force === 'pm' ? 'Polícia Militar' : 'Polícia Civil'}
+        </button>
+      )}
+      {game.prison && <PrisonBanner game={game} />}
       <LifeFeed log={game.log} />
 
       <div className="border-t border-[var(--ds-border)] bg-[var(--ds-surface)] px-3 pt-2">
         <div className="flex items-center justify-between">
-          {game.alive ? <TrainingMeter left={left} reserved={reserved} limit={limit} notes={notes} /> : <span className="text-xs text-[var(--ds-text-muted)]">Fim da vida</span>}
+          {game.alive ? <span /> : <span className="text-xs text-[var(--ds-text-muted)]">Fim da vida</span>}
           <button type="button" onClick={() => setStatsOpen((v) => !v)} aria-expanded={statsOpen} className="flex min-h-9 items-center gap-1 text-xs text-[var(--ds-text-muted)]" data-testid="stats-toggle">
             Atributos {statsOpen ? <ChevronDown size={14} aria-hidden /> : <ChevronUp size={14} aria-hidden />}
           </button>
@@ -152,7 +133,7 @@ export default function Life({ onShowObituary }: { onShowObituary?: () => void }
           center={<AgeButton onClick={advance} disabled={busy} />}
           right={[
             { id: 'relacoes', label: 'Relações', icon: HeartHandshake, onClick: () => nav.open('relacoes'), active: root === 'relacoes' },
-            { id: 'atividades', label: 'Atividades', icon: Sparkles, onClick: () => nav.open('atividades'), active: root === 'atividades' },
+            { id: 'atividades', label: game.prison && game.prison.regime !== 'aberto' ? 'Prisão' : 'Atividades', icon: Sparkles, onClick: () => nav.open('atividades'), active: root === 'atividades' },
           ]}
         />
       ) : (

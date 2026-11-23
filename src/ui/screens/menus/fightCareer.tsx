@@ -21,15 +21,11 @@ import {
   worstInjury,
   playerDivision,
   rankOf,
-  sessionsBreakdown,
-  sessionsLeft,
-  sessionsReserved,
 } from '../../../engine';
 import PixelAvatar from '../../avatar/PixelAvatar';
 import { GymSection, OfferCard, RecordLine, RetireSection, TrainingButtons } from '../../components/CareerPanel';
 import FirstTimeTip from '../../components/FirstTimeTip';
 import { useNav } from '../../nav';
-import { TrainingMeter } from '../Life';
 import { modalityLabel } from '../../text/fight';
 
 /** Iniciante → Amador → Profissional regional → Liga principal → Campeão. */
@@ -156,8 +152,7 @@ export function FightCareerScreen({ game }: { game: GameState }) {
       )}
 
       <div ref={treinoRef}>
-        <Section title="Treinos do ano" testId="fight-training">
-          <TrainingMeter left={sessionsLeft(game, C)} reserved={sessionsReserved(game, C)} limit={C.limits.trainingSessions} notes={sessionsBreakdown(game, C).map((p) => p.text)} />
+        <Section title="Treinos" testId="fight-training">
           <TrainingButtons game={game} />
         </Section>
       </div>

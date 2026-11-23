@@ -1,3 +1,5 @@
+import { emptyPolice } from '../police/types';
+import { emptyCrime } from '../crime/types';
 import { emptyCollege } from '../lifeStages/college';
 import { rollLuck, talentRng } from '../character/talents';
 import { inheritAppearance, lookRng } from '../character/appearance/inherit';
@@ -276,6 +278,9 @@ export function continueAsChild(state: GameState, personId: string, content: Gam
     dynasty: { ...state.dynasty, generation: gen, members: [...state.dynasty.members, dynastyMember(state, child.name)].slice(-30) },
     ending: null,
     wardrobe: { ...defaultWardrobe(content), facialHair: child.appearance?.facialHair ?? 'nenhuma' },
+    police: emptyPolice(),
+    crime: emptyCrime(),
+    prison: null,
   };
   const items = pickInheritedItems(state, heir.amount);
   const cash = Math.max(0, heir.amount - items.used);

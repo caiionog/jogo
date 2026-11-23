@@ -1,3 +1,5 @@
+import type { CrimeContent } from '../crime/types';
+import type { PoliceContent } from '../police/types';
 import type { VenueDef } from '../lifeStages/nightlife';
 import type { ExchangeProgramDef, SportsClubDef } from '../lifeStages/sportsClub';
 import type { CollegeContent } from '../lifeStages/college';
@@ -110,4 +112,8 @@ export interface GameContent {
   exchangePrograms: readonly ExchangeProgramDef[];
   /** Locais da vida noturna (release 0.0.1). */
   venues: readonly VenueDef[];
+  /** Carreira policial: trilhas, postos, forças especiais (release 0.0.2). */
+  police: PoliceContent;
+  /** Delitos, planejamento e instituições fictícias (release 0.0.2). */
+  crime: CrimeContent;
 }

@@ -9,7 +9,8 @@ import type { Rng } from '../core/rng';
 import type { GameState } from '../core/state';
 import { addStats, appendLog } from '../core/stats';
 import { addSkills } from './profile';
-import { sessionsLeft, useSessions } from '../lifeStages/sessions';
+import { useSessions } from '../lifeStages/sessions';
+import { isOvertraining, overtrainSession } from './overtrain';
 import { meetFriend, socialTrainingBonus } from '../relationships/social';
 import { ownGymBonus } from '../economy/business';
 import type { GymDef, ModalityId, SkillKey, Skills } from './types';
@@ -100,11 +101,12 @@ export function currentGym(state: GameState, content: GameContent): GymDef | und
   return id ? content.fighting.gyms.find((g) => g.id === id) : undefined;
 }
 
-export type TrainingBlockReason = 'dead' | 'busy' | 'too-young' | 'no-gym' | 'not-offered' | 'no-sessions' | 'injured' | 'retired';
+export type TrainingBlockReason = 'dead' | 'busy' | 'too-young' | 'no-gym' | 'not-offered' | 'injured' | 'retired' | 'prison';
 
 export function trainingBlockReason(state: GameState, kind: TrainingKind, content: GameContent): TrainingBlockReason | null {
   if (!state.alive) return 'dead';
   if (state.pendingEvents.length > 0 || state.activeFight) return 'busy';
+  if (state.prison && state.prison.regime !== 'aberto') return 'prison';
   if (state.character.age < TRAINING_MIN_AGE[kind]) return 'too-young';
   if (state.fighter.retired && kind === 'sparring') return 'retired';
   if (kind === 'sparring' && injuryVeto(state)) return 'injured';
@@ -113,7 +115,7 @@ export function trainingBlockReason(state: GameState, kind: TrainingKind, conten
     if (!gym) return 'no-gym';
     if (isModality(kind) && !gym.modalities.includes(kind)) return 'not-offered';
   }
-  if (sessionsLeft(state, content) < TRAINING_SESSIONS) return 'no-sessions';
+  // release 0.0.2: sem sessões livres o treino continua disponível, mas não rende (`overtrainSession`)
   return null;
 }
 
@@ -129,6 +131,7 @@ export function coachLine(rng: Rng, content: GameContent, kind: 'grappling' | 't
 export function trainFighter(state: GameState, kind: TrainingKind, content: GameContent): GameState {
   if (trainingBlockReason(state, kind, content) !== null) return state;
   const rng = createRng(state.rngState);
+  if (isOvertraining(state, content, TRAINING_SESSIONS)) return { ...overtrainSession(state, rng, content), rngState: rng.state };
   const gym = currentGym(state, content);
   // companheiros de treino próximos e treinador querido rendem um treino melhor
   const ctx: GainContext = { age: state.character.age, health: state.character.stats.health, gym, talent: state.fighter.talent * (1 + socialTrainingBonus(state) + ownGymBonus(state, content) + talentMod(state, content, 'trainingGain') + (content.economy.jobs.find((j) => j.id === state.economy.job?.jobId)?.trainingBonus ?? 0)) };

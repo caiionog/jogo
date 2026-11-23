@@ -1025,6 +1025,72 @@ de 20 lutas pro); dinastias chegam à 2ª geração em 30% e à 3ª em 10%.
 Ponto de atenção: casamentos até os 40 caíram (~27% na política do sim, contra 52% na Etapa 4). O sim tenta romance
 uma vez por ano; vale rever na próxima release se isso também acontece com jogadores reais.
 
+## 10c. Release 0.0.2 — treino invisível, polícia, crime e prisão
+
+**Treino invisível.**
+- O limite anual de 10 sessões continua na engine, mas nenhuma tela mostra contador.
+- Acima do limite, o treino fica disponível e não rende. O aviso varia e cita o emprego, a faculdade ou o negócio
+  quando são eles que tomam o tempo.
+- Da 2ª tentativa extra em diante, há 8% e depois 12% de lesão leve, ajustados pela sorte.
+
+**Carreira policial.**
+- Polícia Militar e Polícia Civil, sem sigla nem estado.
+- Concurso de 18 a 30 anos com prova (inteligência + estudo + sorte), TAF, saúde, psicológico e investigação social
+  (condenação ou facção reprovam).
+- Academia de 1 ano (Tiro e físico), estágio probatório de 2 anos (corregedoria ≥ 2 exonera) e efetivação.
+- Promoção por tempo + mérito (ocorrências, afinco, cursos, eventos). Na PM: praças (Soldado → Subtenente) e oficiais
+  pelo CFO interno (Tenente → Coronel, exige superior). Na Civil: investigador, escrivão e delegado (Direito), em
+  classes.
+- Tiro oculto (pistas: "mira insegura" … "mira de atirador de elite").
+- Forças especiais fictícias: **Esquadrão Sentinela** e **Grupo Âncora**. Curso de 3 etapas, no máximo 2 tentativas
+  e +20% de salário.
+- Troca de tiro: tática × Tiro/atlética/luta × sorte (±20%). Investigações com placar oculto. Dilemas e corregedoria;
+  com corregedoria ≥ 4, o policial pode ser preso por corrupção e ir para a Ala de Custódia Especial.
+
+**Crime.**
+- 13 delitos: leves aos 12; médios e graves aos 18. Os graves são planejados em etapas abstratas.
+- Procurado oculto, que cai 15 por ano e leva à investigação. Reputação no crime oculta.
+- Dinheiro sujo com suspeita e lavagem.
+- Facções fictícias: Liga da Serpente, Clã do Corvo, Ordem do Sol Partido e Maré Cinzenta. Entrada por convite com 18+,
+  hierarquia, missões, guerras com rivais no território, dívida, traição e saída arriscada.
+- Tráfico abstrato (pequeno, médio, grande), com lucro e risco anuais.
+
+**Justiça e prisão.**
+- Processo: delegacia (confessar, silêncio ou negar), defesa (Defensoria, particular, amigo advogado, a própria),
+  fiança ou liberdade provisória, julgamento.
+- Pena por faixa fictícia × reincidência (1,5) × facção (1,25) × defesa × confissão (0,67) × sorte (±10%). Até 1 ano,
+  pena alternativa.
+- Regimes: > 8 anos fechado, 4–8 semiaberto, < 4 aberto. Progressão a cada 1/4 com bom comportamento, condicional na
+  metade e remição de 0,25 ano por trabalho ou estudo.
+- Ficha permanente: bloqueia concursos e empregos com ficha limpa e reduz a chance de contratação (menos com o Programa
+  Portas Abertas).
+- Na prisão, as ações são próprias e os eventos também (nenhuma violência sexual). Fuga que falha aumenta a pena.
+- Ser preso cancela o contrato de luta e os patrocínios.
+- Menores: só infrações leves e medidas socioeducativas fictícias.
+
+### Balanceamento da polícia e do crime (`npm run sim`, 6º argumento = vidas por perfil; 200 vidas)
+Três perfis: **neutro** (escolhas aleatórias até os 40), **policial** (concurso todo ano dos 18 aos 30, trabalha com
+afinco, treina no estande, faz cursos e tenta a força especial em 40% dos anos elegíveis) e **criminoso** (a partir
+dos 18, dois delitos por ano — o maior disponível —, aceita facção, entra no tráfico).
+
+| Métrica | Resultado | Meta |
+|---|---|---|
+| Neutro: cometeu algum delito / ficha de adulto | 1,0% / 0% | crime é escolha, não acidente |
+| Virou policial (tentando) · idade média de entrada | 42% · 18,5 anos | carreira acessível com preparo |
+| Força especial (dos policiais) | 4,8% | rara (≤ 15%) |
+| Aprovação no curso de seleção (candidatos que cumprem os requisitos) | ~19% | 10–25% |
+| Mortes em serviço · exonerados/demitidos | 1,2% · 10,7% | estável, com picos de risco |
+| Criminoso: preso com pena > 1 ano | 94% | — |
+| Pena média · reincidência (2+ condenações) | 14,3 anos · 87,5% | — |
+| Passou por facção · morte violenta | 80,5% · 50% | — |
+| Renda média do crime × emprego comum (caixa, nível 1) | R$ 33,7 mil/ano × R$ 19,7 mil/ano | crime rende mais no curto prazo |
+| Carreira criminosa que terminou mal (prisão, morte ou ficha) | 100% | ≥ 80% |
+
+Ajustes desta fase: notas de corte da prova (PM 46, CFO 56, investigador/escrivão 54, delegado 64) e do TAF (PM 36,
+CFO 42, Civil 30–32), requisitos da força especial (4 anos, atlética 62–68, Tiro 65–66), chance por etapa do curso
+`0,22 + folga` limitada a 0,58 e no máximo 2 tentativas na carreira; `crime.earned` passou a somar tudo o que entra
+como dinheiro ilícito (delitos, tráfico, facção, propina).
+
 ## 11. Ideias futuras
 - **Outras carreiras**: boxe olímpico, wrestling universitário, árbitro, treinador de seleção, empresário de lutadores.
 - **Faculdade**: vestibular, cursos e vida universitária (a partir de `caminho_18 = 'faculdade'`).

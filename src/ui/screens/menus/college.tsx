@@ -48,7 +48,7 @@ export function FaculdadeScreen({ game }: { game: GameState }) {
               {cur.grade !== null ? ` · nota do último ano: ${cur.grade}` : ''}
               {cur.failures > 0 ? ` · ${cur.failures} reprovação (mais uma e você é jubilado)` : ''}
             </p>
-            <p className="mt-1 text-xs text-[var(--ds-text-muted)]">A faculdade ocupa {C.limits.collegeSessions} sessões de treino por ano enquanto você estiver cursando.</p>
+            <p className="mt-1 text-xs text-[var(--ds-text-muted)]">A faculdade toma parte do seu tempo de treino enquanto você estiver cursando.</p>
           </div>
           {(['college_study', 'college_skip', 'college_party'] as const).map((id) => {
             const a = C.actions.find((x) => x.id === id)!;

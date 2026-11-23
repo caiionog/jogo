@@ -593,7 +593,12 @@ export function renderAvatar(d: AvatarDescriptor, opts: RenderOptions = {}): Pix
       for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (cv.m(x, y) === mat) paint(x, y, fr[cv.tone[cv.idx(x, y)]!]);
     }
   }
-  if (o.acessorio?.id === 'bone') {
+  if (o.acessorio?.id === 'algemas') {
+    // algemas: duas argolas cinza nos pulsos
+    const steel = makeRamp(o.acessorio.color);
+    for (const [wx, wy] of [b.anchors.wristL, b.anchors.wristR] as const) for (let dy = -1; dy <= 0; dy++) for (let dx = -1; dx <= 1; dx++) if (cv.inside(wx + dx, wy + dy) && cv.m(wx + dx, wy + dy)) paint(wx + dx, wy + dy, steel[dy === -1 ? 0 : 2]);
+  }
+  if (o.acessorio && ['bone', 'bone_pm', 'capacete'].includes(o.acessorio.id)) {
     const cap = makeRamp(o.acessorio.color);
     for (let y = hy - 1; y <= hy + 2; y++) for (let x = hx; x < hx + hw; x++) paint(x, y, cap[y === hy - 1 ? 0 : x > 18 ? 1 : 2]);
     for (let x = hx + hw - 1; x <= hx + hw + 2; x++) paint(x, hy + 3, cap[0]);

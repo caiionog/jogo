@@ -14,6 +14,7 @@ const GROUPS: { title: string; emoji: string; types: RelType[] }[] = [
   { title: 'Filhos', emoji: '🧸', types: ['filho'] },
   { title: 'Amigos', emoji: '🤝', types: ['amigo', 'colega_treino', 'treinador'] },
   { title: 'Rivais', emoji: '⚔️', types: ['rival'] },
+  { title: 'Conhecidos', emoji: '👤', types: ['conhecido'] },
 ];
 
 const MEET_REASON: Record<string, string> = {

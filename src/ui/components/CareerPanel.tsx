@@ -22,7 +22,7 @@ import { STYLE_LABEL, money } from './fightUi';
 const C = GAME_CONTENT;
 
 const BLOCK_TEXT: Record<string, string> = {
-  'no-sessions': 'Sem sessões',
+  'no-sessions': 'Sem tempo livre',
   busy: 'Resolva o evento',
   'too-young': 'Muito novo',
   injured: 'Lesionado',
@@ -81,7 +81,7 @@ export function TrainingButtons({ game }: { game: GameState }) {
             >
               <span className="text-xl">{it.emoji}</span>
               <span className="text-center text-[11px] leading-tight">{it.label}</span>
-              <span className="text-[10px] text-slate-400">{reason ? BLOCK_TEXT[reason] : '1 sessão'}</span>
+              <span className="text-[10px] text-slate-400">{reason ? BLOCK_TEXT[reason] : 'Treinar'}</span>
             </button>
           );
         })}
@@ -193,7 +193,7 @@ export function OfferCard({ game, offer }: { game: GameState; offer: FightOffer 
         ) : (
           <span>🏅 Medalha e reputação</span>
         )}
-        <span>Camp: {offer.campSessions} {offer.campSessions === 1 ? 'sessão' : 'sessões'} de treino</span>
+        <span>Camp {offer.campSessions <= 2 ? 'curto' : offer.campSessions <= 4 ? 'médio' : 'longo'}</span>
       </div>
       {offer.rules === 'mma' && (
         <label className="mt-2 flex items-center gap-2 text-[11px] text-slate-300">

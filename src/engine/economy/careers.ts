@@ -12,14 +12,15 @@ import { jobBlockReason, jobDef, jobRequirementGaps, jobTitle, salaryOf } from '
 import type { JobBlockReason } from './jobs';
 import type { JobDef } from './types';
 
-export type CareerCategory = 'aprendiz' | 'meio_periodo' | 'integral';
+export type CareerCategory = 'aprendiz' | 'meio_periodo' | 'integral' | 'seguranca';
 
 export function careerCategoryOf(def: JobDef): CareerCategory {
+  if (def.category === 'seguranca') return 'seguranca';
   return def.category === 'aprendiz' ? 'aprendiz' : def.category === 'meio_periodo' ? 'meio_periodo' : 'integral';
 }
 
 /** Requisito individual para os cartões (✓ atendido / ✗ com o motivo). */
-export type RequirementKey = 'age' | 'education' | 'study' | 'cnh' | 'stats' | 'reputation' | 'fight' | 'degree' | 'license';
+export type RequirementKey = 'age' | 'education' | 'study' | 'cnh' | 'stats' | 'reputation' | 'fight' | 'degree' | 'license' | 'record';
 export interface Requirement {
   key: RequirementKey;
   ok: boolean;
@@ -53,6 +54,7 @@ export function jobRequirements(state: GameState, def: JobDef): Requirement[] {
   if (def.requires?.cnh) list.push('cnh');
   if (def.requires?.degree) list.push('degree');
   if (def.requires?.license) list.push('license');
+  if (def.requires?.cleanRecord) list.push('record');
   if (def.minStats && Object.keys(def.minStats).length) list.push('stats');
   if (def.minReputation) list.push('reputation');
   if (def.fightReq) list.push('fight');

@@ -123,8 +123,13 @@ describe('barra inferior e menus em camadas', () => {
     expect(screen.getByTestId('train-jiujitsu').textContent).toContain('Sua academia não oferece esta modalidade');
     const noSessions = { ...g, fighter: { ...g.fighter, gymId: 'gen_bairro', sessionsThisYear: 10 } };
     act(() => useGameStore.setState({ game: noSessions }));
-    expect(screen.getByTestId('train-jiujitsu').textContent).toContain('Sem sessões de treino livres neste ano');
-    for (const el of screen.getAllByTestId('sessions')) expect(el.textContent).toContain('Treinos: 0/10');
+    // sem sessões livres o treino continua disponível (treino invisível) e o resultado é o aviso
+    expect((screen.getByTestId('train-jiujitsu') as HTMLButtonElement).disabled).toBe(false);
+    expect(screen.queryByTestId('sessions')).toBeNull();
+    expect(document.body.textContent).not.toMatch(/Treinos:|\/10|sessõ|sessão/);
+    fireEvent.click(screen.getByTestId('train-jiujitsu'));
+    expect(useGameStore.getState().game!.fighter.skills).toEqual(noSessions.fighter.skills);
+    expect(useGameStore.getState().toasts.at(-1)!.title).toMatch(/treinou demais|descans|arrego|Chega por este ano/);
     expect(document.body.textContent).not.toMatch(/⚡|[Ee]nergia/);
   });
 });
@@ -165,6 +170,33 @@ describe('habilidades ocultas', () => {
     const all = texts.join('\n');
     expect(all).not.toMatch(/87[.,]?3?|91[.,]?7?/);
     expect(all).toMatch(/Iniciante|Promissor|Sólido|Elite/);
+  });
+});
+
+describe('treino invisível (release 0.0.2)', () => {
+  it('nenhum contador de treino aparece em nenhuma tela, nem com emprego e ofertas', () => {
+    const g = adult(22);
+    const job = GAME_CONTENT.economy.jobs.find((j) => j.trainingSessions === 4)!;
+    const base = { ...g, fighter: { ...g.fighter, gymId: 'sp_leao_dourado', sessionsThisYear: 3, amateur: { ...g.fighter.amateur, wins: 1 } } };
+    const game = generateOffers({ ...base, economy: { ...base.economy, job: { jobId: job.id, level: 1, years: 0, performance: 50 } } }, createRng(3), GAME_CONTENT);
+    start(game);
+    const texts: string[] = [document.body.textContent ?? ''];
+    const visit = (open: () => void) => {
+      open();
+      texts.push(document.body.textContent ?? '');
+    };
+    visit(() => fireEvent.click(screen.getByTestId('shortcut-luta')));
+    act(() => useNav.getState().syncDepth(0));
+    visit(() => fireEvent.click(screen.getByTestId('nav-ocupacao')));
+    visit(() => fireEvent.click(screen.getByTestId('occ-careers')));
+    act(() => useNav.getState().syncDepth(0));
+    visit(() => fireEvent.click(screen.getByTestId('nav-atividades')));
+    visit(() => fireEvent.click(screen.getByTestId('act-treino')));
+    act(() => useNav.getState().syncDepth(1));
+    visit(() => fireEvent.click(screen.getByTestId('act-clube')));
+    const all = texts.join('\n');
+    expect(screen.queryByTestId('sessions')).toBeNull();
+    expect(all).not.toMatch(/Treinos:|\d+\/10|sessõ|sessão/);
   });
 });
 
@@ -255,5 +287,38 @@ describe('perfil do NPC (release 0.0.1)', () => {
     // a miniatura também abre o perfil
     fireEvent.click(screen.getByTestId('person-avatar'));
     expect(screen.getByTestId('person-profile-view')).toBeTruthy();
+  });
+});
+
+describe('polícia, crime e prisão (release 0.0.2)', () => {
+  it('tela central da polícia: farda, próximo passo, ocorrências; o Tiro nunca aparece como número', () => {
+    const g = adult(28);
+    const career = { force: 'pm' as const, track: 'pm_praca' as const, rank: 1, stage: 'efetivo' as const, stageYears: 0, serviceYears: 5, rankYears: 1, merit: 33, unit: 'regular' as const, posting: '7º Batalhão', notable: [{ age: 26, text: 'Prendeu um suspeito numa troca de tiro' }], corregedoria: 0, specialTries: 0, startAge: 22 };
+    start({ ...g, police: { ...g.police, shooting: 73.4, career }, economy: { ...g.economy, job: { jobId: 'policia_militar', level: 1, performance: 50, years: 5 } } });
+    fireEvent.click(screen.getByTestId('shortcut-policia'));
+    expect(screen.getByTestId('police-status').textContent).toContain('Cabo');
+    expect(screen.getByTestId('police-next')).toBeTruthy();
+    expect(screen.getByTestId('police-notable').textContent).toContain('troca de tiro');
+    expect(document.body.textContent).not.toMatch(/73[.,]?4?(?!\d)/);
+  });
+
+  it('preso: banner e a aba vira Prisão com as ações da prisão', () => {
+    const g = adult(30);
+    start({ ...g, prison: { facility: 'Penitenciária Pedra Funda', regime: 'fechado', sentence: 9, served: 2, remission: 0, behavior: 50, protection: false, wing: 'comum', kind: 'adulto' } });
+    expect(screen.getByTestId('prison-banner').textContent).toContain('faltam 7 anos');
+    fireEvent.click(screen.getByTestId('nav-atividades'));
+    expect(screen.getByTestId('prison-trabalhar')).toBeTruthy();
+    expect(screen.queryByTestId('act-treino')).toBeNull();
+  });
+
+  it('crime: menor vê só os leves; ficha abre', () => {
+    const g = adult(15);
+    start({ ...g, character: { ...g.character, age: 15 } });
+    fireEvent.click(screen.getByTestId('nav-atividades'));
+    fireEvent.click(screen.getByTestId('act-crime'));
+    expect(screen.getByTestId('crime-pichacao')).toBeTruthy();
+    expect(screen.queryByTestId('crime-assalto_banco')).toBeNull();
+    fireEvent.click(screen.getByTestId('crime-ficha'));
+    expect(screen.getByTestId('ficha-limpa')).toBeTruthy();
   });
 });

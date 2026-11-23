@@ -26,12 +26,13 @@ export interface LimitsConfig {
 export interface ReservedPart {
   kind: 'emprego' | 'faculdade' | 'empresa';
   sessions: number;
-  /** Frase pronta para a UI ("Seu emprego ocupa 4 sessões de treino"). */
+  /** Frase pronta para a UI, sem número ("Seu emprego toma boa parte do seu tempo de treino"). */
   text: string;
 }
 
-function plural(n: number): string {
-  return `${n} ${n === 1 ? 'sessão' : 'sessões'} de treino`;
+/** Release 0.0.2 (treino invisível): a UI nunca mostra o número de sessões, só o peso em palavras. */
+function share(n: number): string {
+  return n >= 4 ? 'boa parte do seu tempo de treino' : 'parte do seu tempo de treino';
 }
 
 /** O que ocupa sessões de treino neste ano. */
@@ -41,16 +42,16 @@ export function sessionsBreakdown(state: GameState, content: GameContent): Reser
   if (job) {
     const def = content.economy.jobs.find((j) => j.id === job.jobId);
     const n = def?.trainingSessions ?? 0;
-    if (n > 0) parts.push({ kind: 'emprego', sessions: n, text: `Seu emprego ocupa ${plural(n)}` });
+    if (n > 0) parts.push({ kind: 'emprego', sessions: n, text: `Seu emprego toma ${share(n)}` });
   }
   if (state.college?.current?.status === 'cursando') {
     const n = content.limits.collegeSessions;
-    parts.push({ kind: 'faculdade', sessions: n, text: `A faculdade ocupa ${plural(n)}` });
+    parts.push({ kind: 'faculdade', sessions: n, text: `A faculdade toma ${share(n)}` });
   }
   const dedicated = state.economy.businesses.filter((b) => b.dedicatedYear === state.year).length;
   if (dedicated > 0) {
     const n = dedicated * content.limits.businessDedicateSessions;
-    parts.push({ kind: 'empresa', sessions: n, text: `Gerenciar de perto ocupa ${plural(n)}` });
+    parts.push({ kind: 'empresa', sessions: n, text: `Gerenciar o negócio de perto toma ${share(n)}` });
   }
   return parts;
 }

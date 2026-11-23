@@ -26,7 +26,7 @@ const BUY_REASON: Record<string, string> = {
   dead: '—',
   'not-found': 'Oferta indisponível',
   already: 'Indisponível',
-  'no-sessions': 'Sem sessões de treino livres neste ano',
+  'no-sessions': 'Sem tempo livre para isso neste ano',
   'max-level': 'Nível máximo',
 };
 const CONDITION = { nova: 'novo', boa: 'bom estado', reformar: 'precisa de reforma' } as const;
@@ -144,9 +144,9 @@ export function EmpresaScreen({ game, id }: { game: GameState; id: string }) {
           <p className="text-[var(--ds-text-muted)]">Último ano: {b.years ? money.format(b.lastProfit) : 'ainda sem resultado'}</p>
         </div>
       </div>
-      <ListItem emoji="📋" title="Gerenciar de perto" subtitle={`Ocupa ${C.limits.businessDedicateSessions} sessões de treino · melhora o lucro deste ano`} disabled={busy || dedicateBlockReason(game, b.id, C) !== null} reason={b.dedicatedYear === game.year ? 'Já está gerenciando este ano' : 'Sem sessões de treino livres neste ano'} onClick={() => st.dedicate(b.id)} chevron={false} />
+      <ListItem emoji="📋" title="Gerenciar de perto" subtitle="Toma parte do seu tempo de treino · melhora o lucro deste ano" disabled={busy || dedicateBlockReason(game, b.id, C) !== null} reason={b.dedicatedYear === game.year ? 'Já está gerenciando este ano' : 'Sem tempo livre para isso neste ano'} onClick={() => st.dedicate(b.id)} chevron={false} />
       <ListItem emoji="📈" title="Investir (expandir)" subtitle={`${money.format(expandCost(def, b.level))} · nível ${b.level + 1}`} disabled={b.level >= 5 || game.money < expandCost(def, b.level)} reason={b.level >= 5 ? 'Nível máximo' : 'Dinheiro insuficiente'} onClick={() => st.expandBusiness(b.id)} chevron={false} />
-      <ListItem emoji="🧑‍💼" title={b.manager ? 'Dispensar gerente' : 'Contratar gerente'} subtitle={`${money.format(def.managerCost)}/ano · não ocupa suas sessões de treino`} onClick={() => st.setManager(b.id, !b.manager)} chevron={false} />
+      <ListItem emoji="🧑‍💼" title={b.manager ? 'Dispensar gerente' : 'Contratar gerente'} subtitle={`${money.format(def.managerCost)}/ano · não toma seu tempo de treino`} onClick={() => st.setManager(b.id, !b.manager)} chevron={false} />
       <ListItem emoji="✏️" title="Renomear" onClick={() => setRename(b.name)} chevron={false} />
       <ListItem emoji="💸" title="Vender" subtitle={`Cerca de ${money.format(Math.round(businessValue(b) * 0.9))}`} tone="danger" onClick={() => setSell(true)} chevron={false} />
       {rename !== null && (
@@ -343,7 +343,7 @@ function BuySheet({ game, pick, place, onClose }: { game: GameState; pick: { ass
     return (
       <BottomSheet title={o.name} onClose={onClose} testId="buy-sheet">
         <p className="mb-2 text-sm">{money.format(o.price)} à vista · {STATUS[o.status]} · nível {o.level} · {RISK[o.risk]}</p>
-        <p className="mb-3 text-sm text-[var(--ds-text-muted)]">Faturamento estimado {money.format(o.revenue)}/ano; lucro estimado {money.format(o.profitOwner)}/ano se você gerenciar de perto (ocupa sessões de treino) ou {money.format(o.profit)}/ano com gerente. Se der prejuízo, ele sai do seu bolso; sem dinheiro para cobrir, o negócio quebra.</p>
+        <p className="mb-3 text-sm text-[var(--ds-text-muted)]">Faturamento estimado {money.format(o.revenue)}/ano; lucro estimado {money.format(o.profitOwner)}/ano se você gerenciar de perto (toma tempo de treino) ou {money.format(o.profit)}/ano com gerente. Se der prejuízo, ele sai do seu bolso; sem dinheiro para cobrir, o negócio quebra.</p>
         {reason && <p className="mb-2 text-sm text-[var(--ds-danger)]">{BUY_REASON[reason]}</p>}
         <DsButton tone="primary" full testId="buy-confirm" disabled={!!reason} onClick={() => (st.buyBusiness(o.id, place), onClose())}>
           Comprar negócio
