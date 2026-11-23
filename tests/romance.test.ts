@@ -68,12 +68,12 @@ describe('namoro e casamento', () => {
     let married = false;
     for (let i = 0; i < 40 && !married; i++) {
       let [g, p] = withPerson({ ...aged(26), rngState: i * 101 }, 'parceiro', 25, { affection: 70, stage: 'ficando', traits: ['leal', 'carinhoso'] });
-      for (let k = 0; k < 6 && getRelation(g, p.id)?.romance?.stage === 'ficando'; k++) g = interact({ ...g, energy: { current: 8, max: 8 } }, p.id, 'ask_out', C);
+      for (let k = 0; k < 6 && getRelation(g, p.id)?.romance?.stage === 'ficando'; k++) g = interact({ ...g }, p.id, 'ask_out', C);
       if (getRelation(g, p.id)?.romance?.stage !== 'namorando') continue;
       expect(civilStatus(g)).toBe('namorando');
-      g = { ...g, energy: { current: 8, max: 8 } };
+      g = { ...g };
       for (let k = 0; k < 4 && getRelation(g, p.id)?.romance?.stage === 'namorando'; k++) {
-        g = interact({ ...g, energy: { current: 8, max: 8 }, pendingEvents: [] }, p.id, 'propose', C);
+        g = interact({ ...g, pendingEvents: [] }, p.id, 'propose', C);
       }
       if (getRelation(g, p.id)?.romance?.stage !== 'noivos') continue;
       expect(g.pendingEvents.some((e) => e.eventId === 'rel_wedding')).toBe(true);

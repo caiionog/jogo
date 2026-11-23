@@ -285,9 +285,7 @@ export function transferSchool(state: GameState, rng: Rng, content: GameContent,
 // Clubes
 // ---------------------------------------------------------------------------
 
-export const CLUB_ENERGY_COST = 1;
-
-export type ClubBlockReason = 'unknown' | 'not-enrolled' | 'too-young' | 'already-member' | 'no-energy' | 'pending-event' | 'dead';
+export type ClubBlockReason = 'unknown' | 'not-enrolled' | 'too-young' | 'already-member' | 'pending-event' | 'dead';
 
 export function clubBlockReason(state: GameState, club: ClubDef | undefined): ClubBlockReason | null {
   if (!club) return 'unknown';
@@ -297,11 +295,10 @@ export function clubBlockReason(state: GameState, club: ClubDef | undefined): Cl
   if (!cur) return 'not-enrolled';
   if (!stageAtLeast(stageOfGrade(cur.grade), club.minStage)) return 'too-young';
   if (cur.club === club.id) return 'already-member';
-  if (state.energy.current < CLUB_ENERGY_COST) return 'no-energy';
   return null;
 }
 
-/** Entra no clube (sem custo de energia/validação). Usado por efeitos de eventos e por joinClub. */
+/** Entra no clube (sem validação). Usado por efeitos de eventos e por joinClub. */
 export function joinClubState(state: GameState, clubId: ClubId, content: GameContent, rng: Rng): GameState {
   const club = content.clubs.find((c) => c.id === clubId);
   const cur = state.education.current;

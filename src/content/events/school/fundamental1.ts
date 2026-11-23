@@ -4,6 +4,8 @@ import type { GameEvent } from '../../../engine';
 export const FUNDAMENTAL1_EVENTS: readonly GameEvent[] = [
   {
     id: 'f1_bullying',
+    tags: ['briga'],
+    tone: 'bad',
     conditions: { schoolStages: ['fund1'] },
     weight: 8,
     once: true,

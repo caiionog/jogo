@@ -131,8 +131,8 @@ export default function NewLife() {
     <div className="flex flex-1 flex-col gap-4 px-4 pb-28 pt-6" data-testid="new-life">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Vida de Lutador</h1>
-          <p className="text-sm text-slate-400">Do primeiro tatame ao cinturão.</p>
+          <h1 className="text-2xl font-bold">Vida Real</h1>
+          <p className="text-sm text-slate-400">Uma vida inteira: escola, trabalho, esporte, amor e legado.</p>
         </div>
         <button type="button" onClick={randomAll} className="min-h-11 rounded-xl border border-slate-700 px-3 text-sm" data-testid="random-all">
           🎲 Aleatório

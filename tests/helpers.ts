@@ -33,7 +33,6 @@ export function enrolledGame(age = 10, patch: Partial<Enrollment> = {}, seed: st
   const enrollment = { ...createEnrollment(createRng(1), g, GAME_CONTENT, Math.max(0, age - 3)), ...patch };
   return {
     ...g,
-    energy: { current: 6, max: 6 },
     education: { ...g.education, current: enrollment },
   };
 }

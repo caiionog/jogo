@@ -2,6 +2,7 @@
 import type { GameState } from '../engine';
 import { CURRENT_VERSION, SaveMigrationError, migrate } from './migrations';
 
+/** Identificador interno do formato de save (mantido do nome antigo para importar saves já exportados). */
 export const SAVE_FORMAT = 'vida-de-lutador';
 
 export interface ExportedSave {
@@ -23,7 +24,7 @@ export function exportFileName(state: GameState, date: string): string {
     .replace(/[̀-ͯ]/g, '')
     .replace(/[^a-zA-Z0-9]+/g, '-')
     .toLowerCase();
-  return `vida-de-lutador-${slug}-${date.slice(0, 10)}.json`;
+  return `vida-real-${slug}-${date.slice(0, 10)}.json`;
 }
 
 export type ImportResult = { ok: true; state: GameState } | { ok: false; error: string };
@@ -42,7 +43,8 @@ export function validateSaveShape(s: unknown): string[] {
     ['money', (v) => Number.isInteger(v)],
     ['alive', (v) => typeof v === 'boolean'],
     ['character', isObj],
-    ['energy', isObj],
+    ['yearUses', isObj],
+    ['college', isObj],
     ['flags', isObj],
     ['education', isObj],
     ['fighter', isObj],
@@ -83,7 +85,7 @@ export function importSave(text: string): ImportResult {
   }
   let raw: unknown = data;
   if (isObj(data) && 'format' in data) {
-    if (data.format !== SAVE_FORMAT) return { ok: false, error: 'Este arquivo não é um save do Vida de Lutador.' };
+    if (data.format !== SAVE_FORMAT) return { ok: false, error: 'Este arquivo não é um save do Vida Real.' };
     raw = data.state;
   }
   if (!isObj(raw) || typeof raw.version !== 'number') return { ok: false, error: 'Save inválido: falta o campo "version".' };

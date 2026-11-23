@@ -66,7 +66,20 @@ import {
   evaluateAchievements,
   recordLifeEnd,
   recordLifeStart,
+  takeExam,
+  enrollCollege,
+  lockCollege,
+  unlockCollege,
+  dropCollege,
+  joinSportsClub,
+  leaveSportsClub,
+  trainAtClub,
+  askParentsForExchange,
+  askJobLeave,
+  startExchange,
+  goOut,
 } from '../engine';
+import type { CollegeType, SportId } from '../engine';
 import type {
   AchievementDef,
   StatKey,
@@ -173,6 +186,8 @@ interface GameStore {
   exportCurrent(): { name: string; text: string } | null;
   importFile(text: string): Promise<{ ok: boolean; error?: string }>;
   setMetaSettings(patch: Partial<MetaSettings>): void;
+  /** "Entendi" numa explicação de primeira vez: não aparece de novo (meta). */
+  dismissTip(id: string): void;
   eraseAll(): Promise<void>;
   dismissToast(id: number): void;
   startLife(name: string, sex: Sex, opts?: { adultContent?: boolean; preference?: PartnerPreference; surnames?: string[]; uf?: string; city?: string; appearance?: Appearance }): void;
@@ -210,6 +225,21 @@ interface GameStore {
   workHard(): void;
   askRaise(): void;
   quitJob(): void;
+  /** Faculdade (release 0.0.1). */
+  takeExam(): void;
+  /** Vida noturna (release 0.0.1): sai e o evento do local abre como pop-up. */
+  goOut(venueId: string): void;
+  /** Clube esportivo e intercâmbio (release 0.0.1). */
+  joinSportsClub(clubId: string, sport: SportId): void;
+  leaveSportsClub(): void;
+  trainAtClub(): void;
+  askParentsForExchange(): void;
+  askJobLeave(): void;
+  startExchange(programId: string): void;
+  enrollCollege(courseId: string, type: CollegeType, financing: boolean): void;
+  lockCollege(): void;
+  unlockCollege(): void;
+  dropCollege(): void;
   hireAgent(): void;
   fireAgent(): void;
   seekSponsor(): void;
@@ -344,6 +374,13 @@ export const useGameStore = create<GameStore>((setState, getState) => {
       await getState().refreshSlots();
       return { ok: true };
     },
+    dismissTip(id) {
+      const cur = getState().meta;
+      if (cur.seenTips.includes(id)) return;
+      const meta = { ...cur, seenTips: [...cur.seenTips, id] };
+      setState({ meta });
+      void saveMeta(meta);
+    },
     setMetaSettings(patch) {
       const meta = { ...getState().meta, settings: { ...getState().meta.settings, ...patch } };
       setState({ meta });
@@ -424,9 +461,21 @@ export const useGameStore = create<GameStore>((setState, getState) => {
       const after = getState().game;
       if (before && after && after !== before) setState({ outcome: diffOf(before, after) });
     },
-    workHard: () => act((g) => economyAction(g, (x) => workHard(x))),
+    workHard: () => act((g) => economyAction(g, (x) => workHard(x, GAME_CONTENT))),
     askRaise: () => act((g) => economyAction(g, (x) => askRaise(x, GAME_CONTENT))),
     quitJob: () => eco((g) => quitJob(g, GAME_CONTENT)),
+    takeExam: () => act((g) => takeExam(g, GAME_CONTENT)),
+    goOut: (id) => update((g) => goOut(g, id, GAME_CONTENT)),
+    joinSportsClub: (id, sport) => update((g) => joinSportsClub(g, id, sport, GAME_CONTENT)),
+    leaveSportsClub: () => update((g) => leaveSportsClub(g, GAME_CONTENT)),
+    trainAtClub: () => act((g) => trainAtClub(g, GAME_CONTENT)),
+    askParentsForExchange: () => update((g) => askParentsForExchange(g)),
+    askJobLeave: () => update((g) => askJobLeave(g)),
+    startExchange: (id) => eco((g) => startExchange(g, id, GAME_CONTENT)),
+    enrollCollege: (id, type, financing) => act((g) => enrollCollege(g, id, type, GAME_CONTENT, financing)),
+    lockCollege: () => update((g) => lockCollege(g)),
+    unlockCollege: () => update((g) => unlockCollege(g)),
+    dropCollege: () => update((g) => dropCollege(g, GAME_CONTENT)),
     hireAgent: () => update((g) => hireAgentAction(g, GAME_CONTENT)),
     fireAgent: () => eco((g) => fireAgent(g)),
     seekSponsor: () => eco((g) => seekSponsor(g, GAME_CONTENT)),
@@ -436,7 +485,7 @@ export const useGameStore = create<GameStore>((setState, getState) => {
     setRented: (id, rented) => eco((g) => setRented(g, id, rented, GAME_CONTENT)),
     setInsured: (id, insured) => eco((g) => setInsured(g, id, insured)),
     openBusiness: (defId) => eco((g) => openBusiness(g, defId, GAME_CONTENT)),
-    dedicate: (id) => eco((g) => dedicate(g, id)),
+    dedicate: (id) => eco((g) => dedicate(g, id, GAME_CONTENT)),
     setManager: (id, manager) => eco((g) => setManager(g, id, manager)),
     expandBusiness: (id) => eco((g) => expandBusiness(g, id, GAME_CONTENT)),
     injectCash: (id, amount) => eco((g) => injectCash(g, id, amount)),

@@ -1,3 +1,4 @@
+import { luckWeightMult, talentMod } from '../character/talents';
 import type { Rng } from '../core/rng';
 import type { GameState } from '../core/state';
 import { STAT_KEYS } from '../core/state';
@@ -12,7 +13,7 @@ import { netWorth } from '../economy/worth';
 import { marketYear } from '../economy/market';
 import { jobDef } from '../economy/jobs';
 import type { GameContent } from '../core/content';
-import { beltPromotionReady } from '../fighting/belts';
+import { bjjRank, gradeReady } from '../fighting/belts';
 import { getOrg, isOrgEligible, currentRosterKey } from '../fighting/orgs';
 import { PLAYER_ID } from '../fighting/profile';
 import { rankOf } from '../fighting/ranking';
@@ -59,12 +60,13 @@ function fightingConditionsMet(state: GameState, c: FightingConditions, content?
   if (c.retired !== undefined && !!f.retired !== c.retired) return false;
   if (c.retiredYears && (!f.retired || !inRange(state.character.age - f.retired.age, c.retiredYears))) return false;
   if (c.lossStreak && !inRange(state.feats.curLosses ?? 0, c.lossStreak)) return false;
-  if (!inRange(f.belt.rank, c.belt)) return false;
+  if (!inRange(bjjRank(state), c.belt)) return false;
   if (!inRange(f.amateur.wins, c.amateurWins)) return false;
   if (!inRange(f.pro.wins, c.proWins)) return false;
   if (!inRange(f.reputation, c.reputation)) return false;
   if (c.champion !== undefined && (f.titles.length > 0) !== c.champion) return false;
-  if (c.beltPromotionReady !== undefined && beltPromotionReady(state) !== c.beltPromotionReady) return false;
+  if (c.beltPromotionReady !== undefined && (!!content && gradeReady(state, 'jiujitsu', content)) !== c.beltPromotionReady) return false;
+  if (c.gradeReady && !(content && gradeReady(state, c.gradeReady, content))) return false;
   if (c.hasFought !== undefined && (f.history.length > 0) !== c.hasFought) return false;
   // condições que dependem do conteúdo (organizações)
   if (c.tiers || c.orgEligible || c.ranked !== undefined || c.rankMax !== undefined) {
@@ -169,6 +171,24 @@ export function conditionsMet(state: GameState, event: GameEvent, content?: Game
   if (event.once && state.firedEvents.includes(event.id)) return false;
   if (c.minAge !== undefined && age < c.minAge) return false;
   if (c.maxAge !== undefined && age > c.maxAge) return false;
+  if (c.sportsClub !== undefined) {
+    const m = state.sportsClub;
+    if (c.sportsClub === false ? !!m : !m || (c.sportsClub.sports && !c.sportsClub.sports.includes(m.sport))) return false;
+  }
+  if (c.exchange !== undefined) {
+    const ex = state.exchange && state.exchange.year === state.year ? state.exchange : null;
+    if (c.exchange === false ? !!ex : !ex || (c.exchange.programs && !c.exchange.programs.includes(ex.programId))) return false;
+  }
+  if (c.college) {
+    const cur = state.college?.current;
+    if (c.college.enrolled !== undefined && (cur?.status === 'cursando') !== c.college.enrolled) return false;
+    if (c.college.courses && !(cur && c.college.courses.includes(cur.courseId))) return false;
+    if (c.college.diploma && !c.college.diploma.some((d) => state.college?.diplomas.includes(d))) return false;
+  }
+  if (c.talent) {
+    const t = state.character.talents?.find((x) => x.id === c.talent!.id);
+    if (!t || (c.talent.revealed !== undefined && t.revealed !== c.talent.revealed)) return false;
+  }
   if (c.sex !== undefined && sex !== c.sex) return false;
   if (c.stats) {
     for (const key of STAT_KEYS) {
@@ -226,6 +246,17 @@ export function autoEvents(state: GameState, events: readonly GameEvent[], conte
   return events.filter((e) => e.trigger === 'auto' && conditionsMet(state, e, content));
 }
 
+/**
+ * Peso de um evento no sorteio do ano: o peso do conteúdo × sorte (eventos bons/ruins, com limite) × pavio curto
+ * (eventos de briga). Sem conteúdo, o peso puro.
+ */
+export function eventWeight(state: GameState, e: GameEvent, content?: GameContent): number {
+  if (!content) return e.weight;
+  let w = e.weight * luckWeightMult(state, e.tone, content);
+  if (e.tags?.includes('briga')) w *= talentMod(state, content, 'fightEventMult');
+  return w;
+}
+
 /** Sorteia até `count` eventos elegíveis, ponderados por peso, sem repetição. */
 export function selectEvents(
   state: GameState,
@@ -237,7 +268,7 @@ export function selectEvents(
   const pool = eligibleEvents(state, events, content);
   const chosen: GameEvent[] = [];
   while (chosen.length < count && pool.length > 0) {
-    const idx = rng.weightedIndex(pool.map((e) => e.weight));
+    const idx = rng.weightedIndex(pool.map((e) => eventWeight(state, e, content)));
     chosen.push(pool[idx] as GameEvent);
     pool.splice(idx, 1);
   }

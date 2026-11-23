@@ -1,3 +1,4 @@
+import { rollLuck, rollTalents } from '../engine/character/talents';
 import type { Education, Enrollment, GameState, Skills, Stats } from '../engine';
 import {
   STATE_VERSION,
@@ -53,6 +54,11 @@ export const migrations: Record<number, (save: AnySave) => AnySave> = {
   5: migrateV5toV6,
   6: migrateV6toV7,
   7: migrateV7toV8,
+  8: migrateV8toV9,
+  9: migrateV9toV10,
+  10: migrateV10toV11,
+  11: migrateV11toV12,
+  12: migrateV12toV13,
 };
 
 export class SaveMigrationError extends Error {}
@@ -183,7 +189,8 @@ function migrateV2toV3(save: AnySave): AnySave {
   const talent = Math.round((0.65 + 0.7 * ((rng.next() + rng.next()) / 2)) * 100) / 100;
   const fighter = newFighterProfile(skills as unknown as Skills, talent);
   fighter.reputation = flags.medalha_interescolar ? 5 : 0;
-  if (flags.artesMarciais === 'jiujitsu') fighter.belt = { rank: 0, years: Math.max(0, Math.min(6, c.age - 6)) };
+  // formato v3: faixa única de jiu-jitsu (`belt`), convertida em `grades` na migração v9→v10
+  if (flags.artesMarciais === 'jiujitsu') (fighter as unknown as { belt: { rank: number; years: number } }).belt = { rank: 0, years: Math.max(0, Math.min(6, c.age - 6)) };
   if (flags.artesMarciais) {
     const gymId = flags.artesMarciais === 'judo' ? 'gen_judo_clube' : 'gen_bairro';
     if (GYMS.some((g) => g.id === gymId)) fighter.gymId = gymId;
@@ -236,12 +243,13 @@ function migrateV4toV5(save: AnySave): AnySave {
   const rng = createRng(seedToState(`${s0.seed}:v5`));
   const money = Math.round(s0.money);
   const age = s0.character.age;
-  let g: GameState = {
+  // `energy` existia até o save v8 (removida na v9)
+  let g = {
     ...s0,
     money,
-    energy: { ...s0.energy, reserved: 0 },
+    energy: { ...(s0 as unknown as { energy: object }).energy, reserved: 0 },
     economy: { ...emptyEconomy(money, s0.year), housing: age >= 25 ? 'aluguel' : 'pais' },
-  };
+  } as unknown as GameState;
   for (const { person } of relationsOf(g, ['pai', 'mae'], false)) {
     const wealth = person.alive ? parentWealth(rng, g.character.familyWealth) : 0;
     g = updatePerson(g, person.id, (p) => ({ ...p, wealth }));
@@ -363,8 +371,8 @@ function migrateV6toV7(save: AnySave): AnySave {
 type OldSkills = Partial<Record<'striking' | 'wrestling' | 'grappling' | 'defense' | 'cardio' | 'chin', number>>;
 const r1 = (x: number) => Math.round(Math.max(0, Math.min(100, x)) * 10) / 10;
 
-/** Habilidades antigas → jiu-jitsu (chão e agarre) e trocação (em pé). */
-export function convertSkills(o: OldSkills): Skills {
+/** Habilidades antigas → jiu-jitsu (chão e agarre) e trocação (em pé) — formato do save v8 (vira `grappling` na v10). */
+export function convertSkills(o: OldSkills): { jiujitsu: number; trocacao: number } {
   const g = o.grappling ?? 5;
   const w = o.wrestling ?? 5;
   const st = o.striking ?? 5;
@@ -437,4 +445,141 @@ function migrateV7toV8(save: AnySave): AnySave {
     world: { ...s0.world, rosters },
     activeFight,
   };
+}
+
+// ---------------------------------------------------------------------------
+// v8 → v9 (release 0.0.1: fim da energia → sessões de treino)
+// ---------------------------------------------------------------------------
+
+/**
+ * A energia sai do save. Entram os contadores anuais do retorno decrescente (`yearUses`, vazio) e o limite de 10
+ * sessões de treino (o gasto do ano fica limitado a 10). O custo de camp das ofertas vira `campSessions`.
+ */
+function migrateV8toV9(save: AnySave): AnySave {
+  const s0 = save as unknown as Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+  const { energy: _energy, ...rest } = s0;
+  void _energy;
+  const camp = (o: Record<string, any>) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    const { campCost, ...x } = o;
+    return { ...x, campSessions: typeof campCost === 'number' ? campCost : 2 };
+  };
+  const f = s0.fighter as Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+  const activeFight = s0.activeFight ? { ...s0.activeFight, offer: camp(s0.activeFight.offer) } : s0.activeFight;
+  return {
+    ...(rest as AnySave),
+    version: 9,
+    yearUses: {},
+    fighter: { ...f, sessionsThisYear: Math.min(GAME_CONTENT.limits.trainingSessions, f.sessionsThisYear ?? 0), offers: (f.offers ?? []).map(camp) },
+    activeFight,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// v9 → v10 (release 0.0.1: grappling, modalidades e graduações)
+// ---------------------------------------------------------------------------
+
+type AnyObj = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+
+/** `{ jiujitsu, trocacao }` → `{ grappling, trocacao }` (personagem, NPCs, ofertas, luta em andamento). */
+function renameSkills<T extends AnyObj | undefined>(sk: T): T {
+  if (!sk || !('jiujitsu' in sk)) return sk;
+  const { jiujitsu, ...rest } = sk;
+  return { ...rest, grappling: jiujitsu } as unknown as T;
+}
+
+const withSkills = (x: AnyObj) => (x && x.skills ? { ...x, skills: renameSkills(x.skills) } : x);
+
+/**
+ * A habilidade `jiujitsu` vira `grappling` em todo o save. A faixa única (`belt`) vira `grades.jiujitsu`:
+ * adulto (16+) mantém a faixa e os anos; quem tem menos de 16 entra no sistema infantil com a faixa estimada pelo
+ * nível de grappling e pela idade (determinístico, sem RNG). `trainedBjjThisYear` vira `trainedThisYear`.
+ */
+export function migrateV9toV10(save: AnySave): AnySave {
+  const s0 = save as unknown as AnyObj;
+  const f = s0.fighter as AnyObj;
+  const age = s0.character.age as number;
+  const skills = renameSkills(f.skills) as AnyObj;
+  let grades: AnyObj = f.grades ?? {};
+  const belt = f.belt as { rank: number; years: number } | undefined;
+  const practiced = !!belt && (belt.rank > 0 || belt.years > 0 || (f.bjj?.wins ?? 0) + (f.bjj?.losses ?? 0) > 0);
+  if (belt && practiced && !grades.jiujitsu) {
+    if (age >= 16) grades = { ...grades, jiujitsu: { system: 'bjj_adulto', rank: belt.rank, degree: Math.min(4, belt.years), years: belt.years } };
+    else {
+      const kids = GAME_CONTENT.fighting.graduations.find((g) => g.id === 'bjj_infantil')!;
+      let rank = 0;
+      kids.levels.forEach((l, i) => {
+        if (i > 0 && age >= l.minAge && (skills.grappling ?? 0) >= l.minSkill && i <= belt.years * 2) rank = i;
+      });
+      grades = { ...grades, jiujitsu: { system: 'bjj_infantil', rank, degree: 0, years: Math.min(1, belt.years) } };
+    }
+  }
+  const { belt: _belt, trainedBjjThisYear, ...restF } = f;
+  void _belt;
+  const rosters: AnyObj = {};
+  for (const [k, r] of Object.entries((s0.world?.rosters ?? {}) as AnyObj)) rosters[k] = { ...r, npcs: (r.npcs ?? []).map(withSkills) };
+  const offers = (f.offers ?? []).map((o: AnyObj) => ({ ...o, opponent: withSkills(o.opponent) }));
+  let activeFight = s0.activeFight;
+  if (activeFight) {
+    activeFight = { ...activeFight, offer: { ...activeFight.offer, opponent: withSkills(activeFight.offer.opponent) }, fight: { ...activeFight.fight, fighters: activeFight.fight.fighters.map(withSkills) } };
+  }
+  return {
+    ...(s0 as AnySave),
+    version: 10,
+    fighter: { ...restF, skills, grades, trainedThisYear: trainedBjjThisYear ? ['jiujitsu'] : [], offers },
+    world: { ...s0.world, rosters },
+    activeFight,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// v10 → v11 (release 0.0.1: talentos de nascimento e sorte)
+// ---------------------------------------------------------------------------
+
+/**
+ * Talentos (todos ainda ocultos) e sorte para o personagem; talentos para as pessoas. Sorteio determinístico por RNG
+ * derivado (`seed:v11:…`), sem mexer no `rngState`. Os bônus iniciais de atributo NÃO são aplicados a saves antigos
+ * (a vida já aconteceu); os demais efeitos valem dali em diante.
+ */
+export function migrateV10toV11(save: AnySave): AnySave {
+  const s0 = save as unknown as AnyObj;
+  const seed = String(s0.seed);
+  const r = (k: string) => createRng(seedToState(`${seed}:v11:${k}`));
+  const talents = rollTalents(r('player'), GAME_CONTENT).map((id) => ({ id, revealed: false }));
+  const people = ((s0.relationships?.people ?? []) as AnyObj[]).map((p) => ({ ...p, talents: p.talents ?? rollTalents(r(`p:${p.id}`), GAME_CONTENT) }));
+  return {
+    ...(s0 as AnySave),
+    version: 11,
+    character: { ...s0.character, talents: s0.character.talents ?? talents, luck: s0.character.luck ?? rollLuck(r('sorte')) },
+    relationships: { ...s0.relationships, people },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// v11 → v12 (release 0.0.1: faculdade)
+// ---------------------------------------------------------------------------
+
+/**
+ * Cria `college`. Quem escolheu "faculdade" aos 18 (flag `caminho_18`) e terminou a escola: com 22 anos ou mais, ganha o
+ * diploma de Administração (o curso genérico de antes); de 18 a 21, fica matriculado(a) em Administração numa
+ * particular, no ano correspondente à idade. Sem RNG.
+ */
+export function migrateV11toV12(save: AnySave): AnySave {
+  const s0 = save as unknown as AnyObj;
+  const age = s0.character.age as number;
+  const college: AnyObj = { current: null, diplomas: [], examScore: null, examYear: null };
+  if (s0.flags?.caminho_18 === 'faculdade' && s0.education?.graduated && s0.alive !== false) {
+    if (age >= 22) college.diplomas = ['administracao'];
+    else if (age >= 18) college.current = { courseId: 'administracao', type: 'particular', institution: GAME_CONTENT.college.privateNames[0], year: Math.min(4, age - 17), grade: null, status: 'cursando', funding: 'proprio', failures: 0, financed: 0 };
+  }
+  return { ...(s0 as AnySave), version: 12, college: s0.college ?? college };
+}
+
+// ---------------------------------------------------------------------------
+// v12 → v13 (release 0.0.1: clube esportivo e intercâmbio)
+// ---------------------------------------------------------------------------
+
+/** Sem clube esportivo e sem intercâmbio em andamento (sem RNG). */
+export function migrateV12toV13(save: AnySave): AnySave {
+  const s0 = save as unknown as AnyObj;
+  return { ...(s0 as AnySave), version: 13, sportsClub: s0.sportsClub ?? null, exchange: s0.exchange ?? null };
 }

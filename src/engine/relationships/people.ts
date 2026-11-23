@@ -1,3 +1,4 @@
+import { rollTalents, talentRng } from '../character/talents';
 import { npcAppearance } from '../character/appearance/derive';
 import type { Appearance } from '../character/appearance/genes';
 import { lookRng, randomAppearance, ufOrDefault } from '../character/appearance/inherit';
@@ -41,6 +42,7 @@ const LABELS: Record<RelType, [string, string]> = {
   rival: ['Rival', 'Rival'],
   colega_treino: ['Colega de treino', 'Colega de treino'],
   avo: ['Avô', 'Avó'],
+  professor: ['Professor', 'Professora'],
 };
 
 export function relLabel(type: RelType, sex: Sex): string {
@@ -101,6 +103,8 @@ export function childrenOf(state: GameState): { person: Person; rel: Relation }[
 }
 
 export interface NewPersonOptions {
+  /** Talentos dos pais (herança com chance maior). */
+  parentTalents?: readonly (readonly string[])[];
   sex?: Sex;
   age: number;
   /** Sobrenome do pai (o último do nome). */
@@ -152,6 +156,8 @@ export function createPerson(state: GameState, rng: Rng, content: GameContent, o
     ...(o.job ? { job: o.job } : {}),
     ...(o.npcId ? { npcId: o.npcId } : {}),
     flags: o.flags ?? {},
+    // talentos por RNG derivado (não mexe no rngState principal)
+    talents: rollTalents(talentRng(state.seed, `p${state.relationships.nextPersonId}`), content, o.parentTalents),
     // lutador do elenco: a mesma aparência derivada do busto do ranking; senão, pela UF atual do personagem
     appearance: o.appearance ?? (o.npcId ? npcAppearance(state.seed, { id: o.npcId }, sex, content) : randomAppearance(lookRng(rng), ufOrDefault(content.geo, state.character.uf), sex)),
   };

@@ -110,6 +110,8 @@ export const CHILDHOOD_EVENTS: readonly GameEvent[] = [
   },
   {
     id: 'child_neighbor_bully',
+    tags: ['briga'],
+    tone: 'bad',
     conditions: { minAge: 7, maxAge: 12 },
     weight: 6,
     text: 'O garoto mais velho da rua tenta tomar sua bola.',

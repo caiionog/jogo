@@ -3,7 +3,7 @@
  * low (< 30), mid (30–59), high (60+). Nunca citam números.
  */
 export const COACH_LINES = {
-  jiujitsu: {
+  grappling: {
     low: ['"Base primeiro. Cotovelo colado, quadril solto."', '"Você ainda se afoga embaixo. Respira e repõe a guarda."', '"Calma, o chão é paciência."'],
     mid: ['"Sua passagem de guarda está ficando chata de segurar."', '"Gostei da raspagem. Agora finaliza depois dela."', '"Seu jogo de chão está ficando perigoso."'],
     high: ['"Ninguém aqui aguenta mais de um round no chão com você."', '"Esse estrangulamento é de faixa preta."', '"Se a luta cair, acabou para o outro."'],

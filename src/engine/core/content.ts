@@ -1,3 +1,6 @@
+import type { VenueDef } from '../lifeStages/nightlife';
+import type { ExchangeProgramDef, SportsClubDef } from '../lifeStages/sportsClub';
+import type { CollegeContent } from '../lifeStages/college';
 import type { Effects } from './effects';
 import type { GameEvent } from '../events/types';
 import type { ClubId, SchoolStage } from './state';
@@ -9,6 +12,8 @@ import type { OutfitDef } from '../character/appearance/outfits';
 import type { HealthContent } from '../health/types';
 import type { LegacyContent } from '../legacy/types';
 import type { AchievementDef } from '../meta/types';
+import type { LimitsConfig } from '../lifeStages/sessions';
+import type { LuckConfig, TalentDef } from '../character/talents';
 
 /** Risco de uma ação: efeitos ADICIONAIS aplicados com probabilidade `chance`. */
 export interface ActionRisk {
@@ -19,20 +24,21 @@ export interface ActionRisk {
 
 export type ActionCategory = 'vida' | 'escola';
 
-/** Ação anual que gasta energia (treinar, estudar...). Definida como dado em src/content. */
+/** Atividade (estudar, sair...). Sem limite, mas cada repetição no ano rende menos. Definida como dado em src/content. */
 export interface ActionDef {
   id: string;
   label: string;
   emoji: string;
   description: string;
   category: ActionCategory;
-  energyCost: number;
   minAge: number;
   maxAge?: number;
   requires?: {
     /** Exige estar matriculado em uma escola. */
     enrolled?: boolean;
     schoolStages?: SchoolStage[];
+    /** Exige estar cursando a faculdade. */
+    college?: boolean;
   };
   effects: Effects;
   /** Variação aleatória (+0..variance) somada a cada atributo positivo dos efeitos. */
@@ -92,4 +98,16 @@ export interface GameContent {
   achievements: readonly AchievementDef[];
   /** Catálogo de roupas do busto (Etapa 7). */
   outfits: readonly OutfitDef[];
+  /** Limites anuais: sessões de treino e retorno decrescente (release 0.0.1). */
+  limits: LimitsConfig;
+  /** Talentos de nascimento e limites da sorte (release 0.0.1). */
+  talents: readonly TalentDef[];
+  luck: LuckConfig;
+  /** Faculdade: exame, instituições e cursos (release 0.0.1). */
+  college: CollegeContent;
+  /** Clubes esportivos e programas de intercâmbio (release 0.0.1). */
+  sportsClubs: readonly SportsClubDef[];
+  exchangePrograms: readonly ExchangeProgramDef[];
+  /** Locais da vida noturna (release 0.0.1). */
+  venues: readonly VenueDef[];
 }

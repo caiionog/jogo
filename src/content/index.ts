@@ -2,6 +2,12 @@ import { JOB_EVENTS } from './events/jobs';
 import { COACH_LINES } from './fightText/coach';
 import type { GameContent } from '../engine';
 import { ACTIONS } from './actions';
+import { LIMITS } from './config';
+import { LUCK, TALENTS } from './talents';
+import { COLLEGE } from './college';
+import { SPORTS_CLUBS } from './sportsClubs';
+import { EXCHANGE_PROGRAMS } from './exchange';
+import { VENUES } from './nightlife';
 import { CLUBS } from './clubs';
 import { CHILDHOOD_EVENTS } from './events/childhood';
 import { SCHOOL_EVENTS } from './events/school';
@@ -14,6 +20,7 @@ import { HEALTH_CONTENT } from './health';
 import { LEGACY_CONTENT } from './legacy';
 import { ACHIEVEMENTS } from './achievements';
 import { GYMS } from './gyms';
+import { GRADUATIONS, MODALITIES } from './martialArts';
 import { ORGANIZATIONS } from './organizations';
 import { DIVISIONS } from './organizations/divisions';
 import { FIGHTING_EVENTS } from './events/fighting';
@@ -23,10 +30,21 @@ import { ECONOMY_CONTENT } from './economy';
 import { ECONOMY_EVENTS } from './events/economy';
 import { HEALTH_EVENTS } from './events/health';
 import { LEGACY_EVENTS } from './events/legacy';
+import { TALENT_EVENTS } from './events/talents';
+import { COLLEGE_EVENTS } from './events/college';
+import { CLUB_EXCHANGE_EVENTS } from './events/clubs';
+import { NIGHTLIFE_EVENTS } from './events/nightlife';
 
 export const GAME_CONTENT: GameContent = {
+  limits: LIMITS,
+  talents: TALENTS,
+  luck: LUCK,
+  college: COLLEGE,
+  sportsClubs: SPORTS_CLUBS,
+  exchangePrograms: EXCHANGE_PROGRAMS,
+  venues: VENUES,
   actions: ACTIONS,
-  events: [...CHILDHOOD_EVENTS, ...SCHOOL_EVENTS, ...FIGHTING_EVENTS, ...RELATIONSHIP_EVENTS, ...ECONOMY_EVENTS, ...JOB_EVENTS, ...HEALTH_EVENTS, ...LEGACY_EVENTS],
+  events: [...CHILDHOOD_EVENTS, ...SCHOOL_EVENTS, ...FIGHTING_EVENTS, ...RELATIONSHIP_EVENTS, ...ECONOMY_EVENTS, ...JOB_EVENTS, ...HEALTH_EVENTS, ...LEGACY_EVENTS, ...TALENT_EVENTS, ...COLLEGE_EVENTS, ...CLUB_EXCHANGE_EVENTS, ...NIGHTLIFE_EVENTS],
   geo: GEO_CONTENT,
   clubs: CLUBS,
   names: NAMES,
@@ -37,6 +55,8 @@ export const GAME_CONTENT: GameContent = {
     text: FIGHT_TEXT,
     nicknames: NICKNAMES,
     coachLines: COACH_LINES,
+    modalities: MODALITIES,
+    graduations: GRADUATIONS,
     hooks: { weightMissEventId: 'fight_weight_miss', farewellEventId: 'retire_farewell', losingStreakEventId: 'retire_losing_streak', doctorRetireEventId: 'retire_doctor' },
   },
   relationships: RELATIONSHIPS_CONTENT,

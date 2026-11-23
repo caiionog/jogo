@@ -1,3 +1,4 @@
+import type { ModalityId } from '../fighting/types';
 import type { Effects } from '../core/effects';
 import type { ClubId, SchoolStage, SchoolType, Sex, StatKey } from '../core/state';
 import type { Tier } from '../fighting/types';
@@ -12,6 +13,14 @@ export interface StatRange {
 export type SchoolResultTag = 'passed' | 'failed' | 'honors' | 'graduated' | 'expelled';
 
 export interface EventConditions {
+  /** Clube esportivo: é sócio (opcionalmente de um destes esportes). */
+  sportsClub?: { sports?: string[] } | false;
+  /** Está num intercâmbio (opcionalmente destes programas). */
+  exchange?: { programs?: string[] } | false;
+  /** Faculdade: cursando (enrolled), cursos, diplomas. */
+  college?: { enrolled?: boolean; courses?: string[]; diploma?: string[] };
+  /** Talento de nascimento do personagem (revealed: só se ainda não/já revelado). */
+  talent?: { id: string; revealed?: boolean };
   minAge?: number;
   maxAge?: number;
   sex?: Sex;
@@ -99,7 +108,7 @@ export interface RelationshipCondition {
 }
 
 /** Tags de evento. 'adult' = conteúdo adulto (só 18+, com a opção ligada; ver guards.ts). */
-export type EventTag = 'adult';
+export type EventTag = 'adult' | 'briga';
 
 export interface FightingConditions {
   /** Organização do contrato atual. */
@@ -112,7 +121,7 @@ export interface FightingConditions {
   /** Posição máxima no ranking (1 = #1; o campeão conta como 0). */
   rankMax?: number;
   champion?: boolean;
-  /** Faixa de jiu-jitsu: 0 branca … 4 preta. */
+  /** Faixa ADULTA de jiu-jitsu: 0 branca … 4 preta (quem está no sistema infantil conta como branca). */
   belt?: StatRange;
   amateurWins?: StatRange;
   proWins?: StatRange;
@@ -122,7 +131,10 @@ export interface FightingConditions {
   suspended?: boolean;
   /** Atende aos requisitos e pode receber proposta desta organização. */
   orgEligible?: string;
+  /** Legado: pronto para a próxima faixa de jiu-jitsu (= `gradeReady: 'jiujitsu'`). */
   beltPromotionReady?: boolean;
+  /** Pronto para a próxima graduação desta modalidade (exame de faixa/prajied). */
+  gradeReady?: ModalityId;
   /** Já lutou alguma vez (qualquer cartel). */
   hasFought?: boolean;
   /** Aposentado da luta (Etapa 6). */
@@ -155,6 +167,8 @@ export interface LegacyConditions {
 }
 
 export interface EventRisk {
+  /** O risco é bom ou ruim para o personagem (padrão 'bad'): a sorte inclina a chance. */
+  tone?: 'good' | 'bad';
   /** Probabilidade (0–1) de o resultado alternativo acontecer. */
   chance: number;
   effects?: Effects;
@@ -183,6 +197,8 @@ export interface GameEvent {
   conditions: EventConditions;
   /** Peso relativo no sorteio (> 0 para eventos 'random'). */
   weight: number;
+  /** Evento bom ou ruim: a sorte inclina o peso no sorteio do ano. Tag `briga` pesa mais com pavio curto. */
+  tone?: 'good' | 'bad';
   trigger?: EventTrigger;
   /** Se true, só acontece uma vez por vida. */
   once?: boolean;

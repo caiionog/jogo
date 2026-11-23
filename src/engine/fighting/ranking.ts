@@ -1,6 +1,9 @@
 /** Ranking por organização/categoria. Funções puras sobre Roster. */
 import type { Roster } from './types';
 
+/** Mesmo id de `profile.ts` (evita import circular). */
+const PLAYER_ID = 'player';
+
 /** 0 = campeão, 1..N = posição, null = sem ranking. */
 export function rankOf(roster: Roster, id: string): number | null {
   if (roster.champion === id) return 0;
@@ -56,11 +59,14 @@ export function applyRankingResult(roster: Roster, winnerId: string, loserId: st
   return { ...roster, ranking: ranking.slice(0, size) };
 }
 
-/** Remove um lutador do ranking (e do cinturão, que passa para o #1). */
+/**
+ * Remove um lutador do ranking (e do cinturão, que passa para o NPC mais bem ranqueado). O jogador nunca herda o
+ * cinturão vago de graça: ele só vira campeão vencendo uma disputa (o resultado registra o título em `fighter.titles`).
+ */
 export function removeFromRanking(roster: Roster, id: string): Roster {
   if (roster.champion === id) {
-    const [first, ...rest] = roster.ranking;
-    return { ...roster, champion: first ?? null, ranking: rest };
+    const heir = roster.ranking.find((x) => x !== PLAYER_ID);
+    return { ...roster, champion: heir ?? null, ranking: roster.ranking.filter((x) => x !== heir) };
   }
   return { ...roster, ranking: roster.ranking.filter((x) => x !== id) };
 }

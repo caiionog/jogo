@@ -8,9 +8,12 @@ import { MenuScreen } from '../../design/components';
 import { bindHistory, useNav } from '../../nav';
 import type { ScreenRef } from '../../nav';
 import RankingPanel from '../../components/RankingPanel';
+import { FightCareerScreen } from './fightCareer';
+import { FaculdadeScreen } from './college';
+import { ClubeScreen, IntercambioScreen, NoiteScreen } from './clubs';
 import { BemScreen, BensScreen, EmpresaScreen, FinancasScreen, MercadoCatScreen, MercadoScreen, MeusBensScreen } from './assets';
 import { AmorScreen, AtividadesScreen, EstudoScreen, LazerScreen, RelacoesScreen, SaudeScreen, TestamentoScreen, TreinoScreen } from './activities';
-import { CarreiraLutaScreen, CarreiraScreen, CarreirasCatScreen, CarreirasScreen, EscolaScreen, LutaScreen, MinhaOcupacaoScreen, OcupacaoScreen } from './occupation';
+import { CarreiraScreen, CarreirasCatScreen, CarreirasScreen, EscolaScreen, MinhaOcupacaoScreen, OcupacaoScreen } from './occupation';
 
 const CAT_TITLE: Record<string, string> = { aprendiz: 'Aprendiz e estágio', meio_periodo: 'Meio período', integral: 'Tempo integral' };
 const MARKET_TITLE: Record<string, string> = { imovel: 'Imóveis', veiculo: 'Veículos', luxo: 'Luxo', negocios: 'Empreendimentos' };
@@ -23,11 +26,11 @@ function screenOf(r: ScreenRef, game: GameState): { title: string; body: ReactNo
     case 'carreiras': return { title: 'Carreiras', body: <CarreirasScreen game={game} /> };
     case 'carreiras-cat': return { title: CAT_TITLE[p.cat ?? ''] ?? 'Carreiras', body: <CarreirasCatScreen game={game} cat={p.cat as CareerCategory} /> };
     case 'carreira': return { title: jobDef(C, p.job)?.title ?? 'Carreira', body: <CarreiraScreen game={game} jobId={p.job ?? ''} /> };
-    case 'carreira-luta': return { title: 'Carreira de lutador', body: <CarreiraLutaScreen game={game} /> };
     case 'escola': return { title: 'Escola', body: <EscolaScreen game={game} /> };
-    case 'luta': return { title: 'Carreira de luta', body: <LutaScreen game={game} /> };
+    case 'carreira-luta':
+    case 'luta': return { title: 'Carreira de Luta', body: <FightCareerScreen game={game} /> };
     case 'ranking': return { title: 'Ranking', body: <RankingPanel game={game} /> };
-    case 'estudos': return { title: 'Estudos', body: null };
+    case 'estudos': return { title: 'Estudos e faculdade', body: <FaculdadeScreen game={game} /> };
     case 'bens': return { title: 'Bens', body: <BensScreen game={game} /> };
     case 'meus-bens': return { title: 'Meus bens', body: <MeusBensScreen game={game} /> };
     case 'bem': return { title: 'Bem', body: <BemScreen game={game} id={p.id ?? ''} /> };
@@ -38,6 +41,9 @@ function screenOf(r: ScreenRef, game: GameState): { title: string; body: ReactNo
     case 'relacoes': return { title: 'Relacionamentos', body: <RelacoesScreen game={game} /> };
     case 'atividades': return { title: 'Atividades', body: <AtividadesScreen game={game} /> };
     case 'treino': return { title: 'Treino', body: <TreinoScreen game={game} /> };
+    case 'noite': return { title: 'Sair à noite', body: <NoiteScreen game={game} /> };
+    case 'clube': return { title: 'Clube esportivo', body: <ClubeScreen game={game} /> };
+    case 'intercambio': return { title: 'Intercâmbio', body: <IntercambioScreen game={game} /> };
     case 'estudo': return { title: 'Estudo', body: <EstudoScreen game={game} /> };
     case 'saude': return { title: 'Saúde', body: <SaudeScreen game={game} /> };
     case 'lazer': return { title: 'Lazer', body: <LazerScreen game={game} /> };

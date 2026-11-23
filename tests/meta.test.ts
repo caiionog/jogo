@@ -12,7 +12,7 @@ import { GAME_CONTENT } from '../src/content';
 import { emptyMeta, emptyRecord, evaluateAchievements, killCharacter, newGame, recordLifeEnd, recordLifeStart } from '../src/engine';
 import type { GameState, MetaState } from '../src/engine';
 import { exportSave, importSave, listSlots, loadGame, loadMeta, loadSlot, migrateMeta, saveMeta, saveSlot, setActiveSlot, slotKey } from '../src/save';
-import fixturesV1 from './fixtures/saves-v1.json';
+import fixturesV1 from '../src/save/__fixtures__/saves-v1.json';
 import { adult } from './ecoHelpers';
 import { fighterGame } from './fightHelpers';
 
@@ -33,7 +33,7 @@ describe('conquistas', () => {
 
   it('predicados disparam nas condições certas e não disparam fora delas', () => {
     const rookie = fighterGame(20);
-    const sub = fighterGame(20, {}, { amateur: { ...emptyRecord(), wins: 1, winsBy: { KO: 0, SUB: 1, DEC: 0 } }, belt: { rank: 4, years: 1 } });
+    const sub = fighterGame(20, {}, { amateur: { ...emptyRecord(), wins: 1, winsBy: { KO: 0, SUB: 1, DEC: 0 } }, grades: { jiujitsu: { system: 'bjj_adulto', rank: 4, degree: 0, years: 1 } } });
     const r0 = evaluateAchievements(rookie, emptyMeta(), C, AT);
     expect(r0.unlocked.map((a) => a.id)).not.toContain('primeira_finalizacao');
     const r1 = evaluateAchievements(sub, emptyMeta(), C, AT);
@@ -46,7 +46,7 @@ describe('conquistas', () => {
   });
 
   it('não desbloqueia duas vezes', () => {
-    const g = fighterGame(20, {}, { belt: { rank: 4, years: 1 } });
+    const g = fighterGame(20, {}, { grades: { jiujitsu: { system: 'bjj_adulto', rank: 4, degree: 0, years: 1 } } });
     const first = evaluateAchievements(g, emptyMeta(), C, AT);
     const again = evaluateAchievements(g, first.meta, C, '2030-01-01T00:00:00.000Z');
     expect(again.unlocked).toEqual([]);
@@ -64,7 +64,7 @@ describe('conquistas', () => {
   });
 
   it('persistem entre vidas no armazenamento meta (chave própria)', async () => {
-    const g = fighterGame(20, {}, { belt: { rank: 4, years: 1 } });
+    const g = fighterGame(20, {}, { grades: { jiujitsu: { system: 'bjj_adulto', rank: 4, degree: 0, years: 1 } } });
     const { meta } = evaluateAchievements(g, await loadMeta(), C, AT);
     await saveMeta(meta);
     // nova vida: o save da vida é outro, o meta continua

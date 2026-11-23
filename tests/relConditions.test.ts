@@ -66,7 +66,7 @@ describe('limite de pessoas ativas', () => {
     const rng = createRng(77);
     for (let y = 0; y < 80 && s.alive; y++) {
       s = advanceYear({ ...s, pendingEvents: [] }, { ...C, events: [] });
-      s = { ...s, energy: { current: 10, max: 10 }, money: 100000, character: { ...s.character, stats: { ...s.character.stats, health: 90 } } };
+      s = { ...s, money: 100000, character: { ...s.character, stats: { ...s.character.stats, health: 90 } } };
       for (let k = 0; k < 3; k++) s = meetSomeone(s, 'social', C, createRng(y * 10 + k));
       // termina para poder conhecer mais gente
       for (const { person, rel } of relationsOf(s, ['parceiro'])) if (rel.romance && rel.romance.stage !== 'casados' && rng.chance(0.7)) s = interact(s, person.id, 'break_up', C);

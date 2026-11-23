@@ -45,6 +45,18 @@ export default function AvatarSheet({ onClose }: { onClose: () => void }) {
           <dd className="text-[var(--ds-text-muted)]">Corpo: {desc.build === 'acima' ? 'acima do peso' : desc.build}</dd>
         </dl>
       </div>
+      <h3 className="mb-1 mt-4 text-sm font-semibold">Talentos</h3>
+      <ul className="flex flex-col gap-1 text-sm" data-testid="talents">
+        {(c.talents ?? []).filter((t) => t.revealed).map((t) => {
+          const d = GAME_CONTENT.talents.find((x) => x.id === t.id);
+          return d ? (
+            <li key={t.id} className="rounded-lg bg-[var(--ds-surface-2)] px-3 py-2">
+              {d.negative ? '⚠️' : '✨'} <b>{d.label}</b> <span className="text-[var(--ds-text-muted)]">— {d.hint}</span>
+            </li>
+          ) : null;
+        })}
+        {!(c.talents ?? []).some((t) => t.revealed) && <li className="text-[var(--ds-text-muted)]">Nenhum talento descoberto (ainda).</li>}
+      </ul>
       {auto && <p className="mt-3 rounded-lg bg-[var(--ds-surface-2)] p-2 text-xs">{c.age <= 2 ? 'Bebê usa body.' : 'Em dia de escola você vai de uniforme; o resto do guarda-roupa vale normalmente.'}</p>}
       <h3 className="mb-1 mt-4 text-sm font-semibold">Guarda-roupa</h3>
       <div className="mb-2 flex gap-1 overflow-x-auto" role="tablist" aria-label="Camadas">

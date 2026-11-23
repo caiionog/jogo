@@ -16,11 +16,12 @@ import {
   performAction,
   rankOf,
   signWith,
+  sessionsLeft,
 } from '../src/engine';
 import type { GameState } from '../src/engine';
 import { fighterGame } from './fightHelpers';
 
-const strong = { trocacao: 90, jiujitsu: 90, athletic: 90, chin: 90 };
+const strong = { trocacao: 90, grappling: 90, athletic: 90, chin: 90 };
 
 function pro(seed = 'pro', skills = strong): GameState {
   const g = fighterGame(24, skills, { amateur: { ...emptyRecord(), wins: 5 }, reputation: 30, gymId: 'gen_bairro' }, seed);
@@ -29,9 +30,9 @@ function pro(seed = 'pro', skills = strong): GameState {
 
 /** Aceita a primeira oferta da ARC e luta até o fim. */
 const arcOffer = (g: GameState) => g.fighter.offers.find((o) => o.orgId === 'arc')!;
-function fightFirst(g: GameState, opts = {}): GameState {
+function fightFirst(g: GameState, opts = {}, content = GAME_CONTENT): GameState {
   const offer = arcOffer(g);
-  return autoFinishFight(acceptOffer(g, offer.id, opts, GAME_CONTENT), GAME_CONTENT);
+  return autoFinishFight(acceptOffer(g, offer.id, opts, content), content);
 }
 
 describe('ofertas', () => {
@@ -69,16 +70,16 @@ describe('ofertas', () => {
 describe('luta e resultado', () => {
   const g0 = generateOffers(pro(), createRng(5), GAME_CONTENT);
 
-  it('aceitar gasta a energia do camp, inicia a luta e bloqueia o resto do jogo', () => {
+  it('aceitar ocupa as sessões do camp, inicia a luta e bloqueia o resto do jogo', () => {
     const offer = arcOffer(g0);
     const g = acceptOffer(g0, offer.id, {}, GAME_CONTENT);
-    expect(g.energy.current).toBe(g0.energy.current - offer.campCost);
+    expect(g.fighter.sessionsThisYear).toBe(g0.fighter.sessionsThisYear + offer.campSessions);
     expect(g.activeFight).not.toBeNull();
     expect(g.fighter.offers.some((o) => o.id === offer.id)).toBe(false);
     if (g.activeFight!.fight.phase === 'break') {
       expect(advanceYear(g, GAME_CONTENT)).toBe(g);
-      expect(performAction(g, 'train', GAME_CONTENT)).toBe(g);
-      expect(fightBlockReason(g, g.fighter.offers[0])).toBe('busy');
+      expect(performAction(g, 'study', GAME_CONTENT)).toBe(g);
+      expect(fightBlockReason(g, g.fighter.offers[0], GAME_CONTENT)).toBe('busy');
       const after = chooseFightCorner(g, 'ground', GAME_CONTENT);
       expect(after.activeFight!.fight.round).toBe(2);
     }
@@ -102,7 +103,7 @@ describe('luta e resultado', () => {
   });
 
   it('derrota: cartel e reputação caem', () => {
-    const weak = generateOffers(pro('fraco', { trocacao: 5, jiujitsu: 5, athletic: 5, chin: 20 }), createRng(5), GAME_CONTENT);
+    const weak = generateOffers(pro('fraco', { trocacao: 5, grappling: 5, athletic: 5, chin: 20 }), createRng(5), GAME_CONTENT);
     const g = fightFirst(weak);
     expect(g.activeFight!.fight.result!.winner).toBe(1);
     expect(g.fighter.pro.losses).toBe(1);
@@ -138,7 +139,7 @@ describe('luta e resultado', () => {
 
   it('lesão grave bloqueia novas lutas e passa com o tempo', () => {
     const g = withInjury(g0, 'ombro', 9);
-    expect(fightBlockReason(g, g.fighter.offers[0])).toBe('injured');
+    expect(fightBlockReason(g, g.fighter.offers[0], GAME_CONTENT)).toBe('injured');
     expect(acceptOffer(g, g.fighter.offers[0]!.id, {}, GAME_CONTENT)).toBe(g);
     // 9 meses: sara na virada do ano
     const next = advanceYear(g, GAME_CONTENT);
@@ -147,12 +148,14 @@ describe('luta e resultado', () => {
 
   it('vencendo seguidas, chega ao top 3 e disputa (e ganha) o cinturão', () => {
     let g = pro('campeao');
+    // 12 sessões por ano (como os 12 de energia de antes): 4 lutas por ano isolam o caminho até o cinturão
+    const C12 = { ...GAME_CONTENT, limits: { ...GAME_CONTENT.limits, trainingSessions: 12 } };
     for (let year = 0; year < 12 && g.fighter.titles.length === 0; year++) {
       g = advanceYear({ ...g, pendingEvents: [] }, GAME_CONTENT);
       // ignora lesões para isolar o caminho até o cinturão
-      g = noInjuries({ ...g, pendingEvents: [], energy: { current: 12, max: 12 } });
-      for (let k = 0; k < 4 && arcOffer(g) && g.energy.current >= arcOffer(g).campCost; k++) {
-        g = closeFight(fightFirst(g));
+      g = noInjuries({ ...g, pendingEvents: [] });
+      for (let k = 0; k < 4 && arcOffer(g) && sessionsLeft(g, C12) >= arcOffer(g).campSessions; k++) {
+        g = closeFight(fightFirst(g, {}, C12));
         g = noInjuries({ ...g, pendingEvents: [] });
       }
     }

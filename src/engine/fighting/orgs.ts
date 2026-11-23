@@ -1,3 +1,4 @@
+import { bjjRank } from './belts';
 import { injuryVeto } from './injuries';
 /** Organizações: níveis, requisitos de entrada e contratos. */
 import type { GameContent } from '../core/content';
@@ -33,7 +34,7 @@ export function orgRequirementGap(state: GameState, org: OrgDef): OrgBlockReason
   if (req.minAmateurWins !== undefined && f.amateur.wins < req.minAmateurWins) return 'amateur-wins';
   if (req.minProWins !== undefined && f.pro.wins < req.minProWins) return 'pro-wins';
   if (req.minReputation !== undefined && f.reputation < req.minReputation) return 'reputation';
-  if (req.minBelt !== undefined && f.belt.rank < req.minBelt) return 'belt';
+  if (req.minBelt !== undefined && bjjRank(state) < req.minBelt) return 'belt';
   if (req.minProWinRate !== undefined && recentProWinRate(state) < req.minProWinRate) return 'win-rate';
   return null;
 }

@@ -25,7 +25,7 @@ import type { GameState } from '../src/engine';
 import { fighterGame } from './fightHelpers';
 
 const C = GAME_CONTENT;
-const strong = { trocacao: 90, jiujitsu: 90, athletic: 90, chin: 90 };
+const strong = { trocacao: 90, grappling: 90, athletic: 90, chin: 90 };
 
 function pro(seed = 'apos'): GameState {
   const g = fighterGame(30, strong, { amateur: { ...emptyRecord(), wins: 5 }, pro: { ...emptyRecord(), wins: 8, losses: 2 }, reputation: 40, gymId: 'gen_bairro' }, seed);
@@ -50,8 +50,8 @@ describe('aposentadoria voluntária', () => {
       expect(r.ranking).not.toContain(PLAYER_ID);
       expect(r.champion).not.toBe(PLAYER_ID);
     }
-    expect(trainingBlockReason(g, 'sparring')).toBe('retired');
-    expect(trainingBlockReason(g, 'jiujitsu')).toBeNull();
+    expect(trainingBlockReason(g, 'sparring', C)).toBe('retired');
+    expect(trainingBlockReason(g, 'jiujitsu', C)).toBeNull();
     // aposentado não recebe ofertas
     expect(generateOffers(g, createRng(4), C).fighter.offers).toEqual([]);
   });
@@ -62,7 +62,7 @@ describe('aposentadoria voluntária', () => {
     const offer = g.fighter.offers.find((o) => o.kind === 'farewell')!;
     expect(offer).toBeDefined();
     expect(g.fighter.retired).toBeNull();
-    expect(fightBlockReason(g, offer)).toBeNull();
+    expect(fightBlockReason(g, offer, C)).toBeNull();
     g = closeFight(autoFinishFight(acceptOffer(g, offer.id, {}, C), C));
     expect(g.fighter.retired?.reason).toBe('voluntaria');
   });
@@ -106,7 +106,7 @@ describe('aposentadoria forçada', () => {
     g = resolveEvent(g, 'comeback_offer', 'back', C);
     expect(g.fighter.retired).toBeNull();
     expect(g.feats.comebacks).toBe(1);
-    expect(trainingBlockReason(g, 'sparring')).toBeNull();
+    expect(trainingBlockReason(g, 'sparring', C)).toBeNull();
   });
 
   it('aposentado: a reputação decai devagar', () => {

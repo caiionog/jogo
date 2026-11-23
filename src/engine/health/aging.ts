@@ -1,3 +1,4 @@
+import { talentMod } from '../character/talents';
 import { cityMultOf } from '../geo';
 /** Envelhecimento, doenças da velhice, dano cerebral na velhice e hábitos de saúde (Etapa 6). */
 import type { GameContent } from '../core/content';
@@ -13,7 +14,7 @@ export function conditionDef(content: GameContent, id: string): ConditionDef | u
 }
 
 /** Fator de risco de uma doença para o estado atual (1 = pessoa média). */
-export function conditionRisk(state: GameState, def: ConditionDef): number {
+export function conditionRisk(state: GameState, def: ConditionDef, content?: GameContent): number {
   const h = state.health;
   const st = state.character.stats;
   let f = 1;
@@ -26,6 +27,8 @@ export function conditionRisk(state: GameState, def: ConditionDef): number {
   if (st.athletic < 30) f += def.risk.lowFitness ?? 0;
   if (h.habits.dietYear >= state.year - 1) f *= 0.7;
   if (h.habits.gymYear >= state.year - 1) f *= 0.8;
+  // saúde de ferro / frágil (talento de nascimento)
+  if (content) f *= talentMod(state, content, 'diseaseMult');
   return Math.max(0.2, f);
 }
 
@@ -59,7 +62,7 @@ export function healthYear(state: GameState, rng: Rng, content: GameContent): Ga
   for (const def of content.health.conditions) {
     if (age < def.minAge || s.health.conditions.some((c) => c.defId === def.id)) continue;
     const ageFactor = 1 + Math.max(0, age - def.minAge) / 20;
-    if (!rng.chance(Math.min(0.5, def.baseChance * ageFactor * conditionRisk(s, def)))) continue;
+    if (!rng.chance(Math.min(0.5, def.baseChance * ageFactor * conditionRisk(s, def, content)))) continue;
     const early = s.health.habits.checkupYear >= s.year - 2;
     s = { ...s, health: { ...s.health, conditions: [...s.health.conditions, { defId: def.id, sinceAge: age, controlled: early }] } };
     s = appendLog(s, early ? `O check-up pegou cedo: ${def.name}. Tratamento iniciado.` : `Diagnóstico: ${def.name}.`);
@@ -110,29 +113,27 @@ export function brainHint(state: GameState): string | null {
 // ---------------------------------------------------------------------------
 
 export type HealthActionId = 'checkup' | 'gym' | 'diet';
-export const HEALTH_ACTION_ENERGY = 1;
 
 export function healthActionCost(state: GameState, content: GameContent, id: HealthActionId): number {
   return toMoney(content.health.actionCosts[id] * cityMultOf(state, content));
 }
 
-export function healthActionBlock(state: GameState, content: GameContent, id: HealthActionId): 'busy' | 'too-young' | 'done' | 'no-energy' | 'no-money' | null {
+export function healthActionBlock(state: GameState, content: GameContent, id: HealthActionId): 'busy' | 'too-young' | 'done' | 'no-money' | null {
   if (!state.alive || state.pendingEvents.length || state.activeFight) return 'busy';
   if (state.character.age < 14) return 'too-young';
   const h = state.health.habits;
   if ((id === 'checkup' && h.checkupYear === state.year) || (id === 'gym' && h.gymYear === state.year) || (id === 'diet' && h.dietYear === state.year)) return 'done';
-  if (state.energy.current < HEALTH_ACTION_ENERGY) return 'no-energy';
   const cost = state.character.age >= 18 ? healthActionCost(state, content, id) : 0;
   if (state.money < cost) return 'no-money';
   return null;
 }
 
-/** Check-up, academia comum ou dieta (⚡1 e R$; até os 18 a família paga). */
+/** Check-up, academia comum ou dieta (uma vez por ano cada; R$, até os 18 a família paga). */
 export function healthAction(state: GameState, content: GameContent, id: HealthActionId): GameState {
   if (healthActionBlock(state, content, id) !== null) return state;
   const cost = state.character.age >= 18 ? healthActionCost(state, content, id) : 0;
   const label = id === 'checkup' ? 'Check-up' : id === 'gym' ? 'Academia comum' : 'Dieta com nutricionista';
-  let s: GameState = { ...state, energy: { ...state.energy, current: state.energy.current - HEALTH_ACTION_ENERGY } };
+  let s: GameState = state;
   if (cost > 0) s = post(s, 'saude', -cost, label);
   const key = id === 'checkup' ? 'checkupYear' : id === 'gym' ? 'gymYear' : 'dietYear';
   s = { ...s, health: { ...s.health, habits: { ...s.health.habits, [key]: s.year } } };

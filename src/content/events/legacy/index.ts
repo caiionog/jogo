@@ -20,7 +20,7 @@ export const LEGACY_EVENTS: readonly GameEvent[] = [
     text: 'Nos comentários de um vídeo seu, a torcida compara você a {antecessor}.',
     choices: [
       { id: 'proud', label: 'Ler com orgulho', effects: { stats: { happiness: 3 } }, resultText: '"Tem o mesmo jeito de andar no octógono", disse alguém.' },
-      { id: 'pressure', label: 'Fechar o celular, irritado(a)', effects: { stats: { happiness: -2 }, fighter: { skills: { jiujitsu: 1, trocacao: 1 } } }, resultText: 'A raiva virou treino extra.' },
+      { id: 'pressure', label: 'Fechar o celular, irritado(a)', effects: { stats: { happiness: -2 }, fighter: { skills: { grappling: 1, trocacao: 1 } } }, resultText: 'A raiva virou treino extra.' },
     ],
   },
   {
@@ -41,7 +41,7 @@ export const LEGACY_EVENTS: readonly GameEvent[] = [
     text: 'A academia da família completa mais um aniversário. Na parede, a foto de {antecessor} ainda está lá.',
     choices: [
       { id: 'party', label: 'Fazer uma festa para os alunos', effects: { money: -3000, fighter: { reputation: 2 }, stats: { happiness: 4 } }, resultText: 'Teve churrasco e roda de histórias.' },
-      { id: 'train', label: 'Comemorar com um treinão aberto', effects: { fighter: { reputation: 1, skills: { jiujitsu: 1 } }, stats: { happiness: 2 } }, resultText: 'O tatame encheu.' },
+      { id: 'train', label: 'Comemorar com um treinão aberto', effects: { fighter: { reputation: 1, skills: { grappling: 1 } }, stats: { happiness: 2 } }, resultText: 'O tatame encheu.' },
     ],
   },
   {
@@ -51,7 +51,7 @@ export const LEGACY_EVENTS: readonly GameEvent[] = [
     conditions: { minAge: 12, legacy: { generation: { min: 2 } } },
     text: 'Arrumando a casa, você encontra um caderno velho: o diário de treinos de {antecessor}.',
     choices: [
-      { id: 'study', label: 'Estudar cada página', effects: { fighter: { skills: { jiujitsu: 1.1, trocacao: 1.7 } } }, resultText: 'Tinha anotação de cada luta, até das derrotas.' },
+      { id: 'study', label: 'Estudar cada página', effects: { fighter: { skills: { grappling: 1.1, trocacao: 1.7 } } }, resultText: 'Tinha anotação de cada luta, até das derrotas.' },
       { id: 'keep', label: 'Guardar como lembrança', effects: { stats: { happiness: 3 } }, resultText: 'Você chorou um pouco.' },
     ],
   },
@@ -82,7 +82,7 @@ export const LEGACY_EVENTS: readonly GameEvent[] = [
     conditions: { minAge: 14, legacy: { generation: { min: 2 } } },
     text: 'A família entrega a você o primeiro quimono de {antecessor}, guardado por anos numa caixa.',
     choices: [
-      { id: 'wear', label: 'Treinar com ele uma vez', effects: { stats: { happiness: 4 }, fighter: { skills: { jiujitsu: 1 } } }, resultText: 'Ficou um pouco largo, mas serviu.' },
+      { id: 'wear', label: 'Treinar com ele uma vez', effects: { stats: { happiness: 4 }, fighter: { skills: { grappling: 1 } } }, resultText: 'Ficou um pouco largo, mas serviu.' },
       { id: 'frame', label: 'Emoldurar na parede', effects: { stats: { happiness: 3 } }, resultText: 'É a primeira coisa que você vê ao acordar.' },
     ],
   },

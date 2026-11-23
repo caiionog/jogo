@@ -1,3 +1,5 @@
+import { gradeLevel } from '../../fighting/belts';
+import type { ModalityId } from '../../fighting/types';
 /**
  * Aparência dinâmica: `deriveAvatar` calcula tudo o que o renderizador precisa a partir do estado.
  * Nada disso é guardado no save — só os genes (fixos) e o guarda-roupa. A UI apenas desenha o descriptor
@@ -21,13 +23,16 @@ export type Expression = 'feliz' | 'neutro' | 'triste' | 'cansado' | 'bravo' | '
 /** Tipo físico (silhueta da pixel art), derivado de gordura e musculatura. */
 export type Build = 'magro' | 'medio' | 'atletico' | 'musculoso' | 'acima';
 export const BUILDS: readonly Build[] = ['magro', 'medio', 'atletico', 'musculoso', 'acima'];
-export type AvatarContext = 'principal' | 'luta' | 'casamento' | 'formatura' | 'lista';
+/** `treino`: roupa da modalidade principal (kimono + faixa, shorts + prajied…). */
+export type AvatarContext = 'principal' | 'luta' | 'treino' | 'casamento' | 'formatura' | 'lista';
 
 export interface OutfitPiece {
   id: string;
   /** Cor base (hex) — o renderizador gera a rampa. */
   color: string;
   pattern: OutfitPattern;
+  /** Segunda cor: listra da faixa infantil, ponta do prajied (release 0.0.1). */
+  accent?: string;
 }
 export type AvatarOutfit = Partial<Record<OutfitLayer, OutfitPiece>>;
 
@@ -60,8 +65,6 @@ export interface AvatarDescriptor {
 const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
 const r2 = (x: number) => Math.round(x * 100) / 100;
 
-/** Cor real das faixas de jiu-jitsu (branca → preta). */
-export const BELT_HEX = ['#f1f1ee', '#2f5fb3', '#6b3fa0', '#6b4226', '#1b1b1b'] as const;
 
 export function ageStage(age: number): AgeStage {
   return age <= 2 ? 'bebe' : age <= 11 ? 'crianca' : age <= 17 ? 'adolescente' : age <= 59 ? 'adulto' : 'idoso';
@@ -197,14 +200,48 @@ function casualOutfit(content: GameContent, age: number, sex: Sex, seed: number)
   };
 }
 
+/**
+ * Modalidade principal para o avatar de treino: a treinada no ano, senão a de graduação mais alta, senão a primeira da
+ * academia. `undefined` se o personagem não pratica nada.
+ */
+export function mainModality(state: GameState, content: GameContent): ModalityId | undefined {
+  const f = state.fighter;
+  if (f.trainedThisYear.length) return f.trainedThisYear[0];
+  const graded = (Object.entries(f.grades) as [ModalityId, { rank: number }][]).sort((a, b) => b[1].rank - a[1].rank)[0];
+  if (graded) return graded[0];
+  return content.fighting.gyms.find((g) => g.id === f.gymId)?.modalities[0];
+}
+
+/**
+ * Roupa de treino da modalidade: jiu-jitsu e judô de kimono com a faixa da graduação (listra das faixas infantis
+ * incluída); muay thai com shorts e o prajied no braço (cor e ponta da graduação); boxe, wrestling e kickboxing de
+ * regata e shorts.
+ */
+export function gradeOutfit(state: GameState, content: GameContent, mod: ModalityId): AvatarOutfit {
+  const age = state.character.age;
+  const lvl = gradeLevel(content, state.fighter.grades[mod]);
+  const feet = piece(content, 'descalco', 0)!;
+  if (mod === 'jiujitsu' || mod === 'judo') {
+    const belt: OutfitPiece = { id: 'faixa', color: lvl?.color ?? '#f1f1ee', pattern: 'liso', ...(lvl?.stripe ? { accent: lvl.stripe } : {}) };
+    return { inteira: piece(content, 'kimono', 0)!, acessorio: belt, calcado: feet };
+  }
+  const top = piece(content, age < 14 || mod === 'wrestling' || mod === 'muaythai' ? 'regata_treino' : 'rashguard', 0)!;
+  const out: AvatarOutfit = { cima: top, baixo: piece(content, 'shorts_luta', mod === 'muaythai' ? 1 : 0)!, calcado: feet };
+  if (mod === 'muaythai') out.acessorio = { id: 'prajied', color: lvl?.color ?? '#f1f1ee', pattern: 'liso', ...(lvl?.tip ? { accent: lvl.tip } : {}) };
+  return out;
+}
+
 /** Roupa do personagem: contexto automático (bebê, escola, luta, casamento, formatura) ou o guarda-roupa. */
 export function playerOutfit(state: GameState, content: GameContent, context: AvatarContext = 'principal'): AvatarOutfit {
   const age = state.character.age;
-  const belt = state.fighter.belt.rank;
   if (context === 'luta') {
     const rules = state.activeFight?.offer.rules;
-    if (rules === 'grappling') return { inteira: piece(content, 'kimono', 0)!, acessorio: piece(content, 'faixa', belt)!, calcado: piece(content, 'descalco', 0)! };
+    if (rules === 'grappling') return gradeOutfit(state, content, 'jiujitsu');
     return { cima: piece(content, age < 14 ? 'regata_treino' : 'rashguard', 0)!, baixo: piece(content, 'shorts_luta', 0)!, calcado: piece(content, 'descalco', 0)! };
+  }
+  if (context === 'treino') {
+    const mod = mainModality(state, content);
+    if (mod) return gradeOutfit(state, content, mod);
   }
   if (context === 'casamento' && age >= 16) {
     return state.character.sex === 'F'

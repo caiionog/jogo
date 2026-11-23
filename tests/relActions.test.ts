@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { GAME_CONTENT } from '../src/content';
 import {
   DECAY,
-  INTERACTION_COST,
   advanceYear,
   getRelation,
   interact,
@@ -18,10 +17,10 @@ import { aged, withPerson } from './relHelpers';
 const C = GAME_CONTENT;
 
 describe('ações de relacionamento', () => {
-  it('passar tempo gasta energia e aumenta o afeto', () => {
+  it('passar tempo aumenta o afeto (e conta como repetição no ano)', () => {
     const [g, p] = withPerson(aged(20), 'amigo', 20, { affection: 50 });
     const r = interact(g, p.id, 'spend_time', C);
-    expect(r.energy.current).toBe(g.energy.current - INTERACTION_COST.spend_time);
+    expect(r.yearUses[`rel:spend_time:${p.id}`]).toBe(1);
     expect(getRelation(r, p.id)!.affection).toBeGreaterThan(50);
     expect(getRelation(r, p.id)!.interactedYear).toBe(g.year);
   });
@@ -44,9 +43,10 @@ describe('ações de relacionamento', () => {
     expect(interactionBlockReason(once, dad.id, 'ask_money')).toBe('asked');
   });
 
-  it('bloqueios: sem energia, pessoa morta', () => {
+  it('bloqueios: acontecimento pendente, pessoa morta (sem custo de energia)', () => {
     const [g, p] = withPerson(aged(20), 'amigo', 20);
-    expect(interactionBlockReason({ ...g, energy: { current: 0, max: 8 } }, p.id, 'talk')).toBe('no-energy');
+    expect(interactionBlockReason(g, p.id, 'talk')).toBeNull();
+    expect(interactionBlockReason({ ...g, pendingEvents: [{ eventId: 'x' }] }, p.id, 'talk')).toBe('busy');
     const dead = { ...g, relationships: { ...g.relationships, people: g.relationships.people.map((x) => (x.id === p.id ? { ...x, alive: false } : x)) } };
     expect(interactionBlockReason(dead, p.id, 'talk')).toBe('person-dead');
   });
@@ -92,7 +92,7 @@ describe('ações de relacionamento', () => {
     for (let i = 0; i < 20; i++) {
       let g = aged(10, `esc${i}`);
       g = advanceYear(g, { ...C, events: [] });
-      g = { ...g, energy: { current: 8, max: 8 } };
+      g = { ...g };
       for (let k = 0; k < 4; k++) g = performAction(g, 'make_friends', C);
       made += relationsOf(g, ['amigo']).length;
     }

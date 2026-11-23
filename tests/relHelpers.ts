@@ -9,7 +9,7 @@ export function life(seed = 'rel', opts: { adultContent?: boolean } = {}): GameS
 /** Personagem de `age` anos com energia cheia. */
 export function aged(age: number, seed = 'rel', opts: { adultContent?: boolean } = {}): GameState {
   const g = life(seed, opts);
-  return { ...g, year: 2000 + age, character: { ...g.character, age }, energy: { current: 8, max: 8 }, money: 50000 };
+  return { ...g, year: 2000 + age, character: { ...g.character, age }, money: 50000 };
 }
 
 /** Adiciona uma pessoa com relação, devolvendo o estado e a pessoa. */

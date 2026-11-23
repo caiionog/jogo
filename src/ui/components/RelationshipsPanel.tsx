@@ -20,7 +20,6 @@ const MEET_REASON: Record<string, string> = {
   'too-young': 'A partir dos 14 anos',
   'app-adult': 'Só a partir dos 18',
   taken: 'Você já está com alguém',
-  'no-energy': 'Sem energia',
   busy: 'Resolva o evento',
   dead: '—',
 };
@@ -74,7 +73,7 @@ export default function RelationshipsPanel({ game }: { game: GameState }) {
         className="flex flex-1 flex-col items-center rounded-xl border border-pink-700/60 bg-pink-500/10 px-2 py-2 text-sm disabled:opacity-40"
       >
         <span>{label}</span>
-        <span className="text-[10px] text-slate-400">{reason ? MEET_REASON[reason] : '⚡ 1'}</span>
+        <span className="text-[10px] text-slate-400">{reason ? MEET_REASON[reason] : 'conhecer gente nova'}</span>
       </button>
     );
   };

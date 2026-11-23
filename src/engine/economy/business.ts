@@ -8,8 +8,8 @@ import type { MarketYear } from './market';
 import type { Business, BusinessDef } from './types';
 import { createRng, seedToState } from '../core/rng';
 import { cityDef } from '../geo';
+import { sessionsLeft } from '../lifeStages/sessions';
 
-export const DEDICATE_COST = 2;
 export const OPEN_CASH_SHARE = 0.2;
 export const DIVIDEND_SHARE = 0.5;
 export const MAX_LEVEL = 5;
@@ -29,7 +29,7 @@ export function businessValue(b: Business): number {
   return Math.max(0, toMoney(b.cash + 3 * Math.max(0, avg)));
 }
 
-export type BusinessBlockReason = 'dead' | 'busy' | 'too-young' | 'no-money' | 'no-energy' | 'max-level' | 'already';
+export type BusinessBlockReason = 'dead' | 'busy' | 'too-young' | 'no-money' | 'no-sessions' | 'max-level' | 'already';
 
 export function openBlockReason(state: GameState, def: BusinessDef | undefined): BusinessBlockReason | null {
   if (!def) return 'already';
@@ -76,7 +76,7 @@ export interface BusinessOffer {
   revenue: number;
   /** Lucro estimado com gerente contratado. */
   profit: number;
-  /** Lucro estimado gerenciando de perto (sem gerente, com energia). */
+  /** Lucro estimado gerenciando de perto (sem gerente, ocupando sessões de treino). */
   profitOwner: number;
   risk: 'baixo' | 'medio' | 'alto';
   city: string;
@@ -149,10 +149,19 @@ function update(state: GameState, id: string, fn: (b: Business) => Business): Ga
   return { ...state, economy: { ...state.economy, businesses: state.economy.businesses.map((b) => (b.id === id ? fn(b) : b)) } };
 }
 
-export function dedicate(state: GameState, id: string): GameState {
+/** Gerenciar de perto neste ano: ocupa `limits.businessDedicateSessions` sessões de treino (como um meio período). */
+export function dedicateBlockReason(state: GameState, id: string, content: GameContent): 'busy' | 'already' | 'no-sessions' | null {
   const b = state.economy.businesses.find((x) => x.id === id);
-  if (!b || b.dedicatedYear === state.year || state.energy.current < DEDICATE_COST || state.pendingEvents.length || state.activeFight) return state;
-  const s = update({ ...state, energy: { ...state.energy, current: state.energy.current - DEDICATE_COST } }, id, (x) => ({ ...x, dedicatedYear: state.year }));
+  if (!b || state.pendingEvents.length || state.activeFight) return 'busy';
+  if (b.dedicatedYear === state.year) return 'already';
+  if (sessionsLeft(state, content) < content.limits.businessDedicateSessions) return 'no-sessions';
+  return null;
+}
+
+export function dedicate(state: GameState, id: string, content: GameContent): GameState {
+  const b = state.economy.businesses.find((x) => x.id === id);
+  if (!b || dedicateBlockReason(state, id, content) !== null) return state;
+  const s = update(state, id, (x) => ({ ...x, dedicatedYear: state.year }));
   return appendLog(s, `Você se dedicou de perto à ${b.name} este ano.`);
 }
 

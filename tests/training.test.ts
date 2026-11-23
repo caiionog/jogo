@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { withInjury } from './healthHelpers';
 import { GAME_CONTENT } from '../src/content';
-import { TRAINING_COST, ageFactor, diminishing, expectedGain, trainFighter, trainingBlockReason } from '../src/engine';
+import { ageFactor, diminishing, expectedGain, trainFighter, trainingBlockReason } from '../src/engine';
 import { fighterGame } from './fightHelpers';
 
 const gym = (id: string) => GAME_CONTENT.fighting.gyms.find((g) => g.id === id)!;
@@ -28,8 +28,8 @@ describe('ganho de treino', () => {
     const base = { age: 27, health: 90 };
     const none = expectedGain(7, 'trocacao', 40, { ...base, gym: undefined });
     const weak = expectedGain(7, 'trocacao', 40, { ...base, gym: gym('gen_bairro') });
-    const strikingGym = expectedGain(7, 'trocacao', 40, { ...base, gym: gym('sp_muay_zona_leste') });
-    const bjjGym = expectedGain(7, 'trocacao', 40, { ...base, gym: gym('sp_tatame_paulista') });
+    const strikingGym = expectedGain(7, 'trocacao', 40, { ...base, gym: gym('sp_muay_zona_leste'), modality: 'muaythai' });
+    const bjjGym = expectedGain(7, 'trocacao', 40, { ...base, gym: gym('sp_tatame_paulista'), modality: 'muaythai' });
     expect(weak).toBeGreaterThan(none);
     expect(strikingGym).toBeGreaterThan(bjjGym); // especialidade
     expect(expectedGain(7, 'trocacao', 40, { ...base, gym: undefined, talent: 1.3 })).toBeCloseTo(none * 1.3);
@@ -37,26 +37,26 @@ describe('ganho de treino', () => {
   });
 
   it('cada treino sobe o atributo certo: jiu-jitsu, trocação, físico (Capacidade atlética)', () => {
-    const g = fighterGame(25, { jiujitsu: 30, trocacao: 30 }, { gymId: 'sp_muay_zona_leste' });
+    const g = fighterGame(25, { grappling: 30, trocacao: 30 }, { gymId: 'sp_leao_dourado' });
     const jj = trainFighter(g, 'jiujitsu', GAME_CONTENT);
-    expect(jj.energy.current).toBe(g.energy.current - TRAINING_COST.jiujitsu);
-    expect(jj.fighter.skills.jiujitsu).toBeGreaterThan(30);
+    expect(jj.fighter.sessionsThisYear).toBe(g.fighter.sessionsThisYear + 1);
+    expect(jj.fighter.skills.grappling).toBeGreaterThan(30);
     expect(jj.fighter.skills.trocacao).toBe(30);
-    const tr = trainFighter(g, 'trocacao', GAME_CONTENT);
+    const tr = trainFighter(g, 'muaythai', GAME_CONTENT);
     expect(tr.fighter.skills.trocacao).toBeGreaterThan(30);
-    expect(tr.fighter.skills.jiujitsu).toBe(30);
+    expect(tr.fighter.skills.grappling).toBe(30);
     const low = { ...g, character: { ...g.character, stats: { ...g.character.stats, athletic: 30 } } };
     const fi = trainFighter(low, 'fisico', GAME_CONTENT);
     expect(fi.character.stats.athletic).toBeGreaterThan(30);
     expect(fi.fighter.skills).toEqual(g.fighter.skills);
     const sp = trainFighter(g, 'sparring', GAME_CONTENT);
-    expect(sp.fighter.skills.jiujitsu).toBeGreaterThan(30);
+    expect(sp.fighter.skills.grappling).toBeGreaterThan(30);
     expect(sp.fighter.skills.trocacao).toBeGreaterThan(30);
   });
 
   it('retornos decrescentes no treino real: quem já é bom ganha menos', () => {
-    const lo = trainFighter(fighterGame(25, { trocacao: 20 }), 'trocacao', GAME_CONTENT).fighter.skills.trocacao - 20;
-    const hi = trainFighter(fighterGame(25, { trocacao: 80 }), 'trocacao', GAME_CONTENT).fighter.skills.trocacao - 80;
+    const lo = trainFighter(fighterGame(25, { trocacao: 20 }, { gymId: 'gen_bairro' }), 'muaythai', GAME_CONTENT).fighter.skills.trocacao - 20;
+    const hi = trainFighter(fighterGame(25, { trocacao: 80 }, { gymId: 'gen_bairro' }), 'muaythai', GAME_CONTENT).fighter.skills.trocacao - 80;
     expect(hi).toBeLessThan(lo / 3);
     const aLo = (s: number) => {
       const g = fighterGame(25);
@@ -69,28 +69,34 @@ describe('ganho de treino', () => {
   it('sparring pode lesionar', () => {
     let injured = 0;
     for (let i = 0; i < 200; i++) {
-      const r = trainFighter(fighterGame(25, {}, {}, `sp${i}`), 'sparring', GAME_CONTENT);
+      const r = trainFighter(fighterGame(25, {}, { gymId: 'gen_bairro' }, `sp${i}`), 'sparring', GAME_CONTENT);
       if (r.health.injuries.length) injured++;
     }
     expect(injured).toBeGreaterThan(4);
     expect(injured).toBeLessThan(40);
   });
 
-  it('bloqueios: sem energia, muito novo, sparring lesionado', () => {
-    expect(trainingBlockReason({ ...fighterGame(25), energy: { current: 1, max: 8 } }, 'trocacao')).toBe('no-energy');
-    expect(trainingBlockReason(fighterGame(8), 'sparring')).toBe('too-young');
-    expect(trainingBlockReason(withInjury(fighterGame(25), 'lca', 12), 'sparring')).toBe('injured');
-    expect(trainingBlockReason(withInjury(fighterGame(25), 'distensao', 2), 'sparring')).toBe(null);
+  it('bloqueios: sem sessões, muito novo, sparring lesionado', () => {
+    const full = fighterGame(25, {}, { gymId: 'gen_bairro' });
+    expect(trainingBlockReason({ ...full, fighter: { ...full.fighter, sessionsThisYear: 10 } }, 'muaythai', GAME_CONTENT)).toBe('no-sessions');
+    expect(trainingBlockReason(fighterGame(8), 'sparring', GAME_CONTENT)).toBe('too-young');
+    expect(trainingBlockReason(withInjury(fighterGame(25, {}, { gymId: 'gen_bairro' }), 'lca', 12), 'sparring', GAME_CONTENT)).toBe('injured');
+    expect(trainingBlockReason(withInjury(fighterGame(25, {}, { gymId: 'gen_bairro' }), 'distensao', 2), 'sparring', GAME_CONTENT)).toBe(null);
+    // modalidade só numa academia que a ofereça; sem academia, só o físico
+    expect(trainingBlockReason(fighterGame(25), 'jiujitsu', GAME_CONTENT)).toBe('no-gym');
+    expect(trainingBlockReason(fighterGame(25), 'fisico', GAME_CONTENT)).toBeNull();
+    expect(trainingBlockReason(fighterGame(25, {}, { gymId: 'gen_boxe' }), 'jiujitsu', GAME_CONTENT)).toBe('not-offered');
+    expect(trainingBlockReason(fighterGame(25, {}, { gymId: 'gen_boxe' }), 'boxe', GAME_CONTENT)).toBeNull();
   });
 
   it('clubes escolares de luta contam como treino na infância', () => {
     const judo = GAME_CONTENT.clubs.find((c) => c.id === 'judo')!;
-    expect(judo.yearlyEffects.fighter?.skills?.jiujitsu).toBeGreaterThan(0);
+    expect(judo.yearlyEffects.fighter?.skills?.grappling).toBeGreaterThan(0);
   });
 });
 
 describe('academias', () => {
-  it('entrar custa energia; respeita cidade, idade e dinheiro', async () => {
+  it('entrar é grátis; respeita cidade, idade e dinheiro', async () => {
     const { joinGym, gymBlockReason, leaveGym } = await import('../src/engine');
     const g = { ...fighterGame(20), character: { ...fighterGame(20).character, city: 'São Paulo' }, money: 0 };
     expect(gymBlockReason(g, 'rj_irmandade', GAME_CONTENT)).toBe('other-city');
@@ -101,7 +107,6 @@ describe('academias', () => {
     const rich = { ...g, money: 20000 };
     const r = joinGym(rich, 'sp_leao_dourado', GAME_CONTENT);
     expect(r.fighter.gymId).toBe('sp_leao_dourado');
-    expect(r.energy.current).toBe(rich.energy.current - 1);
     expect(gymBlockReason(r, 'sp_leao_dourado', GAME_CONTENT)).toBe('current');
     expect(leaveGym(r, GAME_CONTENT).fighter.gymId).toBeNull();
   });

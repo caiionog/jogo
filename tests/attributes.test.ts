@@ -4,13 +4,13 @@ import { describe, expect, it } from 'vitest';
 import { GAME_CONTENT } from '../src/content';
 import { COACH_NOISE, STAT_KEYS, SKILL_KEYS, advanceYear, chinValue, coachAssessment, coachWord, playerRating } from '../src/engine';
 import { CURRENT_VERSION, migrate } from '../src/save/migrations';
-import fixturesV7 from './fixtures/saves-v7.json';
-import fixturesV1 from './fixtures/saves-v1.json';
+import fixturesV7 from '../src/save/__fixtures__/saves-v7.json';
+import fixturesV1 from '../src/save/__fixtures__/saves-v1.json';
 import { fighterGame } from './fightHelpers';
 import { makeGame, resolveAllFirst } from './helpers';
 
 type Raw = Record<string, unknown> & { version: number };
-const REMOVED = /\b(strength|fitness|wrestling|cardio|defense|striking|grappling)\b/;
+const REMOVED = /\b(strength|fitness|wrestling|cardio|defense|striking|jiujitsu)\b/;
 
 function files(dir: string): string[] {
   return readdirSync(dir).flatMap((f) => {
@@ -24,11 +24,11 @@ describe('atributos da Etapa 8', () => {
     const g = makeGame('attr');
     expect(Object.keys(g.character.stats).sort()).toEqual([...STAT_KEYS].sort());
     expect([...STAT_KEYS].sort()).toEqual(['athletic', 'happiness', 'health', 'intelligence', 'looks']);
-    expect(Object.keys(g.fighter.skills).sort()).toEqual(['jiujitsu', 'trocacao']);
-    expect([...SKILL_KEYS]).toEqual(['jiujitsu', 'trocacao']);
+    expect(Object.keys(g.fighter.skills).sort()).toEqual(['grappling', 'trocacao']);
+    expect([...SKILL_KEYS]).toEqual(['grappling', 'trocacao']);
     expect(g.fighter).toHaveProperty('chinBase');
     // nada dos atributos antigos em lugar nenhum do estado
-    expect(JSON.stringify(g)).not.toMatch(/"(strength|fitness|wrestling|cardio|defense|striking|grappling|chin)":/);
+    expect(JSON.stringify(g)).not.toMatch(/"(strength|fitness|wrestling|cardio|defense|striking|chin)":/);
   });
 
   it('conteúdo (eventos, conquistas, empregos, clubes, academias, lesões, doenças) não cita atributos removidos', () => {
@@ -45,7 +45,7 @@ describe('atributos da Etapa 8', () => {
     const bad: string[] = [];
     for (const f of files(engine).filter((x) => x.endsWith('.ts'))) {
       const src = readFileSync(f, 'utf8').replace(/rules === 'grappling'|'grappling' \| 'mma'|FightRules = 'mma' \| 'grappling'|rules: 'grappling'|grappling: boolean|grappling \?|grappling\)|, grappling|\(grappling/g, '');
-      for (const m of src.matchAll(/\.(strength|fitness|wrestling|cardio|defense|striking)\b|\bskills\.(chin|grappling)\b/g)) bad.push(`${relative(engine, f)}: ${m[0]}`);
+      for (const m of src.matchAll(/\.(strength|fitness|wrestling|cardio|defense|striking)\b|\bskills\.(chin|jiujitsu)\b/g)) bad.push(`${relative(engine, f)}: ${m[0]}`);
     }
     expect(bad).toEqual([]);
   });
@@ -65,7 +65,7 @@ describe('atributos da Etapa 8', () => {
     expect(coachWord(85)).toBe('Elite');
     const ORDER = ['Iniciante', 'Promissor', 'Sólido', 'Elite'];
     for (let y = 0; y < 60; y++) {
-      const g = { ...fighterGame(26, { jiujitsu: 55, trocacao: 55, athletic: 60, chin: 60 }), year: 2000 + y };
+      const g = { ...fighterGame(26, { grappling: 55, trocacao: 55, athletic: 60, chin: 60 }), year: 2000 + y };
       const r = playerRating(g);
       const w = coachAssessment(g);
       const lo = ORDER.indexOf(coachWord(r - COACH_NOISE));
@@ -73,8 +73,8 @@ describe('atributos da Etapa 8', () => {
       expect(ORDER.indexOf(w)).toBeGreaterThanOrEqual(lo);
       expect(ORDER.indexOf(w)).toBeLessThanOrEqual(hi);
     }
-    expect(coachAssessment(fighterGame(25, { jiujitsu: 95 }), 'jiujitsu')).toBe('Elite');
-    expect(coachAssessment(fighterGame(25, { jiujitsu: 5 }), 'jiujitsu')).toBe('Iniciante');
+    expect(coachAssessment(fighterGame(25, { grappling: 95 }), 'grappling')).toBe('Elite');
+    expect(coachAssessment(fighterGame(25, { grappling: 5 }), 'grappling')).toBe('Iniciante');
   });
 
   it('o corpo muda com treino e sedentarismo (Capacidade atlética e carga de treino)', () => {
@@ -96,14 +96,14 @@ describe('migração v7 → v8', () => {
     const g = migrate(structuredClone(raw));
     expect(g.version).toBe(CURRENT_VERSION);
     expect(g.character.stats.athletic).toBeCloseTo(old.strength! * 0.4 + old.fitness! * 0.35 + sk.cardio! * 0.25, 0);
-    expect(g.fighter.skills.jiujitsu).toBeCloseTo(sk.grappling! * 0.55 + sk.wrestling! * 0.45, 0);
+    expect(g.fighter.skills.grappling).toBeCloseTo(sk.grappling! * 0.55 + sk.wrestling! * 0.45, 0);
     expect(g.fighter.skills.trocacao).toBeCloseTo(sk.striking! * 0.7 + sk.defense! * 0.3, 0);
     expect(g.fighter.chinBase).toBe(sk.chin);
     const json = JSON.stringify(g);
-    expect(json).not.toMatch(/"(strength|fitness|wrestling|cardio|defense|striking|grappling|chin)":/);
+    expect(json).not.toMatch(/"(strength|fitness|wrestling|cardio|defense|striking|chin)":/);
     for (const r of Object.values(g.world.rosters)) for (const n of r.npcs) {
       expect(n.athletic).toBeGreaterThan(0);
-      expect(Object.keys(n.skills).sort()).toEqual(['jiujitsu', 'trocacao']);
+      expect(Object.keys(n.skills).sort()).toEqual(['grappling', 'trocacao']);
       expect(['striker', 'grappler', 'allround']).toContain(n.style);
     }
     if (g.alive) expect(resolveAllFirst(advanceYear(g, GAME_CONTENT)).character.age).toBe(g.character.age + 1);

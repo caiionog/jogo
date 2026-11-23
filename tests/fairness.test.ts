@@ -99,7 +99,7 @@ describe('não discriminação: simulação', () => {
     let s = start(seed, sex, appearance);
     for (let y = 0; y < 30 && s.alive; y++) {
       s = resolveAllFirst(advanceYear(s, GAME_CONTENT));
-      if (s.character.age >= 14 && !s.pendingEvents.length && !s.activeFight) s = resolveAllFirst(performAction(s, 'train', GAME_CONTENT));
+      if (s.character.age >= 14 && !s.pendingEvents.length && !s.activeFight) s = resolveAllFirst(performAction(s, 'study', GAME_CONTENT));
     }
     return s;
   }

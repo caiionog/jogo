@@ -32,6 +32,7 @@ export const CATEGORY_LABEL: Record<LedgerCategory, string> = {
   padrao_vida: 'Padrão de vida',
   filhos: 'Filhos',
   academia: 'Academia',
+  educacao: 'Educação e esporte',
   compras: 'Compras',
   parcelas: 'Parcelas',
   manutencao: 'Manutenção e seguros',

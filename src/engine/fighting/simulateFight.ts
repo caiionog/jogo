@@ -37,7 +37,7 @@ export interface CombatProfile {
 }
 
 export function combat(f: FighterSnapshot): CombatProfile {
-  const j = f.skills.jiujitsu;
+  const j = f.skills.grappling;
   const t = f.skills.trocacao;
   const a = f.athletic;
   return {
@@ -388,7 +388,7 @@ function strike(ctx: Ctx, a: 0 | 1, b: 0 | 1, where: 'standing' | 'clinch' | 'gr
     if (ctx.rng.chance(kdP)) {
       ctx.stats[a].knockdowns += 1;
       const koP = clamp((live.damage - 30) / 90 + (100 - B.chin) / 250, 0.05, 0.85);
-      if (ctx.rng.chance(koP)) return finish(ctx, a, 'KO', a, 'ko', { golpe });
+      if (ctx.rng.chance(Math.min(0.9, koP * (ctx.s.fighters[a].koMult ?? 1)))) return finish(ctx, a, 'KO', a, 'ko', { golpe });
       say(ctx, 'knockdown', a, { golpe });
       if (ctx.rng.chance(0.5)) {
         ctx.s.position = 'ground';
@@ -412,7 +412,7 @@ function submission(ctx: Ctx, a: 0 | 1, b: 0 | 1, factor: number) {
   ctx.stats[a].subAttempts += 1;
   const tired = 1 + (100 - ctx.s.live[b].stamina) / 200;
   const p = (0.05 + 0.28 * sigmoid((A.ground * eff(ctx, a) - (B.ground * 0.75 + B.standDefense * 0.3) * eff(ctx, b)) / 14)) * tired * factor;
-  if (ctx.rng.chance(p)) return finish(ctx, a, 'SUB', a, 'sub_win', { finalizacao: fin });
+  if (ctx.rng.chance(Math.min(0.9, p * (ctx.s.fighters[a].subMult ?? 1)))) return finish(ctx, a, 'SUB', a, 'sub_win', { finalizacao: fin });
   say(ctx, 'sub_attempt', a, { finalizacao: fin });
 }
 

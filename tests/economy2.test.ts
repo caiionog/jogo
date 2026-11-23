@@ -19,6 +19,8 @@ import {
   signSponsor,
   updatePerson,
   workHard,
+  sessionsLeft,
+  sessionsReserved,
 } from '../src/engine';
 import type { GameState, MarketYear } from '../src/engine';
 import { adult, ledgerOk } from './ecoHelpers';
@@ -36,14 +38,14 @@ describe('empregos', () => {
     expect(jobBlockReason(adult(16), job('lanchonete'))).toBeNull();
     const noSchool = { ...adult(25), education: { ...adult(25).education, graduated: false } };
     expect(jobBlockReason(noSchool, job('auxiliar_adm'))).toBe('education');
-    expect(jobBlockReason(adult(25), job('analista'))).toBe('education'); // superior exige faculdade
-    const college = { ...adult(25), flags: { caminho_18: 'faculdade' } };
+    expect(jobBlockReason(adult(25), job('analista'))).toBe('education'); // superior exige diploma
+    const college = { ...adult(25), college: { ...adult(25).college, diplomas: ['administracao'] } }; // superior = diploma
     expect(jobBlockReason(college, job('analista'))).toBeNull();
     const weak = { ...adult(25), character: { ...adult(25).character, stats: { ...adult(25).character.stats, athletic: 10 } } };
     expect(jobBlockReason(weak, job('seguranca'))).toBe('stats');
     expect(jobBlockReason(adult(30), job('comentarista'))).toBe('reputation');
     expect(jobBlockReason(adult(30), job('instrutor'))).toBe('fight');
-    const black = { ...adult(30), fighter: { ...adult(30).fighter, belt: { rank: 2, years: 0 } } };
+    const black = { ...adult(30), fighter: { ...adult(30).fighter, grades: { jiujitsu: { system: 'bjj_adulto', rank: 2, degree: 0, years: 0 } } } };
     expect(jobBlockReason(black, job('instrutor'))).toBeNull();
   });
 
@@ -55,11 +57,11 @@ describe('empregos', () => {
     }
     expect(hired).not.toBeNull();
     const h = hired!;
-    expect(h.energy.current).toBe(8 - 1 - job('auxiliar_adm').energy);
+    expect(sessionsReserved(h, C)).toBe(job('auxiliar_adm').trainingSessions);
     const next = advanceYear({ ...h, pendingEvents: [] }, { ...C, events: [] });
     if (next.economy.job) {
-      expect(next.energy.reserved).toBe(job('auxiliar_adm').energy);
-      expect(next.energy.current).toBe(next.energy.max - job('auxiliar_adm').energy);
+      expect(sessionsReserved(next, C)).toBe(job('auxiliar_adm').trainingSessions);
+      expect(sessionsLeft(next, C)).toBe(C.limits.trainingSessions - job('auxiliar_adm').trainingSessions);
     }
   });
 
@@ -78,7 +80,7 @@ describe('empregos', () => {
     let fired = 0;
     for (let i = 0; i < 40; i++) if (!jobYear(lazy, createRng(i), C, normal).economy.job) fired++;
     expect(fired).toBeGreaterThan(10);
-    expect(workHard(s).economy.job!.performance).toBeGreaterThan(50);
+    expect(workHard(s, C).economy.job!.performance).toBeGreaterThan(50);
   });
 });
 

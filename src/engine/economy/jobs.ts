@@ -1,3 +1,5 @@
+import { bjjRank } from '../fighting/belts';
+import { bumpUse, repeatMultiplier, scaleGain, usesThisYear } from '../lifeStages/sessions';
 import { cityMultOf } from '../geo';
 /** Empregos: requisitos, contratação, salário por nível, promoção, demissão e energia reservada. */
 import type { GameContent } from '../core/content';
@@ -21,10 +23,10 @@ export const EDUCATION_LABEL: Record<EducationLevel, string> = {
   superior: 'Ensino superior',
 };
 
-/** Escolaridade derivada da Etapa 2. */
+/** Escolaridade: diploma de faculdade (release 0.0.1) → superior; senão, a escola da Etapa 2. */
 export function educationLevel(state: GameState): EducationLevel {
   const edu = state.education;
-  if (state.flags.caminho_18 === 'faculdade' && edu.graduated && state.character.age >= 22) return 'superior';
+  if ((state.college?.diplomas.length ?? 0) > 0) return 'superior';
   if (edu.graduated) return 'medio';
   const finishedFund = edu.history.some((h) => h.passed && h.gradeLabel === '9º ano') || (edu.current?.grade ?? 0) >= 12;
   return finishedFund ? 'fundamental' : 'nenhuma';
@@ -56,9 +58,12 @@ export type JobBlockReason =
   | 'current'
   | 'employed'
   | 'no-opening'
-  | 'no-energy';
+  /** Exige diploma de um curso específico. */
+  | 'degree'
+  /** Exige registro profissional (exame da ordem, CRM). */
+  | 'license';
 
-/** Requisitos de perfil (sem energia, vagas e emprego atual): usados nos cartões ✓/✗ da tela Carreiras. */
+/** Requisitos de perfil (sem vagas e emprego atual): usados nos cartões ✓/✗ da tela Carreiras. */
 export function jobRequirementGaps(state: GameState, def: JobDef): JobBlockReason[] {
   const gaps: JobBlockReason[] = [];
   if (state.character.age < def.minAge) gaps.push('age');
@@ -72,12 +77,14 @@ export function jobRequirementGaps(state: GameState, def: JobDef): JobBlockReaso
     if (!ok) gaps.push('study');
   }
   if (r?.cnh && !state.flags.cnh) gaps.push('cnh');
+  if (r?.degree && !r.degree.some((d) => state.college?.diplomas.includes(d))) gaps.push('degree');
+  if (r?.license && !state.flags[r.license]) gaps.push('license');
   const st = state.character.stats;
   const m = def.minStats ?? {};
   if ((m.intelligence ?? 0) > st.intelligence || (m.athletic ?? 0) > st.athletic || (m.looks ?? 0) > st.looks) gaps.push('stats');
   if ((def.minReputation ?? 0) > state.fighter.reputation) gaps.push('reputation');
   if (def.fightReq) {
-    const okBelt = def.fightReq.minBelt !== undefined && state.fighter.belt.rank >= def.fightReq.minBelt;
+    const okBelt = def.fightReq.minBelt !== undefined && bjjRank(state) >= def.fightReq.minBelt;
     const okWins = def.fightReq.minProWins !== undefined && state.fighter.pro.wins >= def.fightReq.minProWins;
     // alternativa: instrutor com Capacidade atlética alta (minStats.athletic) dispensa faixa/vitórias
     const okAthletic = def.minStats?.athletic === undefined && def.fightReq.minBelt !== undefined && st.athletic >= 70;
@@ -104,9 +111,6 @@ export function jobBlockReason(state: GameState, def: JobDef, content?: GameCont
   if (content && !jobOpenings(state, content).includes(def.id)) return 'no-opening';
   // um emprego por vez: trocar exige pedir demissão do atual
   if (state.economy.job && !opts.replace) return 'employed';
-  // candidatar-se custa 1 de energia, e o emprego toma a energia anual dele já neste ano (devolve a do atual)
-  const freed = opts.replace && state.economy.job && content ? jobEnergy(state, content) : 0;
-  if (state.energy.current + freed < 1 + def.energy) return 'no-energy';
   return null;
 }
 
@@ -129,18 +133,15 @@ export function applyForJob(state: GameState, jobId: string, content: GameConten
   const def = jobDef(content, jobId);
   if (!def || jobBlockReason(state, def, content, opts) !== null) return state;
   const rng = createRng(state.rngState);
-  let s: GameState = { ...state, energy: { ...state.energy, current: state.energy.current - 1 } };
+  let s: GameState = state;
   const o = (s.character.sex === 'M' ? 'o' : 'a');
   if (rng.chance(hireChance(s, def, market))) {
     if (s.economy.job) {
       const old = jobDef(content, s.economy.job.jobId);
-      // devolve a energia reservada do emprego antigo
-      s = { ...s, energy: { ...s.energy, current: s.energy.current + (old?.energy ?? 0) } };
       s = appendLog(s, `Você pediu demissão${old ? ` (${old.title.toLowerCase()})` : ''} para assumir a nova vaga.`);
     }
     s = {
       ...s,
-      energy: { ...s.energy, current: s.energy.current - def.energy, reserved: def.energy },
       economy: { ...s.economy, job: { jobId, level: 1, performance: 50, years: 0 } },
     };
     s = appendLog(s, `Você foi contratad${o} como ${jobTitle(def, 1).toLowerCase()} (R$ ${salaryOf(def, 1, cityMultOf(s, content)).toLocaleString('pt-BR')}/ano${def.formal === false ? ', sem carteira' : ''}).`);
@@ -150,30 +151,31 @@ export function applyForJob(state: GameState, jobId: string, content: GameConten
   return { ...s, rngState: rng.state };
 }
 
-/** Conversar com os colegas: humor, um pouco de desempenho e chance de fazer amizade (1 de energia). */
+/** Conversar com os colegas: humor, um pouco de desempenho e chance de fazer amizade (rende menos a cada repetição no ano). */
 export function talkToColleagues(state: GameState, content: GameContent): GameState {
   const job = state.economy.job;
-  if (!job || state.energy.current < 1 || state.pendingEvents.length || state.activeFight) return state;
+  if (!job || state.pendingEvents.length || state.activeFight) return state;
   const rng = createRng(state.rngState);
+  const mult = repeatMultiplier(state, 'emprego:conversar', content);
   let s: GameState = {
-    ...state,
-    energy: { ...state.energy, current: state.energy.current - 1 },
-    character: { ...state.character, stats: addStats(state.character.stats, { happiness: 2 }) },
-    economy: { ...state.economy, job: { ...job, performance: Math.min(100, job.performance + 3) } },
+    ...bumpUse(state, 'emprego:conversar'),
+    character: { ...state.character, stats: addStats(state.character.stats, { happiness: scaleGain(2, mult) }) },
+    economy: { ...state.economy, job: { ...job, performance: Math.min(100, job.performance + scaleGain(3, mult)) } },
   };
   s = appendLog(s, 'Você trocou uma ideia com os colegas no intervalo.');
-  if (rng.chance(0.35)) s = meetFriend({ ...s, rngState: rng.state }, rng, content, 'work');
+  if (rng.chance(0.35 * mult)) s = meetFriend({ ...s, rngState: rng.state }, rng, content, 'work');
   return { ...s, rngState: rng.state };
 }
 
 /** Carteira de motorista (gancho do motorista de aplicativo): 18+, R$ 3.000, pode reprovar. */
 export const CNH_COST = 3000;
 
-export function cnhBlockReason(state: GameState): 'age' | 'has' | 'no-money' | 'busy' | 'no-energy' | null {
+/** Uma tentativa de CNH por ano. */
+export function cnhBlockReason(state: GameState): 'age' | 'has' | 'no-money' | 'busy' | 'tried' | null {
   if (state.flags.cnh) return 'has';
   if (state.character.age < 18) return 'age';
   if (state.pendingEvents.length || state.activeFight) return 'busy';
-  if (state.energy.current < 1) return 'no-energy';
+  if (usesThisYear(state, 'cnh') > 0) return 'tried';
   if (state.money < CNH_COST) return 'no-money';
   return null;
 }
@@ -182,23 +184,21 @@ export function getDriversLicense(state: GameState): GameState {
   if (cnhBlockReason(state) !== null) return state;
   const rng = createRng(state.rngState);
   let s = post(state, 'compras', -CNH_COST, 'Autoescola e exames da CNH');
-  s = { ...s, energy: { ...s.energy, current: s.energy.current - 1 } };
+  s = bumpUse(s, 'cnh');
   const pass = rng.chance(0.55 + s.character.stats.intelligence / 300);
   s = pass ? appendLog({ ...s, flags: { ...s.flags, cnh: true } }, 'Você passou no exame de direção e tirou a CNH!') : appendLog(s, 'Você reprovou na prova prática do Detran. Dá para tentar de novo.');
   return { ...s, rngState: rng.state };
 }
 
-export const WORK_HARD_COST = 1;
-
-export function workHard(state: GameState): GameState {
+/** Dar o sangue: desempenho +8..15 (rende menos a cada repetição no ano). */
+export function workHard(state: GameState, content: GameContent): GameState {
   const job = state.economy.job;
-  if (!job || state.energy.current < WORK_HARD_COST || state.pendingEvents.length || state.activeFight) return state;
+  if (!job || state.pendingEvents.length || state.activeFight) return state;
   const rng = createRng(state.rngState);
-  const gain = rng.int(8, 15);
+  const gain = scaleGain(rng.int(8, 15), repeatMultiplier(state, 'emprego:dar_o_sangue', content));
   const s: GameState = {
-    ...state,
+    ...bumpUse(state, 'emprego:dar_o_sangue'),
     rngState: rng.state,
-    energy: { ...state.energy, current: state.energy.current - WORK_HARD_COST },
     economy: { ...state.economy, job: { ...job, performance: Math.min(100, job.performance + gain) } },
   };
   return appendLog(s, 'Você trabalhou duro e o chefe percebeu.');
@@ -221,13 +221,13 @@ export function askRaise(state: GameState, content: GameContent): GameState {
 export function quitJob(state: GameState, content: GameContent): GameState {
   const def = jobDef(content, state.economy.job?.jobId);
   if (!def || state.activeFight) return state;
-  const s: GameState = { ...state, energy: { ...state.energy, reserved: 0 }, economy: { ...state.economy, job: null } };
+  const s: GameState = { ...state, economy: { ...state.economy, job: null } };
   return appendLog(s, `Você pediu demissão (${def.title.toLowerCase()}).`);
 }
 
-/** Energia anual reservada pelo emprego atual. */
-export function jobEnergy(state: GameState, content: GameContent): number {
-  return jobDef(content, state.economy.job?.jobId)?.energy ?? 0;
+/** Sessões de treino por ano ocupadas pelo emprego atual. */
+export function jobSessions(state: GameState, content: GameContent): number {
+  return jobDef(content, state.economy.job?.jobId)?.trainingSessions ?? 0;
 }
 
 /** Fechamento do ano: salário, promoção, demissão e desempenho voltando à média. */
@@ -235,6 +235,8 @@ export function jobYear(state: GameState, rng: Rng, content: GameContent, market
   const job = state.economy.job;
   const def = jobDef(content, job?.jobId);
   if (!job || !def) return state;
+  // licença não remunerada (intercâmbio): o emprego fica, o salário não vem
+  if (state.flags.licenca === state.year) return appendLog(state, `Licença do trabalho (${jobTitle(def, job.level).toLowerCase()}): sem salário este ano.`);
   let s = post(state, def.formal === false ? 'trabalho_informal' : 'salario', salaryOf(def, job.level, cityMultOf(state, content)), `${def.formal === false ? 'Trabalho' : 'Salário'}: ${jobTitle(def, job.level)}`);
   if (def.yearlyEffects) s = { ...s, character: { ...s.character, stats: addStats(s.character.stats, def.yearlyEffects) } };
   let next = { ...job, years: job.years + 1 };

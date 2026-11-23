@@ -8,19 +8,18 @@ const club = (id: string) => GAME_CONTENT.clubs.find((c) => c.id === id)!;
 
 describe('ações escolares', () => {
   it('bloqueiam quando não está matriculado (e somem da lista)', () => {
-    const g = { ...withAge(makeGame(), 10), energy: { current: 6, max: 6 } };
+    const g = { ...withAge(makeGame(), 10) };
     for (const id of ['study_exams', 'skip_class', 'make_friends']) {
       expect(actionBlockReason(g, action(id))).toBe('not-enrolled');
       expect(isActionAvailable(g, action(id))).toBe(false);
       expect(performAction(g, id, GAME_CONTENT)).toBe(g);
     }
-    expect(isActionAvailable(g, action('train'))).toBe(true);
+    expect(isActionAvailable(g, action('study'))).toBe(true);
   });
 
-  it('estudar para as provas: gasta energia e melhora nota e inteligência', () => {
+  it('estudar para as provas: melhora nota e inteligência', () => {
     const g = enrolledGame(12, { average: 50 });
     const r = performAction(g, 'study_exams', GAME_CONTENT);
-    expect(r.energy.current).toBe(g.energy.current - action('study_exams').energyCost);
     expect(r.education.current!.average).toBe(55);
     expect(r.character.stats.intelligence).toBeGreaterThan(g.character.stats.intelligence);
   });
@@ -29,7 +28,7 @@ describe('ações escolares', () => {
     const g = enrolledGame(12, { average: 50 });
     expect(performAction(g, 'study', GAME_CONTENT).education.current!.average).toBe(52);
     // fora da escola: só inteligência
-    const out = { ...withAge(makeGame(), 10), energy: { current: 6, max: 6 } };
+    const out = { ...withAge(makeGame(), 10) };
     const r = performAction(out, 'study', GAME_CONTENT);
     expect(r.education.current).toBeNull();
     expect(r.character.stats.intelligence).toBeGreaterThan(out.character.stats.intelligence);
@@ -66,11 +65,10 @@ describe('ações escolares', () => {
 });
 
 describe('clubes', () => {
-  it('entrar no judô gasta energia e dá a flag interesse_luta', () => {
+  it('entrar no judô dá a flag interesse_luta', () => {
     const g = enrolledGame(9);
     const r = joinClub(g, 'judo', GAME_CONTENT);
     expect(r.education.current!.club).toBe('judo');
-    expect(r.energy.current).toBe(g.energy.current - 1);
     expect(r.flags.interesse_luta).toBe(true);
   });
 
@@ -84,13 +82,13 @@ describe('clubes', () => {
     expect(g.log.at(-1)!.entries.at(-1)).toMatch(/saiu do clube de futebol/);
   });
 
-  it('bloqueios: fora da escola, fase mínima, já membro, sem energia', () => {
-    expect(clubBlockReason({ ...withAge(makeGame(), 9), energy: { current: 5, max: 5 } }, club('judo'))).toBe('not-enrolled');
+  it('bloqueios: fora da escola, fase mínima, já membro, acontecimento pendente', () => {
+    expect(clubBlockReason({ ...withAge(makeGame(), 9) }, club('judo'))).toBe('not-enrolled');
     expect(clubBlockReason(enrolledGame(9), club('wrestling'))).toBe('too-young');
     expect(clubBlockReason(enrolledGame(12), club('wrestling'))).toBeNull();
     expect(clubBlockReason(enrolledGame(9, { club: 'judo' }), club('judo'))).toBe('already-member');
-    const tired = { ...enrolledGame(9), energy: { current: 0, max: 5 } };
-    expect(clubBlockReason(tired, club('judo'))).toBe('no-energy');
-    expect(joinClub(tired, 'judo', GAME_CONTENT)).toBe(tired);
+    const busy = { ...enrolledGame(9), pendingEvents: [{ eventId: 'x' }] };
+    expect(clubBlockReason(busy, club('judo'))).toBe('pending-event');
+    expect(joinClub(busy, 'judo', GAME_CONTENT)).toBe(busy);
   });
 });

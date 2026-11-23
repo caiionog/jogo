@@ -16,7 +16,9 @@ export type RelType =
   | 'treinador'
   | 'rival'
   | 'colega_treino'
-  | 'avo';
+  | 'avo'
+  /** Professor(a) ou instrutor(a) de faculdade, academia ou curso (release 0.0.1). Professores da ESCOLA nunca são alvo de romance. */
+  | 'professor';
 
 export type RomanceStage = 'ficando' | 'namorando' | 'noivos' | 'casados';
 export type CivilStatus = 'solteiro' | 'ficando' | 'namorando' | 'noivo' | 'casado' | 'divorciado';
@@ -25,6 +27,8 @@ export type PartnerPreference = 'M' | 'F' | 'any';
 /** Modelo único de pessoa (NPC) — família, amigos, amores, filhos, treinadores, rivais. */
 export interface Person {
   id: string;
+  /** Talentos de nascimento do NPC (release 0.0.1; filhos herdam com chance maior). */
+  talents?: string[];
   name: string;
   sex: Sex;
   age: number;
@@ -98,7 +102,11 @@ export type InteractionKind =
   | 'intimacy'
   | 'intimacy_protected'
   | 'try_baby'
-  | 'adopt';
+  | 'adopt'
+  /** Flertar com amizade, colega, treinador(a) ou professor(a) (romântico; faixas de idade de `isValidPartnerAge`). */
+  | 'flirt'
+  /** Passar a noite juntos (sexual: SÓ com `canHaveSexualContentWith` — os dois 18+ e opção adulta ligada). */
+  | 'night_together';
 
 /** Traço de personalidade (conteúdo). */
 export interface TraitDef {

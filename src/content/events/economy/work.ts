@@ -48,7 +48,7 @@ export const WORK_EVENTS: readonly GameEvent[] = [
     conditions: { minAge: 24, fighting: { reputation: { min: 60 } }, economy: { employed: false } },
     weight: 4,
     once: true,
-    text: 'Convite para comentar lutas ao vivo na TV — um trabalho que toma pouca energia e paga bem.',
+    text: 'Convite para comentar lutas ao vivo na TV — um trabalho que quase não atrapalha os treinos e paga bem.',
     choices: [
       { id: 'yes', label: 'Aceitar o convite', effects: { economy: { jobOffer: 'comentarista' }, fighter: { reputation: 3 } }, resultText: 'Estreia na bancada com audiência recorde.' },
       { id: 'no', label: 'Recusar', effects: {}, resultText: 'Talvez no futuro.' },

@@ -44,9 +44,11 @@ export interface MetaState {
   hallOfFame: HallEntry[];
   stats: { lives: number; deaths: number; generations: number; totalYears: number; totalFights: number; bestScore: number };
   settings: MetaSettings;
+  /** Explicações de primeira vez já vistas ("Entendi"), por id (release 0.0.1). */
+  seenTips: string[];
 }
 
-export const META_VERSION = 1;
+export const META_VERSION = 2;
 export const MAX_HALL = 200;
 
 export function emptyMeta(): MetaState {
@@ -56,5 +58,6 @@ export function emptyMeta(): MetaState {
     hallOfFame: [],
     stats: { lives: 0, deaths: 0, generations: 0, totalYears: 0, totalFights: 0, bestScore: 0 },
     settings: { fightSpeed: 'normal', fontScale: 'normal' },
+    seenTips: [],
   };
 }

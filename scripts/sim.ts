@@ -38,7 +38,6 @@ import {
   getOrg,
   gymsInCity,
   newGame,
-  performAction,
   rankOf,
   resolveEvent,
   trainFighter,
@@ -58,8 +57,11 @@ import {
   healthAction,
   makeWill,
   defaultShares,
+  sessionsLeft,
 } from '../src/engine';
-import type { GameState, MetaState, Rng, SkillKey } from '../src/engine';
+import type { GameState, MetaState, Rng, SkillKey, TrainingKind } from '../src/engine';
+import { bjjRank } from '../src/engine';
+import { trainingSummary } from './lib/trainingProfile';
 import { withdraw as withdrawFn } from '../src/engine';
 
 const N = Number(process.argv[2] ?? 500);
@@ -102,7 +104,9 @@ function playYear(s0: GameState, rng: Rng): GameState {
   let s = treatAll(drain(s0, rng));
   if (!s.fighter.gymId && s.character.age >= 5) {
     const gyms = gymsInCity(s, C).filter((g) => g.minAge <= s.character.age);
-    const best = gyms.sort((a, b) => b.coach - a.coach)[0];
+    // academia que ensine os dois lados (agarre e trocação) primeiro; depois o melhor treinador
+    const both = (g: { modalities: readonly string[] }) => (new Set(g.modalities.map((m) => C.fighting.modalities.find((x) => x.id === m)?.skill)).size === 2 ? 1 : 0);
+    const best = gyms.sort((a, b) => both(b) - both(a) || b.coach - a.coach)[0];
     if (best && (s.character.age < 18 || s.money >= best.fee || s.fighter.reputation >= 15)) s = enterGym(s, best.id, C);
   }
   // casal que quer filhos tenta antes de gastar a energia com camps
@@ -114,7 +118,7 @@ function playYear(s0: GameState, rng: Rng): GameState {
   // lutas primeiro (as melhores ofertas: maior bolsa)
   const offers = s.fighter.offers.slice().sort((a, b) => b.purse + b.winBonus - (a.purse + a.winBonus));
   for (const o of offers) {
-    if (s.energy.current < o.campCost + 1) continue;
+    if (sessionsLeft(s, C) < o.campSessions + 1) continue;
     // jogador razoável: não luta no meio de uma recuperação longa (ou trata antes)
     if (s.health.injuries.some((i) => i.months > 4)) break;
     s = acceptOffer(s, o.id, {}, C);
@@ -137,16 +141,17 @@ function playYear(s0: GameState, rng: Rng): GameState {
     }
     s = drain(s, rng);
   }
-  // treino com o resto da energia: técnica no mais fraco (jiu-jitsu/trocação), jiu-jitsu, físico, sparring
-  const weakest = (): SkillKey => (s.fighter.skills.jiujitsu < s.fighter.skills.trocacao ? 'jiujitsu' : 'trocacao');
-  const plan = ['tecnica', 'fisico', 'jiujitsu', 'tecnica', 'sparring', 'fisico'] as const;
-  for (let i = 0; i < 8 && s.energy.current > 0; i++) {
-    const before = s.energy.current;
-    const p = s.energy.current >= 2 ? plan[(i + s.character.age) % plan.length]! : 'fisico';
-    s = trainFighter(s, p === 'tecnica' ? weakest() : p, C);
-    if (s.energy.current === before) s = trainFighter(s, 'fisico', C);
-    if (s.energy.current === before) s = performAction(s, 'train', C);
-    if (s.energy.current === before) break;
+  // treino com as sessões que sobram: técnica no mais fraco (modalidade da academia), grappling, físico, sparring
+  const gymMods = C.fighting.gyms.find((g) => g.id === s.fighter.gymId)?.modalities ?? [];
+  const modFor = (k: SkillKey): TrainingKind => gymMods.find((m) => C.fighting.modalities.find((x) => x.id === m)?.skill === k) ?? gymMods[0] ?? 'fisico';
+  const weakest = (): TrainingKind => modFor(s.fighter.skills.grappling < s.fighter.skills.trocacao ? 'grappling' : 'trocacao');
+  const plan = ['tecnica', 'fisico', 'grappling', 'tecnica', 'sparring', 'fisico'] as const;
+  for (let i = 0; i < 12 && sessionsLeft(s, C) > 0; i++) {
+    const before = sessionsLeft(s, C);
+    const p = plan[(i + s.character.age) % plan.length]!;
+    s = trainFighter(s, p === 'tecnica' ? weakest() : p === 'grappling' ? modFor('grappling') : p, C);
+    if (sessionsLeft(s, C) === before) s = trainFighter(s, 'fisico', C);
+    if (sessionsLeft(s, C) === before) break;
     s = drain(s, rng);
   }
   return s;
@@ -250,7 +255,7 @@ for (let i = 0; i < N; i++) {
   st.proRecords.push([f.pro.wins, f.pro.losses, f.pro.draws]);
   st.amateurWins.push(f.amateur.wins);
   st.money.push(s.money);
-  if (f.belt.rank === 4) st.black++;
+  if (bjjRank(s) === 4) st.black++;
 }
 
 const avg = (a: number[]) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : NaN);
@@ -274,6 +279,11 @@ console.log(`Duração da carreira pro (anos) .. ${avg(st.careerLen).toFixed(1)}
 console.log(`Vitórias pro por método ......... ${Object.entries(st.methods).map(([k, v]) => `${k} ${((100 * v) / totalW).toFixed(0)}%`).join(' · ')}`);
 console.log(`Dinheiro aos ${MAX_AGE} (mediana) ...... R$ ${median(st.money).toLocaleString('pt-BR')}`);
 console.log(`Morreram antes dos ${MAX_AGE} ......... ${st.died}`);
+{
+  // Melhoria 3 (release 0.0.1): perfil de 10 sessões por ano desde os 10 (7 na modalidade principal + 3 de físico)
+  const ts = trainingSummary(200, 'sim');
+  console.log(`Treino (200 vidas, 10 sessões/ano desde os 10): Sólido aos ${ts.solidMedian} (talento ≥ 1,0) · Elite aos ${ts.eliteMedianTalented} (talento ≥ 1,1; ${(ts.eliteReachedTalented * 100).toFixed(0)}% chegam) · atlética aos 21: ${ts.athletic21Median}`);
+}
 console.log('--- Relacionamentos ---');
 console.log(`Casou até os ${MAX_AGE} .............. ${pct(st.married)} | idade média ${avg(st.marriageAge).toFixed(1)}`);
 console.log(`Divorciou (dos casados) ......... ${((100 * st.divorced) / Math.max(1, st.married)).toFixed(1)}%`);
@@ -386,7 +396,7 @@ function ecoYear(s0: GameState, profile: Profile, rng: Rng): GameState {
       }
     }
     for (const b of s.economy.businesses) {
-      s = dedicate(s, b.id);
+      s = dedicate(s, b.id, C);
       const def = businessDef(C, b.defId)!;
       if (b.cash > expandCost(def, b.level) * 1.5 && s.money > expandCost(def, b.level) && b.lastProfit > 0) s = expandBusiness(s, b.id, C);
     }
@@ -397,8 +407,8 @@ function ecoYear(s0: GameState, profile: Profile, rng: Rng): GameState {
   if (profile === 'luta' || profile === 'misto') s = fighterYear(s, rng);
   else {
     s = familyYear(s, rng);
-    // trabalha duro com a energia que sobra
-    for (let k = 0; k < 3 && s.economy.job; k++) s = workHard(s);
+    // trabalha duro (rende menos a cada repetição no ano)
+    for (let k = 0; k < 3 && s.economy.job; k++) s = workHard(s, C);
   }
   return manageMoney(drain(s, rng), rng);
 }

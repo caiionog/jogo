@@ -1,3 +1,6 @@
+import type { ExchangeState, SportsClubMembership } from '../lifeStages/sportsClub';
+import type { CollegeState } from '../lifeStages/college';
+import type { CharacterTalent } from '../character/talents';
 import type { Appearance } from '../character/appearance/genes';
 import type { Wardrobe } from '../character/appearance/outfits';
 import type { HealthState } from '../health/types';
@@ -23,6 +26,10 @@ export type Stats = Record<StatKey, number>;
 export type Sex = 'M' | 'F';
 
 export interface Character {
+  /** Talentos de nascimento (ocultos até revelados por evento; release 0.0.1). */
+  talents: CharacterTalent[];
+  /** Sorte oculta 0–100 (nunca exibida como número). */
+  luck: number;
   name: string;
   sex: Sex;
   age: number;
@@ -45,13 +52,6 @@ export interface Character {
   appearance: Appearance;
   /** Preenchido na morte (Etapa 6). */
   death?: { age: number; year: number; cause: string };
-}
-
-export interface Energy {
-  current: number;
-  max: number;
-  /** Energia do ano já comprometida com o emprego (Etapa 5). */
-  reserved?: number;
 }
 
 export type FlagValue = boolean | number | string;
@@ -144,7 +144,17 @@ export interface GameState {
   year: number;
   character: Character;
   money: number;
-  energy: Energy;
+  /**
+   * Repetições de cada atividade no ano corrente (release 0.0.1: retorno decrescente no lugar da energia).
+   * Chave = id da atividade; zerado no `advanceYear`.
+   */
+  yearUses: Record<string, number>;
+  /** Faculdade: matrícula atual, diplomas e nota do exame nacional (release 0.0.1). */
+  college: CollegeState;
+  /** Clube esportivo (release 0.0.1). */
+  sportsClub: SportsClubMembership | null;
+  /** Intercâmbio de artes marciais em andamento (release 0.0.1). */
+  exchange: ExchangeState | null;
   flags: Record<string, FlagValue>;
   /** Ids de eventos que já aconteceram (para `once`). */
   firedEvents: string[];
@@ -176,4 +186,4 @@ export interface GameState {
   wardrobe: Wardrobe;
 }
 
-export const STATE_VERSION = 8;
+export const STATE_VERSION = 13;

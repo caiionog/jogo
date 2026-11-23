@@ -72,7 +72,7 @@ export const FIGHT_PRO_EVENTS: readonly GameEvent[] = [
       {
         id: 'take',
         label: 'Aceitar a substância',
-        effects: { fighter: { skills: { jiujitsu: 1, trocacao: 1.4, athletic: 4 } } },
+        effects: { fighter: { skills: { grappling: 1, trocacao: 1.4, athletic: 4 } } },
         resultText: 'Você se sentiu mais forte do que nunca. Ninguém percebeu... por enquanto.',
         risk: { chance: 0.4, effects: { stats: { happiness: -10 }, fighter: { suspendYears: 1, reputation: -20, vacateTitles: true } }, resultText: 'O antidoping pegou! Suspensão de um ano e a reputação no chão.' },
       },

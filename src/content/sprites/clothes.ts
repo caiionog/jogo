@@ -37,7 +37,8 @@ export type ClothingDetail =
   | 'sola'
   | 'tira' // tira do chinelo
   | 'brilho'
-  | 'faixa' // faixa de jiu-jitsu (acessório)
+  | 'faixa' // faixa de jiu-jitsu/judô (acessório; `accent` = listra da faixa infantil)
+  | 'prajied' // prajied do muay thai no braço (acessório; `accent` = ponta)
   | 'aba' // boné
   | 'lentes' // óculos
   | 'vinco';
@@ -101,6 +102,7 @@ export const CLOTHING_RULES: Readonly<Record<string, ClothingRule>> = {
   roupao: { cover: [{ regions: ['t', 'a', 'c'] }, { regions: ['l', 'r'], to: { a: 'kneeL' } }], details: ['aberto', 'lapela', 'brilho', 'saia'] },
   // acessórios (desenhados por cima do cabelo/rosto)
   faixa: { cover: [], details: ['faixa'] },
+  prajied: { cover: [], details: ['prajied'] },
   bone: { cover: [], details: ['aba'] },
   oculos: { cover: [], details: ['lentes'] },
 };

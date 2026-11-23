@@ -14,9 +14,9 @@ export default defineConfig({
       injectRegister: null, // registrado em src/ui/pwa.ts (com tratamento de erro)
       includeAssets: ['icons/icon.svg', 'icons/apple-touch-icon.png'],
       manifest: {
-        name: 'Vida de Lutador',
-        short_name: 'Lutador',
-        description: 'Simulador de vida focado na carreira de lutador: escola, lutas, família, dinheiro e legado.',
+        name: 'Vida Real',
+        short_name: 'Vida Real',
+        description: 'Simulador de vida: escola, faculdade, trabalho, esporte, lutas, família, dinheiro e legado.',
         lang: 'pt-BR',
         dir: 'ltr',
         start_url: '/',

@@ -83,10 +83,10 @@ describe('conteúdo adulto: 1000 vidas simuladas', () => {
               const forbidden = (SEXUAL_INTERACTIONS.includes(kind) && (s.character.age < 18 || person.age < 18)) || (ADULT_INTERACTIONS.includes(kind) && !s.relationships.settings.adultContent);
               if (allowed && forbidden) v.adultActionMinor++;
               const before = s;
-              s = interact({ ...s, energy: { ...s.energy, current: Math.max(s.energy.current, 2) } }, person.id, kind, C);
+              s = interact({ ...s }, person.id, kind, C);
               if (forbidden) {
                 // ação adulta proibida: o estado não pode ter mudado
-                if (s !== before && JSON.stringify({ ...s, energy: before.energy }) !== JSON.stringify(before)) v.adultActionMinor++;
+                if (s !== before && JSON.stringify({ ...s, yearUses: before.yearUses }) !== JSON.stringify(before)) v.adultActionMinor++;
               }
               checkPending(s, v);
               let g2 = 0;
@@ -104,4 +104,82 @@ describe('conteúdo adulto: 1000 vidas simuladas', () => {
     expect(adultSeen).toBeGreaterThan(50);
     expect(teenRomances).toBeGreaterThan(50);
   }, 240_000);
+});
+
+// ---------------------------------------------------------------------------
+// release 0.0.1: interações com amizades, colegas, treinadores e professores + vida noturna
+// ---------------------------------------------------------------------------
+import { FLIRT_TYPES, VENUES_FOR_TEST, addRelation, createPerson, goOut, isValidPartnerAge } from './adultSafetyHelpers';
+
+describe('conteúdo adulto (release 0.0.1): 1000 vidas com flerte, noite juntos e vida noturna', () => {
+  it('nenhuma interação sexual com menor de 18, com professor da escola durante a escola ou com a opção desligada', () => {
+    const v = { sexMinor: 0, sexOff: 0, sexTeacher: 0, flirtRange: 0, flirtTeacher: 0, stripBlocked: 0, adultEvent: 0 };
+    let nightSeen = 0;
+    let flirtSeen = 0;
+    for (let i = 0; i < 1000; i++) {
+      const rng = createRng(9000 + i);
+      const on = i % 3 !== 0;
+      let s = newGame({ seed: `safe2-${i}`, name: 'Teste Seguro', sex: i % 2 ? 'M' : 'F', adultContent: on }, C);
+      // pessoas injetadas: amizade adolescente, colega adolescente, professor da escola (adulto) e amizade adulta
+      const inject = (age: number, type: (typeof FLIRT_TYPES)[number], flags: Record<string, boolean> = {}) => {
+        let p;
+        [s, p] = createPerson(s, rng, C, { age, flags });
+        s = addRelation(s, p.id, type, 60);
+      };
+      for (let y = 0; y < 26 && s.alive; y++) {
+        if (y === 12) {
+          inject(rng.int(14, 17), 'amigo');
+          inject(rng.int(14, 17), 'colega_treino');
+          inject(rng.int(30, 55), 'professor', { professor_escola: true });
+          inject(rng.int(19, 30), 'amigo');
+        }
+        s = advanceYear({ ...s, pendingEvents: [] }, C);
+        s = { ...s, pendingEvents: [] };
+        // vida noturna em todos os locais (o motor bloqueia o que não pode)
+        for (const venue of VENUES_FOR_TEST) {
+          const before = s;
+          s = goOut(s, venue.id, C);
+          const adultAllowed = s.character.age >= 18 && s.relationships.settings.adultContent;
+          if (venue.adult && s !== before && !adultAllowed) v.stripBlocked++;
+          for (const p of s.pendingEvents) if (adultIds.has(p.eventId) && !adultAllowed) v.adultEvent++;
+          while (s.pendingEvents.length) {
+            const ev = C.events.find((e) => e.id === s.pendingEvents[0]!.eventId)!;
+            s = resolveEvent(s, ev.id, rng.pick(ev.choices).id, C);
+          }
+        }
+        // flerte e noite juntos com todo mundo que der
+        for (const { person, rel } of relationsOf(s, [...FLIRT_TYPES])) {
+          const a = s.character.age;
+          const teacherDuringSchool = !!person.flags.professor_escola && !!s.education.current;
+          const allowed = applicableInteractions(s, person, rel);
+          if (allowed.includes('night_together')) {
+            if (a < 18 || person.age < 18) v.sexMinor++;
+            if (!s.relationships.settings.adultContent) v.sexOff++;
+            if (teacherDuringSchool) v.sexTeacher++;
+          }
+          if (allowed.includes('flirt')) {
+            if (!isValidPartnerAge(a, person.age)) v.flirtRange++;
+            if (person.flags.professor_escola) v.flirtTeacher++;
+          }
+          for (const kind of ['flirt', 'night_together'] as InteractionKind[]) {
+            const forbidden = kind === 'night_together' ? a < 18 || person.age < 18 || !s.relationships.settings.adultContent || teacherDuringSchool : !isValidPartnerAge(a, person.age) || !!person.flags.professor_escola;
+            const before = s;
+            s = interact(s, person.id, kind, C);
+            if (s !== before) {
+              if (kind === 'night_together') nightSeen++;
+              else flirtSeen++;
+              if (forbidden) v[kind === 'night_together' ? 'sexMinor' : 'flirtRange']++;
+            }
+            while (s.pendingEvents.length) {
+              const ev = C.events.find((e) => e.id === s.pendingEvents[0]!.eventId)!;
+              s = resolveEvent(s, ev.id, rng.pick(ev.choices).id, C);
+            }
+          }
+        }
+      }
+    }
+    expect(v).toEqual({ sexMinor: 0, sexOff: 0, sexTeacher: 0, flirtRange: 0, flirtTeacher: 0, stripBlocked: 0, adultEvent: 0 });
+    expect(nightSeen).toBeGreaterThan(50);
+    expect(flirtSeen).toBeGreaterThan(50);
+  }, 400_000);
 });

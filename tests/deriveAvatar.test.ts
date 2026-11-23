@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { GAME_CONTENT } from '../src/content';
 import type { GameState } from '../src/engine';
-import { BELT_HEX, avatarHash, deriveAvatar, deriveNpcAvatar, derivePersonAvatar, growthAt, playerOutfit, previewAvatar } from '../src/engine';
+import { avatarHash, deriveAvatar, deriveNpcAvatar, derivePersonAvatar, growthAt, playerOutfit, previewAvatar } from '../src/engine';
 import { makeGame } from './helpers';
 
 const C = GAME_CONTENT;
@@ -54,11 +54,11 @@ describe('deriveAvatar', () => {
 
   it('kimono com a cor real da faixa na luta de grappling; uniforme na escola', () => {
     const s = at(base, 25);
-    const fight = { ...s, fighter: { ...s.fighter, belt: { rank: 2, years: 0 } }, activeFight: { offer: { rules: 'grappling' } } } as unknown as GameState;
+    const fight = { ...s, fighter: { ...s.fighter, grades: { jiujitsu: { system: 'bjj_adulto', rank: 2, degree: 0, years: 0 } } }, activeFight: { offer: { rules: 'grappling' } } } as unknown as GameState;
     const o = playerOutfit(fight, C, 'luta');
     expect(o.inteira?.id).toBe('kimono');
     expect(o.acessorio?.id).toBe('faixa');
-    expect(o.acessorio?.color).toBe(BELT_HEX[2]);
+    expect(o.acessorio?.color).toBe(C.fighting.graduations.find((g) => g.id === 'bjj_adulto')!.levels[2]!.color);
     const kid = makeGame('escola-av');
     const enrolled = { ...kid, character: { ...kid.character, age: 9 }, education: { ...kid.education, current: { stage: 'fund1' } } } as unknown as GameState;
     expect(playerOutfit(enrolled, C).cima?.id).toBe('uniforme');
