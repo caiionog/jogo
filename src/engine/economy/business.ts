@@ -74,7 +74,10 @@ export interface BusinessOffer {
   cash: number;
   /** Faturamento e lucro anuais estimados (ano normal, com gerente). */
   revenue: number;
+  /** Lucro estimado com gerente contratado. */
   profit: number;
+  /** Lucro estimado gerenciando de perto (sem gerente, com energia). */
+  profitOwner: number;
   risk: 'baixo' | 'medio' | 'alto';
   city: string;
   uf: string;
@@ -99,12 +102,13 @@ export function businessOffers(state: GameState, content: GameContent, at?: { uf
     const level = status === 'fiel' && rng.chance(0.4) ? 2 : 1;
     const revenue = expectedRevenue(def, level, reputation);
     const profit = toMoney(revenue - def.cost * level - def.managerCost);
+    const profitOwner = toMoney(revenue * 1.1 - def.cost * level);
     const factor = status === 'reforma' ? 0.7 : status === 'regular' ? 1 : 1.35;
     const price = toMoney((def.startCost * level * factor * mult * (0.9 + rng.next() * 0.25)) / 1000) * 1000;
     const name = def.saleNames?.length ? rng.pick(def.saleNames) : def.name;
     const id = `${state.year}-${place.uf}-${def.id}`;
     if (state.economy.boughtOffers.includes(id)) continue;
-    out.push({ id, defId: def.id, name, price, level, status, reputation, cash: toMoney(def.startCost * 0.05), revenue, profit, risk: def.risk ?? 'medio', city: place.city, uf: place.uf });
+    out.push({ id, defId: def.id, name, price, level, status, reputation, cash: toMoney(def.startCost * OPEN_CASH_SHARE), revenue, profit, profitOwner, risk: def.risk ?? 'medio', city: place.city, uf: place.uf });
   }
   return out;
 }
@@ -211,6 +215,14 @@ export function businessYear(state: GameState, rng: Rng, content: GameContent, m
     const dividend = profit > 0 ? toMoney(profit * DIVIDEND_SHARE) : 0;
     cash -= dividend;
     if (dividend) s = post(s, 'empresa', dividend, `Lucro: ${b.name}`);
+    if (cash < 0 && s.money >= -cash && (b.lastProfit >= 0 || b.years < 2)) {
+      // o dono cobre um ano ruim do próprio bolso (fica no extrato); dois anos seguidos no vermelho (depois dos 2
+      // primeiros anos, de carência) ou sem dinheiro para cobrir, o negócio quebra
+      const cover = -cash;
+      s = post(s, 'empresa', -cover, `Cobriu o prejuízo: ${b.name}`);
+      s = appendLog(s, `Você tirou R$ ${cover.toLocaleString('pt-BR')} do bolso para cobrir o prejuízo de ${b.name}.`);
+      cash = 0;
+    }
     if (cash < 0) {
       s = { ...s, economy: { ...s.economy, businesses: s.economy.businesses.filter((x) => x.id !== b.id) } };
       if (def.combat) {
@@ -219,7 +231,9 @@ export function businessYear(state: GameState, rng: Rng, content: GameContent, m
         s = { ...s, flags };
       }
       s = { ...s, flags: { ...s.flags, empresa_faliu: (Number(s.flags.empresa_faliu) || 0) + 1 } };
-      s = appendLog(s, `${def.combat ? 'Sua academia' : `Sua empresa (${b.name})`} faliu.`);
+      const scrap = toMoney(def.startCost * b.level * 0.25);
+      if (scrap > 0) s = post(s, 'empresa', scrap, `Venda dos equipamentos: ${b.name}`);
+      s = appendLog(s, `${def.combat ? 'Sua academia' : `Sua empresa (${b.name})`} faliu.${scrap > 0 ? ` A venda dos equipamentos rendeu R$ ${scrap.toLocaleString('pt-BR')}.` : ''}`);
       continue;
     }
     const reputation = Math.max(0, Math.min(100, b.reputation + (profit > 0 ? 2 : -3) + (dedicated ? 2 : 0)));

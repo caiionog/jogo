@@ -88,7 +88,7 @@ describe('mercado de bens (Etapa 8)', () => {
     s = buyBusiness(s, biz.id, C);
     expect(s.economy.businesses).toHaveLength(1);
     // novo ano: o extrato começa depois das compras
-    s = { ...s, economy: { ...s.economy, ledger: { ...s.economy.ledger, opening: s.money, entries: [] }, businesses: s.economy.businesses.map((b) => ({ ...b, manager: true, reputation: 90, level: 3 })) } };
+    s = { ...s, economy: { ...s.economy, ledger: { ...s.economy.ledger, opening: s.money, entries: [] }, businesses: s.economy.businesses.map((b) => ({ ...b, manager: true, reputation: 90, level: 3, cash: 300_000 })) } };
     let rent = 0;
     let maint = 0;
     let profit = 0;
@@ -121,5 +121,24 @@ describe('mercado de bens (Etapa 8)', () => {
     s = sellBusiness(s, id);
     expect(s.economy.businesses).toHaveLength(0);
     expect(s.money).toBeLessThan(s0.money);
+  });
+});
+
+describe('empreendimento comprado: prejuízo sai do bolso do dono', () => {
+  it('o dono cobre o caixa negativo e o negócio continua; sem dinheiro, quebra', () => {
+    let s = adult(30, 2_000_000);
+    const biz = businessOffers(s, C).find((b) => b.status === 'reforma') ?? businessOffers(s, C)[0]!;
+    s = buyBusiness(s, biz.id, C);
+    const losing = { ...s, economy: { ...s.economy, businesses: s.economy.businesses.map((b) => ({ ...b, reputation: 0, cash: 0 })) } };
+    const r = closeEconomicYear(losing, createRng(1), C);
+    expect(r.economy.businesses).toHaveLength(1);
+    expect(r.economy.history.at(-1)!.totals.empresa).toBeLessThan(0);
+    const broke = closeEconomicYear({ ...losing, money: 0, economy: { ...losing.economy, ledger: { ...losing.economy.ledger, opening: 0, entries: [] } } }, createRng(1), C);
+    expect(broke.economy.businesses).toHaveLength(0);
+  });
+
+  it('oferta mostra lucro gerenciando de perto e com gerente', () => {
+    const s = adult(30, 2_000_000);
+    for (const o of businessOffers(s, C)) expect(o.profitOwner).toBeGreaterThan(o.profit);
   });
 });

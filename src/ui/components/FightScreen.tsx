@@ -83,7 +83,7 @@ export default function FightScreen({ af }: { af: ActiveFight }) {
                   l.kind === 'round_start' || l.kind === 'round_end'
                     ? 'pt-1 text-center text-xs font-semibold text-amber-300'
                     : ['ko', 'tko', 'sub_win', 'knockdown', 'doctor', 'decision', 'draw'].includes(l.kind)
-                      ? 'font-bold text-white'
+                      ? 'font-bold text-[var(--ds-text)]'
                       : l.actor === 0
                         ? 'text-emerald-200'
                         : l.actor === 1

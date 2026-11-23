@@ -1,0 +1,13 @@
+
+> jogo-vida-lutador@1.0.0 dev
+> vite
+
+1:12:21 AM [vite] (client) Re-optimizing dependencies because lockfile has changed
+
+  VITE v8.3.8  ready in 337 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+1:17:44 AM [vite] (client) hmr update /src/index.css, /src/ui/App.tsx, /src/ui/screens/Life.tsx, /src/ui/components/Toasts.tsx, /src/ui/screens/NewLife.tsx, /src/ui/screens/Obituary.tsx, /src/ui/components/FightScreen.tsx, /src/ui/avatar/AvatarSheet.tsx, /src/ui/design/modals.tsx, /src/ui/components/SettingsSheet.tsx, /src/ui/components/MenuHost.tsx, /src/ui/components/MetaScreens.tsx, /src/ui/screens/menus/assets.tsx, /src/ui/screens/menus/activities.tsx, /src/ui/screens/menus/occupation.tsx, /src/ui/components/MenuSheet.tsx and 10 more
+1:17:48 AM [vite] (client) hmr update /src/index.css, /src/ui/App.tsx, /src/ui/screens/Life.tsx, /src/ui/components/Toasts.tsx, /src/ui/screens/NewLife.tsx, /src/ui/screens/Obituary.tsx, /src/ui/components/FightScreen.tsx, /src/ui/avatar/AvatarSheet.tsx, /src/ui/design/modals.tsx, /src/ui/components/SettingsSheet.tsx, /src/ui/components/MenuHost.tsx, /src/ui/components/MetaScreens.tsx, /src/ui/screens/menus/assets.tsx, /src/ui/screens/menus/activities.tsx, /src/ui/screens/menus/occupation.tsx, /src/ui/components/MenuSheet.tsx and 10 more
+1:18:21 AM [vite] (client) hmr update /src/index.css

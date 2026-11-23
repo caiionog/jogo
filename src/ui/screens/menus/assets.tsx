@@ -267,7 +267,7 @@ export function MercadoCatScreen({ game, cat }: { game: GameState; cat: AssetKin
           <ListGroup title="Comprar negócio existente">
             {bizOffers.length === 0 && <p className="text-sm text-[var(--ds-text-muted)]">Nenhum negócio à venda aqui este ano.</p>}
             {bizOffers.map((o) => (
-              <ListItem key={o.id} testId="biz-offer" leading={<Icon id="negocio" size={2} />} title={o.name} subtitle={<><b>{money.format(o.price)}</b> · {STATUS[o.status]} · {RISK[o.risk]}<span className="block">Faturamento ~{money.format(o.revenue)}/ano · lucro ~{money.format(o.profit)}/ano (com gerente)</span></>} onClick={() => setPick({ biz: o })} />
+              <ListItem key={o.id} testId="biz-offer" leading={<Icon id="negocio" size={2} />} title={o.name} subtitle={<><b>{money.format(o.price)}</b> · {STATUS[o.status]} · {RISK[o.risk]}<span className="block">Faturamento ~{money.format(o.revenue)}/ano · lucro ~{money.format(o.profitOwner)}/ano gerenciando de perto · ~{money.format(o.profit)} com gerente</span></>} onClick={() => setPick({ biz: o })} />
             ))}
           </ListGroup>
           <ListGroup title="Abrir do zero ou franquia">
@@ -343,7 +343,7 @@ function BuySheet({ game, pick, place, onClose }: { game: GameState; pick: { ass
     return (
       <BottomSheet title={o.name} onClose={onClose} testId="buy-sheet">
         <p className="mb-2 text-sm">{money.format(o.price)} à vista · {STATUS[o.status]} · nível {o.level} · {RISK[o.risk]}</p>
-        <p className="mb-3 text-sm text-[var(--ds-text-muted)]">Faturamento estimado {money.format(o.revenue)}/ano; lucro estimado {money.format(o.profit)}/ano com gerente. Gerenciar de perto melhora o resultado.</p>
+        <p className="mb-3 text-sm text-[var(--ds-text-muted)]">Faturamento estimado {money.format(o.revenue)}/ano; lucro estimado {money.format(o.profitOwner)}/ano se você gerenciar de perto (energia) ou {money.format(o.profit)}/ano com gerente. Se der prejuízo, ele sai do seu bolso; sem dinheiro para cobrir, o negócio quebra.</p>
         {reason && <p className="mb-2 text-sm text-[var(--ds-danger)]">{BUY_REASON[reason]}</p>}
         <DsButton tone="primary" full testId="buy-confirm" disabled={!!reason} onClick={() => (st.buyBusiness(o.id, place), onClose())}>
           Comprar negócio

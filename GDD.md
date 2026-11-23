@@ -873,6 +873,9 @@ em chão", "Trocador", "Completo"): o especialista em chão vence mais no chão 
 - Compra à vista ou financiada (custo total com juros, parcela anual); bloqueios por dinheiro, crédito e idade (antes
   dos 18, só luxo barato com o próprio dinheiro). **Reformar** imóvel (+valor) e **renomear** empresa são novos.
   Comprar e vender no mesmo ano sempre dá prejuízo (testado).
+- O cartão do negócio mostra o lucro estimado gerenciando de perto (energia) e com gerente. Prejuízo sai do bolso
+  do dono (lançado no extrato); depois de 2 anos de carência, **dois anos seguidos no vermelho**, ou faltar dinheiro
+  para cobrir, e o negócio quebra — a venda dos equipamentos devolve 25% do custo de abertura. Em Finanças, "Anos anteriores" abre cada ano por categoria (aluguéis, lucro das empresas, impostos…).
 
 ### Avatar em pixel art
 Corpo inteiro 32×64 gerado por código a partir do `AvatarDescriptor`: 5 fases × 2 sexos × 5 tipos físicos, roupas
@@ -905,7 +908,9 @@ por um RNG próprio. Fixtures em `tests/fixtures/saves-v7.json`.
 | luta | R$ 351 mil (falência 42,7%) | R$ 549 mil (falência 32,0%) |
 | emprego | R$ 512 mil (12,7%) | R$ 519 mil (2,7%) |
 | misto | R$ 534 mil (6,7%) | R$ 608 mil (4,0%) |
-| empreendedor | R$ 766 mil (9,3%) | R$ 998 mil (9,3%) |
+| empreendedor | R$ 766 mil (9,3%) | R$ 1,07 mi (11,3%) |
+
+Empresas abertas pelo perfil empreendedor que quebraram: 30,9% (Etapa 7) → 13,4% (Etapa 8): o dono agora cobre prejuízos e a falência devolve parte do investimento.
 
 Ajustes para chegar lá: ganhos de treino reescalados para 2 habilidades, Circuito Titã mais difícil (NPCs 55–77,
 reputação 50, aproveitamento 65%, bolsa 25+25+40 mil), regionais um pouco mais fáceis (NPCs 40–68 e 36–64). A luta

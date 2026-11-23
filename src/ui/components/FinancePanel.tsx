@@ -58,6 +58,7 @@ function Ledger({ game }: { game: GameState }) {
 
 function History({ game }: { game: GameState }) {
   const [open, setOpen] = useState(false);
+  const [expanded, setExpanded] = useState<number | null>(game.economy.history.at(-1)?.year ?? null);
   const hist = game.economy.history.slice(-(open ? 30 : 5)).reverse();
   if (!hist.length) return null;
   return (
@@ -74,13 +75,27 @@ function History({ game }: { game: GameState }) {
       <ul className="divide-y divide-slate-800" data-testid="history">
         {hist.map((h) => {
           const net = Object.values(h.totals).reduce((t, v) => t + (v ?? 0), 0);
+          const shown = expanded === h.year;
+          const cats = (Object.entries(h.totals) as [LedgerCategory, number | undefined][]).filter(([, v]) => v).sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0));
           return (
-            <li key={h.year} className="flex items-baseline justify-between gap-2 py-1 text-xs">
-              <span className="text-slate-400">
-                {h.year} · {h.age} anos
-              </span>
-              <span className={`tabular-nums ${net >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{signed(net)}</span>
-              <span className="tabular-nums text-slate-300">patrimônio {money.format(h.netWorth)}</span>
+            <li key={h.year} className="py-1 text-xs">
+              <button type="button" aria-expanded={shown} onClick={() => setExpanded(shown ? null : h.year)} className="flex min-h-9 w-full items-baseline justify-between gap-2 text-left" data-testid="history-year">
+                <span className="text-slate-400">
+                  {shown ? '▾' : '▸'} {h.year} · {h.age} anos
+                </span>
+                <span className={`tabular-nums ${net >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{signed(net)}</span>
+                <span className="tabular-nums text-slate-300">patrimônio {money.format(h.netWorth)}</span>
+              </button>
+              {shown && (
+                <ul className="mb-1 ml-4 flex flex-col gap-0.5" data-testid="history-detail">
+                  {cats.map(([c, v]) => (
+                    <li key={c} className="flex justify-between gap-2">
+                      <span className="text-slate-400">{CATEGORY_LABEL[c] ?? c}</span>
+                      <span className={`tabular-nums ${(v ?? 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{signed(v ?? 0)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </li>
           );
         })}
