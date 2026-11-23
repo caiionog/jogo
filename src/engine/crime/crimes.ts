@@ -3,6 +3,7 @@
  * (oculta), dinheiro sujo, consequências socioeducativas para 12–17 e planejamento abstrato dos graves.
  * Nenhum detalhe real: só escolhas, chances e consequências.
  */
+import { factionYear, traffickingYear } from './faction';
 import type { GameContent } from '../core/content';
 import { createRng } from '../core/rng';
 import type { Rng } from '../core/rng';
@@ -149,8 +150,13 @@ function crimeRepHintRaw(r: number): string | null {
 /** Virada do ano do crime (antes do fechamento econômico): procurado cai, investigação, suspeita do dinheiro sujo. */
 export function crimeYear(state: GameState, rng: Rng, content: GameContent): GameState {
   let s = state;
-  const c = s.crime;
+  // facção e tráfico (fase 5)
+  s = factionYear(s, rng, content);
+  if (!s.alive) return s;
+  s = traffickingYear(s, rng, content);
+  if (!s.alive) return s;
   // investigação: quanto mais procurado, maior a chance de a polícia bater na porta
+  const c = s.crime;
   if (!s.prison && c.wanted >= 20 && rng.chance(c.wanted / 250)) s = arrest(s, 'investigacao', rng, content, 'investigacao');
   // dinheiro sujo: gastar muito de uma vez chama atenção
   const spent = -s.economy.ledger.entries.filter((e) => e.amount < 0 && (e.cat === 'compras' || e.cat === 'padrao_vida')).reduce((t, e) => t + e.amount, 0);

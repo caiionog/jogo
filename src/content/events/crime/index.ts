@@ -1,4 +1,5 @@
 import type { GameEvent } from '../../../engine';
+import { FACTION_EVENTS } from './faction';
 
 /**
  * Crime (release 0.0.2, fase 4): etapas abstratas do planejamento dos delitos graves, suspeita do dinheiro sujo e
@@ -6,6 +7,7 @@ import type { GameEvent } from '../../../engine';
  * Menores: só eventos de infrações leves (maxAge 17, sem facção, sem plano).
  */
 export const CRIME_EVENTS: readonly GameEvent[] = [
+  ...FACTION_EVENTS,
   // --- planejamento (aberto pela ação "Planejar"; a engine enfileira a etapa seguinte) ---
   {
     id: 'crime_plano_equipe',

@@ -4,6 +4,7 @@
  * sai do RNG com sorte, atlética, inteligência, reputação no crime e a qualidade (oculta) da equipe.
  * Também ficam aqui as condições e os efeitos `crime` dos eventos.
  */
+import { factionAtWar, factionsHere, joinFaction, leaveFaction } from './faction';
 import type { GameContent } from '../core/content';
 import type { Rng } from '../core/rng';
 import type { GameState } from '../core/state';
@@ -30,6 +31,10 @@ export interface CrimeConditions {
   /** Em facção (true), fora (false) ou numa destas. */
   faction?: boolean | string[];
   trafficking?: boolean;
+  /** A facção tem rival no território atual. */
+  factionWar?: boolean;
+  /** Há facção com território aqui (para convites). */
+  factionHere?: boolean;
   /** Já cometeu algum delito. */
   committed?: boolean;
 }
@@ -46,11 +51,17 @@ export interface CrimeEffects {
   arrest?: string;
   /** Some o dinheiro sujo (fração), ex.: apreensão. */
   seizeDirty?: number;
+  /** Entrar numa facção (convite): 'local' = dona do território. Só 18+. */
+  joinFaction?: string;
+  leaveFaction?: boolean;
+  /** Dívida com a facção (R$; cobrada na virada do ano). */
+  factionDebt?: number;
+  stopTrafficking?: boolean;
 }
 
 const inR = (v: number, r?: { min?: number; max?: number }) => !r || (v >= (r.min ?? -Infinity) && v <= (r.max ?? Infinity));
 
-export function crimeConditionsMet(state: GameState, c: CrimeConditions): boolean {
+export function crimeConditionsMet(state: GameState, c: CrimeConditions, content?: GameContent): boolean {
   const k = state.crime;
   if (!inR(k.wanted, c.wanted) || !inR(k.rep, c.rep) || !inR(k.dirty, c.dirty)) return false;
   if (c.record !== undefined && (k.record.length > 0) !== c.record) return false;
@@ -62,9 +73,11 @@ export function crimeConditionsMet(state: GameState, c: CrimeConditions): boolea
     } else if (!!k.faction !== c.faction) return false;
   }
   if (c.trafficking !== undefined && !!k.trafficking !== c.trafficking) return false;
+  if (c.factionWar !== undefined && (!content || factionAtWar(state, content) !== c.factionWar)) return false;
+  if (c.factionHere !== undefined && (!content || (factionsHere(state, content).length > 0) !== c.factionHere)) return false;
   if (c.committed !== undefined && ((k.committed ?? 0) > 0) !== c.committed) return false;
   // regra de menores: condição de facção/tráfico/delito grave nunca vale abaixo dos 18
-  if ((c.faction || c.trafficking || c.planning) && !crimeAllowed(state, 'faccao')) return false;
+  if ((c.faction || c.trafficking || c.planning || c.factionWar || c.factionHere) && !crimeAllowed(state, 'faccao')) return false;
   return true;
 }
 
@@ -76,6 +89,10 @@ export function applyCrimeEffects(state: GameState, fx: CrimeEffects, rng: Rng, 
   if (fx.rep) s = { ...s, crime: { ...s.crime, rep: clamp100(s.crime.rep + fx.rep) } };
   if (fx.seizeDirty) s = { ...s, crime: { ...s.crime, dirty: Math.round(s.crime.dirty * (1 - fx.seizeDirty)) } };
   if (fx.arrest) s = arrest(s, fx.arrest, rng, content, 'evento');
+  if (fx.joinFaction) s = joinFaction(s, fx.joinFaction, rng, content);
+  if (fx.leaveFaction) s = leaveFaction(s);
+  if (fx.factionDebt && s.crime.faction) s = { ...s, crime: { ...s.crime, faction: { ...s.crime.faction, debt: Math.max(0, s.crime.faction.debt + fx.factionDebt) } } };
+  if (fx.stopTrafficking) s = { ...s, crime: { ...s.crime, trafficking: null } };
   const plan = s.crime.plan;
   if (!plan) return s;
   const ev = content.crime.planEvents;

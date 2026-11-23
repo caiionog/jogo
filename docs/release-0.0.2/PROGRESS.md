@@ -10,7 +10,7 @@ Branch `release/0.0.2`, criada a partir de `release/0.0.1` (tag local `v0.0.1`).
 - [x] **2. Base da carreira policial** (concurso, formação, Tiro, cargos, promoções; save v15; teste de nomes proibidos) — 732 testes
 - [x] **3. Eventos da PM e da Civil**, dilemas e força especial (≥ 25 eventos) — 41 eventos `pol_*`; 748 testes
 - [x] **4. Delitos**, nível de procurado, reputação no crime e dinheiro sujo — 763 testes
-- [ ] **5. Facções e tráfico**
+- [x] **5. Facções e tráfico** — 773 testes
 - [ ] **6. Justiça**, processo, sentença e ficha criminal
 - [ ] **7. Prisão e reintegração** (≥ 20 eventos)
 - [ ] **8. Cruzamentos** entre polícia, crime, luta e relacionamentos
@@ -91,11 +91,27 @@ Branch `release/0.0.2`, criada a partir de `release/0.0.1` (tag local `v0.0.1`).
 - **UI** `menus/crime.tsx` (Atividades → Crime, `act-crime`, `crime-<id>`, `crime-launder`, `crime-hints`);
   store: `commitCrime` (abre o pop-up de resultado), `startPlan`, `launderMoney`.
 
+## Notas da fase 5
+- **Dados** `content/crime/factions/index.ts`: Liga da Serpente, Clã do Corvo, Ordem do Sol Partido, Maré Cinzenta
+  (`FactionDef`: `short`, `colors`, `symbol`, `territory.ufs/cities`, `size`, `rivals`, `rules`) e `FACTION_RANKS`.
+  `CRIME.factionEvents` = `crime_faccao_missao` / `crime_faccao_saida`.
+- **Engine** `engine/crime/faction.ts`: `factionsHere`, `factionAtWar`, `joinFaction` (18+; família −12, amigos
+  −8 ou 12% entram junto com flag `faccao`), `tryLeaveFaction` (abre o evento de saída), `leaveFaction`,
+  `factionYear` (renda por posto, guerra com rival no território, dívida cobrada ou morte, promoção, missão
+  agendada), `TRAFFICKING` (pequeno/médio/grande), `startTrafficking`/`stopTrafficking`/`traffickingYear`
+  (lucro −30% se em facção, apreensão, ferimento, prisão, morte). Rodam dentro de `crimeYear`; o `advanceYear` para
+  se o personagem morrer ali.
+- Condição `crime`: `factionWar`, `factionHere` (guardadas por 18+). Efeito `crime`: `joinFaction`, `leaveFaction`,
+  `factionDebt`, `stopTrafficking`. O validador barra evento de facção/tráfico/plano com `minAge < 18`.
+- Eventos `content/events/crime/faction.ts` (9). UI: seções Facção (`crime-faction`, `crime-leave-faction`) e
+  Tráfico (`crime-trafico-<nivel>`, `crime-trafico-stop`) na tela de Crime; store `tryLeaveFaction`, `setTrafficking`.
+- `tests/adultSafety.test.ts` agora também tenta todos os delitos, o plano e o tráfico com 12–17 anos (`crimeMinor`).
+
 ## Próximo passo exato (para a sessão nova)
-1. `npm install`. Confira `npm run lint`, `npm test` (763 testes) e `npx tsc --noEmit`.
-2. **Fase 5 — Facções e tráfico**, conforme `PLAN.md`: `FactionDef` em `src/content/crime/factions/` (Liga da
-   Serpente, Clã do Corvo, Ordem do Sol Partido, Maré Cinzenta; rivalidades Liga×Ordem, Clã×Maré, Liga×Maré),
-   `crime.faction` (`id`, `rank` 0–4 membro→cúpula, `years`, `debt`), entrada só por evento de convite (18+,
-   `crimeAllowed(state, 'faccao')`, rep ou amigo com flag `faccao:<id>`), missões anuais, guerras, dívida, traição,
-   saída arriscada; tráfico (`crime.trafficking` pequeno/médio/grande, lucro e risco no ano). Estender
-   `tests/adultSafety.test.ts` (1000 vidas: nenhum menor comete grave, entra em facção ou trafica).
+1. `npm install`. Confira `npm run lint`, `npm test` (773 testes) e `npx tsc --noEmit`.
+2. **Fase 6 — Justiça e ficha criminal**, conforme `PLAN.md`: trocar a passagem simples de `engine/crime/arrest.ts`
+   (adulto) por processo (`crime.case`: fiança, advogado NPC/defensor, responder em liberdade, sentença por faixas
+   em `content/crime/sentences.ts`, agravantes/atenuantes, regime), ficha bloqueando `JobDef.requires.cleanRecord` e
+   reduzindo `hireChance`.
+3. Depois da 0.0.2: o usuário pediu a **release 0.0.3** (texto completo no fim do pedido da sessão anterior; começa
+   pela fase 0 = plano com aprovação).

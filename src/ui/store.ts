@@ -52,6 +52,9 @@ import {
   commitCrime,
   startPlan,
   launderMoney,
+  tryLeaveFaction,
+  startTrafficking,
+  stopTrafficking,
   askRaise,
   quitJob,
   fireAgent,
@@ -90,7 +93,7 @@ import {
   startExchange,
   goOut,
 } from '../engine';
-import type { CollegeType, PoliceTrackId, SportId } from '../engine';
+import type { CollegeType, PoliceTrackId, SportId, TraffickingLevel } from '../engine';
 import type {
   AchievementDef,
   StatKey,
@@ -242,6 +245,8 @@ interface GameStore {
   commitCrime(id: string): void;
   startPlan(id: string): void;
   launderMoney(): void;
+  tryLeaveFaction(): void;
+  setTrafficking(level: TraffickingLevel | null): void;
   askRaise(): void;
   quitJob(): void;
   /** Faculdade (release 0.0.1). */
@@ -493,6 +498,8 @@ export const useGameStore = create<GameStore>((setState, getState) => {
     },
     startPlan: (id) => update((g) => startPlan(g, id, GAME_CONTENT)),
     launderMoney: () => act((g) => launderMoney(g, GAME_CONTENT)),
+    tryLeaveFaction: () => update((g) => tryLeaveFaction(g, GAME_CONTENT)),
+    setTrafficking: (level) => act((g) => (level ? startTrafficking(g, level) : stopTrafficking(g))),
     policeAction: (kind) => {
       const fn = { afinco: policeWorkHard, curso: policeCourse, estande: shootingRange, transferencia: requestTransfer, exoneracao: resignPolice }[kind];
       act((g) => fn(g, GAME_CONTENT));

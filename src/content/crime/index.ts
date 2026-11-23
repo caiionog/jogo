@@ -4,6 +4,7 @@
  * socioeducativas simplificadas); médios e graves só a partir dos 18. Os graves são planejados em etapas abstratas.
  */
 import type { CrimeContent, CrimeDef } from '../../engine';
+import { FACTION_RANKS, FACTIONS } from './factions';
 
 export const CRIMES: readonly CrimeDef[] = [
   // --- leves (12+) ---
@@ -29,4 +30,7 @@ export const CRIME: CrimeContent = {
   planEvents: ['crime_plano_equipe', 'crime_plano_alvo', 'crime_plano_momento', 'crime_plano_hora'],
   suspicionEventId: 'crime_suspeita',
   places: { juvenile: 'Centro Socioeducativo Rumo Novo', reentry: 'Programa Portas Abertas' },
+  factions: FACTIONS,
+  factionRanks: FACTION_RANKS,
+  factionEvents: { mission: 'crime_faccao_missao', leave: 'crime_faccao_saida' },
 };

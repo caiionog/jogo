@@ -210,7 +210,7 @@ export function conditionsMet(state: GameState, event: GameEvent, content?: Game
   if (c.health && !healthConditionsMet(state, c.health)) return false;
   if (c.legacy && !legacyConditionsMet(state, c.legacy)) return false;
   if (c.police && !policeConditionsMet(state, c.police)) return false;
-  if (c.crime && !crimeConditionsMet(state, c.crime)) return false;
+  if (c.crime && !crimeConditionsMet(state, c.crime, content)) return false;
   return true;
 }
 

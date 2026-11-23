@@ -370,6 +370,7 @@ export function advanceYear(
     next = injuriesYear(next, rng, content);
     // crime: investigação pelo procurado, suspeita do dinheiro sujo, procurado cai (release 0.0.2)
     next = crimeYear(next, rng, content);
+    if (!next.alive) return next;
     // fecha o ano econômico (salário, custos, impostos, dívida) e abre o extrato do novo ano
     next = closeEconomicYear(next, rng, content);
     // carreira policial: formação, estágio, promoção, aposentadoria (release 0.0.2)

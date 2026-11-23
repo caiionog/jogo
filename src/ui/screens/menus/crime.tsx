@@ -5,7 +5,8 @@
  */
 import { GAME_CONTENT as C } from '../../../content';
 import type { CrimeBlockReason, CrimeTier, GameState } from '../../../engine';
-import { crimeBlockReason, crimeRepHint, crimeRiskLabel, launderBlockReason, wantedHint } from '../../../engine';
+import { TRAFFICKING, crimeBlockReason, crimeRepHint, crimeRiskLabel, factionDef, factionRankTitle, launderBlockReason, traffickingBlockReason, wantedHint } from '../../../engine';
+import type { TraffickingLevel } from '../../../engine';
 import { ListGroup, ListItem } from '../../design/components';
 import { useGameStore } from '../../store';
 
@@ -62,6 +63,35 @@ export function CrimeScreen({ game }: { game: GameState }) {
             })}
         </ListGroup>
       ))}
+      {adult && game.crime.faction && (() => {
+        const f = factionDef(C, game.crime.faction.id)!;
+        return (
+          <ListGroup title="Facção">
+            <div className="rounded-[var(--ds-radius)] bg-[var(--ds-surface)] p-3 text-sm" data-testid="crime-faction">
+              <p className="flex items-center gap-2 font-semibold">
+                <span className="inline-block h-3 w-3 rounded-full" style={{ background: f.colors[0], outline: `2px solid ${f.colors[1]}` }} aria-hidden />
+                {f.name} · {factionRankTitle(game, C)}
+              </p>
+              <p className="text-xs text-[var(--ds-text-muted)]">Símbolo: {f.symbol}. Regras: {f.rules.join(' ')}</p>
+              {game.crime.faction.debt > 0 && <p className="text-[var(--ds-danger)]">Você está devendo à facção.</p>}
+            </div>
+            <ListItem emoji="🚪" title="Tentar sair da facção" subtitle="Ninguém sai fácil" tone="danger" disabled={game.pendingEvents.length > 0} reason="Resolva o acontecimento pendente" onClick={st.tryLeaveFaction} chevron={false} testId="crime-leave-faction" />
+          </ListGroup>
+        );
+      })()}
+      {adult && (
+        <ListGroup title="Tráfico de drogas">
+          {(['pequeno', 'medio', 'grande'] as TraffickingLevel[]).map((lv) => {
+            const r = traffickingBlockReason(game, lv);
+            const label = { pequeno: 'Pequeno envolvimento', medio: 'Envolvimento médio', grande: 'Esquema grande' }[lv];
+            return (
+              <ListItem key={lv} emoji="💊" title={label} subtitle={`Lucro anual alto · risco ${lv === 'pequeno' ? 'alto' : 'muito alto'} de apreensão, prisão e morte`} disabled={!!r} reason={r === 'already' ? 'É o seu nível atual' : r === 'rep' ? 'Ninguém te leva a sério para isso ainda' : 'Indisponível agora'} onClick={() => st.setTrafficking(lv)} chevron={false} testId={`crime-trafico-${lv}`} />
+            );
+          })}
+          {game.crime.trafficking && <ListItem emoji="✋" title="Largar o tráfico" onClick={() => st.setTrafficking(null)} chevron={false} testId="crime-trafico-stop" />}
+          <p className="text-xs text-[var(--ds-text-muted)]">Referência: um ano no nível pequeno rende em torno de R$ {TRAFFICKING.pequeno.profit.toLocaleString('pt-BR')} — quando não dá errado.</p>
+        </ListGroup>
+      )}
       {adult && game.crime.dirty >= 1000 && (
         <ListGroup title="Dinheiro">
           <p className="text-sm">Você tem dinheiro que chama atenção. Gastar muito de uma vez pode levantar suspeitas.</p>

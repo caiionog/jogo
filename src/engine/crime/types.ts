@@ -30,7 +30,7 @@ export interface CrimeState {
   /** Facção (fase 5). */
   faction: { id: string; rank: number; years: number; debt: number } | null;
   /** Tráfico (fase 5). */
-  trafficking: { level: 'pequeno' | 'medio' | 'grande'; years: number } | null;
+  trafficking: { level: TraffickingLevel; years: number } | null;
   /** Delito grave sendo planejado (opcional na v15). */
   plan?: CrimePlan | null;
   /** Delitos cometidos na vida (contador). */
@@ -72,6 +72,22 @@ export interface CrimeDef {
   text: { ok: string; fail: string };
 }
 
+export interface FactionDef {
+  id: string;
+  name: string;
+  /** Como é chamada no texto ("a Liga"). */
+  short: string;
+  colors: [string, string];
+  /** Descrição do símbolo inventado (o ícone é da fase 9). */
+  symbol: string;
+  territory: { ufs: readonly string[]; cities?: readonly string[] };
+  size: 'pequena' | 'media' | 'grande';
+  rivals: readonly string[];
+  rules: readonly string[];
+}
+
+export type TraffickingLevel = 'pequeno' | 'medio' | 'grande';
+
 export interface CrimeContent {
   crimes: readonly CrimeDef[];
   /** Eventos das etapas do planejamento: equipe, alvo, momento, hora H. */
@@ -80,6 +96,11 @@ export interface CrimeContent {
   suspicionEventId: string;
   /** Instituições fictícias. */
   places: { juvenile: string; reentry: string };
+  factions: readonly FactionDef[];
+  /** Hierarquia: membro → soldado → gerente → liderança regional → cúpula. */
+  factionRanks: readonly string[];
+  /** Evento anual de missão da facção e de tentativa de saída. */
+  factionEvents: { mission: string; leave: string };
 }
 
 export function emptyCrime(): CrimeState {

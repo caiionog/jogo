@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { GAME_CONTENT } from '../src/content';
 import {
   ADULT_INTERACTIONS,
+  commitCrime,
+  startPlan,
+  startTrafficking,
   SEXUAL_INTERACTIONS,
   advanceYear,
   applicableInteractions,
@@ -25,6 +28,7 @@ interface Violations {
   adultPartnerMinor: number;
   teenPartnerRange: number;
   adultActionMinor: number;
+  crimeMinor: number;
 }
 
 /** Verifica todo evento pendente: nenhum 'adult' com menor de 18 ou com a opção desligada. */
@@ -40,6 +44,18 @@ function checkPending(s: GameState, v: Violations) {
   }
 }
 
+const SERIOUS = new Set(C.crime.crimes.filter((c) => c.tier !== 'leve').map((c) => `crime:${c.id}`));
+const ADULT_CRIME_EVENTS = new Set(C.events.filter((e) => /joinFaction|planTeam|planGo|stopTrafficking|factionDebt|"faction":true|"trafficking":true|"planning":true/.test(JSON.stringify(e))).map((e) => e.id));
+
+/** Menores: nenhum delito médio/grave, facção, tráfico, plano ou evento de crime adulto. */
+function checkCrime(s: GameState, v: Violations) {
+  if (s.character.age >= 18 || !s.alive) return;
+  if (s.crime.faction || s.crime.trafficking || s.crime.plan) v.crimeMinor++;
+  if (Object.keys(s.yearUses).some((k) => SERIOUS.has(k))) v.crimeMinor++;
+  if (s.crime.record.length) v.crimeMinor++;
+  if (s.pendingEvents.some((p) => ADULT_CRIME_EVENTS.has(p.eventId))) v.crimeMinor++;
+}
+
 function checkPartner(s: GameState, v: Violations) {
   const p = currentPartner(s);
   if (!p) return;
@@ -51,7 +67,7 @@ function checkPartner(s: GameState, v: Violations) {
 
 describe('conteúdo adulto: 1000 vidas simuladas', () => {
   it('nenhum evento adult com menor de 18 (personagem ou parceiro) nem com a opção desligada; namoros adolescentes na faixa', () => {
-    const v: Violations = { adultMinor: 0, adultOff: 0, adultPartnerMinor: 0, teenPartnerRange: 0, adultActionMinor: 0 };
+    const v: Violations = { adultMinor: 0, adultOff: 0, adultPartnerMinor: 0, teenPartnerRange: 0, adultActionMinor: 0, crimeMinor: 0 };
     let adultSeen = 0;
     let teenRomances = 0;
     for (let i = 0; i < 1000; i++) {
@@ -64,6 +80,7 @@ describe('conteúdo adulto: 1000 vidas simuladas', () => {
         s = advanceYear(s, C);
         checkPending(s, v);
         checkPartner(s, v);
+        checkCrime(s, v);
         let guard = 0;
         while (s.pendingEvents.length && guard++ < 10) {
           const p = s.pendingEvents[0]!;
@@ -71,6 +88,19 @@ describe('conteúdo adulto: 1000 vidas simuladas', () => {
           const ev = C.events.find((e) => e.id === p.eventId)!;
           s = resolveEvent(s, ev.id, rng.pick(ev.choices).id, C);
           checkPending(s, v);
+          checkCrime(s, v);
+        }
+        // crime (release 0.0.2): tenta todos os delitos, o tráfico e o plano de qualquer jeito (o motor deve bloquear)
+        if (!s.pendingEvents.length && s.alive && s.character.age >= 12 && s.character.age < 18 && y % 3 === 0) {
+          for (const c of C.crime.crimes) s = c.plan ? startPlan(s, c.id, C) : commitCrime(s, c.id, C);
+          s = startTrafficking(s, 'pequeno');
+          checkCrime(s, v);
+          let g3 = 0;
+          while (s.pendingEvents.length && g3++ < 8) {
+            const ev = C.events.find((e) => e.id === s.pendingEvents[0]!.eventId)!;
+            s = resolveEvent(s, ev.id, rng.pick(ev.choices).id, C);
+            checkCrime(s, v);
+          }
         }
         // tenta romance e ações íntimas de qualquer jeito (o motor deve bloquear)
         if (!s.pendingEvents.length) {
@@ -99,7 +129,7 @@ describe('conteúdo adulto: 1000 vidas simuladas', () => {
         }
       }
     }
-    expect(v).toEqual({ adultMinor: 0, adultOff: 0, adultPartnerMinor: 0, teenPartnerRange: 0, adultActionMinor: 0 });
+    expect(v).toEqual({ adultMinor: 0, adultOff: 0, adultPartnerMinor: 0, teenPartnerRange: 0, adultActionMinor: 0, crimeMinor: 0 });
     // a simulação de fato exercitou os dois lados
     expect(adultSeen).toBeGreaterThan(50);
     expect(teenRomances).toBeGreaterThan(50);

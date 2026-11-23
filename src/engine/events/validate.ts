@@ -23,7 +23,7 @@ export function validateContent(content: GameContent): string[] {
   const gradIds = new Set(fc.graduations.map((g) => g.id));
   const traitIds = new Set(content.relationships.traits.map((t) => t.id));
   for (const id of content.police.specialEvents) if (!allEventIds.has(id)) errors.push(`polícia: evento do curso especial inexistente "${id}"`);
-  for (const id of [...content.crime.planEvents, content.crime.suspicionEventId]) if (!allEventIds.has(id)) errors.push(`crime: evento inexistente "${id}"`);
+  for (const id of [...content.crime.planEvents, content.crime.suspicionEventId, content.crime.factionEvents.mission, content.crime.factionEvents.leave]) if (!allEventIds.has(id)) errors.push(`crime: evento inexistente "${id}"`);
   const crimeIds = new Set(content.crime.crimes.map((c) => c.id));
 
   const checkEffects = (where: string, fx: Effects | undefined) => {
@@ -46,7 +46,8 @@ export function validateContent(content: GameContent): string[] {
     const pe = fx.police;
     if (pe?.caseStart && !content.police.cases.some((c) => c.id === pe.caseStart)) errors.push(`${where}: caso policial inexistente "${pe.caseStart}"`);
     if (pe?.shootout && !['avancar', 'abrigar', 'negociar', 'recuar'].includes(pe.shootout)) errors.push(`${where}: tática inexistente "${pe.shootout}"`);
-    if (fx.crime?.arrest && fx.crime.arrest !== 'investigacao' && !crimeIds.has(fx.crime.arrest)) errors.push(`${where}: delito inexistente "${fx.crime.arrest}"`);
+    if (fx.crime?.joinFaction && fx.crime.joinFaction !== 'local' && !content.crime.factions.some((f) => f.id === fx.crime!.joinFaction)) errors.push(`${where}: facção inexistente "${fx.crime.joinFaction}"`);
+    if (fx.crime?.arrest && !['investigacao', 'trafico'].includes(fx.crime.arrest) && !crimeIds.has(fx.crime.arrest)) errors.push(`${where}: delito inexistente "${fx.crime.arrest}"`);
     const he = fx.health;
     if (he?.injury && he.injury !== 'random' && !content.health.injuries.some((d) => d.id === he.injury)) errors.push(`${where}: lesão inexistente "${he.injury}"`);
     if (he?.condition && !content.health.conditions.some((d) => d.id === he.condition)) errors.push(`${where}: doença inexistente "${he.condition}"`);
@@ -65,6 +66,11 @@ export function validateContent(content: GameContent): string[] {
     if (!e.id) errors.push('evento sem id');
     if (eventIds.has(e.id)) errors.push(`id de evento duplicado: ${e.id}`);
     eventIds.add(e.id);
+    // regra de menores (release 0.0.2): facção, tráfico e plano de delito grave só com minAge >= 18
+    const json = JSON.stringify(e);
+    const adultCrime = /"(joinFaction|planTeam|planGo|stopTrafficking|factionDebt)"/.test(json) || !!(e.conditions.crime?.faction || e.conditions.crime?.trafficking || e.conditions.crime?.planning || e.conditions.crime?.factionWar || e.conditions.crime?.factionHere);
+    if (adultCrime && (e.conditions.minAge ?? 0) < 18) errors.push(`${e.id}: facção/tráfico/delito grave exige minAge >= 18`);
+    if (/"arrest":"(?!pichacao|furto_loja|briga_rua|dano_patrimonio)/.test(json) && (e.conditions.minAge ?? 0) < 18 && !/"police"/.test(json)) errors.push(`${e.id}: prisão por delito médio/grave exige minAge >= 18`);
     const trigger = e.trigger ?? 'random';
     if (trigger === 'random' && !(e.weight > 0)) errors.push(`${e.id}: evento aleatório precisa de peso > 0`);
     if (!e.text.trim()) errors.push(`${e.id}: texto vazio`);
