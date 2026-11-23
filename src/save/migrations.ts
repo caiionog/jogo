@@ -60,6 +60,7 @@ export const migrations: Record<number, (save: AnySave) => AnySave> = {
   11: migrateV11toV12,
   12: migrateV12toV13,
   13: migrateV13toV14,
+  14: migrateV14toV15,
 };
 
 export class SaveMigrationError extends Error {}
@@ -596,4 +597,28 @@ export function migrateV13toV14(save: AnySave): AnySave {
   const w = (s0.wardrobe ?? {}) as AnyObj;
   const unlocked = [...new Set([...((w.unlocked as string[]) ?? []), ...swim])];
   return { ...(s0 as AnySave), version: 14, scene: s0.scene ?? null, eventLastAge: s0.eventLastAge ?? {}, wardrobe: { ...w, unlocked } };
+}
+
+// ---------------------------------------------------------------------------
+// v14 → v15 (release 0.0.2: carreira policial, crime, justiça e prisão)
+// ---------------------------------------------------------------------------
+
+/**
+ * Sem carreira policial (Tiro 0), crime vazio e ninguém preso (sem RNG). A flag antiga `preso` (briga na balada que
+ * terminou na delegacia) vira uma passagem leve na ficha criminal, na idade atual (a idade exata não foi guardada).
+ */
+export function migrateV14toV15(save: AnySave): AnySave {
+  const s0 = save as unknown as AnyObj;
+  const ch = (s0.character ?? {}) as AnyObj;
+  const age = typeof ch.age === 'number' ? ch.age : 18;
+  const year = typeof s0.year === 'number' ? s0.year : 0;
+  const flags = (s0.flags ?? {}) as AnyObj;
+  const record = flags.preso && age >= 18 ? [{ age, year, crime: 'briga', kind: 'passagem' }] : [];
+  return {
+    ...(s0 as AnySave),
+    version: 15,
+    police: s0.police ?? { shooting: 0, career: null, exams: [], past: [] },
+    crime: s0.crime ?? { wanted: 0, rep: 0, dirty: 0, record, juvenile: [], faction: null, trafficking: null },
+    prison: s0.prison ?? null,
+  };
 }

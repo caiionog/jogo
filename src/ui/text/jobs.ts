@@ -31,6 +31,8 @@ export function jobReasonText(r: JobBlockReason, def: JobDef): string {
       return def.requires?.license === 'oab' ? 'Exige aprovação no Exame da Ordem' : 'Exige registro profissional (CRM)';
     case 'employed':
       return 'Você já tem um emprego (peça demissão para trocar)';
+    case 'public-exam':
+      return 'Entrada só por concurso público';
     case 'current':
       return 'Seu emprego atual';
     case 'busy':

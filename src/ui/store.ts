@@ -42,6 +42,12 @@ import {
   setHousing,
   applyJob,
   workHard,
+  takePoliceExam,
+  policeWorkHard,
+  policeCourse,
+  shootingRange,
+  requestTransfer,
+  resignPolice,
   askRaise,
   quitJob,
   fireAgent,
@@ -80,7 +86,7 @@ import {
   startExchange,
   goOut,
 } from '../engine';
-import type { CollegeType, SportId } from '../engine';
+import type { CollegeType, PoliceTrackId, SportId } from '../engine';
 import type {
   AchievementDef,
   StatKey,
@@ -224,6 +230,9 @@ interface GameStore {
   setHousing(housing: Housing): void;
   applyJob(jobId: string, replace?: boolean): void;
   workHard(): void;
+  /** Carreira policial (release 0.0.2). */
+  takePoliceExam(track: PoliceTrackId): void;
+  policeAction(kind: 'afinco' | 'curso' | 'estande' | 'transferencia' | 'exoneracao'): void;
   askRaise(): void;
   quitJob(): void;
   /** Faculdade (release 0.0.1). */
@@ -465,6 +474,11 @@ export const useGameStore = create<GameStore>((setState, getState) => {
       if (before && after && after !== before) setState({ outcome: diffOf(before, after) });
     },
     workHard: () => act((g) => economyAction(g, (x) => workHard(x, GAME_CONTENT))),
+    takePoliceExam: (track) => act((g) => takePoliceExam(g, track, GAME_CONTENT)),
+    policeAction: (kind) => {
+      const fn = { afinco: policeWorkHard, curso: policeCourse, estande: shootingRange, transferencia: requestTransfer, exoneracao: resignPolice }[kind];
+      act((g) => fn(g, GAME_CONTENT));
+    },
     askRaise: () => act((g) => economyAction(g, (x) => askRaise(x, GAME_CONTENT))),
     quitJob: () => eco((g) => quitJob(g, GAME_CONTENT)),
     takeExam: () => act((g) => takeExam(g, GAME_CONTENT)),

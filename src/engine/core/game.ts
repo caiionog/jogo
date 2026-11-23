@@ -1,3 +1,6 @@
+import { policeYear } from '../police/career';
+import { emptyPolice } from '../police/types';
+import { emptyCrime } from '../crime/types';
 import { exchangeYear, onExchange, sportsClubYear } from '../lifeStages/sportsClub';
 import { collegeYear, emptyCollege, inCollege } from '../lifeStages/college';
 import type { Appearance } from '../character/appearance/genes';
@@ -117,6 +120,9 @@ export function newGame(options: NewGameOptions, content: GameContent): GameStat
     dynasty: emptyDynasty(character.name.split(' ').slice(-1)[0] ?? character.name, birthYear),
     ending: null,
     wardrobe: { ...defaultWardrobe(content), facialHair: options.appearance?.facialHair ?? 'nenhuma' },
+    police: emptyPolice(),
+    crime: emptyCrime(),
+    prison: null,
   };
   const withFamily = generateFamily(state, rng, content, 0);
   state.relationships = withFamily.relationships;
@@ -363,6 +369,8 @@ export function advanceYear(
     next = injuriesYear(next, rng, content);
     // fecha o ano econômico (salário, custos, impostos, dívida) e abre o extrato do novo ano
     next = closeEconomicYear(next, rng, content);
+    // carreira policial: formação, estágio, promoção, aposentadoria (release 0.0.2)
+    next = policeYear(next, rng, content);
     next = {
       ...next,
       year: next.year + 1,

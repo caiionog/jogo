@@ -1,3 +1,5 @@
+import type { PoliceState } from '../police/types';
+import type { CrimeState, PrisonState } from '../crime/types';
 import type { ExchangeState, SportsClubMembership } from '../lifeStages/sportsClub';
 import type { CollegeState } from '../lifeStages/college';
 import type { CharacterTalent } from '../character/talents';
@@ -188,6 +190,12 @@ export interface GameState {
   ending: LifeEnding | null;
   /** Roupas desbloqueadas, roupa escolhida e barba (Etapa 7). */
   wardrobe: Wardrobe;
+  /** Carreira policial e Tiro (oculto) — release 0.0.2. */
+  police: PoliceState;
+  /** Procurado, reputação no crime, dinheiro sujo, ficha, facção — release 0.0.2. */
+  crime: CrimeState;
+  /** Pena em andamento (null = livre) — release 0.0.2. */
+  prison: PrisonState | null;
 }
 
-export const STATE_VERSION = 14;
+export const STATE_VERSION = 15;

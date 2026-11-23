@@ -12,9 +12,10 @@ import { jobBlockReason, jobDef, jobRequirementGaps, jobTitle, salaryOf } from '
 import type { JobBlockReason } from './jobs';
 import type { JobDef } from './types';
 
-export type CareerCategory = 'aprendiz' | 'meio_periodo' | 'integral';
+export type CareerCategory = 'aprendiz' | 'meio_periodo' | 'integral' | 'seguranca';
 
 export function careerCategoryOf(def: JobDef): CareerCategory {
+  if (def.category === 'seguranca') return 'seguranca';
   return def.category === 'aprendiz' ? 'aprendiz' : def.category === 'meio_periodo' ? 'meio_periodo' : 'integral';
 }
 

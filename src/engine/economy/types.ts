@@ -57,7 +57,7 @@ export type LivingStandard = 'simples' | 'confortavel' | 'luxo';
 export type EconYearKind = 'normal' | 'crise' | 'boom';
 export type EducationLevel = 'nenhuma' | 'fundamental' | 'medio' | 'superior';
 /** aprendiz = jovem aprendiz/estágio (14+/16+); meio_periodo; formal e luta = tempo integral. */
-export type JobCategory = 'aprendiz' | 'meio_periodo' | 'formal' | 'luta';
+export type JobCategory = 'aprendiz' | 'meio_periodo' | 'formal' | 'luta' | 'seguranca';
 export type LoanKind = 'pessoal' | 'imobiliario' | 'veiculo';
 export type Regime = 'parcial' | 'separacao';
 
@@ -215,6 +215,8 @@ export interface JobDef {
   /** Efeitos anuais nos atributos (servente: +Capacidade atlética, −Saúde). */
   yearlyEffects?: Partial<Record<'health' | 'happiness' | 'intelligence' | 'looks' | 'athletic', number>>;
   description?: string;
+  /** Entrada só por concurso público (polícia; release 0.0.2): não aceita candidatura comum, sem demissão por crise. */
+  publicExam?: boolean;
 }
 
 export interface AssetDef {

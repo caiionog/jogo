@@ -1,5 +1,6 @@
 import { JOB_EVENTS } from './events/jobs';
 import { COACH_LINES } from './fightText/coach';
+import { POLICE } from './careers/police';
 import { OVERTRAIN } from './fightText/overtrain';
 import type { GameContent } from '../engine';
 import { ACTIONS } from './actions';
@@ -45,6 +46,7 @@ export const GAME_CONTENT: GameContent = {
   sportsClubs: SPORTS_CLUBS,
   exchangePrograms: EXCHANGE_PROGRAMS,
   venues: VENUES,
+  police: POLICE,
   actions: ACTIONS,
   events: [...CHILDHOOD_EVENTS, ...SCHOOL_EVENTS, ...FIGHTING_EVENTS, ...RELATIONSHIP_EVENTS, ...ECONOMY_EVENTS, ...JOB_EVENTS, ...HEALTH_EVENTS, ...LEGACY_EVENTS, ...TALENT_EVENTS, ...COLLEGE_EVENTS, ...CLUB_EXCHANGE_EVENTS, ...NIGHTLIFE_EVENTS, ...RANDOM_EVENTS],
   geo: GEO_CONTENT,

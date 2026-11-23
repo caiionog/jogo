@@ -15,7 +15,7 @@ import { BemScreen, BensScreen, EmpresaScreen, FinancasScreen, MercadoCatScreen,
 import { AmorScreen, AtividadesScreen, EstudoScreen, LazerScreen, RelacoesScreen, SaudeScreen, TestamentoScreen, TreinoScreen } from './activities';
 import { CarreiraScreen, CarreirasCatScreen, CarreirasScreen, EscolaScreen, MinhaOcupacaoScreen, OcupacaoScreen } from './occupation';
 
-const CAT_TITLE: Record<string, string> = { aprendiz: 'Aprendiz e estágio', meio_periodo: 'Meio período', integral: 'Tempo integral' };
+const CAT_TITLE: Record<string, string> = { aprendiz: 'Aprendiz e estágio', meio_periodo: 'Meio período', integral: 'Tempo integral', seguranca: 'Segurança pública' };
 const MARKET_TITLE: Record<string, string> = { imovel: 'Imóveis', veiculo: 'Veículos', luxo: 'Luxo', negocios: 'Empreendimentos' };
 
 function screenOf(r: ScreenRef, game: GameState): { title: string; body: ReactNode } {

@@ -13,6 +13,7 @@ import { jobReasonText } from '../../text/jobs';
 import SchoolPanel from '../../components/SchoolPanel';
 import { money } from '../../components/ecoUi';
 import { gradesSummary } from '../../text/fight';
+import { PolicePanel } from './police';
 
 /** Quanto o emprego pesa no tempo de treino, em palavras (release 0.0.2: nenhum número de sessões na UI). */
 export function sessionsText(n: number): string {
@@ -33,6 +34,7 @@ const CAT_LABEL: Record<CareerCategory, { title: string; sub: string; minAge: nu
   aprendiz: { title: 'Aprendiz e estágio', sub: 'A partir dos 14 (aprendiz) e 16 (estágio)', minAge: 14 },
   meio_periodo: { title: 'Meio período', sub: 'A partir dos 16 anos', minAge: 16 },
   integral: { title: 'Tempo integral', sub: 'A partir dos 18 anos', minAge: 18 },
+  seguranca: { title: 'Segurança pública', sub: 'Polícia Militar e Polícia Civil · concurso público', minAge: 18 },
 };
 
 const STAGE_LABEL = { sem_academia: 'Sem academia', aluno: 'Aluno(a) de academia', amador: 'Lutador(a) amador(a)', pro_regional: 'Profissional regional', liga_principal: 'Liga principal', aposentado: 'Aposentado(a)' } as const;
@@ -160,6 +162,7 @@ export function CarreiraScreen({ game, jobId }: { game: GameState; jobId: string
   const [confirm, setConfirm] = useState<'swap' | 'quit' | null>(null);
   if (!card) return null;
   const { def } = card;
+  if (def.publicExam) return <PolicePanel game={game} def={def} />;
   const currentDef = jobDef(C, game.economy.job?.jobId);
   const blocked = card.blocked;
   const busyFree = !game.pendingEvents.length && !game.activeFight && game.alive;
