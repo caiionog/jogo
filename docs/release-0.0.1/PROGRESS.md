@@ -88,3 +88,21 @@ Para retomar numa sessão nova: "Continue a release 0.0.1 a partir do docs/relea
 
 Dev server para capturas: `npx vite --port 5173 &`, `npx tsx scripts/e2e/state.ts lutador20 tmp/e2e-state.json`,
 `node scripts/e2e/shot.mjs tmp/e2e-state.json tmp/x 375 667 shortcut-luta`.
+
+## Pedidos do usuário depois da fase 3 (incluir nas próximas fases)
+1. **Cabelos dos avatares** precisam melhorar: forma, volume, textura e silhueta. Entra na **fase 8** (qualidade dos
+   avatares), com antes e depois e pausa para aprovação.
+2. **Homens com aparência de mulher e vice-versa:** o sexo tem de ser legível no avatar. Na fase 8, revisar as
+   diferenças por sexo em todas as fases de idade: proporções (ombro, quadril, cintura), maxilar e rosto, sobrancelha,
+   cílios e boca, distribuição dos cabelos (curtos em F e longos em M continuam possíveis, mas com outros sinais
+   claros) e a barba/sombra de barba em M adulto. Teste automático: um classificador simples por pixels/âncoras não
+   pode confundir M e F na amostra de 48 NPCs × 5 fases.
+3. **O jogo é um simulador de VIDA, não só de lutador.** A luta é uma carreira entre várias (faculdade, empregos,
+   empresas, clubes, vida noturna…). Consequências:
+   - textos de abertura, título/subtítulo, README, GDD §1 e CLAUDE.md devem apresentar o jogo como simulador de vida
+     (a carreira de luta como destaque, não como o único foco);
+   - a tela principal não deve empurrar a luta para quem não luta (o atalho "Carreira de Luta" já só aparece para quem
+     tem academia ou interesse; manter assim e oferecer atalhos equivalentes, p.ex. faculdade/emprego);
+   - balanceamento e eventos (fases 10 e 11) devem cobrir bem vidas sem luta;
+   - **perguntar ao usuário** se o nome do jogo muda (hoje "Vida de Lutador") antes de trocar título, manifest do PWA
+     e ícones.
