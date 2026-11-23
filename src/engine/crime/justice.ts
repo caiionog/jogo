@@ -133,6 +133,12 @@ export function imprison(state: GameState, years: number, content: GameContent, 
   if (regime !== 'aberto' && s.economy.job) s = appendLog({ ...s, economy: { ...s.economy, job: null } }, 'Você perdeu o emprego.');
   const facility = wing === 'especial' && regime === 'fechado' ? content.crime.facilities.especial : content.crime.facilities[regime];
   const prison: PrisonState = { facility, regime, sentence: years, served: 0, remission: 0, behavior: 50, protection: !!s.crime.faction, wing, kind: 'adulto' };
+  // lutador: ser preso cancela o contrato com a organização, o empresário e os patrocínios (fase 8)
+  if (s.fighter.orgId || s.economy.contract || s.economy.sponsors.length || s.fighter.offers.length) {
+    const had = !!s.fighter.orgId || !!s.economy.contract || s.economy.sponsors.length > 0;
+    s = { ...s, fighter: { ...s.fighter, orgId: null, offers: [], reputation: Math.max(0, s.fighter.reputation - 10) }, economy: { ...s.economy, contract: null, sponsors: [] } };
+    if (had) s = appendLog(s, 'A organização rompeu seu contrato e os patrocinadores cancelaram tudo.');
+  }
   // faculdade trancada enquanto preso
   if (regime !== 'aberto' && s.college?.current?.status === 'cursando') s = { ...s, college: { ...s.college, current: { ...s.college.current, status: 'trancado' } } };
   s = { ...s, prison, crime: { ...s.crime, trafficking: null, plan: null }, character: { ...s.character, stats: addStats(s.character.stats, { happiness: -15 }) } };

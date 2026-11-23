@@ -1,6 +1,7 @@
 import type { GameEvent } from '../../../engine';
 import { FACTION_EVENTS } from './faction';
 import { JUSTICE_EVENTS } from './justice';
+import { CROSSING_EVENTS } from './crossings';
 
 /**
  * Crime (release 0.0.2, fase 4): etapas abstratas do planejamento dos delitos graves, suspeita do dinheiro sujo e
@@ -10,6 +11,7 @@ import { JUSTICE_EVENTS } from './justice';
 export const CRIME_EVENTS: readonly GameEvent[] = [
   ...FACTION_EVENTS,
   ...JUSTICE_EVENTS,
+  ...CROSSING_EVENTS,
   // --- planejamento (aberto pela ação "Planejar"; a engine enfileira a etapa seguinte) ---
   {
     id: 'crime_plano_equipe',

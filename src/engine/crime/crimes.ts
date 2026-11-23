@@ -106,6 +106,10 @@ export function runCrime(state: GameState, def: CrimeDef, rng: Rng, content: Gam
     }
     s = patchCrime(s, (c) => ({ ...c, wanted: clamp100(c.wanted + wanted * 0.6), rep: clamp100(c.rep + def.repGain) }));
     s = { ...s, character: { ...s.character, stats: addStats(s.character.stats, { happiness: def.tier === 'grave' ? -1 : 1 }) } };
+    // lutador profissional brigando na rua: a imagem sofre (fase 8)
+    if ((def.id === 'briga_rua' || def.id === 'agressao') && s.fighter.pro.wins + s.fighter.pro.losses > 0) {
+      s = appendLog({ ...s, fighter: { ...s.fighter, reputation: Math.max(0, s.fighter.reputation - 3) } }, 'O vídeo da briga circulou: "lutador profissional briga na rua". Sua imagem no esporte sofreu.');
+    }
     return s;
   }
   // deu errado

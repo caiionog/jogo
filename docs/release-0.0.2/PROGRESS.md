@@ -13,7 +13,7 @@ Branch `release/0.0.2`, criada a partir de `release/0.0.1` (tag local `v0.0.1`).
 - [x] **5. Facções e tráfico** — 773 testes
 - [x] **6. Justiça**, processo, sentença e ficha criminal — 783 testes
 - [x] **7. Prisão e reintegração** (≥ 20 eventos) — 22 eventos `prisao_*`; 790 testes
-- [ ] **8. Cruzamentos** entre polícia, crime, luta e relacionamentos
+- [x] **8. Cruzamentos** entre polícia, crime, luta e relacionamentos — 794 testes
 - [ ] **9. Interface**, fardas, uniformes e ícones
 - [ ] **10. Balanceamento** (`npm run sim`, tabelas no GDD)
 - [ ] **11. Documentação e release** (CHANGELOG, versão 0.0.2, capturas, tag local `v0.0.2`)
@@ -143,12 +143,21 @@ Branch `release/0.0.2`, criada a partir de `release/0.0.1` (tag local `v0.0.1`).
 - **UI** `menus/prison.tsx`: `PrisonBanner` (na tela principal, `prison-banner`) e `PrisaoScreen` (Atividades vira
   Prisão; `prison-<acao>`). Store `prisonAction`.
 
+## Notas da fase 8
+- `imprison`: lutador perde a organização (`fighter.orgId`), ofertas, empresário (`economy.contract`), patrocínios e
+  10 de reputação. `runCrime`: briga de rua/agressão de lutador pro com sucesso tira 3 de reputação.
+- `policeYear`: efetivo com `corregedoria ≥ 4` tem 35%/ano de ser preso por corrupção (passagem + `openCase` com
+  `wasPolice` → ala especial na sentença).
+- Eventos `content/events/crime/crossings.ts` (6): parente/amigo com crime (flag de pessoa `crime`), policial
+  prende alguém próximo, parente de facção no relatório, parente policial (flag `policial`) cobra o criminoso,
+  parente vira policial, redenção na luta para egresso (`recomecou`).
+
 ## Próximo passo exato (para a sessão nova)
-1. `npm install`. Confira `npm run lint`, `npm test` (790 testes) e `npx tsc --noEmit`.
-2. **Fase 8 — Cruzamentos**, conforme `PLAN.md`: policial prende NPC ligado a você (família/ex-amigo com flag
-   `crime`/`faccao`) num dilema; policial com corregedoria alta pode ser preso por corrupção/excesso
-   (`openCase(state, 'corrupcao'|'excesso')` → ala especial já existe em `imprison`); lutador: brigas de rua/prisão
-   mexem na reputação, ser preso cancela contrato e patrocínios (`cancelSponsors`), evento de redenção na luta
-   para egresso; parentes com crime/facção geram eventos para o policial e para o criminoso.
+1. `npm install`. Confira `npm run lint`, `npm test` (794 testes) e `npx tsc --noEmit`.
+2. **Fase 9 — Interface, fardas e ícones**, conforme `PLAN.md`: tela central "Polícia" (evoluir `menus/police.tsx`
+   para a tela no estilo da luta, com avatar fardado e ocorrências marcantes; atalho na tela principal), tela
+   "Ficha" (ficha criminal, processo, regime) a partir da tela de Crime, aba inferior "Prisão" quando preso, fardas
+   PM/Civil/força especial, uniforme de presidiário e algemas (`outfits` + `content/sprites/clothes.ts`,
+   `AvatarContext` `'policia'`/`'prisao'`), ícones 16×16 dos delitos, fardas e facções (teste de unicidade).
 3. Depois da 0.0.2: o usuário pediu a **release 0.0.3** (texto completo no fim do pedido da sessão anterior; começa
    pela fase 0 = plano com aprovação).

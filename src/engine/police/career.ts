@@ -3,6 +3,7 @@
  * tempo + mérito, ações do ano e saída (exoneração, pedido, aposentadoria). O emprego fica em `economy.job` (o
  * fechamento econômico paga o salário do posto); o estado da carreira fica em `police.career`.
  */
+import { openCase } from '../crime/justice';
 import type { GameContent } from '../core/content';
 import { createRng } from '../core/rng';
 import type { Rng } from '../core/rng';
@@ -100,6 +101,13 @@ export function policeYear(state: GameState, rng: Rng, content: GameContent): Ga
     return setCareer(s, next);
   }
 
+  // corregedoria demais: prisão por corrupção (fase 8) — o processo leva à ala especial
+  if (c.corregedoria >= 4 && rng.chance(0.35)) {
+    s = setCareer(s, next);
+    s = appendLog(s, `A corregedoria concluiu a investigação e pediu sua prisão por corrupção. Você foi pres${o} em casa.`);
+    s = { ...s, crime: { ...s.crime, record: [...s.crime.record, { age: s.character.age, year: s.year, crime: 'corrupcao', kind: 'passagem' }] } };
+    return openCase(s, 'corrupcao', content);
+  }
   // efetivo: aposentadoria e promoção
   if (next.serviceYears >= 35 || s.character.age >= 65) {
     s = setCareer(s, next);
