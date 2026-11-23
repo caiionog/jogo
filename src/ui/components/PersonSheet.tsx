@@ -1,12 +1,11 @@
 import AvatarThumb from '../avatar/AvatarThumb';
 import { personAvatar } from '../avatar/descriptors';
-import { INTERACTION_COST, INTERACTION_LABEL, STAGE_LABEL, applicableInteractions, interactionBlockReason, relLabel } from '../../engine';
+import { INTERACTION_LABEL, STAGE_LABEL, applicableInteractions, interactionBlockReason, relLabel } from '../../engine';
 import type { GameState, InteractionKind, Person, Relation, TraitDef } from '../../engine';
 import { useGameStore } from '../store';
 import { Bar } from './fightUi';
 
 const REASON: Record<string, string> = {
-  'no-energy': 'Sem energia',
   'no-money': 'Sem dinheiro',
   busy: 'Resolva o evento',
   asked: 'Já pediu este ano',
@@ -81,7 +80,6 @@ export default function PersonSheet({ game, person, rel, traits, onClose }: { ga
           <div className="mt-4 grid grid-cols-2 gap-2" data-testid="person-actions">
             {actions.map((kind) => {
               const reason = interactionBlockReason(game, person.id, kind);
-              const cost = INTERACTION_COST[kind];
               return (
                 <button
                   key={kind}
@@ -92,7 +90,7 @@ export default function PersonSheet({ game, person, rel, traits, onClose }: { ga
                   }`}
                 >
                   <span className="leading-tight">{INTERACTION_LABEL[kind]}</span>
-                  <span className="text-[10px] text-slate-400">{reason ? REASON[reason] : cost ? `⚡ ${cost}` : 'grátis'}</span>
+                  <span className="text-[10px] text-slate-400">{reason ? REASON[reason] : 'repetir no ano rende menos'}</span>
                 </button>
               );
             })}

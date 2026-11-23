@@ -102,7 +102,6 @@ export function killCharacter(state: GameState, cause: string, content: GameCont
     activeFight: null,
     pendingEvents: [],
     scheduledEvents: [],
-    energy: { current: 0, max: 0, reserved: 0 },
     character: { ...c, death: { age: c.age, year: state.year, cause } },
   };
   const { score, parts } = lifeScore(s);

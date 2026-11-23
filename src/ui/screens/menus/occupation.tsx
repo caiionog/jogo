@@ -14,10 +14,14 @@ import CareerPanel from '../../components/CareerPanel';
 import SchoolPanel from '../../components/SchoolPanel';
 import { money } from '../../components/ecoUi';
 
+/** "Ocupa 4 sessões de treino por ano" (tempo integral) / 2 (meio período) / nenhuma. */
+export function sessionsText(n: number): string {
+  return n > 0 ? `ocupa ${n} sessões de treino/ano` : 'não ocupa sessões de treino';
+}
+
 export const ACTION_REASON: Record<string, string> = {
   'too-young': 'Ainda muito novo(a) para isso',
   'too-old': 'Não combina com a sua idade',
-  'no-energy': 'Energia insuficiente',
   'pending-event': 'Resolva o acontecimento pendente',
   'not-enrolled': 'Só para quem está na escola',
   'wrong-stage': 'Indisponível na sua série',
@@ -125,7 +129,7 @@ export function CarreirasCatScreen({ game, cat }: { game: GameState; cat: Career
             title={c.def.title}
             subtitle={
               <>
-                {money.format(c.salary[0])}–{money.format(c.salary[1])}/ano · ⚡{c.def.energy}/ano{c.def.formal === false ? ' · sem carteira' : ''}
+                {money.format(c.salary[0])}–{money.format(c.salary[1])}/ano · {sessionsText(c.def.trainingSessions)}{c.def.formal === false ? ' · sem carteira' : ''}
                 <span className="block">
                   {c.requirements.map((r) => (
                     <span key={r.key} className={`mr-2 inline-block ${r.ok ? 'text-[var(--ds-accent)]' : 'text-[var(--ds-danger)]'}`}>
@@ -161,7 +165,7 @@ export function CarreiraScreen({ game, jobId }: { game: GameState; jobId: string
       {def.description && <p className="text-sm text-[var(--ds-text-muted)]">{def.description}</p>}
       <div className="rounded-[var(--ds-radius)] bg-[var(--ds-surface)] p-3 text-sm">
         <p>
-          <b>{money.format(card.salary[0])}</b> a <b>{money.format(card.salary[1])}</b> por ano ({def.salaryMW?.[0].toLocaleString('pt-BR')} a {def.salaryMW?.[1].toLocaleString('pt-BR')} salários mínimos) · ⚡{def.energy} de energia por ano
+          <b>{money.format(card.salary[0])}</b> a <b>{money.format(card.salary[1])}</b> por ano ({def.salaryMW?.[0].toLocaleString('pt-BR')} a {def.salaryMW?.[1].toLocaleString('pt-BR')} salários mínimos) · {sessionsText(def.trainingSessions)}
         </p>
         <p className="text-xs text-[var(--ds-text-muted)]">{def.formal === false ? 'Sem carteira: ganha mais na hora, sem INSS nem benefícios.' : 'Carteira assinada: desconta previdência.'}</p>
       </div>
@@ -189,9 +193,9 @@ export function CarreiraScreen({ game, jobId }: { game: GameState; jobId: string
       </ListGroup>
       {card.current ? (
         <ListGroup title="No emprego">
-          <ListItem emoji="💪" title="Trabalhar mais" subtitle="⚡1 · aumenta a chance de promoção" onClick={workHard} disabled={!busyFree || game.energy.current < 1} reason="Energia insuficiente" chevron={false} />
+          <ListItem emoji="💪" title="Trabalhar mais" subtitle="Aumenta a chance de promoção (rende menos se repetir no ano)" onClick={workHard} disabled={!busyFree} reason="Resolva o acontecimento pendente" chevron={false} />
           <ListItem emoji="💰" title="Pedir aumento" subtitle="Uma vez por ano" onClick={askRaise} disabled={!busyFree || game.flags.pediu_aumento === game.year} reason="Você já pediu este ano" chevron={false} />
-          <ListItem emoji="☕" title="Conversar com colegas" subtitle="⚡1 · humor e amizades" onClick={talk} disabled={!busyFree || game.energy.current < 1} reason="Energia insuficiente" chevron={false} />
+          <ListItem emoji="☕" title="Conversar com colegas" subtitle="Humor e amizades (rende menos se repetir no ano)" onClick={talk} disabled={!busyFree} reason="Resolva o acontecimento pendente" chevron={false} />
           <ListItem emoji="🚪" title="Pedir demissão" tone="danger" onClick={() => setConfirm('quit')} chevron={false} />
         </ListGroup>
       ) : (
@@ -204,7 +208,7 @@ export function CarreiraScreen({ game, jobId }: { game: GameState; jobId: string
       )}
       {confirm && (
         <BottomSheet title={confirm === 'quit' ? 'Pedir demissão?' : 'Trocar de emprego?'} onClose={() => setConfirm(null)} testId="confirm-job">
-          <p className="mb-3 text-sm">{confirm === 'quit' ? `Você deixa de ser ${def.title.toLowerCase()} e libera a energia do emprego.` : `Se for contratado(a), você pede demissão de ${currentDef?.title.toLowerCase()}. Só dá para ter um emprego por vez.`}</p>
+          <p className="mb-3 text-sm">{confirm === 'quit' ? `Você deixa de ser ${def.title.toLowerCase()} e libera as sessões de treino que ele ocupava.` : `Se for contratado(a), você pede demissão de ${currentDef?.title.toLowerCase()}. Só dá para ter um emprego por vez.`}</p>
           <div className="grid grid-cols-2 gap-2">
             <DsButton onClick={() => setConfirm(null)}>Cancelar</DsButton>
             <DsButton
@@ -278,7 +282,7 @@ export function CarreiraLutaScreen({ game }: { game: GameState }) {
       <ListItem icon={Dumbbell} title={gym ? `Academia: ${gym.name}` : 'Matricular em academia'} subtitle={gym ? `${money.format(gym.fee)}/ano` : 'Escolha entre as academias da sua cidade'} onClick={() => setGyms(true)} testId="fighter-gyms" />
       <ListItem icon={Trophy} title="Procurar lutas" subtitle={`${game.fighter.offers.length} oferta(s) neste ano`} onClick={() => nav.push('luta')} />
       <ListItem icon={Medal} title="Ranking" onClick={() => nav.push('ranking')} />
-      <p className="text-xs text-[var(--ds-text-muted)]">Dá para lutar e trabalhar ao mesmo tempo — a energia do ano é que manda.</p>
+      <p className="text-xs text-[var(--ds-text-muted)]">Dá para lutar e trabalhar ao mesmo tempo, mas o emprego ocupa parte das 10 sessões de treino do ano.</p>
       {gyms && (
         <BottomSheet title="Academias da cidade" onClose={() => setGyms(false)} testId="gym-sheet">
           <div className="flex flex-col gap-2">
@@ -291,7 +295,7 @@ export function CarreiraLutaScreen({ game }: { game: GameState }) {
                   title={g.name}
                   subtitle={`${money.format(g.fee)}/ano${game.character.age < 18 ? ' (pais pagam)' : ''} · treinador ${g.coach >= 75 ? 'renomado' : g.coach >= 55 ? 'experiente' : 'de bairro'} · ${g.specialty === 'jiujitsu' ? 'jiu-jitsu' : g.specialty === 'trocacao' ? 'trocação' : 'MMA'}`}
                   disabled={!!r}
-                  reason={r === 'current' ? 'Você treina aqui' : r === 'no-money' ? 'Dinheiro insuficiente' : r === 'too-young' ? 'Muito novo(a)' : r === 'no-energy' ? 'Energia insuficiente' : r ? 'Indisponível' : undefined}
+                  reason={r === 'current' ? 'Você treina aqui' : r === 'no-money' ? 'Dinheiro insuficiente' : r === 'too-young' ? 'Muito novo(a)' : r ? 'Indisponível' : undefined}
                   onClick={() => {
                     joinGym(g.id);
                     setGyms(false);
@@ -316,7 +320,7 @@ export function EscolaScreen({ game }: { game: GameState }) {
       <ListGroup title="Ações escolares">
         {school.map((a) => {
           const r = actionBlockReason(game, a);
-          return <ListItem key={a.id} emoji={a.emoji} title={a.label} subtitle={`⚡${a.energyCost} · ${a.description}`} disabled={!!r} reason={r ? ACTION_REASON[r] : undefined} onClick={() => doAction(a.id)} chevron={false} />;
+          return <ListItem key={a.id} emoji={a.emoji} title={a.label} subtitle={a.description} disabled={!!r} reason={r ? ACTION_REASON[r] : undefined} onClick={() => doAction(a.id)} chevron={false} />;
         })}
       </ListGroup>
     </>

@@ -167,11 +167,10 @@ describe('saúde e doenças', () => {
     }
   });
 
-  it('ações de saúde gastam energia e dinheiro (pelo extrato) uma vez por ano', () => {
+  it('ações de saúde gastam dinheiro (pelo extrato) uma vez por ano', () => {
     const base = fighterGame(40);
     const g = { ...base, money: 10000, economy: { ...base.economy, ledger: { year: base.year, opening: 10000, entries: [] } } };
     const r = healthAction(g, C, 'gym');
-    expect(r.energy.current).toBe(g.energy.current - 1);
     expect(r.money).toBeLessThan(g.money);
     expect(ledgerOk(r)).toBe(true);
     expect(healthAction(r, C, 'gym')).toBe(r);
@@ -199,7 +198,7 @@ describe('morte', () => {
 
   it('com a mesma seed (e as mesmas escolhas) a morte ocorre na mesma idade, com obituário', () => {
     const run = () => {
-      let s = { ...fighterGame(60, {}, {}, 'morte-seed'), energy: { current: 0, max: 0 } };
+      let s = { ...fighterGame(60, {}, {}, 'morte-seed') };
       for (let i = 0; i < 70 && s.alive; i++) s = resolveAllFirst(advanceYear(s, C));
       return s;
     };

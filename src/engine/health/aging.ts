@@ -110,29 +110,27 @@ export function brainHint(state: GameState): string | null {
 // ---------------------------------------------------------------------------
 
 export type HealthActionId = 'checkup' | 'gym' | 'diet';
-export const HEALTH_ACTION_ENERGY = 1;
 
 export function healthActionCost(state: GameState, content: GameContent, id: HealthActionId): number {
   return toMoney(content.health.actionCosts[id] * cityMultOf(state, content));
 }
 
-export function healthActionBlock(state: GameState, content: GameContent, id: HealthActionId): 'busy' | 'too-young' | 'done' | 'no-energy' | 'no-money' | null {
+export function healthActionBlock(state: GameState, content: GameContent, id: HealthActionId): 'busy' | 'too-young' | 'done' | 'no-money' | null {
   if (!state.alive || state.pendingEvents.length || state.activeFight) return 'busy';
   if (state.character.age < 14) return 'too-young';
   const h = state.health.habits;
   if ((id === 'checkup' && h.checkupYear === state.year) || (id === 'gym' && h.gymYear === state.year) || (id === 'diet' && h.dietYear === state.year)) return 'done';
-  if (state.energy.current < HEALTH_ACTION_ENERGY) return 'no-energy';
   const cost = state.character.age >= 18 ? healthActionCost(state, content, id) : 0;
   if (state.money < cost) return 'no-money';
   return null;
 }
 
-/** Check-up, academia comum ou dieta (⚡1 e R$; até os 18 a família paga). */
+/** Check-up, academia comum ou dieta (uma vez por ano cada; R$, até os 18 a família paga). */
 export function healthAction(state: GameState, content: GameContent, id: HealthActionId): GameState {
   if (healthActionBlock(state, content, id) !== null) return state;
   const cost = state.character.age >= 18 ? healthActionCost(state, content, id) : 0;
   const label = id === 'checkup' ? 'Check-up' : id === 'gym' ? 'Academia comum' : 'Dieta com nutricionista';
-  let s: GameState = { ...state, energy: { ...state.energy, current: state.energy.current - HEALTH_ACTION_ENERGY } };
+  let s: GameState = state;
   if (cost > 0) s = post(s, 'saude', -cost, label);
   const key = id === 'checkup' ? 'checkupYear' : id === 'gym' ? 'gymYear' : 'dietYear';
   s = { ...s, health: { ...s.health, habits: { ...s.health.habits, [key]: s.year } } };

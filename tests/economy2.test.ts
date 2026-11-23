@@ -19,6 +19,8 @@ import {
   signSponsor,
   updatePerson,
   workHard,
+  sessionsLeft,
+  sessionsReserved,
 } from '../src/engine';
 import type { GameState, MarketYear } from '../src/engine';
 import { adult, ledgerOk } from './ecoHelpers';
@@ -55,11 +57,11 @@ describe('empregos', () => {
     }
     expect(hired).not.toBeNull();
     const h = hired!;
-    expect(h.energy.current).toBe(8 - 1 - job('auxiliar_adm').energy);
+    expect(sessionsReserved(h, C)).toBe(job('auxiliar_adm').trainingSessions);
     const next = advanceYear({ ...h, pendingEvents: [] }, { ...C, events: [] });
     if (next.economy.job) {
-      expect(next.energy.reserved).toBe(job('auxiliar_adm').energy);
-      expect(next.energy.current).toBe(next.energy.max - job('auxiliar_adm').energy);
+      expect(sessionsReserved(next, C)).toBe(job('auxiliar_adm').trainingSessions);
+      expect(sessionsLeft(next, C)).toBe(C.limits.trainingSessions - job('auxiliar_adm').trainingSessions);
     }
   });
 
@@ -78,7 +80,7 @@ describe('empregos', () => {
     let fired = 0;
     for (let i = 0; i < 40; i++) if (!jobYear(lazy, createRng(i), C, normal).economy.job) fired++;
     expect(fired).toBeGreaterThan(10);
-    expect(workHard(s).economy.job!.performance).toBeGreaterThan(50);
+    expect(workHard(s, C).economy.job!.performance).toBeGreaterThan(50);
   });
 });
 

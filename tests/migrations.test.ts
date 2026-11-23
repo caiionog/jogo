@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import fixtures from './fixtures/saves-v1.json';
-import fixturesV2 from './fixtures/saves-v2.json';
+import fixtures from '../src/save/__fixtures__/saves-v1.json';
+import fixturesV2 from '../src/save/__fixtures__/saves-v2.json';
 import { GAME_CONTENT } from '../src/content';
 import { advanceYear, gradeForAge, performAction } from '../src/engine';
 import { CURRENT_VERSION, migrate, SaveMigrationError } from '../src/save/migrations';
@@ -114,7 +114,7 @@ describe('migração v2 → v3 (carreira de luta)', () => {
   });
 });
 
-import fixturesV3 from './fixtures/saves-v3.json';
+import fixturesV3 from '../src/save/__fixtures__/saves-v3.json';
 import { relationsOf } from '../src/engine';
 import type { GameState } from '../src/engine';
 const v3 = fixturesV3 as unknown as Record<string, Raw>;
@@ -155,7 +155,7 @@ describe('migração v3 → v4 (relacionamentos)', () => {
   });
 });
 
-import fixturesV4 from './fixtures/saves-v4.json';
+import fixturesV4 from '../src/save/__fixtures__/saves-v4.json';
 const v4 = fixturesV4 as unknown as Record<string, Raw>;
 
 describe('migração v4 → v5 (economia)', () => {
@@ -195,7 +195,7 @@ describe('migração v4 → v5 (economia)', () => {
   });
 });
 
-import fixturesV5 from './fixtures/saves-v5.json';
+import fixturesV5 from '../src/save/__fixtures__/saves-v5.json';
 const v5 = fixturesV5 as unknown as Record<string, Raw>;
 
 describe('migração v5 → v6 (lesões, aposentadoria, legado)', () => {
@@ -250,7 +250,7 @@ describe('migração v5 → v6 (lesões, aposentadoria, legado)', () => {
   });
 });
 
-import fixturesV6 from './fixtures/saves-v6.json';
+import fixturesV6 from '../src/save/__fixtures__/saves-v6.json';
 import { cityDef, relationsOf as relsOf } from '../src/engine';
 const v6 = fixturesV6 as unknown as Record<string, Raw>;
 

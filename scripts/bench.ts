@@ -5,7 +5,7 @@
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { GAME_CONTENT as C } from '../src/content';
-import { acceptOffer, advanceYear, autoFinishFight, closeFight, createRng, enterGym, gymsInCity, newGame, resolveEvent, trainFighter } from '../src/engine';
+import { acceptOffer, advanceYear, autoFinishFight, closeFight, createRng, enterGym, gymsInCity, newGame, resolveEvent, sessionsLeft, trainFighter } from '../src/engine';
 import type { GameState, Rng } from '../src/engine';
 
 function drain(s: GameState, rng: Rng): GameState {
@@ -29,8 +29,8 @@ function buildSave(age: number): GameState {
         const g = gymsInCity(s, C)[0];
         if (g) s = enterGym(s, g.id, C);
       }
-      for (const o of s.fighter.offers.slice()) if (s.energy.current >= o.campCost + 1) s = drain(closeFight(autoFinishFight(acceptOffer(s, o.id, {}, C), C)), rng);
-      for (let k = 0; k < 4 && s.energy.current > 0; k++) s = trainFighter(s, k % 2 ? 'jiujitsu' : 'trocacao', C);
+      for (const o of s.fighter.offers.slice()) if (sessionsLeft(s, C) >= o.campSessions + 1) s = drain(closeFight(autoFinishFight(acceptOffer(s, o.id, {}, C), C)), rng);
+      for (let k = 0; k < 6 && sessionsLeft(s, C) > 0; k++) s = trainFighter(s, k % 2 ? 'jiujitsu' : 'trocacao', C);
     }
     if (s.alive && s.character.age >= age) return s;
   }

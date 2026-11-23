@@ -8,7 +8,6 @@ import {
   BELTS,
   BELT_EMOJI,
   PLAYER_ID,
-  TRAINING_COST,
   currentRosterKey,
   fightBlockReason,
   getOrg,
@@ -34,7 +33,7 @@ import { Bar, STYLE_LABEL, money } from './fightUi';
 const C = GAME_CONTENT;
 
 const BLOCK_TEXT: Record<string, string> = {
-  'no-energy': 'Sem energia',
+  'no-sessions': 'Sem sessões',
   busy: 'Resolva o evento',
   'too-young': 'Muito novo',
   injured: 'Lesionado',
@@ -116,7 +115,7 @@ function TrainingButtons({ game }: { game: GameState }) {
       <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Treinar</h2>
       <div className="grid grid-cols-4 gap-2">
         {items.map((it) => {
-          const reason = trainingBlockReason(game, it.kind);
+          const reason = trainingBlockReason(game, it.kind, C);
           return (
             <button
               key={it.kind}
@@ -126,7 +125,7 @@ function TrainingButtons({ game }: { game: GameState }) {
             >
               <span className="text-xl">{it.emoji}</span>
               <span className="text-center text-[11px] leading-tight">{it.label}</span>
-              <span className="text-[10px] text-slate-400">{reason ? BLOCK_TEXT[reason] : `⚡ ${TRAINING_COST[it.kind]}`}</span>
+              <span className="text-[10px] text-slate-400">{reason ? BLOCK_TEXT[reason] : '1 sessão'}</span>
             </button>
           );
         })}
@@ -182,7 +181,7 @@ function GymSection({ game }: { game: GameState }) {
                         Treinador {g.coach} · {spec[g.specialty]} · {money.format(g.fee)}/ano
                       </span>
                     </span>
-                    <span className="shrink-0 text-[11px] text-slate-400">{reason ? BLOCK_TEXT[reason] : 'Entrar ⚡1'}</span>
+                    <span className="shrink-0 text-[11px] text-slate-400">{reason ? BLOCK_TEXT[reason] : 'Entrar'}</span>
                   </button>
                 </li>
               );
@@ -214,7 +213,7 @@ function OfferCard({ game, offer }: { game: GameState; offer: FightOffer }) {
   const [cut, setCut] = useState(false);
   const org = getOrg(C, offer.orgId)!;
   const o = offer.opponent;
-  const reason = fightBlockReason(game, offer);
+  const reason = fightBlockReason(game, offer, C);
   const rank = o.rank === 0 ? 'Campeão' : o.rank ? `#${o.rank}` : null;
   return (
     <li className="rounded-2xl border border-slate-700 bg-slate-900 p-3" data-testid="offer">
@@ -239,7 +238,7 @@ function OfferCard({ game, offer }: { game: GameState; offer: FightOffer }) {
         ) : (
           <span>🏅 Medalha e reputação</span>
         )}
-        <span>⚡ Camp: {offer.campCost}</span>
+        <span>Camp: {offer.campSessions} {offer.campSessions === 1 ? 'sessão' : 'sessões'} de treino</span>
       </div>
       {offer.rules === 'mma' && (
         <label className="mt-2 flex items-center gap-2 text-[11px] text-slate-300">

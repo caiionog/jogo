@@ -424,7 +424,7 @@ export const useGameStore = create<GameStore>((setState, getState) => {
       const after = getState().game;
       if (before && after && after !== before) setState({ outcome: diffOf(before, after) });
     },
-    workHard: () => act((g) => economyAction(g, (x) => workHard(x))),
+    workHard: () => act((g) => economyAction(g, (x) => workHard(x, GAME_CONTENT))),
     askRaise: () => act((g) => economyAction(g, (x) => askRaise(x, GAME_CONTENT))),
     quitJob: () => eco((g) => quitJob(g, GAME_CONTENT)),
     hireAgent: () => update((g) => hireAgentAction(g, GAME_CONTENT)),
@@ -436,7 +436,7 @@ export const useGameStore = create<GameStore>((setState, getState) => {
     setRented: (id, rented) => eco((g) => setRented(g, id, rented, GAME_CONTENT)),
     setInsured: (id, insured) => eco((g) => setInsured(g, id, insured)),
     openBusiness: (defId) => eco((g) => openBusiness(g, defId, GAME_CONTENT)),
-    dedicate: (id) => eco((g) => dedicate(g, id)),
+    dedicate: (id) => eco((g) => dedicate(g, id, GAME_CONTENT)),
     setManager: (id, manager) => eco((g) => setManager(g, id, manager)),
     expandBusiness: (id) => eco((g) => expandBusiness(g, id, GAME_CONTENT)),
     injectCash: (id, amount) => eco((g) => injectCash(g, id, amount)),

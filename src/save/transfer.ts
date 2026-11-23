@@ -42,7 +42,7 @@ export function validateSaveShape(s: unknown): string[] {
     ['money', (v) => Number.isInteger(v)],
     ['alive', (v) => typeof v === 'boolean'],
     ['character', isObj],
-    ['energy', isObj],
+    ['yearUses', isObj],
     ['flags', isObj],
     ['education', isObj],
     ['fighter', isObj],

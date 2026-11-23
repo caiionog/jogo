@@ -12,7 +12,7 @@ import { GAME_CONTENT } from '../src/content';
 import { emptyMeta, emptyRecord, evaluateAchievements, killCharacter, newGame, recordLifeEnd, recordLifeStart } from '../src/engine';
 import type { GameState, MetaState } from '../src/engine';
 import { exportSave, importSave, listSlots, loadGame, loadMeta, loadSlot, migrateMeta, saveMeta, saveSlot, setActiveSlot, slotKey } from '../src/save';
-import fixturesV1 from './fixtures/saves-v1.json';
+import fixturesV1 from '../src/save/__fixtures__/saves-v1.json';
 import { adult } from './ecoHelpers';
 import { fighterGame } from './fightHelpers';
 

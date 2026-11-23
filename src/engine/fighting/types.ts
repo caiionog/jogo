@@ -172,7 +172,8 @@ export interface OrgDef {
   rounds: number;
   titleRounds: number;
   purse: { base: number; win: number; perf: number };
-  campCost: number;
+  /** Sessões de treino do ano que o camp de uma luta ocupa. */
+  campSessions: number;
   /** Faixa de habilidade dos adversários (NPCs). */
   npcSkill: [number, number];
   reputationGain: number;
@@ -286,7 +287,8 @@ export interface FightOffer {
   rules: FightRules;
   purse: number;
   winBonus: number;
-  campCost: number;
+  /** Sessões de treino que o camp ocupa (substituição 1; título +1). */
+  campSessions: number;
   title: boolean;
 }
 

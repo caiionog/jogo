@@ -21,15 +21,15 @@ import {
 import type { Person, RomanceStage } from './types';
 import { post } from '../economy/ledger';
 import { divorceSettlement, recordMarriage } from '../economy/family';
+import { bumpUse, repeatMultiplier } from '../lifeStages/sessions';
 
-export const MEET_COST = 1;
 export const WEDDING_COST = { simple: 3000, big: 20000 } as const;
 export const ADOPTION_COST = 10000;
 export const CHILD_YEARLY_COST = 6000;
 
 export type MeetMode = 'social' | 'app';
 
-export type MeetBlockReason = 'dead' | 'busy' | 'too-young' | 'app-adult' | 'taken' | 'no-energy';
+export type MeetBlockReason = 'dead' | 'busy' | 'too-young' | 'app-adult' | 'taken';
 
 export function meetBlockReason(state: GameState, mode: MeetMode): MeetBlockReason | null {
   if (!state.alive) return 'dead';
@@ -37,7 +37,6 @@ export function meetBlockReason(state: GameState, mode: MeetMode): MeetBlockReas
   if (!canDate(state.character.age)) return 'too-young';
   if (mode === 'app' && state.character.age < ADULT_AGE) return 'app-adult';
   if (currentPartner(state)) return 'taken';
-  if (state.energy.current < MEET_COST) return 'no-energy';
   return null;
 }
 
@@ -79,14 +78,16 @@ export function compatibility(state: GameState, person: Person, content: GameCon
 /** Conhecer alguém: gera um pretendente válido e, se houver química, começam a ficar. */
 export function meetSomeone(state: GameState, mode: MeetMode, content: GameContent, rng: Rng): GameState {
   if (meetBlockReason(state, mode) !== null) return state;
-  let s: GameState = { ...state, energy: { ...state.energy, current: state.energy.current - MEET_COST } };
+  // sem limite, mas insistir no mesmo ano rende menos química
+  const rep = repeatMultiplier(state, 'conhecer', content);
+  let s: GameState = bumpUse(state, 'conhecer');
   const age = pickPartnerAge(rng, s.character.age, mode);
   if (!isValidPartnerAge(s.character.age, age)) return s; // defesa em profundidade
   let person: Person;
   [s, person] = createPerson(s, rng, content, { sex: pickPartnerSex(rng, s), age });
   const compat = compatibility(s, person, content);
   const where = mode === 'app' ? 'num aplicativo de namoro' : rng.pick(['numa festa', 'por amigos em comum', 'na academia', 'num show']);
-  if (rng.chance(0.1 + (compat / 100) * 0.75)) {
+  if (rng.chance((0.1 + (compat / 100) * 0.75) * rep)) {
     s = addRelation(s, person.id, 'parceiro', rng.int(40, 60), { romance: { stage: 'ficando', since: s.character.age } });
     s = updateRelation(s, person.id, (r) => withHistory(r, `Vocês se conheceram ${where}.`));
     return appendLog(s, `Você conheceu ${person.name} ${where} e vocês estão ficando.`);

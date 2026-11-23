@@ -6,7 +6,7 @@ import { Briefcase, ChevronDown, ChevronUp, HeartHandshake, Sparkles, Wallet } f
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { GAME_CONTENT } from '../../content';
 import type { LogYear, StatKey } from '../../engine';
-import { LIFE_STAGE_LABEL, deriveAvatar, lifeStage } from '../../engine';
+import { LIFE_STAGE_LABEL, deriveAvatar, lifeStage, sessionsBreakdown, sessionsLeft, sessionsReserved } from '../../engine';
 import { AgeButton, BottomNav, StatBar } from '../design/components';
 import { EventModal, ResultModal } from '../design/modals';
 import FightScreen from '../components/FightScreen';
@@ -53,18 +53,24 @@ function LifeFeed({ log }: { log: LogYear[] }) {
   );
 }
 
-function EnergyDots({ current, max }: { current: number; max: number }) {
+/** "Treinos: 7/10": sessões de treino livres no ano; as ocupadas pelo emprego/faculdade aparecem riscadas. */
+export function TrainingMeter({ left, reserved, limit, notes }: { left: number; reserved: number; limit: number; notes: string[] }) {
+  const used = limit - reserved - left;
   return (
-    <div className="flex items-center gap-2 text-xs text-[var(--ds-text-muted)]" role="meter" aria-label="Energia do ano" aria-valuemin={0} aria-valuemax={max} aria-valuenow={current} data-testid="energy">
-      <span aria-hidden>⚡</span>
-      <span className="flex gap-1">
-        {Array.from({ length: max }, (_, i) => (
-          <span key={i} className={`h-2.5 w-2.5 rounded-full ${i < current ? 'bg-[var(--ds-age)]' : 'bg-[var(--ds-surface-2)]'}`} />
-        ))}
-      </span>
-      <span className="tabular-nums">
-        {current}/{max} energia
-      </span>
+    <div className="flex min-w-0 flex-col gap-0.5 text-xs text-[var(--ds-text-muted)]" data-testid="sessions">
+      <div className="flex items-center gap-2" role="meter" aria-label="Sessões de treino livres no ano" aria-valuemin={0} aria-valuemax={limit} aria-valuenow={left}>
+        <span aria-hidden>🥋</span>
+        <span className="flex gap-1">
+          {Array.from({ length: limit }, (_, i) => {
+            const cls = i < used ? 'bg-[var(--ds-surface-2)]' : i < used + left ? 'bg-[var(--ds-age)]' : 'border border-dashed border-[var(--ds-text-muted)] bg-transparent';
+            return <span key={i} className={`h-2.5 w-2.5 rounded-full ${cls}`} />;
+          })}
+        </span>
+        <span className="tabular-nums font-medium text-[var(--ds-text)]">
+          Treinos: {left}/{limit}
+        </span>
+      </div>
+      {notes.length > 0 && <span className="truncate" data-testid="sessions-notes">{notes.join(' · ')}</span>}
     </div>
   );
 }
@@ -85,7 +91,10 @@ export default function Life({ onShowObituary }: { onShowObituary?: () => void }
   const pendingEvent = pending ? GAME_CONTENT.events.find((e) => e.id === pending.eventId) : undefined;
   const root = nav.stack[0]?.id;
   const busy = game.pendingEvents.length > 0 || !!game.activeFight;
-  const usable = game.energy.max - (game.energy.reserved ?? 0);
+  const limit = GAME_CONTENT.limits.trainingSessions;
+  const reserved = sessionsReserved(game, GAME_CONTENT);
+  const left = sessionsLeft(game, GAME_CONTENT);
+  const notes = sessionsBreakdown(game, GAME_CONTENT).map((p) => p.text);
 
   return (
     <div className="flex h-dvh flex-col">
@@ -112,7 +121,7 @@ export default function Life({ onShowObituary }: { onShowObituary?: () => void }
 
       <div className="border-t border-[var(--ds-border)] bg-[var(--ds-surface)] px-3 pt-2">
         <div className="flex items-center justify-between">
-          {game.alive ? <EnergyDots current={game.energy.current} max={Math.max(game.energy.current, usable)} /> : <span className="text-xs text-[var(--ds-text-muted)]">Fim da vida</span>}
+          {game.alive ? <TrainingMeter left={left} reserved={reserved} limit={limit} notes={notes} /> : <span className="text-xs text-[var(--ds-text-muted)]">Fim da vida</span>}
           <button type="button" onClick={() => setStatsOpen((v) => !v)} aria-expanded={statsOpen} className="flex min-h-9 items-center gap-1 text-xs text-[var(--ds-text-muted)]" data-testid="stats-toggle">
             Atributos {statsOpen ? <ChevronDown size={14} aria-hidden /> : <ChevronUp size={14} aria-hidden />}
           </button>

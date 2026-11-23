@@ -39,7 +39,6 @@ function adult(age = 25, money = 300000): GameState {
     year: 2000 + age,
     money,
     character: { ...g.character, age, stats: { ...g.character.stats, intelligence: 70, looks: 60, athletic: 70, health: 90 } },
-    energy: { current: 8, max: 8, reserved: 0 },
     education: { ...g.education, current: null, graduated: true },
     economy: { ...g.economy, ledger: { year: 2000 + age, opening: money, entries: [] }, lastIncome: 90000, housing: 'aluguel' },
     // valores distintos para garantir que não aparecem em lugar nenhum
@@ -85,7 +84,7 @@ describe('barra inferior e menus em camadas', () => {
 
   it('Carreiras navega até o detalhe e a confirmação de troca de emprego', () => {
     const g = adult();
-    const employed = { ...g, economy: { ...g.economy, job: { jobId: 'lanchonete', level: 1, performance: 50, years: 0 } }, energy: { current: 6, max: 8, reserved: 2 } };
+    const employed = { ...g, economy: { ...g.economy, job: { jobId: 'lanchonete', level: 1, performance: 50, years: 0 } } };
     start(employed);
     fireEvent.click(screen.getByTestId('nav-ocupacao'));
     fireEvent.click(screen.getByTestId('occ-careers'));
@@ -116,9 +115,12 @@ describe('barra inferior e menus em camadas', () => {
     expect(screen.getByTestId('act-mudar').textContent).toContain('Disponível a partir dos 18 anos');
     expect((screen.getByTestId('act-mudar') as HTMLButtonElement).disabled).toBe(true);
     fireEvent.click(screen.getByTestId('act-treino'));
-    const noEnergy = { ...useGameStore.getState().game!, energy: { current: 0, max: 8, reserved: 0 } };
-    act(() => useGameStore.setState({ game: noEnergy }));
-    expect(screen.getByTestId('train-jiujitsu').textContent).toContain('Energia insuficiente');
+    const g = useGameStore.getState().game!;
+    const noSessions = { ...g, fighter: { ...g.fighter, sessionsThisYear: 10 } };
+    act(() => useGameStore.setState({ game: noSessions }));
+    expect(screen.getByTestId('train-jiujitsu').textContent).toContain('Sem sessões de treino livres neste ano');
+    for (const el of screen.getAllByTestId('sessions')) expect(el.textContent).toContain('Treinos: 0/10');
+    expect(document.body.textContent).not.toMatch(/⚡|[Ee]nergia/);
   });
 });
 

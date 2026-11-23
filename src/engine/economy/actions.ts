@@ -39,25 +39,21 @@ export function hireAgentAction(state: GameState, content: GameContent): GameSta
   return { ...s, rngState: rng.state };
 }
 
-export const SEEK_SPONSOR_COST = 1;
-
 /** Por que não dá para procurar patrocínio agora (null = pode). */
-export function seekSponsorBlockReason(state: GameState, content: GameContent): 'busy' | 'no-energy' | 'already' | 'none' | 'suspended' | null {
+export function seekSponsorBlockReason(state: GameState, content: GameContent): 'busy' | 'already' | 'none' | 'suspended' | null {
   if (!canManageMoney(state)) return 'busy';
   if (state.fighter.suspendedYears > 0) return 'suspended';
   if (state.flags.buscou_patrocinio === state.year) return 'already';
   if (!eligibleSponsors(state, content).length) return 'none';
-  if (state.energy.current < SEEK_SPONSOR_COST) return 'no-energy';
   return null;
 }
 
-/** Procurar patrocínio (⚡1, uma vez por ano): chance cresce com a reputação; fecha com a melhor marca disponível. */
+/** Procurar patrocínio (uma vez por ano): chance cresce com a reputação; fecha com a melhor marca disponível. */
 export function seekSponsor(state: GameState, content: GameContent): GameState {
   if (seekSponsorBlockReason(state, content) !== null) return state;
   const rng = createRng(state.rngState);
   let s: GameState = {
     ...state,
-    energy: { ...state.energy, current: state.energy.current - SEEK_SPONSOR_COST },
     flags: { ...state.flags, buscou_patrocinio: state.year },
   };
   const chance = Math.min(0.85, 0.35 + state.fighter.reputation / 150);

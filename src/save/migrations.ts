@@ -53,6 +53,7 @@ export const migrations: Record<number, (save: AnySave) => AnySave> = {
   5: migrateV5toV6,
   6: migrateV6toV7,
   7: migrateV7toV8,
+  8: migrateV8toV9,
 };
 
 export class SaveMigrationError extends Error {}
@@ -236,12 +237,13 @@ function migrateV4toV5(save: AnySave): AnySave {
   const rng = createRng(seedToState(`${s0.seed}:v5`));
   const money = Math.round(s0.money);
   const age = s0.character.age;
-  let g: GameState = {
+  // `energy` existia até o save v8 (removida na v9)
+  let g = {
     ...s0,
     money,
-    energy: { ...s0.energy, reserved: 0 },
+    energy: { ...(s0 as unknown as { energy: object }).energy, reserved: 0 },
     economy: { ...emptyEconomy(money, s0.year), housing: age >= 25 ? 'aluguel' : 'pais' },
-  };
+  } as unknown as GameState;
   for (const { person } of relationsOf(g, ['pai', 'mae'], false)) {
     const wealth = person.alive ? parentWealth(rng, g.character.familyWealth) : 0;
     g = updatePerson(g, person.id, (p) => ({ ...p, wealth }));
@@ -435,6 +437,33 @@ function migrateV7toV8(save: AnySave): AnySave {
     character: { ...s0.character, appearance: look(s0.character.appearance, 'player'), stats: { ...restStats, athletic } },
     fighter: { ...f, skills: convertSkills(oldSkills), chinBase: r1(oldSkills.chin ?? 55), trainingLoad: f.gymId ? 0.3 : 0, sessionsThisYear: 0, offers },
     world: { ...s0.world, rosters },
+    activeFight,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// v8 → v9 (release 0.0.1: fim da energia → sessões de treino)
+// ---------------------------------------------------------------------------
+
+/**
+ * A energia sai do save. Entram os contadores anuais do retorno decrescente (`yearUses`, vazio) e o limite de 10
+ * sessões de treino (o gasto do ano fica limitado a 10). O custo de camp das ofertas vira `campSessions`.
+ */
+function migrateV8toV9(save: AnySave): AnySave {
+  const s0 = save as unknown as Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+  const { energy: _energy, ...rest } = s0;
+  void _energy;
+  const camp = (o: Record<string, any>) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    const { campCost, ...x } = o;
+    return { ...x, campSessions: typeof campCost === 'number' ? campCost : 2 };
+  };
+  const f = s0.fighter as Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+  const activeFight = s0.activeFight ? { ...s0.activeFight, offer: camp(s0.activeFight.offer) } : s0.activeFight;
+  return {
+    ...(rest as AnySave),
+    version: 9,
+    yearUses: {},
+    fighter: { ...f, sessionsThisYear: Math.min(GAME_CONTENT.limits.trainingSessions, f.sessionsThisYear ?? 0), offers: (f.offers ?? []).map(camp) },
     activeFight,
   };
 }

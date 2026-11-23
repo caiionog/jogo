@@ -38,7 +38,6 @@ import {
   getOrg,
   gymsInCity,
   newGame,
-  performAction,
   rankOf,
   resolveEvent,
   trainFighter,
@@ -58,6 +57,7 @@ import {
   healthAction,
   makeWill,
   defaultShares,
+  sessionsLeft,
 } from '../src/engine';
 import type { GameState, MetaState, Rng, SkillKey } from '../src/engine';
 import { withdraw as withdrawFn } from '../src/engine';
@@ -114,7 +114,7 @@ function playYear(s0: GameState, rng: Rng): GameState {
   // lutas primeiro (as melhores ofertas: maior bolsa)
   const offers = s.fighter.offers.slice().sort((a, b) => b.purse + b.winBonus - (a.purse + a.winBonus));
   for (const o of offers) {
-    if (s.energy.current < o.campCost + 1) continue;
+    if (sessionsLeft(s, C) < o.campSessions + 1) continue;
     // jogador razoável: não luta no meio de uma recuperação longa (ou trata antes)
     if (s.health.injuries.some((i) => i.months > 4)) break;
     s = acceptOffer(s, o.id, {}, C);
@@ -140,13 +140,12 @@ function playYear(s0: GameState, rng: Rng): GameState {
   // treino com o resto da energia: técnica no mais fraco (jiu-jitsu/trocação), jiu-jitsu, físico, sparring
   const weakest = (): SkillKey => (s.fighter.skills.jiujitsu < s.fighter.skills.trocacao ? 'jiujitsu' : 'trocacao');
   const plan = ['tecnica', 'fisico', 'jiujitsu', 'tecnica', 'sparring', 'fisico'] as const;
-  for (let i = 0; i < 8 && s.energy.current > 0; i++) {
-    const before = s.energy.current;
-    const p = s.energy.current >= 2 ? plan[(i + s.character.age) % plan.length]! : 'fisico';
+  for (let i = 0; i < 12 && sessionsLeft(s, C) > 0; i++) {
+    const before = sessionsLeft(s, C);
+    const p = plan[(i + s.character.age) % plan.length]!;
     s = trainFighter(s, p === 'tecnica' ? weakest() : p, C);
-    if (s.energy.current === before) s = trainFighter(s, 'fisico', C);
-    if (s.energy.current === before) s = performAction(s, 'train', C);
-    if (s.energy.current === before) break;
+    if (sessionsLeft(s, C) === before) s = trainFighter(s, 'fisico', C);
+    if (sessionsLeft(s, C) === before) break;
     s = drain(s, rng);
   }
   return s;
@@ -386,7 +385,7 @@ function ecoYear(s0: GameState, profile: Profile, rng: Rng): GameState {
       }
     }
     for (const b of s.economy.businesses) {
-      s = dedicate(s, b.id);
+      s = dedicate(s, b.id, C);
       const def = businessDef(C, b.defId)!;
       if (b.cash > expandCost(def, b.level) * 1.5 && s.money > expandCost(def, b.level) && b.lastProfit > 0) s = expandBusiness(s, b.id, C);
     }
@@ -397,8 +396,8 @@ function ecoYear(s0: GameState, profile: Profile, rng: Rng): GameState {
   if (profile === 'luta' || profile === 'misto') s = fighterYear(s, rng);
   else {
     s = familyYear(s, rng);
-    // trabalha duro com a energia que sobra
-    for (let k = 0; k < 3 && s.economy.job; k++) s = workHard(s);
+    // trabalha duro (rende menos a cada repetição no ano)
+    for (let k = 0; k < 3 && s.economy.job; k++) s = workHard(s, C);
   }
   return manageMoney(drain(s, rng), rng);
 }

@@ -199,9 +199,9 @@ export function simulateRosterYear(roster: Roster, org: OrgDef, world: World, rn
   // disputa anual de cinturão entre NPCs
   const top = r.ranking[0];
   if (r.champion && r.champion !== PLAYER_ID && top && top !== PLAYER_ID) fight(r.champion, top, true);
-  // cinturão vago: o #1 (se não for o jogador) assume
-  const first = r.ranking[0];
-  if (!r.champion && first && first !== PLAYER_ID) r = { ...r, champion: first, ranking: r.ranking.slice(1) };
+  // cinturão vago: o NPC mais bem ranqueado assume (o jogador só ganha o cinturão lutando)
+  const first = r.ranking.find((id) => id !== PLAYER_ID);
+  if (!r.champion && first) r = { ...r, champion: first, ranking: r.ranking.filter((id) => id !== first) };
 
   return { roster: r, nextNpcId: nextId };
 }

@@ -13,7 +13,6 @@ export function fighterGame(age = 22, setup: FighterSetup = {}, patch: Partial<G
     ...g,
     year: 2000 + age,
     character: { ...g.character, age, heightCm: 178, weightKg: 75, stats: { ...g.character.stats, health: 90, ...(athletic !== undefined ? { athletic } : {}) } },
-    energy: { current: 8, max: 8 },
     fighter: { ...g.fighter, skills: { ...g.fighter.skills, ...skills }, ...(chin !== undefined ? { chinBase: chin } : {}), ...patch },
   };
 }

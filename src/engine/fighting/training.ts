@@ -7,6 +7,7 @@ import type { Rng } from '../core/rng';
 import type { GameState } from '../core/state';
 import { addStats, appendLog } from '../core/stats';
 import { addSkills } from './profile';
+import { sessionsLeft, useSessions } from '../lifeStages/sessions';
 import { meetFriend, socialTrainingBonus } from '../relationships/social';
 import { ownGymBonus } from '../economy/business';
 import type { GymDef, SkillKey, Skills } from './types';
@@ -15,7 +16,8 @@ import type { GymDef, SkillKey, Skills } from './types';
 export type TrainingKind = 'jiujitsu' | 'trocacao' | 'fisico' | 'sparring';
 export const TRAINING_KINDS: readonly TrainingKind[] = ['jiujitsu', 'trocacao', 'fisico', 'sparring'];
 
-export const TRAINING_COST: Record<TrainingKind, number> = { jiujitsu: 2, trocacao: 2, fisico: 1, sparring: 2 };
+/** Cada treino ocupa 1 das sessões de treino do ano (`limits.trainingSessions`). */
+export const TRAINING_SESSIONS = 1;
 export const TRAINING_MIN_AGE: Record<TrainingKind, number> = { jiujitsu: 4, trocacao: 4, fisico: 6, sparring: 12 };
 /** Treino físico com saúde < 50: chance de lesão por excesso. */
 export const OVERTRAINING_INJURY_CHANCE = 0.1;
@@ -59,9 +61,15 @@ export interface GainContext {
   talent?: number;
 }
 
+/**
+ * Fator por sessão: 10 sessões por ano rendem mais treinos que a energia antiga (treino custava 2). Provisório na
+ * fase 1 da release 0.0.1 para manter o balanceamento; a fase 2 recalibra os ganhos.
+ */
+export const SESSION_GAIN = 0.45;
+
 /** Ganho esperado (sem ruído) de uma sessão de treino de `base` pontos na habilidade. */
 export function expectedGain(base: number, skill: SkillKey | 'athletic', current: number, ctx: GainContext): number {
-  return base * (ctx.talent ?? 1) * coachFactor(ctx.gym) * ageFactor(ctx.age) * healthFactor(ctx.health) * diminishing(current) * specialtyFactor(ctx.gym, skill);
+  return SESSION_GAIN * base * (ctx.talent ?? 1) * coachFactor(ctx.gym) * ageFactor(ctx.age) * healthFactor(ctx.health) * diminishing(current) * specialtyFactor(ctx.gym, skill);
 }
 
 export function gainFor(rng: Rng, base: number, skill: SkillKey | 'athletic', current: number, ctx: GainContext): number {
@@ -73,15 +81,15 @@ export function currentGym(state: GameState, content: GameContent): GymDef | und
   return id ? content.fighting.gyms.find((g) => g.id === id) : undefined;
 }
 
-export type TrainingBlockReason = 'dead' | 'busy' | 'too-young' | 'no-energy' | 'injured' | 'retired';
+export type TrainingBlockReason = 'dead' | 'busy' | 'too-young' | 'no-sessions' | 'injured' | 'retired';
 
-export function trainingBlockReason(state: GameState, kind: TrainingKind): TrainingBlockReason | null {
+export function trainingBlockReason(state: GameState, kind: TrainingKind, content: GameContent): TrainingBlockReason | null {
   if (!state.alive) return 'dead';
   if (state.pendingEvents.length > 0 || state.activeFight) return 'busy';
   if (state.character.age < TRAINING_MIN_AGE[kind]) return 'too-young';
   if (state.fighter.retired && kind === 'sparring') return 'retired';
   if (kind === 'sparring' && injuryVeto(state)) return 'injured';
-  if (state.energy.current < TRAINING_COST[kind]) return 'no-energy';
+  if (sessionsLeft(state, content) < TRAINING_SESSIONS) return 'no-sessions';
   return null;
 }
 
@@ -95,7 +103,7 @@ export function coachLine(rng: Rng, content: GameContent, kind: TrainingKind, va
 
 /** Executa um treino de luta. Estado inalterado se bloqueado. */
 export function trainFighter(state: GameState, kind: TrainingKind, content: GameContent): GameState {
-  if (trainingBlockReason(state, kind) !== null) return state;
+  if (trainingBlockReason(state, kind, content) !== null) return state;
   const rng = createRng(state.rngState);
   const gym = currentGym(state, content);
   // companheiros de treino próximos e treinador querido rendem um treino melhor
@@ -107,7 +115,7 @@ export function trainFighter(state: GameState, kind: TrainingKind, content: Game
   };
   const athletic = state.character.stats.athletic;
   const athleticGain = (base: number) => Math.round(gainFor(rng, base, 'athletic', athletic, ctx) * 10) / 10;
-  let next: GameState = { ...state, energy: { ...state.energy, current: state.energy.current - TRAINING_COST[kind] } };
+  let next: GameState = useSessions(state, TRAINING_SESSIONS);
   let text = '';
   let injury: InjuryDef | undefined;
   const where = gym ? `na ${gym.name}` : state.character.sex === 'M' ? 'sozinho' : 'sozinha';
@@ -149,7 +157,7 @@ export function trainFighter(state: GameState, kind: TrainingKind, content: Game
     }
   }
 
-  next = { ...next, fighter: { ...next.fighter, skills: addSkills(next.fighter.skills, delta), sessionsThisYear: (next.fighter.sessionsThisYear ?? 0) + 1 } };
+  next = { ...next, fighter: { ...next.fighter, skills: addSkills(next.fighter.skills, delta) } };
   const line = coachLine(rng, content, kind, coachValue);
   next = appendLog(next, line ? `${text} ${line}` : text);
   // na academia dá para conhecer companheiros de treino

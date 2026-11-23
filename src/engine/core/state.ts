@@ -47,13 +47,6 @@ export interface Character {
   death?: { age: number; year: number; cause: string };
 }
 
-export interface Energy {
-  current: number;
-  max: number;
-  /** Energia do ano já comprometida com o emprego (Etapa 5). */
-  reserved?: number;
-}
-
 export type FlagValue = boolean | number | string;
 
 export interface LogYear {
@@ -144,7 +137,11 @@ export interface GameState {
   year: number;
   character: Character;
   money: number;
-  energy: Energy;
+  /**
+   * Repetições de cada atividade no ano corrente (release 0.0.1: retorno decrescente no lugar da energia).
+   * Chave = id da atividade; zerado no `advanceYear`.
+   */
+  yearUses: Record<string, number>;
   flags: Record<string, FlagValue>;
   /** Ids de eventos que já aconteceram (para `once`). */
   firedEvents: string[];
@@ -176,4 +173,4 @@ export interface GameState {
   wardrobe: Wardrobe;
 }
 
-export const STATE_VERSION = 8;
+export const STATE_VERSION = 9;

@@ -1,6 +1,5 @@
 import { GAME_CONTENT } from '../../content';
 import {
-  HEALTH_ACTION_ENERGY,
   brainHint,
   canManageMoney,
   conditionDef,
@@ -26,7 +25,6 @@ const BLOCK: Record<string, string> = {
   busy: 'Resolva o evento',
   already: 'Já em tratamento',
   'no-money': 'Sem dinheiro',
-  'no-energy': 'Sem energia',
   'no-surgery': 'Não indicada',
   'not-found': '—',
 };
@@ -74,7 +72,7 @@ function InjuryCard({ game, inj }: { game: GameState; inj: ActiveInjury }) {
             return (
               <Btn key={t} testId={`treat-${t}`} tone={t === 'repouso' ? 'default' : 'primary'} disabled={r !== null} onClick={() => pick(t)}>
                 {TREAT_LABEL[t]}
-                <span className="block text-[10px] text-slate-400">{r ? BLOCK[r] : t === 'repouso' ? 'grátis' : `${money.format(cost)}${t === 'fisio' ? ' · ⚡1' : ''}`}</span>
+                <span className="block text-[10px] text-slate-400">{r ? BLOCK[r] : t === 'repouso' ? 'grátis' : money.format(cost)}</span>
               </Btn>
             );
           })}
@@ -182,7 +180,7 @@ export default function HealthPanel({ game }: { game: GameState }) {
                 <span className="text-xl">{a.emoji}</span>
                 <span className="text-center text-[11px] leading-tight">{a.label}</span>
                 <span className="text-[10px] text-slate-400">
-                  {r === 'done' ? 'feito este ano' : r === 'too-young' ? 'a partir dos 14' : `⚡${HEALTH_ACTION_ENERGY}${cost ? ` · ${money.format(cost)}` : ''}`}
+                  {r === 'done' ? 'feito este ano' : r === 'too-young' ? 'a partir dos 14' : cost ? money.format(cost) : 'uma vez por ano'}
                 </span>
               </button>
             );

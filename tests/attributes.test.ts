@@ -4,8 +4,8 @@ import { describe, expect, it } from 'vitest';
 import { GAME_CONTENT } from '../src/content';
 import { COACH_NOISE, STAT_KEYS, SKILL_KEYS, advanceYear, chinValue, coachAssessment, coachWord, playerRating } from '../src/engine';
 import { CURRENT_VERSION, migrate } from '../src/save/migrations';
-import fixturesV7 from './fixtures/saves-v7.json';
-import fixturesV1 from './fixtures/saves-v1.json';
+import fixturesV7 from '../src/save/__fixtures__/saves-v7.json';
+import fixturesV1 from '../src/save/__fixtures__/saves-v1.json';
 import { fighterGame } from './fightHelpers';
 import { makeGame, resolveAllFirst } from './helpers';
 

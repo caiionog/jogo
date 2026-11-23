@@ -59,3 +59,12 @@ describe('ranking', () => {
     expect(r.ranking[0]).toBe('b');
   });
 });
+
+describe('cinturão vago (release 0.0.1)', () => {
+  it('quando o campeão sai, o cinturão vai para o NPC mais bem ranqueado, nunca de graça para o jogador', () => {
+    const r = removeFromRanking(roster(['player', 'b', 'c'], 'champ', ['x']), 'champ');
+    expect(r.champion).toBe('b');
+    expect(r.ranking).toEqual(['player', 'c']);
+    expect(rankOf(r, 'player')).toBe(1);
+  });
+});

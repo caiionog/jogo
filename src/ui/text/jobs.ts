@@ -22,8 +22,6 @@ export function jobReasonText(r: JobBlockReason, def: JobDef): string {
       return `Exige reputação ${def.minReputation}`;
     case 'fight':
       return `Exige faixa ${BELT_NAMES[def.fightReq?.minBelt ?? 1] ?? 'azul'}+${def.fightReq?.minProWins ? ` ou ${def.fightReq.minProWins} vitórias pro` : ''} ou Capacidade atlética alta`;
-    case 'no-energy':
-      return `Energia insuficiente (precisa de ⚡${1 + def.energy})`;
     case 'no-opening':
       return 'Sem vagas na sua cidade este ano';
     case 'employed':

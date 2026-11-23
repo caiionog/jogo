@@ -15,12 +15,11 @@ import { createRng, seedToState } from './rng';
 import type { Rng } from './rng';
 import type { EventVars, GameState, PendingEvent, Sex, StatKey } from './state';
 import { STATE_VERSION } from './state';
-import { addStats, appendLog, clamp } from './stats';
+import { addStats, appendLog } from './stats';
 import { createCharacter } from '../character/create';
 import { randomPersonName, randomTeacherName } from '../character/names';
-import { maxEnergy } from '../lifeStages/energy';
+import { bumpUse, repeatMultiplier, scalePositiveEffects } from '../lifeStages/sessions';
 import {
-  CLUB_ENERGY_COST,
   clubBlockReason,
   currentStage,
   emptyEducation,
@@ -40,7 +39,6 @@ import { generateFamily } from '../relationships/family';
 import { relationshipsYear } from '../relationships/year';
 import { emptyEconomy } from '../economy/ledger';
 import { closeEconomicYear } from '../economy/close';
-import { jobEnergy } from '../economy/jobs';
 
 export interface NewGameOptions {
   seed: string | number;
@@ -91,7 +89,7 @@ export function newGame(options: NewGameOptions, content: GameContent): GameStat
     year: birthYear,
     character,
     money: 0,
-    energy: { current: 0, max: 0 },
+    yearUses: {},
     flags: {},
     firedEvents: [],
     pendingEvents: [],
@@ -113,10 +111,9 @@ export function newGame(options: NewGameOptions, content: GameContent): GameStat
   const withFamily = generateFamily(state, rng, content, 0);
   state.relationships = withFamily.relationships;
   state.rngState = rng.state;
-  const max = maxEnergy(0, character.stats.health);
   const pronoun = character.sex === 'M' ? 'um menino' : 'uma menina';
   return appendLog(
-    { ...state, energy: { current: max, max } },
+    state,
     `Você nasceu ${pronoun} em ${character.city} (${character.uf}). Seu nome é ${character.name}.`,
   );
 }
@@ -132,8 +129,7 @@ export type ActionBlockReason =
   | 'too-young'
   | 'too-old'
   | 'not-enrolled'
-  | 'wrong-stage'
-  | 'no-energy';
+  | 'wrong-stage';
 
 export function actionBlockReason(state: GameState, action: ActionDef | undefined): ActionBlockReason | null {
   if (!action) return 'unknown';
@@ -148,26 +144,34 @@ export function actionBlockReason(state: GameState, action: ActionDef | undefine
     if (!stage) return 'not-enrolled';
     if (!req.schoolStages.includes(stage)) return 'wrong-stage';
   }
-  if (state.energy.current < action.energyCost) return 'no-energy';
   return null;
 }
 
-/** Ação disponível para o personagem agora (ignora energia e eventos pendentes). Usado pela UI para esconder ações. */
+/** Ação disponível para o personagem agora (ignora eventos pendentes). Usado pela UI para esconder ações. */
 export function isActionAvailable(state: GameState, action: ActionDef): boolean {
   const r = actionBlockReason(state, action);
-  return r === null || r === 'no-energy' || r === 'pending-event';
+  return r === null || r === 'pending-event';
 }
 
-/** Gasta energia e aplica os efeitos da ação. Se a ação não for permitida, devolve o estado inalterado. */
+/** Chave do retorno decrescente de uma ação (`yearUses`). */
+export function actionUseKey(actionId: string): string {
+  return `acao:${actionId}`;
+}
+
+/**
+ * Aplica os efeitos da ação. Sem limite por ano, mas cada repetição no mesmo ano rende menos (efeitos positivos ×
+ * `repeatMultiplier`). Se a ação não for permitida, devolve o estado inalterado.
+ */
 export function performAction(state: GameState, actionId: string, content: GameContent): GameState {
   const action = content.actions.find((a) => a.id === actionId);
   if (actionBlockReason(state, action) !== null || !action) return state;
 
   return withRng(state, (rng, s) => {
     const ctx = { rng, content, immediateSource: 'action' as const };
-    const effects = withVariance(action.effects, action.variance ?? 0, rng);
-    let next = applyEffects(s, effects, ctx);
-    next = { ...next, energy: { ...next.energy, current: next.energy.current - action.energyCost } };
+    const key = actionUseKey(action.id);
+    const mult = repeatMultiplier(s, key, content);
+    const effects = scalePositiveEffects(withVariance(action.effects, action.variance ?? 0, rng), mult);
+    let next = applyEffects(bumpUse(s, key), effects, ctx);
     next = appendLog(next, formatText(next, rng.pick(action.logTexts)));
     if (action.risk && rng.chance(action.risk.chance)) {
       next = applyEffects(next, action.risk.effects, ctx);
@@ -194,19 +198,16 @@ export function joinClub(state: GameState, clubId: string, content: GameContent)
   const club = content.clubs.find((c) => c.id === clubId);
   if (clubBlockReason(state, club) !== null) return state;
   return withRng(state, (rng, s) => {
-    const next = { ...s, energy: { ...s.energy, current: s.energy.current - CLUB_ENERGY_COST } };
-    return joinClubState(next, clubId, content, rng);
+    return joinClubState(s, clubId, content, rng);
   });
 }
 
 export function leaveClub(state: GameState, content: GameContent): GameState {
   const cur = state.education.current;
   if (!state.alive || !cur?.club || state.pendingEvents.length > 0 || state.activeFight) return state;
-  if (state.energy.current < CLUB_ENERGY_COST) return state;
   const club = content.clubs.find((c) => c.id === cur.club);
   const next: GameState = {
     ...state,
-    energy: { ...state.energy, current: state.energy.current - CLUB_ENERGY_COST },
     education: { ...state.education, current: { ...cur, club: null } },
   };
   return appendLog(next, `Você saiu do clube de ${club?.label.toLowerCase() ?? 'escola'}.`);
@@ -316,7 +317,7 @@ function pickYearEvents(state: GameState, content: GameContent, rng: Rng, target
 
 /**
  * Tick anual: fecha o ano letivo, envelhece, aplica efeitos naturais, abre o novo ano letivo,
- * renova energia e seleciona eventos (follow-ups, automáticos e 1–2 aleatórios).
+ * zera os contadores anuais e seleciona eventos (follow-ups, automáticos e 1–2 aleatórios).
  * Bloqueado (estado inalterado) se houver evento pendente ou o personagem estiver morto.
  */
 export function advanceYear(
@@ -349,10 +350,8 @@ export function advanceYear(
     if (cause) return killCharacter(next, cause, content);
 
     next = startSchoolYear(next, rng, content);
-    const max = maxEnergy(next.character.age, next.character.stats.health);
-    // o emprego reserva parte da energia do ano
-    const reserved = Math.min(max, jobEnergy(next, content));
-    next = { ...next, energy: { current: max - reserved, max, reserved } };
+    // ano novo: os contadores do retorno decrescente recomeçam (as sessões de treino zeram no ano de luta)
+    next = { ...next, yearUses: {} };
     next = relationshipsYear(next, rng, content);
     next = startFightingYear(next, rng, content);
 
@@ -389,7 +388,6 @@ export function resolveEvent(
       logText,
     );
     next = applyEffects(next, effects, { rng, content, ...(pending.vars ? { vars: pending.vars } : {}) });
-    next = { ...next, energy: { ...next.energy, current: clamp(next.energy.current, 0, next.energy.max) } };
     // morte por evento (acidente, luta clandestina...)
     const eventDeath = next.flags.morte_evento;
     if (typeof eventDeath === 'string') {

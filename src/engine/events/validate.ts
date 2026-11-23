@@ -93,7 +93,6 @@ export function validateContent(content: GameContent): string[] {
   for (const a of content.actions) {
     if (actionIds.has(a.id)) errors.push(`id de ação duplicado: ${a.id}`);
     actionIds.add(a.id);
-    if (!(a.energyCost > 0)) errors.push(`ação ${a.id}: custo de energia deve ser > 0`);
     if (a.logTexts.length === 0) errors.push(`ação ${a.id}: sem textos de log`);
     checkEffects(`ação ${a.id}`, a.effects);
     if (a.risk) {
@@ -194,7 +193,7 @@ export function validateContent(content: GameContent): string[] {
   uniq('patrocinadores', ec.sponsors.map((x) => x.id));
   for (const j of ec.jobs) {
     if (j.salary[0] > j.salary[1] || j.salary.some((v) => !Number.isInteger(v))) errors.push(`emprego ${j.id}: salário inválido`);
-    if (j.energy < 0 || j.energy > 5) errors.push(`emprego ${j.id}: energia inválida`);
+    if (![0, 2, 4].includes(j.trainingSessions)) errors.push(`emprego ${j.id}: trainingSessions deve ser 0, 2 ou 4`);
   }
   for (const a of ec.assets) if (a.price[0] > a.price[1] || a.price[0] <= 0) errors.push(`bem ${a.id}: preço inválido`);
   for (const b of ec.businesses) if (!Number.isInteger(b.startCost) || b.revenue <= 0 || b.cost <= 0) errors.push(`empresa ${b.id}: valores inválidos`);

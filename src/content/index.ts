@@ -2,6 +2,7 @@ import { JOB_EVENTS } from './events/jobs';
 import { COACH_LINES } from './fightText/coach';
 import type { GameContent } from '../engine';
 import { ACTIONS } from './actions';
+import { LIMITS } from './config';
 import { CLUBS } from './clubs';
 import { CHILDHOOD_EVENTS } from './events/childhood';
 import { SCHOOL_EVENTS } from './events/school';
@@ -25,6 +26,7 @@ import { HEALTH_EVENTS } from './events/health';
 import { LEGACY_EVENTS } from './events/legacy';
 
 export const GAME_CONTENT: GameContent = {
+  limits: LIMITS,
   actions: ACTIONS,
   events: [...CHILDHOOD_EVENTS, ...SCHOOL_EVENTS, ...FIGHTING_EVENTS, ...RELATIONSHIP_EVENTS, ...ECONOMY_EVENTS, ...JOB_EVENTS, ...HEALTH_EVENTS, ...LEGACY_EVENTS],
   geo: GEO_CONTENT,

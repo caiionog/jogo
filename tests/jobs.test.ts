@@ -5,6 +5,8 @@ import type { GameState } from '../src/engine';
 import {
   CNH_COST, applyForJob, careerCard, careersIn, createRng, currentMarket, fighterNextStep, fighterStage, getDriversLicense, joinGym,
   jobBlockReason, jobDef, jobOpenings, jobRequirementGaps, jobTitle, jobYear, ledgerSum, talkToColleagues,
+  sessionsLeft,
+  sessionsReserved,
 } from '../src/engine';
 import { adult, ledgerOk } from './ecoHelpers';
 import { enrolledGame } from './helpers';
@@ -70,10 +72,10 @@ describe('empregos básicos (Etapa 8)', () => {
     expect(careersIn(a, C, 'aprendiz').map((c) => c.def.id)).toEqual(['jovem_aprendiz', 'estagio']);
   });
 
-  it('só um emprego por vez: trocar exige pedir demissão (replace); energia reservada pelo emprego', () => {
+  it('só um emprego por vez: trocar exige pedir demissão (replace); o emprego ocupa sessões de treino', () => {
     let s = hire(adult(25), 'lanchonete');
-    expect(s.energy.reserved).toBe(def('lanchonete').energy);
-    expect(s.energy.current).toBeLessThan(adult(25).energy.current);
+    expect(sessionsReserved(s, C)).toBe(def('lanchonete').trainingSessions);
+    expect(sessionsLeft(s, C)).toBeLessThan(sessionsLeft(adult(25), C));
     const other = 'garcom';
     expect(['employed', 'no-opening']).toContain(jobBlockReason(s, def(other), C));
     s = hire(s, other, true);
@@ -83,10 +85,10 @@ describe('empregos básicos (Etapa 8)', () => {
 
   it('jovem aprendiz aos 14 e troca por outro emprego aos 18', () => {
     let s = enrolledGame(14);
-    s = { ...s, energy: { current: 6, max: 6 } };
+    s = { ...s };
     s = hire(s, 'jovem_aprendiz');
     expect(s.economy.job?.jobId).toBe('jovem_aprendiz');
-    s = { ...at(s, 18), energy: { current: 8, max: 8, reserved: 1 } };
+    s = { ...at(s, 18) };
     const id = 'garcom';
     s = hire(s, id, true);
     expect(s.economy.job?.jobId).toBe(id);
@@ -126,7 +128,7 @@ describe('empregos básicos (Etapa 8)', () => {
   it('conversar com os colegas e tirar a CNH', () => {
     const s = hire(adult(25), 'caixa');
     const t = talkToColleagues(s, C);
-    expect(t.energy.current).toBe(s.energy.current - 1);
+    expect(t.yearUses['emprego:conversar']).toBe(1);
     expect(t.economy.job!.performance).toBeGreaterThan(s.economy.job!.performance);
     let passed = 0;
     for (let i = 0; i < 40; i++) {
@@ -142,7 +144,7 @@ describe('empregos básicos (Etapa 8)', () => {
   it('carreira de lutador coexiste com um emprego e mostra a etapa', () => {
     let s = hire(adult(22, 20000), 'lanchonete');
     expect(fighterStage(s, C)).toBe('sem_academia');
-    s = joinGym({ ...s, energy: { ...s.energy, current: 3 } }, 'gen_bairro', C);
+    s = joinGym({ ...s }, 'gen_bairro', C);
     expect(s.fighter.gymId).toBe('gen_bairro');
     expect(s.economy.job?.jobId).toBe('lanchonete');
     expect(fighterStage(s, C)).toBe('aluno');

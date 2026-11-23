@@ -67,9 +67,8 @@ describe('conteúdo', () => {
     expect(GAME_CONTENT.clubs.map((c) => c.id).sort()).toEqual(['chess', 'judo', 'soccer', 'theater', 'wrestling']);
   });
 
-  it('ações têm custo de energia positivo e textos de log', () => {
+  it('ações têm textos de log', () => {
     for (const a of GAME_CONTENT.actions) {
-      expect(a.energyCost).toBeGreaterThan(0);
       expect(a.logTexts.length).toBeGreaterThan(0);
     }
   });

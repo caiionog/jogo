@@ -186,7 +186,8 @@ export interface JobDef {
   salary: [number, number];
   /** O mesmo salário em salários mínimos mensais de referência (exibição; Etapa 8). */
   salaryMW?: [number, number];
-  energy: number;
+  /** Sessões de treino que o emprego ocupa por ano: 4 (tempo integral), 2 (meio período/estágio) ou 0. */
+  trainingSessions: number;
   /** Requisitos extras (Etapa 8). */
   requires?: {
     /** Precisa estar matriculado (jovem aprendiz). */

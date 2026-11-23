@@ -9,6 +9,7 @@ import type { OutfitDef } from '../character/appearance/outfits';
 import type { HealthContent } from '../health/types';
 import type { LegacyContent } from '../legacy/types';
 import type { AchievementDef } from '../meta/types';
+import type { LimitsConfig } from '../lifeStages/sessions';
 
 /** Risco de uma ação: efeitos ADICIONAIS aplicados com probabilidade `chance`. */
 export interface ActionRisk {
@@ -19,14 +20,13 @@ export interface ActionRisk {
 
 export type ActionCategory = 'vida' | 'escola';
 
-/** Ação anual que gasta energia (treinar, estudar...). Definida como dado em src/content. */
+/** Atividade (estudar, sair...). Sem limite, mas cada repetição no ano rende menos. Definida como dado em src/content. */
 export interface ActionDef {
   id: string;
   label: string;
   emoji: string;
   description: string;
   category: ActionCategory;
-  energyCost: number;
   minAge: number;
   maxAge?: number;
   requires?: {
@@ -92,4 +92,6 @@ export interface GameContent {
   achievements: readonly AchievementDef[];
   /** Catálogo de roupas do busto (Etapa 7). */
   outfits: readonly OutfitDef[];
+  /** Limites anuais: sessões de treino e retorno decrescente (release 0.0.1). */
+  limits: LimitsConfig;
 }

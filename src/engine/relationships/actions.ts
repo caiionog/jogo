@@ -10,25 +10,7 @@ import { changeAffection, firstName, getPerson, getRelation, relLabel, updatePer
 import type { InteractionKind, Person, Relation } from './types';
 import { post } from '../economy/ledger';
 import { moneyFromParent } from '../economy/family';
-
-export const INTERACTION_COST: Record<InteractionKind, number> = {
-  spend_time: 1,
-  talk: 1,
-  compliment: 1,
-  argue: 1,
-  gift: 1,
-  ask_money: 1,
-  teach_fight: 2,
-  date: 1,
-  ask_out: 1,
-  propose: 1,
-  break_up: 0,
-  divorce: 0,
-  intimacy: 1,
-  intimacy_protected: 1,
-  try_baby: 1,
-  adopt: 1,
-};
+import { bumpUse, repeatMultiplier } from '../lifeStages/sessions';
 
 export const GIFT_COST = 200;
 
@@ -60,7 +42,6 @@ export type InteractionBlockReason =
   | 'dead'
   | 'person-dead'
   | 'busy'
-  | 'no-energy'
   | 'no-money'
   | 'not-applicable'
   | 'too-young'
@@ -102,7 +83,6 @@ export function interactionBlockReason(state: GameState, personId: string, kind:
   if (state.character.age < 3 && kind !== 'spend_time') return 'too-young';
   if (rel.romance && !canDate(state.character.age)) return 'too-young';
   if (kind === 'ask_money' && person.flags.pediu_dinheiro === state.year) return 'asked';
-  if (state.energy.current < INTERACTION_COST[kind]) return 'no-energy';
   if (kind === 'gift' && state.money < GIFT_COST) return 'no-money';
   if (kind === 'adopt' && state.money < ADOPTION_COST) return 'no-money';
   return null;
@@ -125,12 +105,12 @@ export function interact(state: GameState, personId: string, kind: InteractionKi
   const rng = createRng(state.rngState);
   const person = getPerson(state, personId)!;
   const rel = getRelation(state, personId)!;
-  let s: GameState = {
-    ...state,
-    energy: { ...state.energy, current: state.energy.current - INTERACTION_COST[kind] },
-  };
+  // sem custo, mas repetir a mesma ação com a mesma pessoa no ano rende menos
+  const key = interactionUseKey(kind, personId);
+  const rep = repeatMultiplier(state, key, content);
+  let s: GameState = bumpUse(state, key);
   s = updateRelation(s, personId, (r) => ({ ...r, interactedYear: state.year }));
-  s = runInteraction(s, person, rel, kind, rng, content);
+  s = runInteraction(s, person, rel, kind, rng, content, rep);
   s = checkTypeShift(s, personId);
   return { ...s, rngState: rng.state };
 }
@@ -139,10 +119,16 @@ function gain(rng: Rng, lo: number, hi: number, mult: number) {
   return Math.round(rng.int(lo, hi) * mult);
 }
 
-function runInteraction(state: GameState, person: Person, rel: Relation, kind: InteractionKind, rng: Rng, content: GameContent): GameState {
+/** Chave do retorno decrescente de uma interação (`yearUses`): por ação e por pessoa. */
+export function interactionUseKey(kind: InteractionKind, personId: string): string {
+  return `rel:${kind}:${personId}`;
+}
+
+function runInteraction(state: GameState, person: Person, rel: Relation, kind: InteractionKind, rng: Rng, content: GameContent, rep = 1): GameState {
   let s = state;
   const n = firstName(person.name);
-  const m = traitMult(person, kind, content);
+  // ganhos de afeto: traços × retorno decrescente da repetição no ano
+  const m = traitMult(person, kind, content) * rep;
   const happy = (d: number) => {
     s = { ...s, character: { ...s.character, stats: addStats(s.character.stats, { happiness: d }) } };
   };

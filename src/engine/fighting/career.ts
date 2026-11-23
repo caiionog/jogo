@@ -1,3 +1,4 @@
+import { sessionsLeft, useSessions } from '../lifeStages/sessions';
 /**
  * Carreira: ofertas de luta, a luta em andamento (activeFight), aplicação do resultado
  * (cartel, dinheiro, reputação, ranking, cinturão, lesão) e as viradas de ano.
@@ -67,7 +68,7 @@ function makeOffer(state: GameState, org: OrgDef, kind: OfferKind, opponent: Opp
     rules: org.rules,
     purse: Math.round(base * (title ? 2 : 1) * mult * agent),
     winBonus: Math.round(org.purse.win * (title ? 2 : 1) * mult * agent),
-    campCost: kind === 'shortNotice' ? 1 : org.campCost + (title ? 1 : 0),
+    campSessions: kind === 'shortNotice' ? 1 : org.campSessions + (title ? 1 : 0),
     title,
   };
 }
@@ -138,16 +139,17 @@ export function generateOffers(state: GameState, rng: Rng, content: GameContent)
 // Luta
 // ---------------------------------------------------------------------------
 
-export type FightBlockReason = 'dead' | 'busy' | 'injured' | 'suspended' | 'retired' | 'no-energy' | 'unknown';
+export type FightBlockReason = 'dead' | 'busy' | 'injured' | 'suspended' | 'retired' | 'no-sessions' | 'unknown';
 
-export function fightBlockReason(state: GameState, offer: FightOffer | undefined): FightBlockReason | null {
+/** Motivo para não aceitar a luta. O camp ocupa sessões de treino do ano (`offer.campSessions`). */
+export function fightBlockReason(state: GameState, offer: FightOffer | undefined, content: GameContent): FightBlockReason | null {
   if (!offer) return 'unknown';
   if (!state.alive) return 'dead';
   if (state.activeFight || state.pendingEvents.length > 0) return 'busy';
   if (state.fighter.retired && offer.kind !== 'farewell') return 'retired';
   if (injuryVeto(state)) return 'injured';
   if (state.fighter.suspendedYears > 0) return 'suspended';
-  if (state.energy.current < offer.campCost) return 'no-energy';
+  if (sessionsLeft(state, content) < offer.campSessions) return 'no-sessions';
   return null;
 }
 
@@ -170,16 +172,13 @@ export interface AcceptOptions {
 /** Aceita a oferta: paga o camp, faz o corte de peso, inicia a luta e joga o 1º round. */
 export function acceptOffer(state: GameState, offerId: string, opts: AcceptOptions, content: GameContent): GameState {
   const offer = state.fighter.offers.find((o) => o.id === offerId);
-  if (fightBlockReason(state, offer) !== null || !offer) return state;
+  if (fightBlockReason(state, offer, content) !== null || !offer) return state;
   const rng = createRng(state.rngState);
   const aggressive = !!opts.aggressiveCut && offer.rules === 'mma';
   const missed = aggressive && rng.chance(AGGRESSIVE_CUT_MISS_CHANCE);
 
-  let s: GameState = {
-    ...state,
-    energy: { ...state.energy, current: state.energy.current - offer.campCost },
-    fighter: { ...state.fighter, offers: state.fighter.offers.filter((o) => o.id !== offerId) },
-  };
+  let s: GameState = useSessions(state, offer.campSessions);
+  s = { ...s, fighter: { ...s.fighter, offers: s.fighter.offers.filter((o) => o.id !== offerId) } };
   if (missed) {
     s = { ...s, character: { ...s.character, stats: addStats(s.character.stats, { health: -3 }) } };
     s = appendLog(s, 'Você não bateu o peso! Multa de 20% da bolsa e um corpo mais fraco para a luta.');
@@ -566,8 +565,7 @@ function effectOffer(state: GameState, kind: NonNullable<FighterEffects['offer']
 // Academia (ações do jogador)
 // ---------------------------------------------------------------------------
 
-export const GYM_JOIN_COST = 1;
-export type GymBlockReason = 'dead' | 'busy' | 'too-young' | 'other-city' | 'current' | 'no-money' | 'no-energy' | 'unknown';
+export type GymBlockReason = 'dead' | 'busy' | 'too-young' | 'other-city' | 'current' | 'no-money' | 'unknown';
 
 /** Pode pagar: menor de idade (pais pagam), bolsa de atleta (reputação ≥ 15) ou dinheiro para a mensalidade. */
 export function canAffordGym(state: GameState, fee: number): boolean {
@@ -583,15 +581,13 @@ export function gymBlockReason(state: GameState, gymId: string, content: GameCon
   if (gym.city !== null && gym.city !== state.character.city) return 'other-city';
   if (state.character.age < gym.minAge) return 'too-young';
   if (!canAffordGym(state, gym.fee)) return 'no-money';
-  if (state.energy.current < GYM_JOIN_COST) return 'no-energy';
   return null;
 }
 
-/** Entra (ou troca) de academia. Custa 1 de energia. */
+/** Entra (ou troca) de academia. */
 export function joinGym(state: GameState, gymId: string, content: GameContent): GameState {
   if (gymBlockReason(state, gymId, content) !== null) return state;
-  const s = { ...state, energy: { ...state.energy, current: state.energy.current - GYM_JOIN_COST } };
-  return enterGym(s, gymId, content);
+  return enterGym(state, gymId, content);
 }
 
 export function leaveGym(state: GameState, content: GameContent): GameState {

@@ -19,7 +19,6 @@ import { bodyFor } from '../fighting/body';
 import { leaveRankings } from '../fighting/orgs';
 import { baseSkills, newFighterProfile } from '../fighting/profile';
 import { emptyHealth } from '../health/types';
-import { maxEnergy } from '../lifeStages/energy';
 import { educationForAge } from '../lifeStages/school';
 import { addRelation, createPerson, getPerson, relationsOf } from '../relationships/people';
 import { recordMarriage } from '../economy/family';
@@ -238,7 +237,7 @@ export function continueAsChild(state: GameState, personId: string, content: Gam
     year: state.year,
     character,
     money: 0,
-    energy: { current: 0, max: 0, reserved: 0 },
+    yearUses: {},
     flags: {
       ...(child.flags.interesse_luta ? { interesse_luta: true, gostaDeLuta: true } : {}),
       ...(mirim ? { lutador_mirim: true, artesMarciais: true } : {}),
@@ -284,8 +283,6 @@ export function continueAsChild(state: GameState, personId: string, content: Gam
   // a família que o herdeiro já tinha (coerente com a idade): cônjuge e filhos
   s = heirOwnFamily(s, rng, content);
 
-  const max = maxEnergy(age, character.stats.health);
-  s = { ...s, energy: { current: max, max, reserved: 0 } };
   s = appendLog(s, `Você é ${child.name}, ${age} anos, ${gen}ª geração da família ${state.dynasty.surname}. ${old.sex === 'M' ? 'Seu pai' : 'Sua mãe'}, ${old.name}, faleceu aos ${old.age} anos.`);
   if (cash > 0) s = post(s, 'heranca', toMoney(cash), `Herança de ${old.name}`);
   if (heir.amount > 0) {

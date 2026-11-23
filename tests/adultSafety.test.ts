@@ -83,10 +83,10 @@ describe('conteúdo adulto: 1000 vidas simuladas', () => {
               const forbidden = (SEXUAL_INTERACTIONS.includes(kind) && (s.character.age < 18 || person.age < 18)) || (ADULT_INTERACTIONS.includes(kind) && !s.relationships.settings.adultContent);
               if (allowed && forbidden) v.adultActionMinor++;
               const before = s;
-              s = interact({ ...s, energy: { ...s.energy, current: Math.max(s.energy.current, 2) } }, person.id, kind, C);
+              s = interact({ ...s }, person.id, kind, C);
               if (forbidden) {
                 // ação adulta proibida: o estado não pode ter mudado
-                if (s !== before && JSON.stringify({ ...s, energy: before.energy }) !== JSON.stringify(before)) v.adultActionMinor++;
+                if (s !== before && JSON.stringify({ ...s, yearUses: before.yearUses }) !== JSON.stringify(before)) v.adultActionMinor++;
               }
               checkPending(s, v);
               let g2 = 0;

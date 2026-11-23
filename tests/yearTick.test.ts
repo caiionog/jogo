@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { GAME_CONTENT } from '../src/content';
 import type { GameContent, GameState } from '../src/engine';
-import { advanceYear, maxEnergy, resolveEvent } from '../src/engine';
+import { advanceYear, resolveEvent } from '../src/engine';
 import { makeEvent, makeGame, withAge } from './helpers';
 
 /** Avança N anos sempre escolhendo a primeira opção de cada evento. */
@@ -32,12 +32,12 @@ describe('advanceYear', () => {
     expect(next.log.at(-1)!.age).toBe(1);
   });
 
-  it('renova a energia para o máximo da nova idade', () => {
+  it('zera as repetições do ano e as sessões de treino', () => {
     let g = withAge(makeGame(), 7);
-    g = { ...g, energy: { current: 0, max: 5 } };
+    g = { ...g, yearUses: { 'acao:study': 3 }, fighter: { ...g.fighter, sessionsThisYear: 6 } };
     const next = advanceYear(g, testContent);
-    expect(next.energy.max).toBe(maxEnergy(8, next.character.stats.health));
-    expect(next.energy.current).toBe(next.energy.max);
+    expect(next.yearUses).toEqual({});
+    expect(next.fighter.sessionsThisYear).toBe(0);
   });
 
   it('sorteia 1 ou 2 eventos quando há elegíveis', () => {
