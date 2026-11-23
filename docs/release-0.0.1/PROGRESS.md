@@ -131,7 +131,13 @@ Para retomar numa sessão nova: "Continue a release 0.0.1 a partir do docs/relea
   - Migração v13→v14 (fixture `saves-v13.json`); `tests/swimwear.test.ts` (todas as idades × sexos × contextos,
     guarda-roupa e NPCs: nenhuma peça adulta abaixo de 18), `tests/businessIcons.test.ts`.
   - Capturas: `screenshots/mercado-icones.png`, `screenshots/roupas-banho.png`.
-- [ ] **10. Eventos novos (≥ 40) e intervalo de repetição**
+- [x] **10. Eventos novos (≥ 40) e intervalo de repetição**
+  - `content/events/random/` com 48 eventos (primeira infância, infância, escola, faculdade, trabalho, rua, viagem,
+    saúde, dinheiro, luta, noite, família, velhice), todos com `tone` e riscos inclinados pela sorte. Somam-se aos 10
+    de talento, 2 de sorte, 6 de faculdade, 8 de clube/intercâmbio e 10 de vida noturna desta release.
+  - Intervalo de repetição: `GameState.eventLastAge` + `GameEvent.cooldownYears` (padrão `limits.eventCooldown` = 5).
+  - `tests/eventsCoverage.test.ts`: ≥ 40 novos, ids únicos, todo ano de 3 a 85 com ≥ 5 elegíveis, intervalo
+    respeitado numa vida de 70 anos.
 - [ ] **11. Balanceamento geral** (`npm run sim`, GDD)
 - [ ] **12. Documentação e release** (CHANGELOG, versão 0.0.1, tag local `v0.0.1`)
 

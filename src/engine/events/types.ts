@@ -199,6 +199,8 @@ export interface GameEvent {
   weight: number;
   /** Evento bom ou ruim: a sorte inclina o peso no sorteio do ano. Tag `briga` pesa mais com pavio curto. */
   tone?: 'good' | 'bad';
+  /** Anos mínimos até o evento poder ser sorteado de novo (padrão: `limits.eventCooldown`). */
+  cooldownYears?: number;
   trigger?: EventTrigger;
   /** Se true, só acontece uma vez por vida. */
   once?: boolean;

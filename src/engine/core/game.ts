@@ -334,6 +334,8 @@ function pickYearEvents(state: GameState, content: GameContent, rng: Rng, target
     scheduledEvents,
     pendingEvents: [...state.pendingEvents, ...pending],
     firedEvents: [...state.firedEvents, ...pending.map((p) => p.eventId)],
+    // intervalo de repetição: guarda a idade em que cada evento aconteceu por último
+    eventLastAge: { ...state.eventLastAge, ...Object.fromEntries(pending.map((p) => [p.eventId, state.character.age])) },
   };
 }
 

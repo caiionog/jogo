@@ -15,4 +15,6 @@ export const LIMITS: LimitsConfig = {
   businessDedicateSessions: 2,
   /** Idade mínima para qualquer atividade (bebês só avançam o ano). */
   minActivityAge: 3,
+  /** Um evento aleatório não se repete antes de 5 anos (o evento pode pedir outro intervalo). */
+  eventCooldown: 5,
 };
