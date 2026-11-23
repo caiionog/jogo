@@ -235,11 +235,17 @@ tests/                    # Vitest; fixtures/saves-v1.json = saves reais da Etap
 - **Texto de luta:** acrescente variações em `src/content/fightText/index.ts` na chave do tipo de lance. Placeholders:
   `{a}` (quem age), `{b}`, `{golpe}`, `{finalizacao}`, `{n}`, `{plano}`, `{placar}`, `{tipo}`. O validador exige todas as chaves.
 
-- **Emprego:** `JobDef` em `src/content/jobs/index.ts` (`category` 'meio_periodo'|'formal'|'luta', `minAge`, `education`,
-  `minStats?`, `minReputation?`, `fightReq?`, `salary: [nível 1, nível 5]` antes do custo da cidade, `energy` reservada/ano).
+- **Emprego:** prefira o formato da Etapa 8 em `src/content/jobs/basic/` (ver "Como adicionar (Etapa 8)"). Os empregos
+  da Etapa 5 continuam em `src/content/jobs/index.ts` (`category` 'aprendiz'|'meio_periodo'|'formal'|'luta', `minAge`,
+  `education`, `minStats?`, `minReputation?`, `fightReq?`, `salary: [nível 1, nível 5]` antes do custo da cidade,
+  `energy` reservada/ano).
 - **Bem:** `AssetDef` em `src/content/assets/index.ts` (`kind`, `price: [min,max]` — imóveis × cidade —, `happiness`,
   `reputation?`, `article?` para o log, `variants?`). Taxas/depreciação ficam em `engine/assets/assets.ts`.
-- **Empresa:** `BusinessDef` em `src/content/businesses/index.ts` (`startCost`, `revenue`, `cost`, `managerCost`, `combat?`).
+- **Empresa:** `BusinessDef` em `src/content/businesses/index.ts` (`startCost`, `revenue`, `cost`, `managerCost`, `combat?`;
+  Etapa 8: `open` (abrir do zero/franquia), `forSale` + `saleNames` (aparece à venda no Mercado), `risk`). Regras do
+  fechamento (`businessYear`): o prejuízo sai do bolso do dono (extrato) nos 2 primeiros anos e depois só se o ano
+  anterior foi positivo; dois anos seguidos no vermelho, ou sem dinheiro para cobrir, o negócio quebra e a venda dos
+  equipamentos devolve 25% de `startCost × nível`. Rode `npm run sim` (empresas quebradas do perfil empreendedor ~13%).
 - **Patrocinador:** `SponsorDef` em `src/content/sponsors/index.ts` (marca fictícia, `minReputation`, `amount`, `years`,
   `maxLossStreak`, `scandal`).
 - **Evento econômico:** em `src/content/events/economy/`, com `conditions.economy` e `effects.economy`. Valores sempre
@@ -257,6 +263,17 @@ tests/                    # Vitest; fixtures/saves-v1.json = saves reais da Etap
 - **Evento de legado:** em `src/content/events/legacy/` com `conditions.legacy` (`generation: { min: 2 }`,
   `parentChampion`, `inheritedGym`) e os placeholders `{antecessor}`/`{seu_pai}`.
 
+## Brasil e aparência (Etapa 7)
+- **Só Brasil**: 27 UFs e cidades em `src/content/geo/brasil/` (`data.generated.ts` é gerado por `scripts/geo-fetch.ts`
+  a partir do IBGE; o jogo não acessa a rede). Nascimento sorteado pela população; `cityMultOf` escala salários,
+  aluguel, imóveis e saúde. Mudança de cidade: `moveTo`/`moveBlockReason` (18+, R$ 3.000 na UF, R$ 8.000 fora) ou
+  efeito de evento `move: { to: 'outra_capital'|'mesma_uf', cost? }`.
+- **Nomes**: IBGE por década e região; nome completo = nome + sobrenome da mãe + sobrenome do pai.
+- **Aparência**: genes em `engine/character/appearance/` (`sample.ts` por cor ou raça com faixas amplas e sobrepostas,
+  `inherit.ts` para filhos, `parentsFor` para família coerente). Usa um RNG próprio (`lookRng`): nunca mexe no
+  `rngState`. `deriveAvatar` é puro e nada do avatar vai para o save. A regra 8 (não discriminação) vale para tudo isso.
+- **Cidade nova**: entra pelo script de dados; academia nova precisa de `city` existente nos dados de geo.
+
 ## Interface (Etapa 8)
 - **Tela principal** (`screens/Life.tsx`): busto pixel (toque → Perfil/guarda-roupa), feed da vida por idade, energia,
   5 barras, barra inferior Ocupação · Bens · **+ Idade** · Relações · Atividades. Menu ≡: Conquistas, Hall da Fama,
@@ -267,7 +284,23 @@ tests/                    # Vitest; fixtures/saves-v1.json = saves reais da Etap
   toque ≥ 44 px, contraste AA nos dois modos, animações com `prefers-reduced-motion`. Ícones: lucide-react.
 - **Ação desabilitada mostra o motivo** (`ListItem disabled reason=…`), vindo de uma `*BlockReason` da engine.
 - **Pop-ups**: `EventModal` (evento + miniatura do NPC) e `ResultModal` (texto + diff dos atributos visíveis, calculado
-  no store por `diffOf`). Ações viram toast.
+  no store por `diffOf`, não no `GameState`). Ações viram toast.
+- **Avatar**: `PixelAvatar` (corpo inteiro ou `bust`), `AvatarThumb` (miniatura com cache) e `AvatarSheet` (perfil e
+  guarda-roupa por camada). NPCs: `personAvatar`/`fighterAvatar` (`avatar/descriptors.ts`). Direção de arte em `ASSETS.md`.
+- **Finanças**: "Anos anteriores" abre cada ano arquivado por categoria (`economy.history[].totals`).
+- **Telas antigas** (`components/CareerPanel`, `FinancePanel`, `HealthPanel`, `RelationshipsPanel`, `RankingPanel`…)
+  são reaproveitadas dentro dos menus; algumas ainda usam classes `slate-*`, que o `tokens.css` remapeia para os
+  tokens. Ao mexer numa delas, prefira `var(--ds-*)` e evite `text-white`/cores fixas (contraste no tema claro).
+
+### Verificação (Etapa 8)
+- Testes de UI em `tests/ui.test.tsx` (jsdom + Testing Library; o save é mockado e `canvas.getContext` devolve null).
+- Antes de entregar uma mudança visível: `npm run dev` e Playwright (já instalado; não rode `playwright install`) em
+  375×667 e 414×896. Os `data-testid` principais: `age-button`, `nav-<menu>`, `screen-<id>`, `event-choice`,
+  `result-ok`, `career-<jobId>`, `apply-job`, `offer-card`, `biz-offer`, `buy-confirm`, `my-asset`, `my-business`.
+- Para testar um cenário, gere o `GameState` com a engine (Node/tsx) e grave em IndexedDB (`keyval-store`/`keyval`,
+  chaves `save:slot1` e `slot:active`) antes de recarregar a página.
+- Versão de teste: `npm run build:artifact -- arquivo.html` (fragmento com `<meta charset="utf-8">`, sem service
+  worker). "Exportar save" não funciona nessa versão (sem permissão de download).
 
 ### Como adicionar (Etapa 8)
 - **Item de menu**: `ListItem` na tela-mãe (`screens/menus/*.tsx`) com `onClick={() => nav.open('id')}` e o caso

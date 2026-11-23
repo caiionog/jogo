@@ -6,14 +6,19 @@ perde dinheiro, se machuca, se aposenta, envelhece e morre. Depois, se tiver fil
 
 Tudo é fictício: ligas, academias, marcas, bancos e lutadores. Os textos estão em português do Brasil.
 
-**Versão 1.0** — design completo em [`GDD.md`](./GDD.md); guia técnico em [`CLAUDE.md`](./CLAUDE.md).
+**Versão 1.2** — design completo em [`GDD.md`](./GDD.md); guia técnico em [`CLAUDE.md`](./CLAUDE.md); estado atual e
+pendências em [`docs/HANDOFF.md`](./docs/HANDOFF.md).
 
 ## O que tem no jogo
-- **Vida ano a ano** com energia, ações e eventos com escolhas e consequências.
+- **Vida ano a ano** com energia, ações e eventos com escolhas e consequências, num feed por idade; menus em camadas
+  (Ocupação, Bens, Relações, Atividades) e um botão "+ Idade".
+- **Brasil**: 27 UFs e cidades com dados do IBGE, nomes por década e região, custo de vida por cidade.
+- **Avatar em pixel art** de corpo inteiro, do bebê ao idoso, com genética herdada, roupas por camada e marcas de luta.
 - **Escola**: notas, disciplina, clubes, formatura.
 - **Carreira de luta**: treino, faixas de jiu-jitsu, lutas round a round com córner, ranking vivo, cinturões, rivais.
 - **Relações**: família, amigos, namoro, casamento e filhos.
-- **Economia**: emprego, bolsas, patrocínios, banco, imóveis, carros, a sua própria academia e outras empresas.
+- **Economia**: 26 empregos (de jovem aprendiz a segurança) com escada de cargos, bolsas, patrocínios, banco e um
+  Mercado de imóveis, veículos, luxo e negócios (comprar existente ou abrir do zero).
 - **Corpo**: lesões com tratamento (repouso, fisioterapia, cirurgia), sequelas, doenças da velhice e dano acumulado na
   cabeça.
 - **Fim de vida**: aposentadoria, testamento, obituário com nota da vida e continuar como filho(a), com dinastia e

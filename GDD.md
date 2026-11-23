@@ -41,12 +41,14 @@ Modificador de saúde: < 25 → −2 · < 50 → −1 · ≥ 85 → +1.
 
 ## 3. Personagem
 - Criação em 3 passos (Etapa 7): nome, sobrenomes e sexo → UF e cidade (escolhidas ou sorteadas pela população) →
-  aparência (cor ou raça pré-sorteada pela UF e ajustes finos), com prévia 3D "ver como bebê/criança/adulto/idoso".
-  Atributos iniciais sorteados. Ver seção 9.
-- Atributos (0–100): **Saúde, Felicidade, Inteligência, Aparência, Força, Condicionamento**.
+  aparência (cor ou raça pré-sorteada pela UF e ajustes finos), com prévia em pixel art "ver como" nas 5 fases.
+  Atributos iniciais sorteados. Ver seções 9 e 10.
+- Atributos visíveis (0–100, Etapa 8): **Saúde, Felicidade, Inteligência, Aparência, Capacidade atlética**.
+  (Até a Etapa 7 eram seis, com Força e Condicionamento; viraram a Capacidade atlética.)
 - Dinheiro, flags de história, histórico de eventos.
 - Altura, peso e biotipo (crescem com a idade) e família com renda (`familyWealth`).
-- Perfil de lutador (Etapa 3): habilidades de luta, talento oculto, faixa, reputação e cartéis — ver seção 5.
+- Perfil de lutador (Etapa 3, refeito na Etapa 8): habilidades ocultas (jiu-jitsu, trocação, queixo), talento oculto,
+  faixa, reputação e cartéis — ver seções 5 e 10.
 
 ## 4. Escola (Etapa 2)
 
@@ -92,7 +94,7 @@ fica em ~76; quem só brinca fica em ~67 e repete ~1,4 vez; quem mata aula sem p
 A ação **Estudar** (Etapa 1) também dá média +2 quando o personagem está matriculado, pelo mesmo mecanismo de efeitos.
 
 **Clubes**: 🥋 Judô (a partir do Fund. I), 🤼 Luta olímpica (a partir do Fund. II), ⚽ Futebol, ♟️ Xadrez, 🎭 Teatro.
-Os clubes de luta dão força e condicionamento todo ano e a flag `interesse_luta`.
+Os clubes de luta dão capacidade atlética e um pouco de jiu-jitsu/trocação todo ano e a flag `interesse_luta`.
 
 ### Eventos escolares (34)
 - **Pré-escola**: primeiro dia, disputa de brinquedo, desenho da família.
@@ -120,18 +122,21 @@ Tudo é **fictício**: organizações, academias, eventos e lutadores.
 | Kids | Copa Dente-de-Leão de Artes Marciais · Copa Kids Faixa Colorida (jiu-jitsu) | 6–14 | treinar (academia ou clube de luta da escola) | grappling, 1 round |
 | Amador | Circuito Amador Punho de Ferro (MMA) · Copa Tatame Aberto (jiu-jitsu por faixa) | 15+ | treinar | MMA 3×; jiu-jitsu 1 round |
 | Regional | **LFM** – Liga Fronteira MMA (2 vitórias amadoras, reputação 10) · **ARC** – Arena Regional de Combate (3 vitórias amadoras, reputação 15) | 18+ | proposta (evento) | 3 rounds; 5 em disputa de cinturão; ranking top 10 + campeão |
-| Principal | **Circuito Titã** | 20+, assina até os 31 | 9 vitórias pro, reputação 45, aproveitamento ≥ 60% nas últimas 10 lutas pro (recalibrado na Etapa 4) | ranking top 15 + campeão por categoria; cinturão com 2 vitórias seguidas no top 3 |
+| Principal | **Circuito Titã** | 20+, assina até os 31 | 9 vitórias pro, reputação 50, aproveitamento ≥ 65% nas últimas 10 lutas pro (recalibrado nas Etapas 4 e 8) | ranking top 15 + campeão por categoria; cinturão com 2 vitórias seguidas no top 3 |
 
 - Contratos chegam como **eventos automáticos** quando os requisitos são atendidos e o jogador pode aceitar ou recusar. Só são propostas organizações de nível acima do contrato atual.
 - **Ofertas de luta** são renovadas a cada ano e vencem no fim dele. Cada luta custa **energia de camp**: kids 1, amador 2, pro 3, título 4, substituição 1. Por isso dá para lutar 1–3 vezes por ano e ainda treinar.
 - Lesão ou suspensão bloqueiam as ofertas.
 
 ### Perfil do lutador
-- **Habilidades** (0–100): trocação, wrestling, jiu-jitsu, defesa, cardio e queixo.
-  - Força e condicionamento (atributos base) entram na luta como potência e custo de estamina.
-  - O **queixo** inicial é genético (sorteado entre 40 e 75). Ele cai com KOs sofridos e com a idade, e o sparring o treina um pouco.
+- **Habilidades ocultas** (0–100, Etapa 8): **jiu-jitsu** (quedas, clinch e chão) e **trocação** (ataque e defesa em
+  pé). Nunca aparecem como número na UI. Até a Etapa 7 eram seis (trocação, wrestling, jiu-jitsu, defesa, cardio e
+  queixo); a migração v8 as funde.
+  - A **Capacidade atlética** (atributo visível) entra na luta como estamina, potência e parte da defesa e das quedas.
+  - O **queixo** não é treinável: `chinBase` genético (40–75) × fator de idade (cai 2,5% por ano depois dos 32, até
+    ×0,55) − dano cerebral × 0,25, com piso de 5 + saúde/10 (`fighting/chin.ts`).
 - **Talento** (oculto, 0,65–1,35): multiplica os ganhos de treino e é o que diferencia as vidas.
-- **Altura e peso**: altura adulta sorteada, curva de crescimento e peso pelo IMC (idade, força, condicionamento, biotipo).
+- **Altura e peso**: altura adulta sorteada, curva de crescimento e peso pelo IMC (idade, capacidade atlética, biotipo).
   - A **categoria** é a menor cujo limite comporta 92% do peso de caminhada.
   - Masculino: mosca 57 · galo 61 · pena 66 · leve 70 · meio-médio 77 · médio 84 · meio-pesado 93 · pesado 120. Feminino: palha 52 · mosca 57 · galo 61 · pena 66.
   - **Corte agressivo** (opção ao aceitar a luta): vantagem de tamanho (mais potência), com 25% de chance de não bater o peso. Errar custa multa de 20% da bolsa, estamina inicial de 85, −3 de saúde e um evento.
@@ -160,33 +165,40 @@ Tudo é **fictício**: organizações, academias, eventos e lutadores.
   - Especialidade: ×1,25 na habilidade da academia (×1,1 em tudo nas de MMA).
 - **Ações**:
 
-  | Ação | ⚡ | Efeito |
+  | Ação (Etapa 8) | ⚡ | Efeito |
   |---|---|---|
-  | Treino técnico | 2 | trocação, wrestling ou defesa (+ um pouco de defesa) |
-  | Sparring | 2 | ganho 1,6× em duas habilidades + defesa + queixo; 8% de chance de lesão |
-  | Condicionamento | 1 | cardio + condicionamento |
-  | Jiu-jitsu | 2 | conta o ano para a faixa |
+  | Jiu-jitsu | 2 | jiu-jitsu (base 3,5); conta o ano para a faixa |
+  | Trocação | 2 | trocação (base 4,0) |
+  | Físico | 1 | capacidade atlética (base 3,6) e +1 de saúde; 10% de lesão com saúde abaixo de 50 |
+  | Sparring | 2 | jiu-jitsu (2,8) e trocação (3,2), um pouco de atlética, −1 de saúde, pouco dano cerebral; 8% de lesão |
+
+  Depois de cada treino o treinador comenta em palavras (`content/fightText/coach.ts`), sem números.
 
 - **Lutar ensina**: cada luta dá pequenos ganhos nas habilidades usadas.
-- **Declínio** a partir dos 33 (cardio e queixo primeiro). A saúde se recupera 35% do que falta para 90 por ano até os 45.
-- **Clubes da escola** (Etapa 2) contam como treino: judô dá wrestling e jiu-jitsu; luta olímpica dá wrestling e cardio.
+- **Declínio** das habilidades a partir dos 33; a capacidade atlética cai com a idade e com a falta de treino (carga
+  de treino do ano). A saúde se recupera 35% do que falta para 90 por ano até os 45.
+- **Clubes da escola** (Etapa 2) contam como treino: judô dá jiu-jitsu e atlética; luta olímpica dá jiu-jitsu e atlética.
 
 ### Simulação de luta (`engine/fighting/simulateFight.ts`)
 - **Máquina de estados**: `startFight → playRound → 'break' → chooseCorner → … → 'finished'`. O estado é JSON, com RNG próprio, e fica salvo no meio da luta.
 - **Round**: 12 trocas (16 no grappling). Em cada troca age um lutador, sorteado por agressividade × estratégia × estamina (quem está por cima no chão age mais).
-  - **Em pé**: golpe, queda ou clinch. A chance de tentar a queda cresce com a vantagem de wrestling/grappling e com a estratégia "chão".
-  - **Golpe**: chance de acertar = `0,12 + 0,68·σ((ataque − defesa)/20)`. Dano = `(4 + trocação/18 + força/30) × rng`, atenuado pelo queixo e pela defesa.
+  - **Perfil de combate** (`combat()`, Etapa 8): em pé = trocação; defesa em pé = 0,65·trocação + 0,15·jiu-jitsu +
+    0,2·atlética; queda = 0,75·jiu-jitsu + 0,25·atlética; chão = jiu-jitsu; estamina e potência = atlética; queixo =
+    `chinOf`.
+  - **Em pé**: golpe, queda ou clinch. A chance de tentar a queda cresce com a vantagem de queda/chão e com a estratégia "chão".
+  - **Golpe**: chance de acertar = `0,12 + 0,68·σ((ataque − defesa)/20)`. Dano = `(4 + em pé/18 + potência/30) × rng`, atenuado pelo queixo e pela defesa.
   - **Golpe pesado** (~13%, ×2,3): pode causar knockdown, e o knockdown pode virar **KO** conforme o dano acumulado e o queixo. Dano ≥ 100 ou árbitro (a partir de 78) = **TKO**.
-  - **Queda**: `0,08 + 0,7·σ((wrestling − defesa de queda)/16)`. Falhar cansa.
+  - **Queda**: `0,08 + 0,7·σ((queda − defesa de queda)/16)`. Falhar cansa.
   - **Chão por cima**: ground and pound, controle ou **finalização**, cuja chance cresce com o cansaço do defensor. **Por baixo**: raspagem, finalização da guarda ou levantar.
-  - **Estamina**: cada ação custa `base × (1,45 − cardio/100) × estratégia`. Recupera `8 + cardio/7` no intervalo. Eficiência = estamina × (1 − dano/250).
+  - **Estamina**: cada ação custa `base × (1,45 − atlética/100) × estratégia`. Recupera `8 + atlética/7` no intervalo. Eficiência = estamina × (1 − dano/250).
   - **Interrupção médica**: no intervalo, se o dano ≥ 85.
 - **Córner** (escolhido entre rounds; o NPC usa `aiStrategy`):
   - `pressionar`: mais volume, dano e gasto, menos defesa;
   - `seguro`: mais defesa, menos volume;
   - `chão`: muito mais quedas. É bom para quem é melhor no chão e ruim para o trocador, porque quedas bloqueadas cansam.
 - **Juízes**: 3 juízes, 10-9 por round (10-8 com domínio ou 2 knockdowns), cada um com ruído próprio → decisão unânime, dividida, majoritária ou empate. No grappling, a decisão é por pontos (queda 2, raspagem 2, controle 3).
-- **Calibragem** (testes): 65 × 50 em todas as habilidades → o superior vence ~88%. Entre lutadores próximos: ~30% KO/TKO, ~10% finalização, ~60% decisão.
+- **Calibragem** (testes): 65 × 50 em todas as habilidades → o superior vence ~88%. O especialista em chão vence mais
+  no chão e o trocador, em pé (teste da Etapa 8). Entre lutadores próximos: ~30% KO/TKO, ~10% finalização, ~60% decisão.
 - **Narração**: `src/content/fightText/`, com várias variações por tipo de lance.
 
 ### Mundo vivo, ranking e matchmaking
@@ -209,7 +221,8 @@ Tudo é **fictício**: organizações, academias, eventos e lutadores.
   - campeão defende contra o top 3.
   - Kids e amador usam adversários efêmeros no nível do jogador.
 - **Dinheiro**: bolsa da organização × (1 + rep/100), mais bônus de vitória, mais 50% de chance de bônus de performance em finalização. Disputa de cinturão paga em dobro.
-  - Bolsas: LFM R$ 3 mil + 3 mil · ARC R$ 4 mil + 4 mil · Titã R$ 30 mil + 30 mil (+50 mil de performance).
+  - Bolsas: LFM R$ 3 mil + 3 mil · ARC R$ 4 mil + 4 mil · Titã R$ 25 mil + 25 mil (+40 mil de performance; era
+    30 + 30 + 50 até a Etapa 7).
 - **Lesão**: chance após cada luta (4%, +30% em derrota por KO, +12% com dano alto) ou no sparring. A lesão fica guardada como `injury { nome, anosRestantes }`, bloqueia lutas, tira 10 de saúde e passa no fim do ano.
 
 ### Eventos de carreira (24, em `src/content/events/fighting/`)
@@ -242,7 +255,7 @@ A política do script entra na melhor academia cedo, treina com toda a energia, 
 
 Os principais ajustes que levaram a esses números:
 - recuperação anual de saúde (antes, 2/3 morriam antes dos 40);
-- experiência de luta e treino de cardio e defesa;
+- experiência de luta e treino de cardio e defesa (modelo de 6 habilidades da época);
 - talento;
 - teto de evolução dos NPCs;
 - queixo genético;
@@ -345,7 +358,7 @@ Os textos adultos são sugestivos e nunca gráficos.
   - divórcio: −20 de felicidade e perda de metade do dinheiro (divisão simples).
 - **Carreira × amor**:
   - lutas frequentes desgastam a relação: a 1ª luta do ano não pesa, cada uma das seguintes custa −2 (−3 com parceiro ciumento ou protetor);
-  - parceiro que apoia (afeto ≥ 70, sem traço que reprove a luta) dá +3 de felicidade por ano e +3 de cardio nas lutas;
+  - parceiro que apoia (afeto ≥ 70, sem traço que reprove a luta) dá +3 de felicidade por ano e +3 de capacidade atlética nas lutas;
   - eventos de "pare de lutar", camp longe de casa e apoio no camp.
 
 ### Filhos
@@ -353,7 +366,7 @@ Os textos adultos são sugestivos e nunca gráficos.
   - Chance de 45% por tentativa, 25% numa noite sem proteção e 2% com proteção.
   - Há um evento de decisão: ter o bebê ou entregar para adoção ao nascer.
   - **Adoção**: qualquer casal casado, por R$ 10 mil.
-- **Nascimento** no ano seguinte. Atributos = média dos pais ± 12 (seed), e o atletismo vem de força e condicionamento.
+- **Nascimento** no ano seguinte. Atributos = média dos pais ± 12 (seed), inclusive a capacidade atlética.
 - **Despesa**: R$ 3 mil por ano por filho menor de 18. Sem dinheiro, −5 de felicidade.
 - **Eventos**: o filho quer lutar, sofre bullying (o tema da Etapa 2), tem notas ruins ou diz que você é o herói dele.
 
@@ -562,7 +575,7 @@ morre, e o jogador pode continuar a história como um dos filhos. Conquistas e H
   - **luta**: chance = 3% + 22% × dano recebido + 20% se nocauteado (×0,45 no grappling). A zona sorteada pesa pela
     regra: trocação acerta mais cabeça e mãos; grappling, mais joelho e ombro;
   - **sparring**: 8% por sessão;
-  - **treino excessivo**: 10% no condicionamento com saúde abaixo de 50;
+  - **treino excessivo**: 10% no treino físico com saúde abaixo de 50;
   - **eventos**.
 - **Tempo em meses**: o ano tira 12 meses de cada lesão. Lesões graves (gravidade ≥ 3) com mais de 6 meses vetam
   lutas. As demais permitem lutar, mas com penalidade nas habilidades e **35% de chance de agravar**: o tempo dobra
@@ -589,7 +602,7 @@ morre, e o jogador pode continuar a história como um dos filhos. Conquistas e H
   ano. Doenças e lesões puxam para baixo. O físico cai mais depois dos 55 e a aparência depois dos 70.
 - **6 doenças** (`content/health`): hipertensão, diabetes, cardiopatia, artrose, câncer e neurodegenerativa.
   - Chance anual = base × (1 + anos acima da idade mínima ÷ 20) × fatores de risco (saúde, padrão de vida simples,
-    condicionamento baixo, lesões e sequelas, dano cerebral). Academia comum e dieta reduzem o risco.
+    capacidade atlética baixa, lesões e sequelas, dano cerebral). Academia comum e dieta reduzem o risco.
   - O diagnóstico vira evento (tratar ou ignorar). Doença tratada tira metade da saúde e cobra o tratamento anual
     pelo extrato.
 - **Ações de saúde**: check-up, academia comum e dieta (⚡1 e R$ cada, uma vez por ano). O check-up coloca as doenças
@@ -764,8 +777,8 @@ mecânica, e nenhum evento tem condição de cor ou raça. Garantido por `tests/
 Função pura da engine que devolve um `AvatarDescriptor` a partir do estado; nada disso vai para o save.
 - **Idade**: fase (bebê 0–2, criança 3–11, adolescente 12–17, adulto 18–59, idoso 60+) com crescimento contínuo
   (proporções interpoladas, sem salto entre fases); rugas, grisalho e calvície crescem com a idade e os genes.
-- **Corpo**: gordura pelo IMC da Etapa 3 (força, condicionamento, biotipo), genes, padrão de vida e saúde;
-  musculatura por força, condicionamento e habilidades de luta. Treinar ou parar de treinar muda o busto.
+- **Corpo**: gordura pelo IMC (capacidade atlética, biotipo), genes, padrão de vida e saúde; musculatura pela
+  capacidade atlética e pela carga de treino do ano (`fighter.trainingLoad`). Treinar ou parar muda o tipo físico.
 - **Marcas da luta**: cicatriz, nariz torto e orelha de couve-flor (sequelas da Etapa 6), olho roxo depois de luta
   perdida ou lesão na cabeça no ano. **Expressão**: feliz, neutra, triste, cansada ou machucada.
 - **Roupa**: automática pelo contexto (body de bebê, uniforme na escola, kimono com a **cor real da faixa** ou
@@ -792,8 +805,9 @@ pelo extrato). As desbloqueadas ficam em `GameState.wardrobe` (gancho para cosm�
 - Medidas (dev, iPhone 13 emulado, CPU 4× mais lenta): o busto 3D aparece em ~1,6 s; parado, 0 desenhos.
 
 ### Página de desenvolvimento
-`npm run dev` → `/dev/avatars`: grade de 5 fases × 3 níveis de gordura × 6 combinações de genes e roupas, uma linha
-de musculatura e um busto ao vivo do item tocado. Fica fora do build de produção.
+`npm run dev` → `/dev/avatars`. Desde a Etapa 8 mostra a pixel art: 5 fases × 5 tipos físicos (M/F), a rampa de pele,
+todos os cabelos em 3 cores, barbas, rostos e expressões, roupas em magro e acima do peso, marcas e 24 NPCs. Fica fora
+do build de produção.
 
 ## 10. Nova interface, atributos, empregos, mercado e pixel art (Etapa 8)
 
