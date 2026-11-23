@@ -18,4 +18,18 @@ export const BUSINESSES: readonly BusinessDef[] = [
   { id: 'mercadinho', name: 'Mercadinho', startCost: 90000, revenue: 160000, cost: 137000, managerCost: 28000, forSale: true, saleNames: ['Mercadinho Bom Preço', 'Mercearia Dona Lurdes', 'Mini Mercado Vizinho'], risk: 'baixo' },
   { id: 'loja_roupas', name: 'Loja de roupas', startCost: 70000, revenue: 100000, cost: 84000, managerCost: 22000, forSale: true, saleNames: ['Loja Estilo Urbano', 'Boutique Flor de Lis', 'Moda & Cia'], risk: 'alto' },
   { id: 'academia_luta', name: 'Academia de luta', startCost: 140000, revenue: 125000, cost: 104000, managerCost: 30000, combat: true, forSale: true, saleNames: ['Academia Tatame Vivo', 'CT Punho de Ferro', 'Equipe Raiz Jiu-Jitsu'], risk: 'medio' },
+  // release 0.0.1: mais tipos no Mercado (todos fictícios)
+  { id: 'pizzaria', name: 'Pizzaria', startCost: 85000, revenue: 130000, cost: 112000, managerCost: 24000, forSale: true, saleNames: ['Pizzaria Forno a Lenha', 'Pizza da Nona', 'Pizzaria Bella Massa'], open: 'zero', risk: 'medio' },
+  { id: 'padaria', name: 'Padaria', startCost: 110000, revenue: 170000, cost: 147000, managerCost: 28000, forSale: true, saleNames: ['Padaria Pão Quentinho', 'Panificadora Trigo de Ouro', 'Padaria da Esquina'], risk: 'baixo' },
+  { id: 'salao_beleza', name: 'Salão de beleza', startCost: 45000, revenue: 70000, cost: 59000, managerCost: 16000, forSale: true, saleNames: ['Salão Espelho Meu', 'Studio Belle', 'Salão Cachos & Cia'], open: 'zero', risk: 'baixo' },
+  { id: 'farmacia', name: 'Farmácia', startCost: 160000, revenue: 240000, cost: 214000, managerCost: 32000, forSale: true, saleNames: ['Farmácia Bem-Estar', 'Drogaria Vida Leve', 'Farmácia do Povo'], risk: 'baixo' },
+  { id: 'oficina', name: 'Oficina mecânica', startCost: 75000, revenue: 105000, cost: 89000, managerCost: 22000, forSale: true, saleNames: ['Oficina Chave de Roda', 'Auto Center Pistão', 'Mecânica do Juca'], open: 'zero', risk: 'medio' },
+  { id: 'pet_shop', name: 'Pet shop', startCost: 60000, revenue: 88000, cost: 75000, managerCost: 18000, forSale: true, saleNames: ['Pet Shop Focinho Feliz', 'Banho & Tosa Au Au', 'Pet Center Patinha'], open: 'zero', risk: 'medio' },
+  { id: 'sorveteria', name: 'Sorveteria', startCost: 55000, revenue: 78000, cost: 67000, managerCost: 16000, forSale: true, saleNames: ['Sorveteria Gelato Tropical', 'Sorvetes Polo Sul', 'Picolé da Praça'], open: 'franquia', risk: 'medio' },
+  { id: 'food_truck', name: 'Food truck', startCost: 45000, revenue: 70000, cost: 60000, managerCost: 15000, open: 'zero', risk: 'alto' },
+  { id: 'grafica', name: 'Gráfica rápida', startCost: 70000, revenue: 92000, cost: 79000, managerCost: 20000, forSale: true, saleNames: ['Gráfica Tinta Fresca', 'Copiadora Express', 'Gráfica Papel & Cor'], risk: 'medio' },
+  { id: 'loja_celulares', name: 'Loja de celulares', startCost: 90000, revenue: 140000, cost: 122000, managerCost: 24000, forSale: true, saleNames: ['Cell Point', 'Mundo do Celular', 'Conserta Já Celulares'], open: 'franquia', risk: 'alto' },
+  { id: 'pousada', name: 'Pousada', startCost: 260000, revenue: 210000, cost: 172000, managerCost: 36000, forSale: true, saleNames: ['Pousada Brisa do Mar', 'Pousada Recanto Verde', 'Pousada Sol Nascente'], risk: 'medio' },
+  { id: 'bar', name: 'Bar', startCost: 65000, revenue: 115000, cost: 99000, managerCost: 22000, forSale: true, saleNames: ['Bar do Gringo', 'Boteco da Esquina', 'Bar Saideira'], open: 'zero', risk: 'alto' },
+  { id: 'estudio_tatuagem', name: 'Estúdio de tatuagem', startCost: 40000, revenue: 68000, cost: 57000, managerCost: 16000, forSale: true, saleNames: ['Estúdio Tinta Viva', 'Agulha de Ouro Tattoo', 'Studio Traço Fino'], open: 'zero', risk: 'medio' },
 ];

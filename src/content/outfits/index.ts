@@ -66,4 +66,13 @@ export const OUTFITS: readonly OutfitDef[] = [
   { id: 'arara_social', name: 'Camisa de seda Maison Arara', layer: 'cima', minAge: 16, maxAge: 120, context: 'luxo', colors: ['#f4e3b1', '#1e1b4b', '#7f1d1d'], price: 9000, unlockedByDefault: false },
   { id: 'cronos_terno', name: 'Paletó sob medida Cronos Wear', layer: 'agasalho', minAge: 18, maxAge: 120, context: 'luxo', colors: ['#0f172a', '#334155', '#78350f'], price: 35000, unlockedByDefault: false },
   { id: 'cronos_moletom', name: 'Moletom Cronos Wear Edição Ouro', layer: 'cima', minAge: 14, maxAge: 120, context: 'luxo', colors: ['#e3b52f', '#0b0b0b'], price: 6000, unlockedByDefault: false },
+  // ---- praia e piscina (release 0.0.1): roupas de banho adultas só 18+; crianças e adolescentes usam peças fechadas ----
+  { id: 'biquini', name: 'Biquíni', layer: 'inteira', minAge: 18, maxAge: 120, context: 'praia', colors: ['#d8485e', '#2f7fd0', '#f0b030', '#1f2a44', '#3fa06a'], unlockedByDefault: true },
+  { id: 'maio', name: 'Maiô', layer: 'inteira', minAge: 18, maxAge: 120, context: 'praia', colors: ['#1f2a44', '#c23a3a', '#2f7fd0', '#e070a8'], unlockedByDefault: true },
+  { id: 'sunga', name: 'Sunga', layer: 'baixo', minAge: 18, maxAge: 120, context: 'praia', colors: ['#1f2a44', '#2f7fd0', '#c23a3a', '#3fa06a'], unlockedByDefault: true },
+  { id: 'bermuda_praia', name: 'Bermuda de praia', layer: 'baixo', minAge: 18, maxAge: 120, context: 'praia', colors: ['#f0a030', '#2fa0c0', '#d8485e', '#3fa06a'], pattern: 'estampa', unlockedByDefault: true },
+  { id: 'saida_praia', name: 'Saída de praia', layer: 'agasalho', minAge: 18, maxAge: 120, context: 'praia', colors: ['#f6efe0', '#f0c0d0', '#a8d8e8'], unlockedByDefault: true },
+  { id: 'maio_infantil', name: 'Maiô infantil', layer: 'inteira', minAge: 1, maxAge: 17, context: 'praia', colors: ['#e070a8', '#2f7fd0', '#f0b030'], unlockedByDefault: true },
+  { id: 'camiseta_uv', name: 'Camiseta UV', layer: 'cima', minAge: 1, maxAge: 17, context: 'praia', colors: ['#2fa0c0', '#f0a030', '#3fa06a'], unlockedByDefault: true },
+  { id: 'bermuda_infantil', name: 'Bermuda de praia infantil', layer: 'baixo', minAge: 1, maxAge: 17, context: 'praia', colors: ['#1f2a44', '#d8485e', '#2f7fd0'], unlockedByDefault: true },
 ];

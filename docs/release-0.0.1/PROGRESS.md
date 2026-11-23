@@ -94,7 +94,7 @@ Para retomar numa sessão nova: "Continue a release 0.0.1 a partir do docs/relea
   - Validador: eventos dos locais existem; evento `adult` só em local adulto 18+.
   - `adultSafety` ampliado: +1000 vidas com flerte/noite juntos em todos os tipos, menores e professor da escola
     injetados, opção ligada/desligada e todos os locais → 0 violações. `tests/nightlife.test.ts`.
-- [~] **8. Qualidade dos avatares** — **AGUARDANDO APROVAÇÃO do usuário** (capturas em `screenshots/avatars-*`)
+- [x] **8. Qualidade dos avatares** — aprovado pelo usuário (capturas em `screenshots/avatars-*`)
   - 10 piores casos do "antes": (1) cabelos médio/longo/franja/grisalho em bloco retangular ("capacete");
     (2) textura de cabelo em riscas diagonais; (3) corpos M e F iguais (só o cabelo diferenciava); (4) boca vermelha
     "de batom" em todos, inclusive homens e crianças; (5) rosto sem traço de sexo (cílios, maxilar, sobrancelha);
@@ -120,7 +120,17 @@ Para retomar numa sessão nova: "Continue a release 0.0.1 a partir do docs/relea
   - Capturas novas: `avatars-tipos-fisicos.png`, `avatars-rostos.png`, `avatars-roupas-curvas.png`.
   - Pendente se o usuário pedir: roupas variadas na amostra de auditoria (o `previewAvatar` usa sempre a mesma),
     pescoço da mulher, ajuste fino por fase.
-- [ ] **9. Roupas de banho e ícones de negócios** (save v14)
+- [x] **9. Roupas de banho e ícones de negócios** (save v14)
+  - Roupas `praia` em dados: biquíni, maiô, sunga, bermuda de praia e saída de praia (`minAge 18`); maiô infantil,
+    camiseta UV e bermuda infantil (`maxAge 17`). Regras de silhueta em `sprites/clothes.ts`. `swimOutfit` escolhe pela
+    idade e confere `outfitFitsAge` de novo. Guarda-roupa inclui `praia` (filtrado pela idade).
+  - Cena do ano `GameState.scene` (efeito `scene`; viagem → praia, natação no clube → piscina): o avatar principal
+    veste roupa de banho da idade naquele ano. `GameState.eventLastAge` criado para a fase 10.
+  - 13 empreendimentos novos (24 no total) e um ícone 16×16 por ramo (`sprites/market/business.ts`: fachada comum
+    com toldo na cor do ramo + símbolo 8×7). UI do Mercado/Meus bens usa o ícone do ramo.
+  - Migração v13→v14 (fixture `saves-v13.json`); `tests/swimwear.test.ts` (todas as idades × sexos × contextos,
+    guarda-roupa e NPCs: nenhuma peça adulta abaixo de 18), `tests/businessIcons.test.ts`.
+  - Capturas: `screenshots/mercado-icones.png`, `screenshots/roupas-banho.png`.
 - [ ] **10. Eventos novos (≥ 40) e intervalo de repetição**
 - [ ] **11. Balanceamento geral** (`npm run sim`, GDD)
 - [ ] **12. Documentação e release** (CHANGELOG, versão 0.0.1, tag local `v0.0.1`)

@@ -12,7 +12,8 @@ import type { FacialHair, HairStyle } from './genes';
 export const OUTFIT_LAYERS = ['cima', 'baixo', 'calcado', 'agasalho', 'inteira', 'acessorio'] as const;
 export type OutfitLayer = (typeof OUTFIT_LAYERS)[number];
 
-export type OutfitContext = 'bebe' | 'dia' | 'escola' | 'luta' | 'ocasiao' | 'luxo';
+/** `praia`: roupas de banho (release 0.0.1) — as adultas exigem 18+ (`minAge`). */
+export type OutfitContext = 'bebe' | 'dia' | 'escola' | 'luta' | 'ocasiao' | 'luxo' | 'praia';
 export type OutfitPattern = 'liso' | 'listrado' | 'xadrez' | 'estampa';
 
 export interface OutfitDef {
@@ -66,7 +67,7 @@ export function outfitFitsAge(o: OutfitDef, age: number): boolean {
 /** Peças escolhíveis agora numa camada (desbloqueadas, da idade, fora dos contextos automáticos). */
 export function wardrobeOptions(state: GameState, content: GameContent, layer?: OutfitLayer): OutfitDef[] {
   return content.outfits.filter(
-    (o) => (!layer || o.layer === layer) && state.wardrobe.unlocked.includes(o.id) && outfitFitsAge(o, state.character.age) && (o.context === 'dia' || o.context === 'luxo' || o.context === 'bebe'),
+    (o) => (!layer || o.layer === layer) && state.wardrobe.unlocked.includes(o.id) && outfitFitsAge(o, state.character.age) && (o.context === 'dia' || o.context === 'luxo' || o.context === 'bebe' || o.context === 'praia'),
   );
 }
 

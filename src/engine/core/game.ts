@@ -98,6 +98,8 @@ export function newGame(options: NewGameOptions, content: GameContent): GameStat
     college: emptyCollege(),
     sportsClub: null,
     exchange: null,
+    scene: null,
+    eventLastAge: {},
     flags: {},
     firedEvents: [],
     pendingEvents: [],
