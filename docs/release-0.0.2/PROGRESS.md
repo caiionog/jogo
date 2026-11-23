@@ -14,7 +14,7 @@ Branch `release/0.0.2`, criada a partir de `release/0.0.1` (tag local `v0.0.1`).
 - [x] **6. Justiça**, processo, sentença e ficha criminal — 783 testes
 - [x] **7. Prisão e reintegração** (≥ 20 eventos) — 22 eventos `prisao_*`; 790 testes
 - [x] **8. Cruzamentos** entre polícia, crime, luta e relacionamentos — 794 testes
-- [ ] **9. Interface**, fardas, uniformes e ícones
+- [x] **9. Interface**, fardas, uniformes e ícones — 798 testes
 - [ ] **10. Balanceamento** (`npm run sim`, tabelas no GDD)
 - [ ] **11. Documentação e release** (CHANGELOG, versão 0.0.2, capturas, tag local `v0.0.2`)
 
@@ -152,12 +152,25 @@ Branch `release/0.0.2`, criada a partir de `release/0.0.1` (tag local `v0.0.1`).
   prende alguém próximo, parente de facção no relatório, parente policial (flag `policial`) cobra o criminoso,
   parente vira policial, redenção na luta para egresso (`recomecou`).
 
+## Notas da fase 9
+- **Avatar**: `OutfitContext` `farda`/`prisao`; peças `farda_pm`, `calca_farda`, `colete_pm`, `coturno`, `bone_pm`,
+  `camisa_civil`, `colete_civil`, `farda_tatica`, `capacete`, `uniforme_presidiario`, `algemas` (regras em
+  `sprites/clothes.ts`; detalhe novo `algemas` desenhado nos pulsos em `pixel/render.ts`; boné/capacete reaproveitam
+  o desenho do boné). `AvatarContext` `policia` (farda pela força/unidade: `policeOutfit`) e `prisao` (algemas);
+  atrás das grades o avatar usa sempre o uniforme; a tela principal usa `prisao` durante os eventos `justica_*`.
+- **Ícones** `content/sprites/crimeIcons.ts`: medalhão comum + glifo 8×8 — 13 delitos + tráfico, 3 fardas, 4 facções
+  (`factionIcon` nas cores da facção). `tests/crimeIcons.test.ts` (16×16, paleta, unicidade).
+- **Telas**: `PolicePanel` virou a tela central (avatar fardado, ícone da farda, posto, lotação, avaliação, mira,
+  "Próximo passo", "Ocorrências marcantes", ações, força especial, concurso interno); id de navegação `policia`
+  e atalho `shortcut-policia` na tela principal. Crime: ícones em pixel, item "Ficha" (`crime-ficha`) → `FichaScreen`
+  (`ficha`: situação, processo, pena, foragido, registros). Preso: aba inferior "Prisão", atalho da luta escondido.
+- Bundle: JS 1.161 kB (328 kB gzip), CSS 42 kB.
+
 ## Próximo passo exato (para a sessão nova)
-1. `npm install`. Confira `npm run lint`, `npm test` (794 testes) e `npx tsc --noEmit`.
-2. **Fase 9 — Interface, fardas e ícones**, conforme `PLAN.md`: tela central "Polícia" (evoluir `menus/police.tsx`
-   para a tela no estilo da luta, com avatar fardado e ocorrências marcantes; atalho na tela principal), tela
-   "Ficha" (ficha criminal, processo, regime) a partir da tela de Crime, aba inferior "Prisão" quando preso, fardas
-   PM/Civil/força especial, uniforme de presidiário e algemas (`outfits` + `content/sprites/clothes.ts`,
-   `AvatarContext` `'policia'`/`'prisao'`), ícones 16×16 dos delitos, fardas e facções (teste de unicidade).
+1. `npm install`. Confira `npm run lint`, `npm test` (798 testes) e `npx tsc --noEmit`.
+2. **Fase 10 — Balanceamento**: estender `scripts/sim.ts` com a seção polícia/crime (perfis: "policial" tenta o
+   concurso aos 18–25 e trabalha com afinco; "criminoso" comete delitos e aceita convites) medindo % policial, idade
+   de entrada, % força especial, mortes em serviço; % que comete crimes, % presos, pena média, reincidência, % em
+   facção, expectativa de vida no crime, renda do crime × emprego comum. Metas no `PLAN.md`. Registrar no GDD.
 3. Depois da 0.0.2: o usuário pediu a **release 0.0.3** (texto completo no fim do pedido da sessão anterior; começa
    pela fase 0 = plano com aprovação).

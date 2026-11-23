@@ -13,7 +13,7 @@ export const OUTFIT_LAYERS = ['cima', 'baixo', 'calcado', 'agasalho', 'inteira',
 export type OutfitLayer = (typeof OUTFIT_LAYERS)[number];
 
 /** `praia`: roupas de banho (release 0.0.1) — as adultas exigem 18+ (`minAge`). */
-export type OutfitContext = 'bebe' | 'dia' | 'escola' | 'luta' | 'ocasiao' | 'luxo' | 'praia';
+export type OutfitContext = 'bebe' | 'dia' | 'escola' | 'luta' | 'ocasiao' | 'luxo' | 'praia' | 'farda' | 'prisao';
 export type OutfitPattern = 'liso' | 'listrado' | 'xadrez' | 'estampa';
 
 export interface OutfitDef {

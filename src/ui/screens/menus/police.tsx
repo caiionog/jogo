@@ -3,9 +3,14 @@
  * posto, etapa, avaliação, pista do Tiro e ações do ano. A fase 9 transforma isto na tela central da polícia.
  * Tiro nunca aparece como número (só `shootingHint`).
  */
+import { useMemo } from 'react';
 import { GAME_CONTENT as C } from '../../../content';
+import { UNIFORM_ICONS } from '../../../content/sprites/crimeIcons';
+import PixelAvatar from '../../avatar/PixelAvatar';
+import PixelCanvas from '../../avatar/pixel/PixelCanvas';
+import { renderIcon } from '../../avatar/pixel/icon';
 import type { GameState, JobDef, PoliceExamBlockReason, PoliceTrackId } from '../../../engine';
-import { EDUCATION_LABEL, nextRankGap, policeActionBlock, policeAssessment, policeExamBlockReason, rankTitle, shootingHint, specialBlockReason, specialDef, trackDef } from '../../../engine';
+import { EDUCATION_LABEL, deriveAvatar, nextRankGap, policeActionBlock, policeAssessment, policeExamBlockReason, rankTitle, shootingHint, specialBlockReason, specialDef, trackDef } from '../../../engine';
 import type { SpecialBlockReason } from '../../../engine';
 import { ListGroup, ListItem } from '../../design/components';
 import { useGameStore } from '../../store';
@@ -73,23 +78,48 @@ export function PolicePanel({ game, def }: { game: GameState; def: JobDef }) {
   const mine = c && c.force === force;
   const tracks = C.police.tracks.filter((t) => t.force === force && (t.entry === 'concurso' || (mine && c.track === 'pm_praca')));
   const gap = mine ? nextRankGap(game, C) : null;
+  const desc = useMemo(() => deriveAvatar(game, C, 'policia'), [game]);
+  const uniform = mine ? UNIFORM_ICONS[c.unit === 'especial' ? 'especial' : c.force] : undefined;
+  const nextText = !mine ? null : c.stage === 'formacao' ? `Concluir o ${trackDef(C, c.track)?.course ?? 'curso de formação'}` : c.stage === 'probatorio' ? 'Passar no estágio probatório (cuidado com a corregedoria)' : gap ? `${gap.title}: ${[gap.years > 0 && `mais ${gap.years} ${gap.years === 1 ? 'ano' : 'anos'}`, gap.merit && 'mais mérito'].filter(Boolean).join(' e ') || 'falta pouco'}` : 'Topo da carreira';
   return (
     <>
-      {def.description && <p className="text-sm text-[var(--ds-text-muted)]">{def.description}</p>}
+      {def.description && !mine && <p className="text-sm text-[var(--ds-text-muted)]">{def.description}</p>}
       {mine && (
         <ListGroup title="Sua carreira">
-          <div className="rounded-[var(--ds-radius)] bg-[var(--ds-surface)] p-3 text-sm" data-testid="police-status">
-            <p className="font-semibold">
-              {rankTitle(game, C)} · {c.posting}
-            </p>
-            <p className="text-[var(--ds-text-muted)]">
-              {STAGE[c.stage]} · {c.serviceYears} {c.serviceYears === 1 ? 'ano' : 'anos'} de serviço
-            </p>
-            <p>
-              Avaliação: <b>{policeAssessment(game)}</b> · Mira: <b>{shootingHint(game.police.shooting)}</b>
-            </p>
-            {gap && <p className="text-xs text-[var(--ds-text-muted)]">Próximo posto: {gap.title}{gap.years > 0 ? ` · mais ${gap.years} ${gap.years === 1 ? 'ano' : 'anos'}` : ''}{gap.merit ? ' · mais mérito' : ''}</p>}
+          <div className="flex items-center gap-3 rounded-[var(--ds-radius)] bg-[var(--ds-surface)] p-3 text-sm" data-testid="police-status">
+            <div className="flex h-28 w-20 shrink-0 items-end justify-center overflow-hidden rounded-2xl bg-[var(--ds-avatar-bg)]">
+              <PixelAvatar d={desc} scale={2} label="Você fardado(a)" />
+            </div>
+            <div className="min-w-0">
+              <p className="flex items-center gap-2 font-semibold">
+                {uniform && <PixelCanvas img={renderIcon(uniform)} scale={2} label="" className="shrink-0" />}
+                {def.title} · {c.posting}
+              </p>
+              <p>
+                {rankTitle(game, C)} · {c.serviceYears} {c.serviceYears === 1 ? 'ano' : 'anos'} de serviço
+              </p>
+              <p className="text-[var(--ds-text-muted)]">{STAGE[c.stage]}{c.unit === 'especial' ? ` · ${specialDef(C, c.force)?.name}` : ''}</p>
+              <p>
+                Avaliação: <b>{policeAssessment(game)}</b> · Mira: <b>{shootingHint(game.police.shooting)}</b>
+              </p>
+            </div>
           </div>
+          {nextText && (
+            <div className="rounded-[var(--ds-radius)] border border-[var(--ds-accent)] p-3 text-sm" data-testid="police-next">
+              <p className="text-xs font-semibold uppercase text-[var(--ds-accent)]">Próximo passo</p>
+              <p>{nextText}</p>
+            </div>
+          )}
+          {c.notable.length > 0 && (
+            <div className="rounded-[var(--ds-radius)] bg-[var(--ds-surface)] p-3 text-sm" data-testid="police-notable">
+              <p className="mb-1 text-xs font-semibold uppercase text-[var(--ds-text-muted)]">Ocorrências marcantes</p>
+              <ul className="flex flex-col gap-0.5">
+                {[...c.notable].reverse().slice(0, 6).map((n, i) => (
+                  <li key={i}>• {n.text} ({n.age} anos)</li>
+                ))}
+              </ul>
+            </div>
+          )}
           {(
             [
               ['afinco', '💪', 'Trabalhar com afinco', 'Mérito para a promoção (rende menos se repetir)'],

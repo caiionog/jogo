@@ -1,5 +1,6 @@
 /** Renderiza o topo da pilha de navegação (um MenuScreen por nível; "Voltar" fecha o nível de cima). */
-import { CrimeScreen } from './crime';
+import { CrimeScreen, FichaScreen } from './crime';
+import { PolicePanel } from './police';
 import { useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { AssetKind, CareerCategory, GameState } from '../../../engine';
@@ -43,6 +44,11 @@ function screenOf(r: ScreenRef, game: GameState): { title: string; body: ReactNo
     case 'atividades': return { title: 'Atividades', body: <AtividadesScreen game={game} /> };
     case 'treino': return { title: 'Treino', body: <TreinoScreen game={game} /> };
     case 'crime': return { title: 'Crime', body: <CrimeScreen game={game} /> };
+    case 'ficha': return { title: 'Ficha criminal', body: <FichaScreen game={game} /> };
+    case 'policia': {
+      const def = jobDef(C, game.police.career ? C.police.jobIds[game.police.career.force] : C.police.jobIds.pm)!;
+      return { title: def.title, body: <PolicePanel game={game} def={def} /> };
+    }
     case 'noite': return { title: 'Sair à noite', body: <NoiteScreen game={game} /> };
     case 'clube': return { title: 'Clube esportivo', body: <ClubeScreen game={game} /> };
     case 'intercambio': return { title: 'Intercâmbio', body: <IntercambioScreen game={game} /> };

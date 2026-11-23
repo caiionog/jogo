@@ -63,7 +63,7 @@ export default function Life({ onShowObituary }: { onShowObituary?: () => void }
   const nav = useNav();
   const [profile, setProfile] = useState(false);
   const [statsOpen, setStatsOpen] = useState(true);
-  const desc = useMemo(() => (game ? deriveAvatar(game, GAME_CONTENT, game.activeFight ? 'luta' : 'principal') : null), [game]);
+  const desc = useMemo(() => (game ? deriveAvatar(game, GAME_CONTENT, game.activeFight ? 'luta' : game.pendingEvents[0]?.eventId.startsWith('justica_') ? 'prisao' : 'principal') : null), [game]);
   if (!game || !desc) return null;
   const c = game.character;
   const pending = game.pendingEvents[0];
@@ -93,13 +93,18 @@ export default function Life({ onShowObituary }: { onShowObituary?: () => void }
         </div>
         <MenuHost className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-xl" />
       </header>
-      {game.alive && fightShortcut && (
+      {game.alive && fightShortcut && !(game.prison && game.prison.regime !== 'aberto') && (
         <button type="button" onClick={() => nav.open('luta')} disabled={busy} className="flex min-h-11 items-center justify-center gap-2 border-b border-[var(--ds-border)] bg-[var(--ds-surface-2)] text-sm font-semibold text-[var(--ds-accent)] disabled:opacity-50" data-testid="shortcut-luta">
           <span aria-hidden>🥊</span> Carreira de Luta
           {game.fighter.offers.length > 0 && <span className="rounded-full bg-[var(--ds-accent)] px-2 text-xs text-[var(--ds-on-accent,#fff)]">{game.fighter.offers.length} oferta{game.fighter.offers.length > 1 ? 's' : ''}</span>}
         </button>
       )}
 
+      {game.alive && game.police.career && (
+        <button type="button" onClick={() => nav.open('policia')} disabled={busy} className="flex min-h-11 items-center justify-center gap-2 border-b border-[var(--ds-border)] bg-[var(--ds-surface-2)] text-sm font-semibold text-[var(--ds-accent)] disabled:opacity-50" data-testid="shortcut-policia">
+          <span aria-hidden>🚓</span> {game.police.career.force === 'pm' ? 'Polícia Militar' : 'Polícia Civil'}
+        </button>
+      )}
       {game.prison && <PrisonBanner game={game} />}
       <LifeFeed log={game.log} />
 
@@ -128,7 +133,7 @@ export default function Life({ onShowObituary }: { onShowObituary?: () => void }
           center={<AgeButton onClick={advance} disabled={busy} />}
           right={[
             { id: 'relacoes', label: 'Relações', icon: HeartHandshake, onClick: () => nav.open('relacoes'), active: root === 'relacoes' },
-            { id: 'atividades', label: 'Atividades', icon: Sparkles, onClick: () => nav.open('atividades'), active: root === 'atividades' },
+            { id: 'atividades', label: game.prison && game.prison.regime !== 'aberto' ? 'Prisão' : 'Atividades', icon: Sparkles, onClick: () => nav.open('atividades'), active: root === 'atividades' },
           ]}
         />
       ) : (
