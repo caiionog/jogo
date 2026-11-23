@@ -57,6 +57,7 @@ export const migrations: Record<number, (save: AnySave) => AnySave> = {
   8: migrateV8toV9,
   9: migrateV9toV10,
   10: migrateV10toV11,
+  11: migrateV11toV12,
 };
 
 export class SaveMigrationError extends Error {}
@@ -550,4 +551,24 @@ export function migrateV10toV11(save: AnySave): AnySave {
     character: { ...s0.character, talents: s0.character.talents ?? talents, luck: s0.character.luck ?? rollLuck(r('sorte')) },
     relationships: { ...s0.relationships, people },
   };
+}
+
+// ---------------------------------------------------------------------------
+// v11 → v12 (release 0.0.1: faculdade)
+// ---------------------------------------------------------------------------
+
+/**
+ * Cria `college`. Quem escolheu "faculdade" aos 18 (flag `caminho_18`) e terminou a escola: com 22 anos ou mais, ganha o
+ * diploma de Administração (o curso genérico de antes); de 18 a 21, fica matriculado(a) em Administração numa
+ * particular, no ano correspondente à idade. Sem RNG.
+ */
+export function migrateV11toV12(save: AnySave): AnySave {
+  const s0 = save as unknown as AnyObj;
+  const age = s0.character.age as number;
+  const college: AnyObj = { current: null, diplomas: [], examScore: null, examYear: null };
+  if (s0.flags?.caminho_18 === 'faculdade' && s0.education?.graduated && s0.alive !== false) {
+    if (age >= 22) college.diplomas = ['administracao'];
+    else if (age >= 18) college.current = { courseId: 'administracao', type: 'particular', institution: GAME_CONTENT.college.privateNames[0], year: Math.min(4, age - 17), grade: null, status: 'cursando', funding: 'proprio', failures: 0, financed: 0 };
+  }
+  return { ...(s0 as AnySave), version: 12, college: s0.college ?? college };
 }

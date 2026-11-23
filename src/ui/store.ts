@@ -66,7 +66,13 @@ import {
   evaluateAchievements,
   recordLifeEnd,
   recordLifeStart,
+  takeExam,
+  enrollCollege,
+  lockCollege,
+  unlockCollege,
+  dropCollege,
 } from '../engine';
+import type { CollegeType } from '../engine';
 import type {
   AchievementDef,
   StatKey,
@@ -212,6 +218,12 @@ interface GameStore {
   workHard(): void;
   askRaise(): void;
   quitJob(): void;
+  /** Faculdade (release 0.0.1). */
+  takeExam(): void;
+  enrollCollege(courseId: string, type: CollegeType, financing: boolean): void;
+  lockCollege(): void;
+  unlockCollege(): void;
+  dropCollege(): void;
   hireAgent(): void;
   fireAgent(): void;
   seekSponsor(): void;
@@ -436,6 +448,11 @@ export const useGameStore = create<GameStore>((setState, getState) => {
     workHard: () => act((g) => economyAction(g, (x) => workHard(x, GAME_CONTENT))),
     askRaise: () => act((g) => economyAction(g, (x) => askRaise(x, GAME_CONTENT))),
     quitJob: () => eco((g) => quitJob(g, GAME_CONTENT)),
+    takeExam: () => act((g) => takeExam(g, GAME_CONTENT)),
+    enrollCollege: (id, type, financing) => act((g) => enrollCollege(g, id, type, GAME_CONTENT, financing)),
+    lockCollege: () => update((g) => lockCollege(g)),
+    unlockCollege: () => update((g) => unlockCollege(g)),
+    dropCollege: () => update((g) => dropCollege(g, GAME_CONTENT)),
     hireAgent: () => update((g) => hireAgentAction(g, GAME_CONTENT)),
     fireAgent: () => eco((g) => fireAgent(g)),
     seekSponsor: () => eco((g) => seekSponsor(g, GAME_CONTENT)),

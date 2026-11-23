@@ -23,10 +23,10 @@ export const EDUCATION_LABEL: Record<EducationLevel, string> = {
   superior: 'Ensino superior',
 };
 
-/** Escolaridade derivada da Etapa 2. */
+/** Escolaridade: diploma de faculdade (release 0.0.1) → superior; senão, a escola da Etapa 2. */
 export function educationLevel(state: GameState): EducationLevel {
   const edu = state.education;
-  if (state.flags.caminho_18 === 'faculdade' && edu.graduated && state.character.age >= 22) return 'superior';
+  if ((state.college?.diplomas.length ?? 0) > 0) return 'superior';
   if (edu.graduated) return 'medio';
   const finishedFund = edu.history.some((h) => h.passed && h.gradeLabel === '9º ano') || (edu.current?.grade ?? 0) >= 12;
   return finishedFund ? 'fundamental' : 'nenhuma';
@@ -57,7 +57,11 @@ export type JobBlockReason =
   | 'fight'
   | 'current'
   | 'employed'
-  | 'no-opening';
+  | 'no-opening'
+  /** Exige diploma de um curso específico. */
+  | 'degree'
+  /** Exige registro profissional (exame da ordem, CRM). */
+  | 'license';
 
 /** Requisitos de perfil (sem vagas e emprego atual): usados nos cartões ✓/✗ da tela Carreiras. */
 export function jobRequirementGaps(state: GameState, def: JobDef): JobBlockReason[] {
@@ -73,6 +77,8 @@ export function jobRequirementGaps(state: GameState, def: JobDef): JobBlockReaso
     if (!ok) gaps.push('study');
   }
   if (r?.cnh && !state.flags.cnh) gaps.push('cnh');
+  if (r?.degree && !r.degree.some((d) => state.college?.diplomas.includes(d))) gaps.push('degree');
+  if (r?.license && !state.flags[r.license]) gaps.push('license');
   const st = state.character.stats;
   const m = def.minStats ?? {};
   if ((m.intelligence ?? 0) > st.intelligence || (m.athletic ?? 0) > st.athletic || (m.looks ?? 0) > st.looks) gaps.push('stats');

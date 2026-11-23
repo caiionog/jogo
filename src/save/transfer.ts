@@ -43,6 +43,7 @@ export function validateSaveShape(s: unknown): string[] {
     ['alive', (v) => typeof v === 'boolean'],
     ['character', isObj],
     ['yearUses', isObj],
+    ['college', isObj],
     ['flags', isObj],
     ['education', isObj],
     ['fighter', isObj],

@@ -41,6 +41,10 @@ export function sessionsBreakdown(state: GameState, content: GameContent): Reser
     const n = def?.trainingSessions ?? 0;
     if (n > 0) parts.push({ kind: 'emprego', sessions: n, text: `Seu emprego ocupa ${plural(n)}` });
   }
+  if (state.college?.current?.status === 'cursando') {
+    const n = content.limits.collegeSessions;
+    parts.push({ kind: 'faculdade', sessions: n, text: `A faculdade ocupa ${plural(n)}` });
+  }
   const dedicated = state.economy.businesses.filter((b) => b.dedicatedYear === state.year).length;
   if (dedicated > 0) {
     const n = dedicated * content.limits.businessDedicateSessions;

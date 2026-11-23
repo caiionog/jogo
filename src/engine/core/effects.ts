@@ -1,3 +1,4 @@
+import { examBlockReason, takeExamWith } from '../lifeStages/college';
 import { changeLuck, revealTalent } from '../character/talents';
 import { applySkillDelta } from '../fighting/profile';
 import type { GameContent } from './content';
@@ -47,6 +48,8 @@ export interface Effects {
   revealTalent?: string;
   /** Muda a sorte oculta (limitado por `luck.maxEventChange`). */
   luck?: number;
+  /** Faculdade: fazer o exame nacional agora. */
+  college?: { exam?: boolean };
   money?: number;
   setFlags?: Record<string, FlagValue>;
   clearFlags?: string[];
@@ -92,6 +95,7 @@ export function applyEffects(state: GameState, effects: Effects | undefined, ctx
   };  // talentos e sorte (release 0.0.1)
   if (effects.revealTalent && ctx) next = revealTalent(next, effects.revealTalent, ctx.content);
   if (effects.luck && ctx) next = changeLuck(next, effects.luck, ctx.content);
+  if (effects.college?.exam && ctx && examBlockReason(next) !== 'too-young') next = takeExamWith(next, ctx.rng, ctx.content);
 
   // dinheiro só via extrato (inteiro)
   if (effects.money) next = post(next, effects.money > 0 ? 'eventos' : 'eventos', effects.money, 'Evento');

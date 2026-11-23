@@ -1,3 +1,4 @@
+import { collegeYear, emptyCollege, inCollege } from '../lifeStages/college';
 import type { Appearance } from '../character/appearance/genes';
 import { defaultWardrobe } from '../character/appearance/outfits';
 import { composeName } from '../character/names';
@@ -93,6 +94,7 @@ export function newGame(options: NewGameOptions, content: GameContent): GameStat
     character,
     money: 0,
     yearUses: {},
+    college: emptyCollege(),
     flags: {},
     firedEvents: [],
     pendingEvents: [],
@@ -142,6 +144,7 @@ export function actionBlockReason(state: GameState, action: ActionDef | undefine
   if (action.maxAge !== undefined && state.character.age > action.maxAge) return 'too-old';
   const req = action.requires;
   if (req?.enrolled && !state.education.current) return 'not-enrolled';
+  if (req?.college && !inCollege(state)) return 'not-enrolled';
   if (req?.schoolStages) {
     const stage = currentStage(state);
     if (!stage) return 'not-enrolled';
@@ -344,6 +347,7 @@ export function advanceYear(
 
   return withRng(state, (rng, s) => {
     let next = endSchoolYear(s, rng, content);
+    next = collegeYear(next, rng, content);
     next = endFightingYear(next, content);
     // lesões: 12 meses de recuperação (sequelas ao sarar)
     next = injuriesYear(next, rng, content);

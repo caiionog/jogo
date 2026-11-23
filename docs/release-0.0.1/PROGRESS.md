@@ -47,7 +47,7 @@ Para retomar numa sessão nova: "Continue a release 0.0.1 a partir do docs/relea
   - Atalho "🥊 Carreira de Luta" na tela principal (com nº de ofertas): treinar, ver ofertas e ranking em 2 toques.
   - Dicas de primeira vez (graduação, cartel, ranking, bolsa/camp, treinador) com "Entendi": `meta.seenTips`
     (META_VERSION 2 + migração). Testes de UI: 2 toques, dica some e não volta, nenhum número de habilidade.
-  - Captura: `docs/release-0.0.1/fase3-carreira-luta.png`.
+  - Captura: `docs/release-0.0.1/screenshots/carreira-luta.png`.
 - [x] **4. Talentos e sorte** (save v11)
   - `src/content/talents/` (10 talentos: 7 positivos 7–10%, 3 negativos 5–6%; `LUCK` com os limites) e
     `engine/character/talents.ts` (rollTalents/rollLuck por RNG derivado `seed:talentos:*`, `talentMod`,
@@ -60,7 +60,17 @@ Para retomar numa sessão nova: "Continue a release 0.0.1 a partir do docs/relea
   - NPCs: `Person.talents` (filhos biológicos herdam com `heritBonus`); herdeiro herda os dele.
   - Migração v10→v11 (fixture `saves-v10.json`), `tests/talentsLuck.test.ts` (100 mil nascimentos, herança,
     limites, determinismo, estatística da sorte) e guarda na UI.
-- [ ] **5. Faculdade, cursos e empregos de nível superior** (save v12)
+- [x] **5. Faculdade, cursos e empregos de nível superior** (save v12)
+  - `engine/lifeStages/college.ts`: ENU fictício (0–1000: inteligência, média, estudo do ano, talento, sorte),
+    matrícula (pública grátis com corte alto; particular com mensalidade, bolsa integral pela nota ou "Crédito
+    Estudantil Futuro" que vira empréstimo), nota anual, reprovação, jubilamento (2), trancar/destrancar/largar,
+    diploma + flag `formado_<curso>` (Medicina → `crm`). Ocupa 2 sessões de treino. Categoria `educacao` no extrato.
+  - `src/content/college/` (15 cursos) e `content/events/college/` (ENU automático no 3º ano, jogos universitários,
+    time de luta, prova difícil, estágio, Exame da Ordem fictício → `oab`). Ações `college_study/skip/party`.
+  - 17 empregos de nível superior (`content/jobs/superior/`) com `requires.degree`/`license`; preparador físico,
+    fisioterapeuta e nutricionista com `trainingBonus` 5%; comentarista exige reputação. "Superior" = ter diploma.
+  - UI: Ocupação → Carreiras → Estudos (tela da faculdade). Captura `screenshots/faculdade.png`.
+  - Migração v11→v12 (fixture `saves-v11.json`); `tests/college.test.ts`.
 - [ ] **6. Clubes esportivos e intercâmbio** (save v13)
 - [ ] **7. Vida noturna e interações adultas**
 - [ ] **8. Qualidade dos avatares** — PAUSA para aprovação do antes × depois

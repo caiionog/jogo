@@ -127,7 +127,7 @@ export function trainFighter(state: GameState, kind: TrainingKind, content: Game
   const rng = createRng(state.rngState);
   const gym = currentGym(state, content);
   // companheiros de treino próximos e treinador querido rendem um treino melhor
-  const ctx: GainContext = { age: state.character.age, health: state.character.stats.health, gym, talent: state.fighter.talent * (1 + socialTrainingBonus(state) + ownGymBonus(state, content) + talentMod(state, content, 'trainingGain')) };
+  const ctx: GainContext = { age: state.character.age, health: state.character.stats.health, gym, talent: state.fighter.talent * (1 + socialTrainingBonus(state) + ownGymBonus(state, content) + talentMod(state, content, 'trainingGain') + (content.economy.jobs.find((j) => j.id === state.economy.job?.jobId)?.trainingBonus ?? 0)) };
   const sk = state.fighter.skills;
   const delta: Partial<Skills> = {};
   const g = (base: number, k: SkillKey, modality?: ModalityId) => {

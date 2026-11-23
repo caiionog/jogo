@@ -1,5 +1,6 @@
 import type { JobDef } from '../../engine';
 import { BASIC_JOBS, SALARIO_MINIMO } from './basic';
+import { SUPERIOR_JOBS } from './superior';
 
 export { SALARIO_MINIMO };
 
@@ -16,4 +17,4 @@ const OTHER_JOBS: readonly JobDef[] = [
 ];
 
 /** Todos os empregos: básicos (Etapa 8) + os demais. `salaryMW` (salários mínimos) é preenchido para exibição. */
-export const JOBS: readonly JobDef[] = [...BASIC_JOBS, ...OTHER_JOBS.map((j) => ({ ...j, salaryMW: [Math.round((j.salary[0] / (SALARIO_MINIMO * 13)) * 10) / 10, Math.round((j.salary[1] / (SALARIO_MINIMO * 13)) * 10) / 10] as [number, number] }))];
+export const JOBS: readonly JobDef[] = [...BASIC_JOBS, ...SUPERIOR_JOBS, ...OTHER_JOBS.map((j) => ({ ...j, salaryMW: [Math.round((j.salary[0] / (SALARIO_MINIMO * 13)) * 10) / 10, Math.round((j.salary[1] / (SALARIO_MINIMO * 13)) * 10) / 10] as [number, number] }))];

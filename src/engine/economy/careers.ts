@@ -19,7 +19,7 @@ export function careerCategoryOf(def: JobDef): CareerCategory {
 }
 
 /** Requisito individual para os cartões (✓ atendido / ✗ com o motivo). */
-export type RequirementKey = 'age' | 'education' | 'study' | 'cnh' | 'stats' | 'reputation' | 'fight';
+export type RequirementKey = 'age' | 'education' | 'study' | 'cnh' | 'stats' | 'reputation' | 'fight' | 'degree' | 'license';
 export interface Requirement {
   key: RequirementKey;
   ok: boolean;
@@ -51,6 +51,8 @@ export function jobRequirements(state: GameState, def: JobDef): Requirement[] {
   if (def.education !== 'nenhuma') list.push('education');
   if (def.requires?.studying || def.requires?.schoolStages) list.push('study');
   if (def.requires?.cnh) list.push('cnh');
+  if (def.requires?.degree) list.push('degree');
+  if (def.requires?.license) list.push('license');
   if (def.minStats && Object.keys(def.minStats).length) list.push('stats');
   if (def.minReputation) list.push('reputation');
   if (def.fightReq) list.push('fight');

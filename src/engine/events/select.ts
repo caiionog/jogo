@@ -171,6 +171,12 @@ export function conditionsMet(state: GameState, event: GameEvent, content?: Game
   if (event.once && state.firedEvents.includes(event.id)) return false;
   if (c.minAge !== undefined && age < c.minAge) return false;
   if (c.maxAge !== undefined && age > c.maxAge) return false;
+  if (c.college) {
+    const cur = state.college?.current;
+    if (c.college.enrolled !== undefined && (cur?.status === 'cursando') !== c.college.enrolled) return false;
+    if (c.college.courses && !(cur && c.college.courses.includes(cur.courseId))) return false;
+    if (c.college.diploma && !c.college.diploma.some((d) => state.college?.diplomas.includes(d))) return false;
+  }
   if (c.talent) {
     const t = state.character.talents?.find((x) => x.id === c.talent!.id);
     if (!t || (c.talent.revealed !== undefined && t.revealed !== c.talent.revealed)) return false;

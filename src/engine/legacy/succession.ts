@@ -1,3 +1,4 @@
+import { emptyCollege } from '../lifeStages/college';
 import { rollLuck, talentRng } from '../character/talents';
 import { inheritAppearance, lookRng } from '../character/appearance/inherit';
 import { defaultWardrobe } from '../character/appearance/outfits';
@@ -248,6 +249,7 @@ export function continueAsChild(state: GameState, personId: string, content: Gam
     character,
     money: 0,
     yearUses: {},
+    college: emptyCollege(),
     flags: {
       ...(child.flags.interesse_luta ? { interesse_luta: true, gostaDeLuta: true } : {}),
       ...(mirim ? { lutador_mirim: true, artesMarciais: true } : {}),

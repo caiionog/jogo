@@ -75,7 +75,6 @@ export function MinhaOcupacaoScreen({ game }: { game: GameState }) {
 export function CarreirasScreen({ game }: { game: GameState }) {
   const nav = useNav();
   const age = game.character.age;
-  const path = game.flags.caminho_18;
   return (
     <>
       <ListGroup title="Empregos">
@@ -85,7 +84,7 @@ export function CarreirasScreen({ game }: { game: GameState }) {
       </ListGroup>
       <ListGroup title="Especiais">
         <ListItem icon={Swords} title="Carreira de lutador" subtitle="Academia, faixas, lutas amadoras e profissionais" onClick={() => nav.push('luta')} testId="career-fighter" />
-        <ListItem icon={GraduationCap} title="Estudos" subtitle={path === 'faculdade' ? 'Você escolheu a faculdade aos 18' : 'Cursinho, curso técnico e faculdade'} disabled reason="Em breve" />
+        <ListItem icon={GraduationCap} title="Estudos" subtitle={game.college.current ? `Cursando ${C.college.courses.find((c) => c.id === game.college.current!.courseId)?.label}` : game.college.diplomas.length ? 'Diplomas e novo curso' : 'Exame nacional e faculdade'} onClick={() => nav.push('estudos')} testId="career-studies" />
         <ListItem icon={Store} title="Empreender" subtitle="Comprar ou abrir um negócio" disabled={age < 18} reason="Disponível a partir dos 18 anos" onClick={() => nav.push({ id: 'mercado-cat', params: { cat: 'negocios' } })} />
       </ListGroup>
     </>
@@ -111,6 +110,10 @@ function reqLabel(key: RequirementKey, game: GameState, jobId: string): string {
       return `Reputação ${def.minReputation}+ (você: ${game.fighter.reputation})`;
     case 'fight':
       return `Faixa ${BELTS[def.fightReq?.minBelt ?? 1]}+ ou Capacidade atlética alta`;
+    case 'degree':
+      return `Diploma: ${(def.requires?.degree ?? []).map((d) => C.college.courses.find((c) => c.id === d)?.label ?? d).join(' ou ')}`;
+    case 'license':
+      return def.requires?.license === 'oab' ? 'Aprovação no Exame da Ordem' : 'Registro de médico (CRM)';
   }
 }
 

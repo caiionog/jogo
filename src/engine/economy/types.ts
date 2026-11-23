@@ -12,6 +12,8 @@ export type LedgerCategory =
   | 'heranca'
   | 'venda_bens'
   | 'credito'
+  /** Mensalidades de faculdade, clube esportivo e intercâmbio (release 0.0.1). */
+  | 'educacao'
   | 'familia'
   | 'aplicacoes'
   | 'impostos'
@@ -188,6 +190,8 @@ export interface JobDef {
   salaryMW?: [number, number];
   /** Sessões de treino que o emprego ocupa por ano: 4 (tempo integral), 2 (meio período/estágio) ou 0. */
   trainingSessions: number;
+  /** Bônus pequeno no ganho do próprio treino (preparador físico, fisioterapeuta, nutricionista). */
+  trainingBonus?: number;
   /** Requisitos extras (Etapa 8). */
   requires?: {
     /** Precisa estar matriculado (jovem aprendiz). */
@@ -197,6 +201,10 @@ export interface JobDef {
     acceptGraduated?: boolean;
     /** Carteira de motorista (flag `cnh`). */
     cnh?: boolean;
+    /** Diploma de um destes cursos (release 0.0.1). */
+    degree?: readonly string[];
+    /** Registro profissional (flag): `oab` (exame da ordem fictício) ou `crm` (medicina). */
+    license?: 'oab' | 'crm';
   };
   /** Carteira assinada (padrão true). Informal paga 15% a mais, sem INSS e sem imposto retido. */
   formal?: boolean;

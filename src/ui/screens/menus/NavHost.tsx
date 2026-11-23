@@ -9,6 +9,7 @@ import { bindHistory, useNav } from '../../nav';
 import type { ScreenRef } from '../../nav';
 import RankingPanel from '../../components/RankingPanel';
 import { FightCareerScreen } from './fightCareer';
+import { FaculdadeScreen } from './college';
 import { BemScreen, BensScreen, EmpresaScreen, FinancasScreen, MercadoCatScreen, MercadoScreen, MeusBensScreen } from './assets';
 import { AmorScreen, AtividadesScreen, EstudoScreen, LazerScreen, RelacoesScreen, SaudeScreen, TestamentoScreen, TreinoScreen } from './activities';
 import { CarreiraScreen, CarreirasCatScreen, CarreirasScreen, EscolaScreen, MinhaOcupacaoScreen, OcupacaoScreen } from './occupation';
@@ -28,7 +29,7 @@ function screenOf(r: ScreenRef, game: GameState): { title: string; body: ReactNo
     case 'carreira-luta':
     case 'luta': return { title: 'Carreira de Luta', body: <FightCareerScreen game={game} /> };
     case 'ranking': return { title: 'Ranking', body: <RankingPanel game={game} /> };
-    case 'estudos': return { title: 'Estudos', body: null };
+    case 'estudos': return { title: 'Estudos e faculdade', body: <FaculdadeScreen game={game} /> };
     case 'bens': return { title: 'Bens', body: <BensScreen game={game} /> };
     case 'meus-bens': return { title: 'Meus bens', body: <MeusBensScreen game={game} /> };
     case 'bem': return { title: 'Bem', body: <BemScreen game={game} id={p.id ?? ''} /> };

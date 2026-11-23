@@ -38,8 +38,8 @@ describe('empregos', () => {
     expect(jobBlockReason(adult(16), job('lanchonete'))).toBeNull();
     const noSchool = { ...adult(25), education: { ...adult(25).education, graduated: false } };
     expect(jobBlockReason(noSchool, job('auxiliar_adm'))).toBe('education');
-    expect(jobBlockReason(adult(25), job('analista'))).toBe('education'); // superior exige faculdade
-    const college = { ...adult(25), flags: { caminho_18: 'faculdade' } };
+    expect(jobBlockReason(adult(25), job('analista'))).toBe('education'); // superior exige diploma
+    const college = { ...adult(25), college: { ...adult(25).college, diplomas: ['administracao'] } }; // superior = diploma
     expect(jobBlockReason(college, job('analista'))).toBeNull();
     const weak = { ...adult(25), character: { ...adult(25).character, stats: { ...adult(25).character.stats, athletic: 10 } } };
     expect(jobBlockReason(weak, job('seguranca'))).toBe('stats');

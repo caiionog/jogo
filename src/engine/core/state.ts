@@ -1,3 +1,4 @@
+import type { CollegeState } from '../lifeStages/college';
 import type { CharacterTalent } from '../character/talents';
 import type { Appearance } from '../character/appearance/genes';
 import type { Wardrobe } from '../character/appearance/outfits';
@@ -147,6 +148,8 @@ export interface GameState {
    * Chave = id da atividade; zerado no `advanceYear`.
    */
   yearUses: Record<string, number>;
+  /** Faculdade: matrícula atual, diplomas e nota do exame nacional (release 0.0.1). */
+  college: CollegeState;
   flags: Record<string, FlagValue>;
   /** Ids de eventos que já aconteceram (para `once`). */
   firedEvents: string[];
@@ -178,4 +181,4 @@ export interface GameState {
   wardrobe: Wardrobe;
 }
 
-export const STATE_VERSION = 11;
+export const STATE_VERSION = 12;

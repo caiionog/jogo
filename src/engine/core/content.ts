@@ -1,3 +1,4 @@
+import type { CollegeContent } from '../lifeStages/college';
 import type { Effects } from './effects';
 import type { GameEvent } from '../events/types';
 import type { ClubId, SchoolStage } from './state';
@@ -34,6 +35,8 @@ export interface ActionDef {
     /** Exige estar matriculado em uma escola. */
     enrolled?: boolean;
     schoolStages?: SchoolStage[];
+    /** Exige estar cursando a faculdade. */
+    college?: boolean;
   };
   effects: Effects;
   /** Variação aleatória (+0..variance) somada a cada atributo positivo dos efeitos. */
@@ -98,4 +101,6 @@ export interface GameContent {
   /** Talentos de nascimento e limites da sorte (release 0.0.1). */
   talents: readonly TalentDef[];
   luck: LuckConfig;
+  /** Faculdade: exame, instituições e cursos (release 0.0.1). */
+  college: CollegeContent;
 }

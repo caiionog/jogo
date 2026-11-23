@@ -13,6 +13,8 @@ export interface StatRange {
 export type SchoolResultTag = 'passed' | 'failed' | 'honors' | 'graduated' | 'expelled';
 
 export interface EventConditions {
+  /** Faculdade: cursando (enrolled), cursos, diplomas. */
+  college?: { enrolled?: boolean; courses?: string[]; diploma?: string[] };
   /** Talento de nascimento do personagem (revealed: só se ainda não/já revelado). */
   talent?: { id: string; revealed?: boolean };
   minAge?: number;

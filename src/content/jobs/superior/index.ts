@@ -1,0 +1,30 @@
+import type { JobDef } from '../../../engine';
+import { anual } from '../basic';
+
+/**
+ * Empregos de nível superior (release 0.0.1): exigem o diploma do curso (`requires.degree`); advogado exige o Exame
+ * da Ordem (fictício, flag `oab`) e médico o registro (flag `crm`, ao se formar). Salários em salários mínimos/mês.
+ * Preparador físico, fisioterapeuta e nutricionista dão um bônus pequeno ao próprio treino (`trainingBonus`).
+ */
+type SupJob = Omit<JobDef, 'salary' | 'category' | 'education' | 'trainingSessions'> & { salaryMW: [number, number]; trainingSessions?: number };
+const sup = (j: SupJob): JobDef => ({ category: 'formal', education: 'superior', trainingSessions: 4, hireChance: 0.6, ...j, salary: [anual(j.salaryMW[0]), anual(j.salaryMW[1])] });
+
+export const SUPERIOR_JOBS: readonly JobDef[] = [
+  sup({ id: 'prof_ed_fisica', title: 'Professor(a) de educação física', minAge: 21, requires: { degree: ['educacao_fisica'] }, salaryMW: [2.2, 4.5], ladder: ['Professor(a)', 'Coordenador(a) de esportes'], yearlyEffects: { athletic: 1 }, description: 'Aulas na escola e no clube. Mexe o corpo todo dia.' }),
+  sup({ id: 'preparador_fisico', title: 'Preparador(a) físico(a)', minAge: 22, requires: { degree: ['educacao_fisica'] }, salaryMW: [2.5, 7], trainingBonus: 0.05, ladder: ['Preparador(a) assistente', 'Preparador(a) físico(a)', 'Preparador(a) de seleção'], description: 'Monta o condicionamento de atletas. Seu treino também melhora (+5%).' }),
+  sup({ id: 'fisioterapeuta', title: 'Fisioterapeuta esportivo(a)', minAge: 23, requires: { degree: ['fisioterapia'] }, salaryMW: [2.8, 8], trainingBonus: 0.05, ladder: ['Fisioterapeuta', 'Fisioterapeuta de equipe', 'Coordenador(a) clínico(a)'], description: 'Recupera atletas lesionados. Você entende o próprio corpo melhor (+5% no treino).' }),
+  sup({ id: 'nutricionista', title: 'Nutricionista esportivo(a)', minAge: 22, requires: { degree: ['nutricao'] }, salaryMW: [2.5, 7], trainingBonus: 0.05, ladder: ['Nutricionista', 'Nutricionista de equipe'], description: 'Dietas e corte de peso. Seu próprio treino rende mais (+5%).' }),
+  sup({ id: 'advogado', title: 'Advogado(a)', minAge: 23, requires: { degree: ['direito'], license: 'oab' }, salaryMW: [3.5, 18], ladder: ['Advogado(a) júnior', 'Advogado(a) pleno', 'Sócio(a) do escritório'], description: 'Exige aprovação no Exame da Ordem.' }),
+  sup({ id: 'medico', title: 'Médico(a)', minAge: 24, requires: { degree: ['medicina'], license: 'crm' }, salaryMW: [6, 25], hireChance: 0.85, ladder: ['Médico(a) residente', 'Médico(a)', 'Médico(a) especialista', 'Chefe de equipe'], description: 'Começa na residência; plantões puxados.' }),
+  sup({ id: 'enfermeiro', title: 'Enfermeiro(a)', minAge: 22, requires: { degree: ['enfermagem'] }, salaryMW: [2.5, 6], hireChance: 0.75, ladder: ['Enfermeiro(a)', 'Enfermeiro(a) chefe'], yearlyEffects: { happiness: -1 }, description: 'Plantões e muita responsabilidade.' }),
+  sup({ id: 'engenheiro_sup', title: 'Engenheiro(a)', minAge: 23, requires: { degree: ['engenharia'] }, minStats: { intelligence: 55 }, salaryMW: [5, 18], ladder: ['Engenheiro(a) júnior', 'Engenheiro(a)', 'Gerente de projetos'], description: 'Obras, fábricas e projetos.' }),
+  sup({ id: 'programador', title: 'Programador(a)', minAge: 21, requires: { degree: ['computacao'] }, minStats: { intelligence: 55 }, salaryMW: [3.5, 16], ladder: ['Programador(a) júnior', 'Programador(a) pleno', 'Programador(a) sênior', 'Líder técnico(a)'], description: 'Código, café e prazos. Dá para trabalhar remoto.' }),
+  sup({ id: 'jornalista_esportivo', title: 'Jornalista esportivo(a)', minAge: 22, requires: { degree: ['jornalismo'] }, salaryMW: [2.2, 8], ladder: ['Repórter', 'Editor(a)', 'Colunista'], description: 'Cobre jogos e lutas para um portal fictício.' }),
+  sup({ id: 'comentarista_sup', title: 'Comentarista de lutas', minAge: 24, requires: { degree: ['jornalismo'] }, minReputation: 25, salaryMW: [3, 15], trainingSessions: 2, ladder: ['Comentarista', 'Comentarista principal'], description: 'Exige diploma de Jornalismo e nome no mundo da luta (reputação 25+). Ocupa só meio período.' }),
+  sup({ id: 'psicologo_esporte', title: 'Psicólogo(a) do esporte', minAge: 23, requires: { degree: ['psicologia'] }, salaryMW: [2.5, 8], ladder: ['Psicólogo(a)', 'Psicólogo(a) de equipe'], yearlyEffects: { happiness: 1 }, description: 'Cabeça de atleta é metade da vitória.' }),
+  sup({ id: 'administrador', title: 'Administrador(a)', minAge: 22, requires: { degree: ['administracao'] }, salaryMW: [3, 12], ladder: ['Analista', 'Coordenador(a)', 'Gerente'], description: 'Processos, metas e planilhas.' }),
+  sup({ id: 'contador', title: 'Contador(a)', minAge: 22, requires: { degree: ['contabeis'] }, salaryMW: [3, 11], ladder: ['Contador(a) júnior', 'Contador(a)', 'Sócio(a) do escritório'], description: 'Imposto de renda de meio mundo passa na sua mesa.' }),
+  sup({ id: 'professor_escola', title: 'Professor(a) de escola', minAge: 21, requires: { degree: ['pedagogia', 'educacao_fisica'] }, salaryMW: [2, 4.5], hireChance: 0.75, ladder: ['Professor(a)', 'Coordenador(a) pedagógico(a)', 'Diretor(a)'], yearlyEffects: { happiness: 1 }, description: 'Pedagogia ou licenciatura. Salário modesto, férias boas.' }),
+  sup({ id: 'arquiteto', title: 'Arquiteto(a)', minAge: 23, requires: { degree: ['arquitetura'] }, salaryMW: [3, 12], ladder: ['Arquiteto(a) júnior', 'Arquiteto(a)', 'Dono(a) do escritório'], description: 'Projetos, maquetes e clientes indecisos.' }),
+  sup({ id: 'analista_marketing', title: 'Analista de marketing', minAge: 21, requires: { degree: ['marketing', 'administracao', 'jornalismo'] }, salaryMW: [2.8, 10], ladder: ['Analista', 'Coordenador(a)', 'Gerente de marca'], description: 'Campanhas, redes sociais e métricas.' }),
+];

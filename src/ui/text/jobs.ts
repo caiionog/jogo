@@ -1,3 +1,4 @@
+import { GAME_CONTENT } from '../../content';
 /** Textos dos motivos de bloqueio dos empregos (UI). */
 import type { JobBlockReason, JobDef } from '../../engine';
 import { EDUCATION_LABEL } from '../../engine';
@@ -24,6 +25,10 @@ export function jobReasonText(r: JobBlockReason, def: JobDef): string {
       return `Exige faixa ${BELT_NAMES[def.fightReq?.minBelt ?? 1] ?? 'azul'}+${def.fightReq?.minProWins ? ` ou ${def.fightReq.minProWins} vitórias pro` : ''} ou Capacidade atlética alta`;
     case 'no-opening':
       return 'Sem vagas na sua cidade este ano';
+    case 'degree':
+      return `Exige diploma de ${(def.requires?.degree ?? []).map((d) => GAME_CONTENT.college.courses.find((c) => c.id === d)?.label ?? d).join(' ou ')}`;
+    case 'license':
+      return def.requires?.license === 'oab' ? 'Exige aprovação no Exame da Ordem' : 'Exige registro profissional (CRM)';
     case 'employed':
       return 'Você já tem um emprego (peça demissão para trocar)';
     case 'current':
