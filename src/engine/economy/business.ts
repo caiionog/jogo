@@ -215,7 +215,7 @@ export function businessYear(state: GameState, rng: Rng, content: GameContent, m
     const def = businessDef(content, b.defId);
     if (!def) continue;
     const dedicated = b.dedicatedYear === state.year;
-    const care = dedicated ? 1.1 : b.manager ? 1 : 0.75;
+    const care = dedicated ? 1.03 : b.manager ? 1 : 0.75;
     const ownerRep = def.combat ? s.fighter.reputation / 250 : 0;
     const revenue = def.revenue * b.level * (0.7 + b.reputation / 200 + ownerRep) * market.businessMult * (0.72 + rng.next() * 0.56) * care;
     const cost = def.cost * b.level + (b.manager ? def.managerCost : 0);

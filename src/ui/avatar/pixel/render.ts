@@ -46,10 +46,10 @@ function mix(a: string, b: string, t: number): string {
 }
 
 class Canvas {
-  mat: (string | null)[] = new Array(W * H).fill(null);
-  region: (Region | null)[] = new Array(W * H).fill(null);
-  tone: Tone[] = new Array(W * H).fill(2);
-  fixed: boolean[] = new Array(W * H).fill(false);
+  mat: (string | null)[] = Array.from({ length: W * H }, () => null);
+  region: (Region | null)[] = Array.from({ length: W * H }, () => null);
+  tone: Tone[] = Array.from({ length: W * H }, (): Tone => 2);
+  fixed: boolean[] = Array.from({ length: W * H }, () => false);
   ramps = new Map<string, Ramp>();
   idx = (x: number, y: number) => y * W + x;
   inside = (x: number, y: number) => x >= 0 && y >= 0 && x < W && y < H;
@@ -298,7 +298,7 @@ function hairMask(d: AvatarDescriptor, b: BodySprite): Map<number, HairCell> {
   if (bald > 0.15 && style !== 'careca') {
     const rows = Math.round(bald * (hairline - hy + 3));
     const half = Math.round(bald * hw * 0.55);
-    for (const k of [...out.keys()]) {
+    for (const k of Array.from(out.keys())) {
       const x = k % W;
       const y = Math.floor(k / W);
       if (out.get(k) !== 'f') continue;

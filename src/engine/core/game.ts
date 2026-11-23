@@ -98,6 +98,8 @@ export function newGame(options: NewGameOptions, content: GameContent): GameStat
     college: emptyCollege(),
     sportsClub: null,
     exchange: null,
+    scene: null,
+    eventLastAge: {},
     flags: {},
     firedEvents: [],
     pendingEvents: [],
@@ -332,6 +334,8 @@ function pickYearEvents(state: GameState, content: GameContent, rng: Rng, target
     scheduledEvents,
     pendingEvents: [...state.pendingEvents, ...pending],
     firedEvents: [...state.firedEvents, ...pending.map((p) => p.eventId)],
+    // intervalo de repetição: guarda a idade em que cada evento aconteceu por último
+    eventLastAge: { ...state.eventLastAge, ...Object.fromEntries(pending.map((p) => [p.eventId, state.character.age])) },
   };
 }
 

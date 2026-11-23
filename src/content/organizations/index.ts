@@ -136,7 +136,7 @@ export const ORGANIZATIONS: readonly OrgDef[] = [
     titleRounds: 5,
     purse: { base: 25000, win: 25000, perf: 40000 },
     campSessions: 3,
-    npcSkill: [55, 77],
+    npcSkill: [54, 74],
     reputationGain: 8,
     offersPerYear: 2,
     titleShotStreak: 2,

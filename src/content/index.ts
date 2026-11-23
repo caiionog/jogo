@@ -34,6 +34,7 @@ import { TALENT_EVENTS } from './events/talents';
 import { COLLEGE_EVENTS } from './events/college';
 import { CLUB_EXCHANGE_EVENTS } from './events/clubs';
 import { NIGHTLIFE_EVENTS } from './events/nightlife';
+import { RANDOM_EVENTS } from './events/random';
 
 export const GAME_CONTENT: GameContent = {
   limits: LIMITS,
@@ -44,7 +45,7 @@ export const GAME_CONTENT: GameContent = {
   exchangePrograms: EXCHANGE_PROGRAMS,
   venues: VENUES,
   actions: ACTIONS,
-  events: [...CHILDHOOD_EVENTS, ...SCHOOL_EVENTS, ...FIGHTING_EVENTS, ...RELATIONSHIP_EVENTS, ...ECONOMY_EVENTS, ...JOB_EVENTS, ...HEALTH_EVENTS, ...LEGACY_EVENTS, ...TALENT_EVENTS, ...COLLEGE_EVENTS, ...CLUB_EXCHANGE_EVENTS, ...NIGHTLIFE_EVENTS],
+  events: [...CHILDHOOD_EVENTS, ...SCHOOL_EVENTS, ...FIGHTING_EVENTS, ...RELATIONSHIP_EVENTS, ...ECONOMY_EVENTS, ...JOB_EVENTS, ...HEALTH_EVENTS, ...LEGACY_EVENTS, ...TALENT_EVENTS, ...COLLEGE_EVENTS, ...CLUB_EXCHANGE_EVENTS, ...NIGHTLIFE_EVENTS, ...RANDOM_EVENTS],
   geo: GEO_CONTENT,
   clubs: CLUBS,
   names: NAMES,

@@ -231,6 +231,25 @@ export function gradeOutfit(state: GameState, content: GameContent, mod: Modalit
   return out;
 }
 
+/**
+ * Roupa de banho pela idade (release 0.0.1). REGRA: biquíni, maiô, sunga, bermuda de praia e saída de praia só com
+ * 18+ (`minAge` no catálogo, conferido de novo aqui); antes disso, maiô infantil fechado ou camiseta UV + bermuda.
+ */
+export function swimOutfit(content: GameContent, age: number, sex: Sex, seed: number): AvatarOutfit {
+  const safe = (id: string, color: number) => {
+    const o = outfitDef(content, id);
+    return o && outfitFitsAge(o, age) ? piece(content, id, color) : undefined;
+  };
+  const c = Math.floor(frac(seed, 41) * 4);
+  const feet = piece(content, 'chinelo', 0) ?? piece(content, 'descalco', 0)!;
+  if (age >= 18) {
+    if (sex === 'F') return { inteira: (frac(seed, 43) < 0.6 ? safe('biquini', c) : safe('maio', c))!, calcado: feet };
+    return { baixo: (frac(seed, 47) < 0.5 ? safe('sunga', c) : safe('bermuda_praia', c))!, calcado: feet };
+  }
+  if (sex === 'F' && age >= 4) return { inteira: safe('maio_infantil', c % 3)!, calcado: feet };
+  return { cima: safe('camiseta_uv', c % 3)!, baixo: safe('bermuda_infantil', c % 3)!, calcado: feet };
+}
+
 /** Roupa do personagem: contexto automático (bebê, escola, luta, casamento, formatura) ou o guarda-roupa. */
 export function playerOutfit(state: GameState, content: GameContent, context: AvatarContext = 'principal'): AvatarOutfit {
   const age = state.character.age;
@@ -250,6 +269,7 @@ export function playerOutfit(state: GameState, content: GameContent, context: Av
   }
   if (context === 'formatura') return { cima: piece(content, 'camisa_formatura', 0)!, baixo: piece(content, 'calca_jeans', 0)!, calcado: piece(content, 'tenis', 0)! };
   if (age <= 2) return { inteira: piece(content, 'body', 0)!, calcado: piece(content, 'meia', 0)! };
+  if (context === 'principal' && state.scene && state.scene.year === state.year) return swimOutfit(content, age, state.character.sex, state.character.birthYear);
   const worn = wornToOutfit(content, state.wardrobe.worn ?? {}, age);
   if (state.education.current && age >= 6 && age <= 17) {
     // dia de escola: uniforme por cima, resto do guarda-roupa

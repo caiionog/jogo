@@ -1,3 +1,4 @@
+import { BUSINESS_GLYPHS, BUSINESS_ICONS } from './business';
 /**
  * Ilustrações do Mercado em pixel art (16×16), na mesma direção de arte do avatar: luz de cima à esquerda,
  * contorno escuro colorido (não preto puro). Cada letra é uma chave da paleta do ícone; '.' é transparente.
@@ -9,7 +10,7 @@ export interface IconSprite {
 
 const OUT = '#2a2238';
 
-export const MARKET_ICONS: Readonly<Record<string, IconSprite>> = {
+const BASE_ICONS: Readonly<Record<string, IconSprite>> = {
   casa: {
     palette: { o: OUT, r: '#c0503a', R: '#8e3428', w: '#efe2c4', W: '#cdb994', b: '#7fb7d9', d: '#7a4a2c', g: '#5fa04a', G: '#3f7a35' },
     grid: [
@@ -201,9 +202,13 @@ export const MARKET_ICONS: Readonly<Record<string, IconSprite>> = {
   },
 };
 
+/** Ícones do Mercado: bens e os empreendimentos (um ícone próprio por ramo, release 0.0.1). */
+export const MARKET_ICONS: Readonly<Record<string, IconSprite>> = { ...BASE_ICONS, ...BUSINESS_ICONS };
+
 /** Ícone de cada item do catálogo (por id), com fallback pelo tipo. */
 export const ICON_FOR: Readonly<Record<string, string>> = {
   kitnet: 'predio', apartamento: 'predio', sala_comercial: 'predio', casa: 'casa', casa_luxo: 'casa', casa_praia: 'praia', sitio: 'sitio', terreno: 'terreno',
   moto: 'moto', carro_usado: 'carro', carro_popular: 'carro', sedan: 'carro', suv: 'carro', esportivo: 'carro',
   imovel: 'casa', veiculo: 'carro', luxo: 'luxo', negocio: 'loja',
+  ...Object.fromEntries(Object.keys(BUSINESS_GLYPHS).map((id) => [id, id])),
 };

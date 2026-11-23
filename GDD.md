@@ -1,4 +1,4 @@
-# GDD — Vida de Lutador (versão 1.2)
+# GDD — Vida Real (release 0.0.1; antes "Vida de Lutador", versão 1.2)
 
 > Jogo completo: infância, escola, carreira de luta, relacionamentos, economia, lesões, aposentadoria, morte e legado
 > por gerações, com conquistas e Hall da Fama entre vidas. Funciona offline como app instalado (PWA).
@@ -930,6 +930,100 @@ Ajustes para chegar lá: ganhos de treino reescalados para 2 habilidades, Circui
 reputação 50, aproveitamento 65%, bolsa 25+25+40 mil), regionais um pouco mais fáceis (NPCs 40–68 e 36–64). A luta
 continua sendo o caminho de maior variância (mais falência e mais milionários); o lutador aposentado agora tem
 empregos básicos de verdade para cair, o que explica a mediana maior.
+
+## 10b. Release 0.0.1 — vida além da luta
+
+> Nome provisório do jogo: **Vida Real** (antes "Vida de Lutador"). A luta é uma das carreiras de um simulador de
+> vida completo: escola, faculdade, empregos, empresas, esporte, vida noturna, família e legado.
+
+### Sessões de treino (sem energia)
+- A energia saiu do jogo. O ano tem **10 sessões de treino** (`content/config.ts`), compartilhadas entre modalidades,
+  treino físico, sparring, treino no clube esportivo e camps de luta (substituição 1, org +1 no título).
+- Ocupam sessões: emprego de tempo integral 4, meio período/estágio 2, faculdade 2, "gerenciar de perto" 2.
+- As outras atividades não têm limite, mas repetir no mesmo ano rende menos: ×1 → 0,6 → 0,35 → 0,2 → 0,1
+  (`yearUses`). CNH: 1 tentativa por ano.
+
+### Modalidades, grappling e graduações (`src/content/martialArts/`)
+- Habilidades ocultas: **grappling** (jiu-jitsu, judô, wrestling) e **trocação** (muay thai, boxe, kickboxing).
+- Cada modalidade só é treinada numa academia que a oferece (31 academias, com muay thai e mistas); toda modalidade
+  também dá 30–50% da Capacidade atlética do treino físico.
+- Graduações em dados: jiu-jitsu infantil (branca, cinza, amarela, laranja e verde, com as faixas de listra branca e
+  preta; até os 15) → adulto aos 16 (azul com laranja+ e nível de azul; senão branca); jiu-jitsu adulto com graus
+  (azul 32, roxa 46, marrom 59, preta 70 de grappling); judô (branca → preta/dan); muay thai pela **Federação
+  Sião-Brasileira de Muay Thai (FSBMT, fictícia)**, com prajied por cores e pontas. Boxe, wrestling e kickboxing sem
+  graduação. O tempo na faixa só corre na modalidade treinada.
+- Metas de evolução (perfil de 10 sessões/ano desde os 10, `tests/trainingTargets.test.ts`): **Sólido aos 17, Elite
+  aos 24–25 com talento, Capacidade atlética 80 aos 21**.
+
+### Tela central da Carreira de Luta
+Avatar de treino, linha do tempo (Iniciante → Amador → Profissional regional → Liga principal → Campeão), "Próximo
+passo" com frase objetiva e botão, modalidades e graduações, academia, treinador, treinos, cartel e ranking, ofertas,
+últimas lutas e aposentadoria; atalho na tela principal (treinar, procurar luta e ranking em 2 toques); dicas de
+primeira vez com "Entendi" (meta `seenTips`).
+
+### Talentos de nascimento e sorte
+- 10 talentos ocultos (7 positivos de 7–10%, 3 negativos de 5–6%) revelados por eventos; filhos herdam com chance
+  maior. Mods pequenos: atlética/inteligência/aparência iniciais, treino, estudo, doenças, lesões, nocaute,
+  finalização, afeto, reputação, eventos de briga.
+- Sorte oculta 0–100 (média de 3 uniformes): peso de eventos bons/ruins ±25%, risco ±8 p.p., lances decisivos da luta
+  ±3%, eventos mudam no máximo ±10. Pistas no log e no obituário. RNG derivado da seed (não altera o sorteio principal).
+
+### Faculdade e empregos de nível superior
+Exame nacional fictício (ENU, 0–1000), 15 cursos com nota de corte da pública e da particular, mensalidade, bolsa
+integral pela nota ou financiamento estudantil fictício, nota anual, reprovação, jubilamento, diploma. 17 empregos de
+nível superior que exigem o diploma certo (advogado: Exame da Ordem fictício; médico: registro ao se formar).
+
+### Clubes esportivos, intercâmbio e vida noturna
+- 8 clubes (futebol, natação, atletismo, vôlei, basquete, judô, ginástica) a partir dos 6, com mensalidade; contam
+  nas 10 sessões; competições por eventos.
+- Intercâmbio de um ano em 5 academias fictícias no exterior (16+ com autorização dos pais; licença do emprego;
+  escola em pausa; ganho grande na volta).
+- Vida noturna por idade (até 17: festa de amigos, matinê, lanchonete; 18+: bar, festa, show, balada; casa de strip
+  só com "Conteúdo adulto"), cada saída com um evento.
+- Interações adultas (flertar, passar a noite juntos) com amizades, colegas, treinadores e professores, sempre pela
+  guarda única `canHaveSexualContentWith` (os dois 18+, opção ligada, nunca professor da escola).
+
+### Avatares, roupas de banho e Mercado
+- Cabelos com silhueta arredondada e textura por tipo; sexo legível a partir da adolescência (ombros, cintura e
+  quadril, cílios, sobrancelha, lábios, maxilar); boca em linha limpa; cinco tipos físicos bem distintos; curvas
+  femininas (só adulta e idosa, sob a roupa); perfil do NPC com o corpo inteiro.
+- Roupas de banho pela idade (biquíni, maiô, sunga, bermuda e saída de praia só 18+; peças fechadas antes) na cena de
+  praia ou piscina do ano.
+- 24 empreendimentos no Mercado, cada um com ícone próprio (fachada comum + símbolo do ramo).
+
+### Eventos
++86 eventos na release (48 aleatórios de todas as idades + talentos, faculdade, clubes, intercâmbio e noite), com
+tom bom/ruim; um evento sorteado não se repete antes de 5 anos (`cooldownYears`).
+
+### Balanceamento (`npm run sim`)
+| Carreira de luta (1000 vidas até os 40) | Etapa 8 | 0.0.1 |
+|---|---|---|
+| Estreia profissional | 98,0% | 94,9% |
+| Chegou à liga principal | 28,6% | 25,4% |
+| Campeão (qualquer liga) | 19,2% | 29,7% |
+| Campeão do Circuito Titã | 2,8% | 2,7% |
+| Faixa preta | 12,6% | 11,5% |
+| Duração da carreira pro | 15,9 anos | 15,9 anos |
+| Métodos (KO · SUB · DEC) | 23 · 35 · 43% | 30 · 24 · 46% |
+
+Ajustes: ganho por sessão ×0,45 (10 sessões rendem mais treinos que a energia), experiência de luta ×1,5, atlética
+com retorno decrescente mais suave e arredondamento estocástico, faixas adultas um pouco mais fáceis, Titã com NPCs
+54–74, "gerenciar de perto" ×1,03 (antes ×1,1, quando competia com a energia). O cinturão vago deixou de passar de
+graça ao jogador (bug corrigido), o que exigiu o ajuste do Titã.
+
+| Patrimônio mediano aos 50 (150 vidas) | Etapa 8 | 0.0.1 |
+|---|---|---|
+| luta | R$ 549 mil (falência 32,0%) | R$ 429 mil (falência 40,7%) |
+| emprego | R$ 519 mil (2,7%) | R$ 580 mil (0,7%) |
+| misto | R$ 608 mil (4,0%) | R$ 601 mil (3,3%) |
+| empreendedor | R$ 1,07 mi (11,3%) | R$ 1,02 mi (10,0%), empresas quebradas 18,2% |
+
+Vidas completas (150 por perfil + 80 dinastias): expectativa de vida do lutador 75,5 (emprego 77,9), 8 lesões e 1,07
+sequela por vida, lesão grave em 53,5% das carreiras pro, aposentadoria forçada 19,6%, dano cerebral médio 41 (mais
+de 20 lutas pro); dinastias chegam à 2ª geração em 30% e à 3ª em 10%.
+
+Ponto de atenção: casamentos até os 40 caíram (~27% na política do sim, contra 52% na Etapa 4). O sim tenta romance
+uma vez por ano; vale rever na próxima release se isso também acontece com jogadores reais.
 
 ## 11. Ideias futuras
 - **Outras carreiras**: boxe olímpico, wrestling universitário, árbitro, treinador de seleção, empresário de lutadores.

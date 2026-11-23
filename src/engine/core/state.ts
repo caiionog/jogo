@@ -155,6 +155,10 @@ export interface GameState {
   sportsClub: SportsClubMembership | null;
   /** Intercâmbio de artes marciais em andamento (release 0.0.1). */
   exchange: ExchangeState | null;
+  /** Cena do ano (praia/piscina): o avatar usa roupa de banho da idade (release 0.0.1). */
+  scene: { kind: 'praia' | 'piscina'; year: number } | null;
+  /** Idade em que cada evento aconteceu pela última vez (intervalo de repetição; release 0.0.1). */
+  eventLastAge: Record<string, number>;
   flags: Record<string, FlagValue>;
   /** Ids de eventos que já aconteceram (para `once`). */
   firedEvents: string[];
@@ -186,4 +190,4 @@ export interface GameState {
   wardrobe: Wardrobe;
 }
 
-export const STATE_VERSION = 13;
+export const STATE_VERSION = 14;

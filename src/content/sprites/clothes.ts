@@ -100,6 +100,15 @@ export const CLOTHING_RULES: Readonly<Record<string, ClothingRule>> = {
   terno: { cover: TOP_LONG, details: ['aberto', 'lapela', 'gravata'] },
   cronos_terno: { cover: TOP_LONG, details: ['aberto', 'lapela', 'gravata', 'brilho'] },
   roupao: { cover: [{ regions: ['t', 'a', 'c'] }, { regions: ['l', 'r'], to: { a: 'kneeL' } }], details: ['aberto', 'lapela', 'brilho', 'saia'] },
+  // praia e piscina (release 0.0.1)
+  biquini: { cover: [{ regions: ['t'], from: { a: 'chest', dy: -1 }, to: { a: 'chest', dy: 1 } }, { regions: ['c'], to: { a: 'waist', dy: 2 } }], details: ['alcas'] },
+  maio: { cover: [{ regions: ['t', 'c'], from: { a: 'chest', dy: -2 } }], details: ['alcas'] },
+  sunga: { cover: [{ regions: ['c'], to: { a: 'waist', dy: 2 } }], details: ['cos'] },
+  bermuda_praia: { cover: [{ regions: ['c', 'l', 'r'], to: { a: 'kneeL', dy: -1 } }], details: ['cos'] },
+  saida_praia: { cover: [{ regions: ['t', 'c'], from: { a: 'chest', dy: -1 } }, { regions: ['l', 'r'], to: { a: 'kneeL', dy: -2 } }], details: ['aberto', 'saia'] },
+  maio_infantil: { cover: [{ regions: ['t', 'c'] }], details: ['alcas'] },
+  camiseta_uv: { cover: TOP_SHORT, details: ['gola', 'manga'] },
+  bermuda_infantil: { cover: [{ regions: ['c', 'l', 'r'], to: { a: 'kneeL', dy: -1 } }], details: ['cos'] },
   // acessórios (desenhados por cima do cabelo/rosto)
   faixa: { cover: [], details: ['faixa'] },
   prajied: { cover: [], details: ['prajied'] },

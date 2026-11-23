@@ -75,7 +75,7 @@ export function MeusBensScreen({ game }: { game: GameState }) {
       {businesses.length > 0 && (
         <ListGroup title="Empreendimentos">
           {businesses.map((b) => (
-            <ListItem key={b.id} leading={<Icon id="negocio" size={2} />} title={b.name} subtitle={`Nível ${b.level} · último ano ${money.format(b.lastProfit)}`} onClick={() => nav.push({ id: 'empresa', params: { id: b.id } })} testId="my-business" />
+            <ListItem key={b.id} leading={<Icon id={b.defId} size={2} />} title={b.name} subtitle={`Nível ${b.level} · último ano ${money.format(b.lastProfit)}`} onClick={() => nav.push({ id: 'empresa', params: { id: b.id } })} testId="my-business" />
           ))}
         </ListGroup>
       )}
@@ -137,7 +137,7 @@ export function EmpresaScreen({ game, id }: { game: GameState; id: string }) {
   return (
     <>
       <div className="flex items-center gap-3">
-        <Icon id="negocio" size={4} />
+        <Icon id={b.defId} size={4} />
         <div className="text-sm">
           <p className="font-semibold">{b.name}</p>
           <p className="text-[var(--ds-text-muted)]">Nível {b.level} · clientela {b.reputation >= 65 ? 'fiel' : b.reputation >= 40 ? 'regular' : 'fraca'} · caixa {money.format(b.cash)}</p>
@@ -267,12 +267,12 @@ export function MercadoCatScreen({ game, cat }: { game: GameState; cat: AssetKin
           <ListGroup title="Comprar negócio existente">
             {bizOffers.length === 0 && <p className="text-sm text-[var(--ds-text-muted)]">Nenhum negócio à venda aqui este ano.</p>}
             {bizOffers.map((o) => (
-              <ListItem key={o.id} testId="biz-offer" leading={<Icon id="negocio" size={2} />} title={o.name} subtitle={<><b>{money.format(o.price)}</b> · {STATUS[o.status]} · {RISK[o.risk]}<span className="block">Faturamento ~{money.format(o.revenue)}/ano · lucro ~{money.format(o.profitOwner)}/ano gerenciando de perto · ~{money.format(o.profit)} com gerente</span></>} onClick={() => setPick({ biz: o })} />
+              <ListItem key={o.id} testId="biz-offer" leading={<Icon id={o.defId} size={2} />} title={o.name} subtitle={<><b>{money.format(o.price)}</b> · {STATUS[o.status]} · {RISK[o.risk]}<span className="block">Faturamento ~{money.format(o.revenue)}/ano · lucro ~{money.format(o.profitOwner)}/ano gerenciando de perto · ~{money.format(o.profit)} com gerente</span></>} onClick={() => setPick({ biz: o })} />
             ))}
           </ListGroup>
           <ListGroup title="Abrir do zero ou franquia">
             {C.economy.businesses.filter((d) => d.open).map((d) => (
-              <ListItem key={d.id} leading={<Icon id="negocio" size={2} />} title={d.name} subtitle={`${money.format(d.startCost)} · ${d.open === 'franquia' ? 'franquia' : 'do zero'} · ${RISK[d.risk ?? 'medio']}`} onClick={() => setPick({ open: d.id })} />
+              <ListItem key={d.id} leading={<Icon id={d.id} size={2} />} title={d.name} subtitle={`${money.format(d.startCost)} · ${d.open === 'franquia' ? 'franquia' : 'do zero'} · ${RISK[d.risk ?? 'medio']}`} onClick={() => setPick({ open: d.id })} />
             ))}
           </ListGroup>
         </>

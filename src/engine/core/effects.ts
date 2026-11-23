@@ -50,6 +50,8 @@ export interface Effects {
   luck?: number;
   /** Faculdade: fazer o exame nacional agora. */
   college?: { exam?: boolean };
+  /** Cena do ano: praia ou piscina (o avatar veste roupa de banho da idade). */
+  scene?: 'praia' | 'piscina';
   money?: number;
   setFlags?: Record<string, FlagValue>;
   clearFlags?: string[];
@@ -95,6 +97,7 @@ export function applyEffects(state: GameState, effects: Effects | undefined, ctx
   };  // talentos e sorte (release 0.0.1)
   if (effects.revealTalent && ctx) next = revealTalent(next, effects.revealTalent, ctx.content);
   if (effects.luck && ctx) next = changeLuck(next, effects.luck, ctx.content);
+  if (effects.scene) next = { ...next, scene: { kind: effects.scene, year: next.year } };
   if (effects.college?.exam && ctx && examBlockReason(next) !== 'too-young') next = takeExamWith(next, ctx.rng, ctx.content);
 
   // dinheiro só via extrato (inteiro)

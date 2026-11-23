@@ -108,6 +108,7 @@ export default function SettingsSheet({ game, onClose }: { game: GameState | nul
             </div>
           )}
         </div>
+        <p className="text-center text-xs text-[var(--ds-text-muted)]" data-testid="app-version">Vida Real · versão {typeof __APP_VERSION__ === 'string' ? __APP_VERSION__ : 'dev'}</p>
       </div>
     </Sheet>
   );

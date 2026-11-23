@@ -34,9 +34,9 @@ describe('faixas de jiu-jitsu adulto (tempo, idade e habilidade)', () => {
   });
 
   it('respeita idade mínima e habilidade', () => {
-    expect(gradeReady(withGrade(17, 'jiujitsu', adultBjj(2, 3), { grappling: 60 }), 'jiujitsu', C)).toBe(false); // marrom: 18 anos e 65
-    expect(gradeReady(withGrade(18, 'jiujitsu', adultBjj(2, 3), { grappling: 60 }), 'jiujitsu', C)).toBe(false);
-    expect(gradeReady(withGrade(18, 'jiujitsu', adultBjj(2, 3), { grappling: 65 }), 'jiujitsu', C)).toBe(true);
+    expect(gradeReady(withGrade(17, 'jiujitsu', adultBjj(2, 3), { grappling: 60 }), 'jiujitsu', C)).toBe(false); // marrom: 18 anos e 59
+    expect(gradeReady(withGrade(18, 'jiujitsu', adultBjj(2, 3), { grappling: 55 }), 'jiujitsu', C)).toBe(false);
+    expect(gradeReady(withGrade(18, 'jiujitsu', adultBjj(2, 3), { grappling: 59 }), 'jiujitsu', C)).toBe(true);
     expect(gradeReady(withGrade(30, 'jiujitsu', adultBjj(4, 10), { grappling: 100 }), 'jiujitsu', C)).toBe(false); // já é preta
   });
 

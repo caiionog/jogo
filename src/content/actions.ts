@@ -64,7 +64,7 @@ export const ACTIONS: readonly ActionDef[] = [
     description: 'Uns dias longe da rotina. Custa dinheiro, renova a cabeça.',
     category: 'vida',
     minAge: 18,
-    effects: { stats: { happiness: 9, health: 1 }, money: -1800 },
+    effects: { stats: { happiness: 9, health: 1 }, money: -1800, scene: 'praia' },
     variance: 2,
     logTexts: ['Você viajou para o litoral e voltou renovado(a).', 'Uma semana na serra, longe de tudo.', 'Você conheceu outra capital do Brasil.'],
   },

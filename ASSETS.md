@@ -111,6 +111,29 @@ Determinismo (hash de pixels) · grade para todas as fases × sexos × tipos com
 fase × sexo × tipo × cabelo × roupa sem camada faltando · roupa dentro da silhueta · ≤ 48 cores · contraste do
 contorno · compor < 5 ms · ícones 16×16 com paleta definida · toda roupa do catálogo tem regra.
 
+## Regras de qualidade (release 0.0.1, `tests/avatarQuality.test.ts`)
+- **O sexo tem de ser legível em todas as fases.** Mulheres têm cílios, lábio mais cheio, cintura e quadril
+  arredondados e curvas sombreadas (só adulta e idosa, sempre vestida). Homens têm sobrancelha mais grossa, maxilar
+  marcado no adulto e ombros mais largos. Um classificador simples por pixels não pode confundir M e F na amostra de
+  NPCs.
+- **O tipo de corpo tem de ser legível** (`BUILD_DELTA` em `bodygen.ts`): magro, médio, atlético, forte e gordo com
+  silhuetas claramente diferentes. Depois de mexer, regere com `npx tsx scripts/sprites/gen-bodies.ts`.
+- **Rosto:** olhos com 2 px ou mais de altura, boca e nariz desenhados por sexo, e contraste mínimo entre pele, cabelo
+  e roupa vizinhos.
+- **Cabelo:** forma arredondada com laterais afinando e um tom próprio de sombra (`hairTone`).
+- **Roupa de treino:** a faixa de duas cores tem uma listra de 3 linhas e o prajied fica no braço (`drawBelt`,
+  `drawPrajied`). As cores vêm dos dados de graduação.
+- **Roupa de banho:** peças adultas só a partir de 18 anos (`minAge: 18`), sem exceção.
+- Auditoria visual: `npx tsx scripts/sprites/avatar-audit.ts` gera a grade de NPCs. As capturas de antes e depois
+  ficam em `docs/release-0.0.1/screenshots/`.
+
+## Ícones de negócio (padrão)
+Cada `BusinessDef` tem um ícone 16×16 montado por `businessIcon` (`src/content/sprites/market/business.ts`). A base é
+comum a todos: fachada, toldo, contorno `#2a2238` e a moldura pelo token do tema, para funcionar no claro e no escuro.
+Sobre ela entra um **glifo 8×7** próprio, em `BUSINESS_GLYPHS`, com o mesmo id do negócio. O glifo usa no máximo 6
+cores no total e tem de ser diferente dos outros (o teste compara os hashes). `MARKET_ICONS` junta tudo e `ICON_FOR`
+mapeia cada id.
+
 ## Como adicionar coisas
 - **Roupa**: `OutfitDef` em `src/content/outfits/index.ts` (`layer`, `colors`, idades, `price` se for luxo) + regra
   com o mesmo id em `src/content/sprites/clothes.ts`. O teste falha se faltar a regra.
@@ -123,3 +146,4 @@ contorno · compor < 5 ms · ícones 16×16 com paleta definida · toda roupa do
   grupos), herança em `inherit.ts`, campo no descriptor e migração do save. Nunca use um gene em mecânica
   (`tests/fairness.test.ts`).
 - **Ícone do Mercado**: grade 16×16 em `src/content/sprites/market/index.ts` e o mapeamento em `ICON_FOR`.
+- **Ícone de negócio**: glifo 8×7 em `BUSINESS_GLYPHS` (ver "Ícones de negócio" acima).

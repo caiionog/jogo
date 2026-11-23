@@ -19,6 +19,8 @@ export interface LimitsConfig {
   collegeSessions: number;
   businessDedicateSessions: number;
   minActivityAge: number;
+  /** Anos até um evento aleatório poder se repetir (padrão para quem não define `cooldownYears`). */
+  eventCooldown: number;
 }
 
 export interface ReservedPart {

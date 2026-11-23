@@ -123,6 +123,7 @@ export function trainAtClub(state: GameState, content: GameContent): GameState {
     s = ensureGrade(s, 'judo', content);
     if (!s.fighter.trainedThisYear.includes('judo')) s = { ...s, fighter: { ...s.fighter, trainedThisYear: [...s.fighter.trainedThisYear, 'judo'] } };
   }
+  if (m.sport === 'natacao') s = { ...s, scene: { kind: 'piscina', year: s.year } };
   s = appendLog(s, `Você treinou ${sportLabel(m.sport)} no clube.`);
   if (rng.chance(0.15)) s = meetFriend({ ...s, rngState: rng.state }, rng, content, 'school');
   return { ...s, rngState: rng.state };

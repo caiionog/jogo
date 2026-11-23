@@ -94,7 +94,7 @@ Para retomar numa sessão nova: "Continue a release 0.0.1 a partir do docs/relea
   - Validador: eventos dos locais existem; evento `adult` só em local adulto 18+.
   - `adultSafety` ampliado: +1000 vidas com flerte/noite juntos em todos os tipos, menores e professor da escola
     injetados, opção ligada/desligada e todos os locais → 0 violações. `tests/nightlife.test.ts`.
-- [~] **8. Qualidade dos avatares** — **AGUARDANDO APROVAÇÃO do usuário** (capturas em `screenshots/avatars-*`)
+- [x] **8. Qualidade dos avatares** — aprovado pelo usuário (capturas em `screenshots/avatars-*`)
   - 10 piores casos do "antes": (1) cabelos médio/longo/franja/grisalho em bloco retangular ("capacete");
     (2) textura de cabelo em riscas diagonais; (3) corpos M e F iguais (só o cabelo diferenciava); (4) boca vermelha
     "de batom" em todos, inclusive homens e crianças; (5) rosto sem traço de sexo (cílios, maxilar, sobrancelha);
@@ -120,10 +120,47 @@ Para retomar numa sessão nova: "Continue a release 0.0.1 a partir do docs/relea
   - Capturas novas: `avatars-tipos-fisicos.png`, `avatars-rostos.png`, `avatars-roupas-curvas.png`.
   - Pendente se o usuário pedir: roupas variadas na amostra de auditoria (o `previewAvatar` usa sempre a mesma),
     pescoço da mulher, ajuste fino por fase.
-- [ ] **9. Roupas de banho e ícones de negócios** (save v14)
-- [ ] **10. Eventos novos (≥ 40) e intervalo de repetição**
-- [ ] **11. Balanceamento geral** (`npm run sim`, GDD)
-- [ ] **12. Documentação e release** (CHANGELOG, versão 0.0.1, tag local `v0.0.1`)
+- [x] **9. Roupas de banho e ícones de negócios** (save v14)
+  - Roupas `praia` em dados: biquíni, maiô, sunga, bermuda de praia e saída de praia (`minAge 18`); maiô infantil,
+    camiseta UV e bermuda infantil (`maxAge 17`). Regras de silhueta em `sprites/clothes.ts`. `swimOutfit` escolhe pela
+    idade e confere `outfitFitsAge` de novo. Guarda-roupa inclui `praia` (filtrado pela idade).
+  - Cena do ano `GameState.scene` (efeito `scene`; viagem → praia, natação no clube → piscina): o avatar principal
+    veste roupa de banho da idade naquele ano. `GameState.eventLastAge` criado para a fase 10.
+  - 13 empreendimentos novos (24 no total) e um ícone 16×16 por ramo (`sprites/market/business.ts`: fachada comum
+    com toldo na cor do ramo + símbolo 8×7). UI do Mercado/Meus bens usa o ícone do ramo.
+  - Migração v13→v14 (fixture `saves-v13.json`); `tests/swimwear.test.ts` (todas as idades × sexos × contextos,
+    guarda-roupa e NPCs: nenhuma peça adulta abaixo de 18), `tests/businessIcons.test.ts`.
+  - Capturas: `screenshots/mercado-icones.png`, `screenshots/roupas-banho.png`.
+- [x] **10. Eventos novos (≥ 40) e intervalo de repetição**
+  - `content/events/random/` com 48 eventos (primeira infância, infância, escola, faculdade, trabalho, rua, viagem,
+    saúde, dinheiro, luta, noite, família, velhice), todos com `tone` e riscos inclinados pela sorte. Somam-se aos 10
+    de talento, 2 de sorte, 6 de faculdade, 8 de clube/intercâmbio e 10 de vida noturna desta release.
+  - Intervalo de repetição: `GameState.eventLastAge` + `GameEvent.cooldownYears` (padrão `limits.eventCooldown` = 5).
+  - `tests/eventsCoverage.test.ts`: ≥ 40 novos, ids únicos, todo ano de 3 a 85 com ≥ 5 elegíveis, intervalo
+    respeitado numa vida de 70 anos.
+- [x] **11. Balanceamento geral** (`npm run sim`, GDD §10b)
+  - Faixas adultas de jiu-jitsu mais fáceis (azul 32, roxa 46, marrom 59, preta 70): faixa preta 1,8% → 11,5%.
+  - Titã com NPCs 54–74 (antes 55–77): campeão do Titã 2,7% em 1000 vidas (Etapa 8: 2,8%; caiu com a correção do
+    cinturão vago). Liga principal 25,4%.
+  - "Gerenciar de perto" ×1,03 (antes ×1,1) e margens dos empreendimentos novos ~15% do custo: empreendedor com
+    mediana de R$ 1,02 mi aos 50 (Etapa 8: R$ 1,07 mi), 18% das empresas quebram.
+  - Ponto de atenção registrado: casamentos até os 40 ~27% na política do sim.
+- [x] **12. Documentação e release** (CHANGELOG, versão 0.0.1, tag local `v0.0.1`)
+  - Lint: oxlint (`npm run lint`, `.oxlintrc.json`), porque o typescript-eslint não suporta o TypeScript 7. Erros
+    corrigidos.
+  - Versão 0.0.1 no `package.json`, exibida em Configurações (`__APP_VERSION__`). O build sai sem avisos e o bundle tem
+    ~288 KB gzip.
+  - Roteiro de release no navegador (`scripts/e2e/release-check.mjs` + `states.ts`) em 375×667 e 414×896, com o
+    console sem erros. Verifica:
+    - uma vida criada pela tela até os 30;
+    - o limite de 10 treinos;
+    - nenhuma "energia";
+    - faixas e prajied;
+    - o diploma;
+    - clube e intercâmbio;
+    - a casa de strip oculta e visível conforme a opção;
+    - os ícones do mercado.
+  - As capturas estão em `screenshots/`. CHANGELOG.md, CLAUDE.md, ASSETS.md e docs/HANDOFF.md foram atualizados.
 
 ## Decisões
 - Fixtures de saves passaram de `tests/fixtures/` para `src/save/__fixtures__/` (checklist da release). Cada versão
@@ -138,6 +175,9 @@ Para retomar numa sessão nova: "Continue a release 0.0.1 a partir do docs/relea
   `scripts/e2e/shot.mjs` (Playwright: injeta o save no IndexedDB e tira capturas; `URL` opcional).
 
 ## Próximo passo exato (para a sessão nova)
+**Release 0.0.1 concluída** (tag local `v0.0.1`). Próximo: release 0.0.2, Fase 0 (plano), em `release/0.0.2`.
+O texto abaixo é histórico.
+
 1. `npm install` (node_modules não vem no clone) e `git checkout release/0.0.1`; confira `npm test` (618 testes) e
    `npx tsc --noEmit`.
 2. **Fase 4 — Talentos e sorte (save v11)**, conforme `PLAN.md`:

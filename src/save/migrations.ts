@@ -59,6 +59,7 @@ export const migrations: Record<number, (save: AnySave) => AnySave> = {
   10: migrateV10toV11,
   11: migrateV11toV12,
   12: migrateV12toV13,
+  13: migrateV13toV14,
 };
 
 export class SaveMigrationError extends Error {}
@@ -355,7 +356,7 @@ function migrateV6toV7(save: AnySave): AnySave {
     set(kid.id, look);
   }
   // demais pessoas: lutadores do elenco pela aparência derivada; o resto pela UF
-  for (const p of [...people.values()]) {
+  for (const p of Array.from(people.values())) {
     if (p.appearance) continue;
     set(p.id, p.npcId ? npcAppearance(s0.seed, { id: p.npcId }, p.sex, GAME_CONTENT) : randomAppearance(rng, uf, p.sex));
   }
@@ -582,4 +583,17 @@ export function migrateV11toV12(save: AnySave): AnySave {
 export function migrateV12toV13(save: AnySave): AnySave {
   const s0 = save as unknown as AnyObj;
   return { ...(s0 as AnySave), version: 13, sportsClub: s0.sportsClub ?? null, exchange: s0.exchange ?? null };
+}
+
+// ---------------------------------------------------------------------------
+// v13 → v14 (release 0.0.1: cena de praia/piscina, intervalo de repetição de eventos, roupas de banho)
+// ---------------------------------------------------------------------------
+
+/** `scene` vazio, `eventLastAge` vazio (o intervalo vale dali em diante) e as roupas de banho no guarda-roupa. */
+export function migrateV13toV14(save: AnySave): AnySave {
+  const s0 = save as unknown as AnyObj;
+  const swim = GAME_CONTENT.outfits.filter((o) => o.context === 'praia' && o.unlockedByDefault).map((o) => o.id);
+  const w = (s0.wardrobe ?? {}) as AnyObj;
+  const unlocked = [...new Set([...((w.unlocked as string[]) ?? []), ...swim])];
+  return { ...(s0 as AnySave), version: 14, scene: s0.scene ?? null, eventLastAge: s0.eventLastAge ?? {}, wardrobe: { ...w, unlocked } };
 }
