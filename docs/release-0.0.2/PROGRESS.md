@@ -16,7 +16,7 @@ Branch `release/0.0.2`, criada a partir de `release/0.0.1` (tag local `v0.0.1`).
 - [x] **8. Cruzamentos** entre polícia, crime, luta e relacionamentos — 794 testes
 - [x] **9. Interface**, fardas, uniformes e ícones — 798 testes
 - [x] **10. Balanceamento** (`npm run sim`, tabelas no GDD) — `scripts/simCrime.ts`, GDD §10c
-- [ ] **11. Documentação e release** (CHANGELOG, versão 0.0.2, capturas, tag local `v0.0.2`)
+- [x] **11. Documentação e release** (CHANGELOG, versão 0.0.2, capturas, tag local `v0.0.2`)
 
 ## Notas da fase 1
 - Treino de modalidade, físico, sparring e clube nunca bloqueia por falta de sessão: acima do limite, `overtrainSession`
@@ -170,13 +170,10 @@ Branch `release/0.0.2`, criada a partir de `release/0.0.1` (tag local `v0.0.1`).
 - `scripts/simCrime.ts` (chamado no fim do `npm run sim`; `SIM_CRIME_N=200 npx tsx scripts/simCrime.ts` sozinho).
   Resultados e ajustes no GDD §10c.
 
+## Release 0.0.2 fechada
+GDD §10c, CLAUDE.md (seção "Polícia, crime, justiça e prisão"), CHANGELOG 0.0.2, HANDOFF, versão 0.0.2 no
+`package.json` (aparece em Configurações), capturas em `screenshots/` e tag local `v0.0.2`.
+
 ## Próximo passo exato (para a sessão nova)
-1. `npm install`. Confira `npm run lint`, `npm test` e `npx tsc --noEmit`.
-2. **Fase 11 — Documentação e release**: GDD (seções de treino invisível, polícia, crime, facções, justiça, prisão e
-   regras de conteúdo — o §10c já tem o balanceamento), CLAUDE.md (regras de conteúdo da 0.0.2, teste de nomes
-   proibidos, como adicionar cargo/evento policial/delito/facção/evento de prisão; save v15), CHANGELOG 0.0.2 (bundle
-   ~1.161 kB JS / 328 kB gzip), versão 0.0.2 em `package.json` e Configurações, capturas em
-   `docs/release-0.0.2/screenshots/` (carreira policial, troca de tiro, investigação, menu de crime, prisão, fardas),
-   HANDOFF, tag local `v0.0.2`. Sem push em main/merge/deploy sem perguntar.
-3. Depois da 0.0.2: o usuário pediu a **release 0.0.3** (texto completo no fim do pedido da sessão anterior; começa
-   pela fase 0 = plano com aprovação).
+Começar a **release 0.0.3** a partir de [`docs/release-0.0.3/SPEC.md`](../release-0.0.3/SPEC.md), pela Fase 0
+(plano com aprovação), na branch `release/0.0.3` criada a partir desta.
