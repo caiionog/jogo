@@ -7,6 +7,7 @@ import { LUCK, TALENTS } from './talents';
 import { COLLEGE } from './college';
 import { SPORTS_CLUBS } from './sportsClubs';
 import { EXCHANGE_PROGRAMS } from './exchange';
+import { VENUES } from './nightlife';
 import { CLUBS } from './clubs';
 import { CHILDHOOD_EVENTS } from './events/childhood';
 import { SCHOOL_EVENTS } from './events/school';
@@ -32,6 +33,7 @@ import { LEGACY_EVENTS } from './events/legacy';
 import { TALENT_EVENTS } from './events/talents';
 import { COLLEGE_EVENTS } from './events/college';
 import { CLUB_EXCHANGE_EVENTS } from './events/clubs';
+import { NIGHTLIFE_EVENTS } from './events/nightlife';
 
 export const GAME_CONTENT: GameContent = {
   limits: LIMITS,
@@ -40,8 +42,9 @@ export const GAME_CONTENT: GameContent = {
   college: COLLEGE,
   sportsClubs: SPORTS_CLUBS,
   exchangePrograms: EXCHANGE_PROGRAMS,
+  venues: VENUES,
   actions: ACTIONS,
-  events: [...CHILDHOOD_EVENTS, ...SCHOOL_EVENTS, ...FIGHTING_EVENTS, ...RELATIONSHIP_EVENTS, ...ECONOMY_EVENTS, ...JOB_EVENTS, ...HEALTH_EVENTS, ...LEGACY_EVENTS, ...TALENT_EVENTS, ...COLLEGE_EVENTS, ...CLUB_EXCHANGE_EVENTS],
+  events: [...CHILDHOOD_EVENTS, ...SCHOOL_EVENTS, ...FIGHTING_EVENTS, ...RELATIONSHIP_EVENTS, ...ECONOMY_EVENTS, ...JOB_EVENTS, ...HEALTH_EVENTS, ...LEGACY_EVENTS, ...TALENT_EVENTS, ...COLLEGE_EVENTS, ...CLUB_EXCHANGE_EVENTS, ...NIGHTLIFE_EVENTS],
   geo: GEO_CONTENT,
   clubs: CLUBS,
   names: NAMES,

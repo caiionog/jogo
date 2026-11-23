@@ -1,3 +1,4 @@
+import { canHaveSexualContentWith, isSchoolTeacher, isValidPartnerAge } from './guards';
 import { talentMod } from '../character/talents';
 /** Ações de relacionamento na tela de detalhe da pessoa. */
 import type { GameContent } from '../core/content';
@@ -7,8 +8,8 @@ import type { GameState } from '../core/state';
 import { addStats, appendLog } from '../core/stats';
 import { adultContentAllowed, canDate, canMarry } from './guards';
 import { breakUp, canConceive, divorce, ADOPTION_COST, startPregnancy } from './romance';
-import { changeAffection, firstName, getPerson, getRelation, relLabel, updatePerson, updateRelation, withHistory } from './people';
-import type { InteractionKind, Person, Relation } from './types';
+import { changeAffection, currentPartner, firstName, getPerson, getRelation, relLabel, updatePerson, updateRelation, withHistory } from './people';
+import type { InteractionKind, Person, RelType, Relation } from './types';
 import { post } from '../economy/ledger';
 import { moneyFromParent } from '../economy/family';
 import { bumpUse, repeatMultiplier } from '../lifeStages/sessions';
@@ -32,12 +33,16 @@ export const INTERACTION_LABEL: Record<InteractionKind, string> = {
   intimacy_protected: 'Noite a dois (com proteção)',
   try_baby: 'Tentar ter um filho',
   adopt: `Adotar uma criança (R$ ${ADOPTION_COST.toLocaleString('pt-BR')})`,
+  flirt: 'Flertar',
+  night_together: 'Passar a noite juntos',
 };
 
 /** Ações que envolvem sexo: SEMPRE exigem canHaveSexualContent (os dois com 18+). */
-export const SEXUAL_INTERACTIONS: readonly InteractionKind[] = ['intimacy', 'intimacy_protected', 'try_baby'];
+export const SEXUAL_INTERACTIONS: readonly InteractionKind[] = ['intimacy', 'intimacy_protected', 'try_baby', 'night_together'];
 /** Ações com texto adulto: além da idade, exigem a opção "Conteúdo adulto" ligada. */
-export const ADULT_INTERACTIONS: readonly InteractionKind[] = ['intimacy', 'intimacy_protected'];
+export const ADULT_INTERACTIONS: readonly InteractionKind[] = ['intimacy', 'intimacy_protected', 'night_together'];
+/** Relações com quem dá para flertar (release 0.0.1). */
+export const FLIRT_TYPES: readonly RelType[] = ['amigo', 'colega_treino', 'treinador', 'professor'];
 
 export type InteractionBlockReason =
   | 'dead'
@@ -56,6 +61,11 @@ export function applicableInteractions(state: GameState, person: Person, rel: Re
   if (rel.type === 'pai' || rel.type === 'mae') out.push('ask_money');
   if (rel.type === 'filho' && person.age >= 4) out.push('teach_fight');
   const stage = rel.romance?.stage;
+  // amizade, colega de treino, treinador(a) e professor(a): flerte (faixas de idade) e noite juntos (só 18+ e opção adulta)
+  if (!stage && FLIRT_TYPES.includes(rel.type) && !isSchoolTeacher(person)) {
+    if (isValidPartnerAge(state.character.age, person.age)) out.push('flirt');
+    if (canHaveSexualContentWith(state, person)) out.push('night_together');
+  }
   if (stage) {
     out.push('date');
     if (stage === 'ficando') out.push('ask_out');
@@ -237,6 +247,10 @@ function runInteraction(state: GameState, person: Person, rel: Relation, kind: I
       s = post(s, 'compras', -ADOPTION_COST, 'Processo de adoção');
       return startPregnancy(s, person.id, content, true);
     }
+    case 'flirt':
+      return flirt(s, person, rel, rng, m);
+    case 'night_together':
+      return nightTogether(s, person, rel, rng);
   }
 }
 
@@ -277,4 +291,65 @@ export function checkTypeShift(state: GameState, personId: string): GameState {
     return appendLog(s, `Você e ${person.name} viraram inimigos.`);
   }
   return state;
+}
+
+/**
+ * Flertar (romântico, nunca sexual): com química, vira "ficando"; sem, a amizade fica estranha. Faixas de idade de
+ * `isValidPartnerAge` (adolescente só com adolescente). Ciúme de quem já namora.
+ */
+function flirt(state: GameState, person: Person, rel: Relation, rng: Rng, m: number): GameState {
+  if (!isValidPartnerAge(state.character.age, person.age) || isSchoolTeacher(person)) return state;
+  const n = firstName(person.name);
+  let s = jealousy(state, person, rng, 0.25);
+  // quem já tem parceiro(a) não começa outro romance: só arrisca o ciúme
+  if (!currentPartner(s) && rng.chance(Math.min(0.7, 0.2 + rel.affection / 200) * Math.min(1.3, m))) {
+    s = updateRelation(s, person.id, (r) => ({ ...r, type: 'parceiro', romance: { stage: 'ficando', since: s.character.age } }));
+    s = changeAffection(s, person.id, 6, 'Rolou um clima.');
+    return appendLog(s, `Você flertou com ${n} e o clima mudou entre vocês: agora estão ficando.`);
+  }
+  s = changeAffection(s, person.id, -rng.int(3, 8), 'Flerte sem resposta.');
+  return appendLog(s, `Você flertou com ${n}, mas ficou um silêncio constrangedor.`);
+}
+
+/**
+ * Passar a noite juntos com amizade, colega, treinador(a) ou professor(a). SÓ com `canHaveSexualContentWith` (os dois
+ * 18+, opção adulta ligada; nunca professor da escola enquanto aluno). Texto sugestivo. Consequências: a amizade pode
+ * virar romance ou estragar; ciúme de parceiro(a); fofoca na academia; com treinador(a) ou professor(a), problema de
+ * hierarquia (instrutor afastado, expulsão da academia, problema na faculdade).
+ */
+function nightTogether(state: GameState, person: Person, rel: Relation, rng: Rng): GameState {
+  if (!canHaveSexualContentWith(state, person)) return state; // defesa em profundidade
+  const n = firstName(person.name);
+  let s = appendLog(state, `Você e ${n} passaram a noite juntos. Na manhã seguinte, um café meio sem graça e muitos pensamentos.`);
+  s = { ...s, character: { ...s.character, stats: addStats(s.character.stats, { happiness: 3 }) } };
+  s = jealousy(s, person, rng, 0.5);
+  const roll = rng.next();
+  if (roll < 0.35 && !currentPartner(s)) {
+    s = updateRelation(s, person.id, (r) => ({ ...r, type: 'parceiro', romance: { stage: 'ficando', since: s.character.age } }));
+    s = changeAffection(s, person.id, 8, 'Viraram algo mais.');
+    s = appendLog(s, `Com ${n}, o que era ${rel.type === 'amigo' ? 'amizade' : 'convivência'} virou algo mais.`);
+  } else if (roll < 0.6) {
+    s = changeAffection(s, person.id, -rng.int(8, 15), 'Ficou estranho.');
+    s = appendLog(s, `Depois daquela noite, as coisas com ${n} ficaram estranhas.`);
+  } else s = changeAffection(s, person.id, rng.int(2, 6), 'Noite juntos.');
+  if (rel.type === 'treinador' || rel.type === 'colega_treino') {
+    if (rng.chance(0.4)) s = appendLog(s, 'A história vazou e virou fofoca na academia.');
+    if (rel.type === 'treinador' && rng.chance(0.2) && s.fighter.gymId) {
+      s = { ...s, fighter: { ...s.fighter, gymId: null } };
+      s = appendLog(s, `A direção da academia afastou ${n} e pediu que você treinasse em outro lugar.`);
+    }
+  }
+  if (rel.type === 'professor' && rng.chance(0.25)) {
+    s = { ...s, character: { ...s.character, stats: addStats(s.character.stats, { happiness: -4 }) } };
+    s = appendLog(s, `A coordenação descobriu: ${n} foi afastad${person.sex === 'M' ? 'o' : 'a'} e você virou assunto no campus.`);
+  }
+  return s;
+}
+
+/** Quem já tem parceiro(a) pode ser descoberto: o parceiro perde afeto. */
+function jealousy(state: GameState, other: Person, rng: Rng, chance: number): GameState {
+  const p = currentPartner(state);
+  if (!p || p.person.id === other.id || !rng.chance(chance)) return state;
+  const s = changeAffection(state, p.person.id, -rng.int(12, 25), 'Ciúme.');
+  return appendLog(s, `${firstName(p.person.name)} descobriu e ficou furios${p.person.sex === 'M' ? 'o' : 'a'} de ciúme.`);
 }

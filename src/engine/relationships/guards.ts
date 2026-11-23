@@ -41,6 +41,22 @@ export function canHaveSexualContent(
   return character.age >= ADULT_AGE && partner.age >= ADULT_AGE;
 }
 
+/** Professor(a) da escola do personagem (marcado com a flag `professor_escola`). */
+export function isSchoolTeacher(person: { flags?: Record<string, unknown> }): boolean {
+  return !!person.flags?.professor_escola;
+}
+
+/**
+ * Conteúdo sexual com uma pessoa específica (release 0.0.1: amizades, colegas, treinadores e professores também).
+ * Passa SEMPRE por `adultContentAllowed` → `canHaveSexualContent` (os dois com 18+) e, além disso, nunca com
+ * professor(a) da escola enquanto o personagem for aluno(a) da escola. Não reimplemente esta regra em outro lugar.
+ */
+export function canHaveSexualContentWith(state: GameState, person: { age: number; alive?: boolean; flags?: Record<string, unknown> }): boolean {
+  if (!adultContentAllowed(state, person)) return false;
+  if (isSchoolTeacher(person) && state.education.current) return false;
+  return true;
+}
+
 /** Conteúdo adulto liberado: opção ligada, personagem 18+ e (se houver) parceiro 18+. */
 export function adultContentAllowed(state: GameState, partner?: { age: number; alive?: boolean }): boolean {
   if (!state.relationships.settings.adultContent) return false;

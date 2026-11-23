@@ -1,7 +1,7 @@
 /** Atividades → Clube esportivo e Intercâmbio (release 0.0.1). */
 import { GAME_CONTENT as C } from '../../../content';
 import type { GameState, SportId } from '../../../engine';
-import { clubTrainBlockReason, clubsInCity, exchangeBlockReason, onExchange, parentsShare, sportsClubBlockReason, sportsClubDef } from '../../../engine';
+import { usesThisYear, venueBlockReason, clubTrainBlockReason, clubsInCity, exchangeBlockReason, onExchange, parentsShare, sportsClubBlockReason, sportsClubDef } from '../../../engine';
 import { ListGroup, ListItem } from '../../design/components';
 import { money } from '../../components/ecoUi';
 import { useGameStore } from '../../store';
@@ -64,6 +64,25 @@ export function IntercambioScreen({ game }: { game: GameState }) {
           return <ListItem key={p.id} emoji="✈️" title={`${p.country}: ${modalityLabel(p.modality)}`} subtitle={`${p.academy} (${p.city}) · ${money.format(p.cost)}${share ? ` · pais pagam ${money.format(share)}` : ''}`} disabled={!!r} reason={r ? EX_REASON[r] : undefined} onClick={() => st.startExchange(p.id)} chevron={false} testId={`exchange-${p.id}`} />;
         })}
       </ListGroup>
+    </>
+  );
+}
+
+const VENUE_REASON: Record<string, string> = { busy: 'Resolva o acontecimento pendente', 'too-young': 'Só para maiores de 18', 'too-old': 'Isso já não é para a sua idade', 'adult-off': 'Ative "Conteúdo adulto" nas configurações', 'no-money': 'Dinheiro insuficiente' };
+
+/** Atividades → Lazer → Sair à noite. Locais adultos só aparecem (desabilitados com o motivo) para quem tem 18+. */
+export function NoiteScreen({ game }: { game: GameState }) {
+  const st = useGameStore();
+  const age = game.character.age;
+  const n = usesThisYear(game, 'noite');
+  const venues = C.venues.filter((v) => (v.maxAge === undefined || age <= v.maxAge) && (!v.adult || (age >= 18 && game.relationships.settings.adultContent)));
+  return (
+    <>
+      {n > 0 && <p className="text-sm text-[var(--ds-text-muted)]">Você já saiu {n}× este ano: cada saída rende um pouco menos de diversão.</p>}
+      {venues.map((v) => {
+        const r = venueBlockReason(game, v.id, C);
+        return <ListItem key={v.id} emoji={v.emoji} title={v.label} subtitle={age >= 18 ? `${money.format(v.cost)} · algo sempre acontece` : 'Algo sempre acontece'} disabled={!!r} reason={r ? VENUE_REASON[r] : undefined} onClick={() => st.goOut(v.id)} chevron={false} testId={`venue-${v.id}`} />;
+      })}
     </>
   );
 }

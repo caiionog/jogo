@@ -77,6 +77,7 @@ import {
   askParentsForExchange,
   askJobLeave,
   startExchange,
+  goOut,
 } from '../engine';
 import type { CollegeType, SportId } from '../engine';
 import type {
@@ -226,6 +227,8 @@ interface GameStore {
   quitJob(): void;
   /** Faculdade (release 0.0.1). */
   takeExam(): void;
+  /** Vida noturna (release 0.0.1): sai e o evento do local abre como pop-up. */
+  goOut(venueId: string): void;
   /** Clube esportivo e intercâmbio (release 0.0.1). */
   joinSportsClub(clubId: string, sport: SportId): void;
   leaveSportsClub(): void;
@@ -462,6 +465,7 @@ export const useGameStore = create<GameStore>((setState, getState) => {
     askRaise: () => act((g) => economyAction(g, (x) => askRaise(x, GAME_CONTENT))),
     quitJob: () => eco((g) => quitJob(g, GAME_CONTENT)),
     takeExam: () => act((g) => takeExam(g, GAME_CONTENT)),
+    goOut: (id) => update((g) => goOut(g, id, GAME_CONTENT)),
     joinSportsClub: (id, sport) => update((g) => joinSportsClub(g, id, sport, GAME_CONTENT)),
     leaveSportsClub: () => update((g) => leaveSportsClub(g, GAME_CONTENT)),
     trainAtClub: () => act((g) => trainAtClub(g, GAME_CONTENT)),

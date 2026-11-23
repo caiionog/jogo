@@ -1,3 +1,4 @@
+import type { VenueDef } from '../lifeStages/nightlife';
 import type { ExchangeProgramDef, SportsClubDef } from '../lifeStages/sportsClub';
 import type { CollegeContent } from '../lifeStages/college';
 import type { Effects } from './effects';
@@ -107,4 +108,6 @@ export interface GameContent {
   /** Clubes esportivos e programas de intercâmbio (release 0.0.1). */
   sportsClubs: readonly SportsClubDef[];
   exchangePrograms: readonly ExchangeProgramDef[];
+  /** Locais da vida noturna (release 0.0.1). */
+  venues: readonly VenueDef[];
 }

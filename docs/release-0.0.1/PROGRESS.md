@@ -80,7 +80,20 @@ Para retomar numa sessão nova: "Continue a release 0.0.1 a partir do docs/relea
     bloqueio por emprego de tempo integral (pedir licença: sem salário no ano, ou demissão), escola em pausa, treino só
     da modalidade na academia do programa (treinador de elite), ganho grande + reputação + flag na volta. 5 eventos.
   - UI: Atividades → Clube esportivo / Intercâmbio. Migração v12→v13; `tests/clubsExchange.test.ts`.
-- [ ] **7. Vida noturna e interações adultas**
+- [x] **7. Vida noturna e interações adultas** (sem mudança de formato do save)
+  - `engine/lifeStages/nightlife.ts` + `content/nightlife/` (8 locais: lanchonete/festa de amigos/matinê até 17;
+    bar, festa, show 16+, balada; casa de strip 18+ com `adult` e opção ligada). `goOut` cobra (adulto), dá humor
+    com retorno decrescente e sorteia 1 evento do local com peso pela sorte. 10 eventos `followUp`
+    (`events/nightlife/`): conhecer alguém, conhecido, briga (3 versões: adulto, lutador — reputação ou polícia —,
+    adolescente), gastar demais, perder o celular, ressaca, strip (tag `adult`, sugestivo).
+  - Interações `flirt` (romântico, `isValidPartnerAge`) e `night_together` (sexual) com amigo, colega de treino,
+    treinador e o tipo novo `professor` (criado ao entrar na faculdade). Guarda única nova
+    `canHaveSexualContentWith` em `guards.ts` (= `adultContentAllowed` + nunca professor da escola durante a escola).
+    Consequências: vira romance (sem parceiro atual) ou esfria; ciúme do parceiro; fofoca na academia; treinador
+    afastado/expulsão da academia; problema na faculdade.
+  - Validador: eventos dos locais existem; evento `adult` só em local adulto 18+.
+  - `adultSafety` ampliado: +1000 vidas com flerte/noite juntos em todos os tipos, menores e professor da escola
+    injetados, opção ligada/desligada e todos os locais → 0 violações. `tests/nightlife.test.ts`.
 - [ ] **8. Qualidade dos avatares** — PAUSA para aprovação do antes × depois
 - [ ] **9. Roupas de banho e ícones de negócios** (save v14)
 - [ ] **10. Eventos novos (≥ 40) e intervalo de repetição**

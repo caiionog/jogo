@@ -13,6 +13,7 @@ import { post, toMoney } from '../economy/ledger';
 import { newLoan } from '../economy/bank';
 import { cityMultOf } from '../geo';
 import { usesThisYear } from './sessions';
+import { addRelation, createPerson } from '../relationships/people';
 
 export interface CourseDef {
   id: string;
@@ -156,7 +157,11 @@ export function enrollCollege(state: GameState, courseId: string, type: CollegeT
   const names = type === 'publica' ? content.college.publicNames : content.college.privateNames;
   const funding: CollegeFunding = type === 'publica' ? 'gratis' : earnsScholarship(state, c, content) ? 'bolsa' : financing ? 'financiamento' : 'proprio';
   const current: CollegeEnrollment = { courseId, type, institution: rng.pick(names), year: 1, grade: null, status: 'cursando', funding, failures: 0, financed: 0 };
-  const s: GameState = { ...state, rngState: rng.state, college: { ...state.college, current }, flags: { ...state.flags, caminho_18: 'faculdade' } };
+  let s: GameState = { ...state, college: { ...state.college, current }, flags: { ...state.flags, caminho_18: 'faculdade' } };
+  // um(a) professor(a) do curso entra nas relações (adulto; release 0.0.1)
+  let prof;
+  [s, prof] = createPerson(s, rng, content, { age: rng.int(30, 62), flags: { faculdade: true } });
+  s = { ...addRelation(s, prof.id, 'professor', 35), rngState: rng.state };
   const how = funding === 'gratis' ? 'pública, sem mensalidade' : funding === 'bolsa' ? 'com bolsa integral pela nota' : funding === 'financiamento' ? `pelo ${content.college.loanName}` : `mensalidade de R$ ${tuitionOf(state, c, content).toLocaleString('pt-BR')}/ano`;
   return appendLog(s, `Você começou ${c.label} na ${current.institution} (${how}).`);
 }

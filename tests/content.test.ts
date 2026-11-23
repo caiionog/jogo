@@ -50,6 +50,8 @@ describe('conteúdo', () => {
     if (GAME_CONTENT.health.diagnosisEventId) targets.add(GAME_CONTENT.health.diagnosisEventId);
     for (const h of Object.values(GAME_CONTENT.relationships.hooks)) if (h) targets.add(h);
     for (const h of Object.values(GAME_CONTENT.economy.hooks)) if (h) targets.add(h);
+    // vida noturna (release 0.0.1): cada local sorteia um dos seus eventos
+    for (const v of GAME_CONTENT.venues) for (const id of v.events) targets.add(id);
     for (const e of GAME_CONTENT.events.filter((x) => x.trigger === 'followUp')) expect(targets.has(e.id), e.id).toBe(true);
   });
 

@@ -3,3 +3,4 @@ export * from './sessions';
 export * from './school';
 export * from './college';
 export * from './sportsClub';
+export * from './nightlife';

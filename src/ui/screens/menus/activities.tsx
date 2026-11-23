@@ -105,7 +105,13 @@ export function EstudoScreen({ game }: { game: GameState }) {
 }
 
 export function LazerScreen({ game }: { game: GameState }) {
-  return <ActionsList game={game} ids={['socialize', 'go_out', 'party', 'travel', 'make_friends', 'skip_class']} />;
+  const nav = useNav();
+  return (
+    <>
+      <ListItem emoji="🌙" title="Sair à noite" subtitle={game.character.age >= 18 ? 'Bar, festa, show, balada…' : 'Festa de amigos, matinê, lanchonete'} disabled={game.character.age < 10} reason="A partir dos 10 anos" onClick={() => nav.push('noite')} testId="act-noite" />
+      <ActionsList game={game} ids={['socialize', 'go_out', 'party', 'travel', 'make_friends', 'skip_class']} />
+    </>
+  );
 }
 
 export function AmorScreen({ game }: { game: GameState }) {

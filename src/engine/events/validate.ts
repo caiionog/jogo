@@ -137,6 +137,15 @@ export function validateContent(content: GameContent): string[] {
     if (!g.modalities.length) errors.push(`academia ${g.id}: sem modalidades`);
     for (const m of g.modalities) if (!modIds.has(m)) errors.push(`academia ${g.id}: modalidade inexistente "${m}"`);
   }
+  // vida noturna (release 0.0.1): eventos existentes; local adulto só com eventos `adult` ou neutros e 18+
+  for (const v of content.venues) {
+    for (const id of v.events) if (!content.events.some((e) => e.id === id)) errors.push(`local ${v.id}: evento inexistente "${id}"`);
+    if (v.adult && v.minAge < 18) errors.push(`local ${v.id}: adulto exige minAge 18`);
+    for (const id of v.events) {
+      const ev = content.events.find((e) => e.id === id);
+      if (ev?.tags?.includes('adult') && (v.minAge < 18 || !v.adult)) errors.push(`local ${v.id}: evento adulto "${id}" em local não adulto`);
+    }
+  }
   // talentos de nascimento (release 0.0.1): positivos 5–15%, negativos com chance menor
   for (const d of content.talents) {
     const [lo, hi] = d.negative ? [0.01, 0.08] : [0.05, 0.15];

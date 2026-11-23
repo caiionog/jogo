@@ -6,7 +6,7 @@
 import { create } from 'zustand';
 
 export type ScreenId =
-  | 'ocupacao' | 'minha-ocupacao' | 'carreiras' | 'carreiras-cat' | 'carreira' | 'carreira-luta' | 'estudos' | 'escola' | 'luta' | 'ranking' | 'clube' | 'intercambio'
+  | 'ocupacao' | 'minha-ocupacao' | 'carreiras' | 'carreiras-cat' | 'carreira' | 'carreira-luta' | 'estudos' | 'escola' | 'luta' | 'ranking' | 'clube' | 'intercambio' | 'noite'
   | 'bens' | 'meus-bens' | 'bem' | 'empresa' | 'mercado' | 'mercado-cat' | 'financas'
   | 'relacoes'
   | 'atividades' | 'treino' | 'estudo' | 'saude' | 'lazer' | 'amor' | 'testamento'
