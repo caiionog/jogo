@@ -229,3 +229,15 @@ describe('tela central da Carreira de Luta (release 0.0.1)', () => {
     expect(screen.getByTestId('fight-career')).toBeTruthy();
   });
 });
+
+describe('talentos e sorte na UI (release 0.0.1)', () => {
+  it('o perfil mostra só talentos revelados; a sorte nunca aparece como número', () => {
+    const g = adult();
+    start({ ...g, character: { ...g.character, luck: 77, talents: [{ id: 'atletico', revealed: true }, { id: 'mao_pesada', revealed: false }] } });
+    fireEvent.click(screen.getByTestId('avatar-button'));
+    const t = screen.getByTestId('talents').textContent ?? '';
+    expect(t).toContain('Talento atlético');
+    expect(t).not.toContain('Mão pesada');
+    expect(document.body.textContent).not.toMatch(/\b77\b|[Ss]orte: ?\d/);
+  });
+});

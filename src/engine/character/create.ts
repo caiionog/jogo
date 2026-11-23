@@ -33,6 +33,9 @@ export function createCharacter(
   const loc = place ?? pickBirthplace(rng, geo);
   const name = input.name.trim() || 'Sem Nome';
   const character: Character = {
+    // talentos e sorte vêm depois, por RNG derivado (newGame)
+    talents: [],
+    luck: 50,
     name,
     sex: input.sex,
     age: 0,

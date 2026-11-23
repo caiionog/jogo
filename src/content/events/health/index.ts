@@ -124,6 +124,8 @@ export const HEALTH_EVENTS: readonly GameEvent[] = [
   },
   {
     id: 'health_street_fight',
+    tags: ['briga'],
+    tone: 'bad',
     weight: 0.5,
     conditions: { minAge: 16, maxAge: 65 },
     text: 'Na saída de um bar, um homem bêbado reconhece você e quer "testar o lutador".',

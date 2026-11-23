@@ -214,6 +214,8 @@ export function resolvePregnancy(state: GameState, rng: Rng, content: GameConten
   const parentLook = partner?.appearance;
   const look = !preg.adoption && parentLook ? (c.sex === 'M' ? inheritAppearance(lookRng(rng), c.appearance, parentLook, childSex) : inheritAppearance(lookRng(rng), parentLook, c.appearance, childSex)) : undefined;
   [s, child] = createPerson(s, rng, content, {
+    // filho biológico herda talentos com chance maior (adotado, não)
+    ...(preg.adoption ? {} : { parentTalents: [c.talents.map((t) => t.id), partner?.talents ?? []] }),
     sex: childSex,
     ...(look ? { appearance: look } : {}),
     age: preg.adoption ? rng.int(0, 5) : 0,

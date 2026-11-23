@@ -1,3 +1,4 @@
+import { luckWeightMult, talentMod } from '../character/talents';
 import type { Rng } from '../core/rng';
 import type { GameState } from '../core/state';
 import { STAT_KEYS } from '../core/state';
@@ -170,6 +171,10 @@ export function conditionsMet(state: GameState, event: GameEvent, content?: Game
   if (event.once && state.firedEvents.includes(event.id)) return false;
   if (c.minAge !== undefined && age < c.minAge) return false;
   if (c.maxAge !== undefined && age > c.maxAge) return false;
+  if (c.talent) {
+    const t = state.character.talents?.find((x) => x.id === c.talent!.id);
+    if (!t || (c.talent.revealed !== undefined && t.revealed !== c.talent.revealed)) return false;
+  }
   if (c.sex !== undefined && sex !== c.sex) return false;
   if (c.stats) {
     for (const key of STAT_KEYS) {
@@ -227,6 +232,17 @@ export function autoEvents(state: GameState, events: readonly GameEvent[], conte
   return events.filter((e) => e.trigger === 'auto' && conditionsMet(state, e, content));
 }
 
+/**
+ * Peso de um evento no sorteio do ano: o peso do conteúdo × sorte (eventos bons/ruins, com limite) × pavio curto
+ * (eventos de briga). Sem conteúdo, o peso puro.
+ */
+export function eventWeight(state: GameState, e: GameEvent, content?: GameContent): number {
+  if (!content) return e.weight;
+  let w = e.weight * luckWeightMult(state, e.tone, content);
+  if (e.tags?.includes('briga')) w *= talentMod(state, content, 'fightEventMult');
+  return w;
+}
+
 /** Sorteia até `count` eventos elegíveis, ponderados por peso, sem repetição. */
 export function selectEvents(
   state: GameState,
@@ -238,7 +254,7 @@ export function selectEvents(
   const pool = eligibleEvents(state, events, content);
   const chosen: GameEvent[] = [];
   while (chosen.length < count && pool.length > 0) {
-    const idx = rng.weightedIndex(pool.map((e) => e.weight));
+    const idx = rng.weightedIndex(pool.map((e) => eventWeight(state, e, content)));
     chosen.push(pool[idx] as GameEvent);
     pool.splice(idx, 1);
   }

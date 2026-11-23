@@ -104,6 +104,8 @@ export const FUNDAMENTAL2_EVENTS: readonly GameEvent[] = [
   },
   {
     id: 'f2_bullying',
+    tags: ['briga'],
+    tone: 'bad',
     conditions: { schoolStages: ['fund2', 'medio'] },
     weight: 7,
     once: true,

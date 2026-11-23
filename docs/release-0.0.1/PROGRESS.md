@@ -48,7 +48,18 @@ Para retomar numa sessão nova: "Continue a release 0.0.1 a partir do docs/relea
   - Dicas de primeira vez (graduação, cartel, ranking, bolsa/camp, treinador) com "Entendi": `meta.seenTips`
     (META_VERSION 2 + migração). Testes de UI: 2 toques, dica some e não volta, nenhum número de habilidade.
   - Captura: `docs/release-0.0.1/fase3-carreira-luta.png`.
-- [ ] **4. Talentos e sorte** (save v11)
+- [x] **4. Talentos e sorte** (save v11)
+  - `src/content/talents/` (10 talentos: 7 positivos 7–10%, 3 negativos 5–6%; `LUCK` com os limites) e
+    `engine/character/talents.ts` (rollTalents/rollLuck por RNG derivado `seed:talentos:*`, `talentMod`,
+    `luckWeightMult`, `luckRiskChance`, `luckFightMult`, `changeLuck`, `luckHint/luckTitle`).
+  - Regras ligadas: ganho de treino, estudo, aparência/atlética/inteligência iniciais, doenças, tempo e chance de
+    lesão, nocaute e finalização (snapshot `koMult/subMult` × sorte), afeto, reputação, peso dos eventos `briga`.
+  - Sorte: `GameEvent.tone` e `risk.tone` (padrão 'bad'); peso ±25%, risco ±8 p.p., luta ±3%, evento ±10 (validado).
+    Pistas no log a cada 7 anos nos extremos e título no obituário. Nunca aparece como número.
+  - 10 eventos de revelação (`events/talents/`) + amuleto e espelho quebrado. Perfil mostra os revelados.
+  - NPCs: `Person.talents` (filhos biológicos herdam com `heritBonus`); herdeiro herda os dele.
+  - Migração v10→v11 (fixture `saves-v10.json`), `tests/talentsLuck.test.ts` (100 mil nascimentos, herança,
+    limites, determinismo, estatística da sorte) e guarda na UI.
 - [ ] **5. Faculdade, cursos e empregos de nível superior** (save v12)
 - [ ] **6. Clubes esportivos e intercâmbio** (save v13)
 - [ ] **7. Vida noturna e interações adultas**

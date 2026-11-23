@@ -34,6 +34,9 @@ export interface FighterSnapshot {
   sizeEdge: number;
   /** Estamina inicial (100 normal; menor se falhou o peso). */
   startStamina?: number;
+  /** Multiplicadores dos lances decisivos (talento mão pesada/corpo elástico × sorte; release 0.0.1). */
+  koMult?: number;
+  subMult?: number;
 }
 
 export interface FighterLive {

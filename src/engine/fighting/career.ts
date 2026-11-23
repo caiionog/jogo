@@ -1,3 +1,4 @@
+import { luckFightMult, talentMod } from '../character/talents';
 import { sessionsLeft, useSessions } from '../lifeStages/sessions';
 /**
  * Carreira: ofertas de luta, a luta em andamento (activeFight), aplicação do resultado
@@ -188,6 +189,9 @@ export function acceptOffer(state: GameState, offerId: string, opts: AcceptOptio
   }
   // lesões ativas pesam na luta (lutar machucado) e o dano cerebral enfraquece o queixo (em playerSnapshot)
   let player = playerSnapshot(s, aggressive ? AGGRESSIVE_CUT_EDGE : 0, missed ? 85 : 100);
+  // talentos de nascimento e sorte nos lances decisivos (com limite)
+  const luckM = luckFightMult(s, content);
+  player = { ...player, koMult: (1 + talentMod(s, content, 'koBonus')) * luckM, subMult: (1 + talentMod(s, content, 'subBonus')) * luckM };
   const pen = injuryFightPenalty(s, content);
   player = { ...player, skills: addSk(player.skills, { grappling: pen.grappling ?? 0, trocacao: pen.trocacao ?? 0 }), athletic: Math.max(0, player.athletic + (pen.athletic ?? 0)), chin: Math.max(0, player.chin + (pen.chin ?? 0)) };
   // parceiro(a) que apoia a carreira: ânimo extra (+3 de fôlego na luta)
@@ -262,7 +266,8 @@ export function applyFightResult(state: GameState, content: GameContent): GameSt
 
   // reputação
   const gain = org.reputationGain;
-  const repDelta = result === 'W' ? gain * (finish ? 1.5 : 1) * (offer.title ? 2 : 1) : result === 'L' ? -gain : 1;
+  // carisma (talento): a fama cresce um pouco mais com as vitórias
+  const repDelta = result === 'W' ? gain * (finish ? 1.5 : 1) * (offer.title ? 2 : 1) * talentMod(state, content, 'reputationMult') : result === 'L' ? -gain : 1;
   f.reputation = Math.min(100, Math.max(0, Math.round(f.reputation + repDelta)));
 
   // queixo: quem é nocauteado fica mais vulnerável — desde a Etapa 6 via dano cerebral (applyFightInjuries + playerSnapshot)

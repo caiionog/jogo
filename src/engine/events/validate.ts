@@ -19,6 +19,7 @@ export function validateContent(content: GameContent): string[] {
   const orgIds = new Set(fc.orgs.map((o) => o.id));
   const gymIds = new Set(fc.gyms.map((g) => g.id));
   const modIds = new Set<string>(fc.modalities.map((m) => m.id));
+  const talentIds = new Set(content.talents.map((x) => x.id));
   const gradIds = new Set(fc.graduations.map((g) => g.id));
   const traitIds = new Set(content.relationships.traits.map((t) => t.id));
 
@@ -37,6 +38,8 @@ export function validateContent(content: GameContent): string[] {
       if (!['grappling', 'trocacao', 'athletic', 'chin'].includes(k)) errors.push(`${where}: habilidade desconhecida "${k}"`);
     }
     if (ff?.promoteGrade && !modIds.has(ff.promoteGrade)) errors.push(`${where}: modalidade inexistente "${ff.promoteGrade}"`);
+    if (fx.revealTalent && !talentIds.has(fx.revealTalent)) errors.push(`${where}: talento inexistente "${fx.revealTalent}"`);
+    if (fx.luck !== undefined && Math.abs(fx.luck) > content.luck.maxEventChange) errors.push(`${where}: efeito de sorte acima do limite`);
     const he = fx.health;
     if (he?.injury && he.injury !== 'random' && !content.health.injuries.some((d) => d.id === he.injury)) errors.push(`${where}: lesão inexistente "${he.injury}"`);
     if (he?.condition && !content.health.conditions.some((d) => d.id === he.condition)) errors.push(`${where}: doença inexistente "${he.condition}"`);
@@ -77,6 +80,7 @@ export function validateContent(content: GameContent): string[] {
     }
     if (c.fighting?.orgEligible && !orgIds.has(c.fighting.orgEligible)) errors.push(`${e.id}: organização inexistente "${c.fighting.orgEligible}"`);
     for (const o of c.fighting?.orgs ?? []) if (!orgIds.has(o)) errors.push(`${e.id}: organização inexistente "${o}"`);
+    if (c.talent && !talentIds.has(c.talent.id)) errors.push(`${e.id}: talento inexistente "${c.talent.id}"`);
     if (c.fighting?.gradeReady && !modIds.has(c.fighting.gradeReady)) errors.push(`${e.id}: modalidade inexistente "${c.fighting.gradeReady}"`);
     const choiceIds = new Set<string>();
     for (const ch of e.choices) {
@@ -132,6 +136,12 @@ export function validateContent(content: GameContent): string[] {
     if (g.city && !content.geo.ufs.some((u) => u.cities.some((c) => c.name === g.city))) errors.push(`academia ${g.id}: cidade inexistente "${g.city}"`);
     if (!g.modalities.length) errors.push(`academia ${g.id}: sem modalidades`);
     for (const m of g.modalities) if (!modIds.has(m)) errors.push(`academia ${g.id}: modalidade inexistente "${m}"`);
+  }
+  // talentos de nascimento (release 0.0.1): positivos 5–15%, negativos com chance menor
+  for (const d of content.talents) {
+    const [lo, hi] = d.negative ? [0.01, 0.08] : [0.05, 0.15];
+    if (d.chance < lo || d.chance > hi) errors.push(`talento ${d.id}: chance fora de ${lo}–${hi}`);
+    if (d.heritBonus < 0 || d.chance + d.heritBonus > 0.6) errors.push(`talento ${d.id}: heritBonus inválido`);
   }
   // modalidades e graduações (release 0.0.1)
   for (const m of fc.modalities) {

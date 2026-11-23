@@ -1,3 +1,4 @@
+import { luckTitle } from '../character/talents';
 /** Fim de vida (Etapa 6): morte, obituário, nota da vida (legado) e partilha do espólio. */
 import type { GameContent } from '../core/content';
 import type { GameState } from '../core/state';
@@ -77,6 +78,9 @@ export function buildObituary(state: GameState, cause: string): Obituary {
   if (totalFights) lines.push(`Cartel profissional: ${f.pro.wins}-${f.pro.losses}-${f.pro.draws}${titles ? `, ${titles} cinturão${titles > 1 ? 'ões' : ''}` : ''}.`);
   if (bjjRank(state) > 0) lines.push(`Faixa ${BELTS[bjjRank(state)]} de jiu-jitsu.`);
   if (f.retired) lines.push(`Aposentou-se aos ${f.retired.age} anos.`);
+  // pista da sorte no fim da vida (nunca o número)
+  const lt = luckTitle(state);
+  if (lt) lines.push(lt);
   const spouse = relationsOf(state, ['conjuge'])[0];
   const kids = childrenOf(state);
   const fam: string[] = [];

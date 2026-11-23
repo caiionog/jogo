@@ -1,3 +1,4 @@
+import { talentMod } from '../../character/talents';
 import { cityMultOf } from '../../geo';
 /**
  * Lesões (Etapa 6): catálogo injetado por `content.health`, origem em lutas/sparring/treino/eventos,
@@ -80,7 +81,8 @@ export function pickInjury(rng: Rng, content: GameContent, source: InjurySource,
 /** Adiciona uma lesão (tempo sorteado, efeito imediato na saúde, dano cerebral de concussão, histórico, log). */
 export function addInjury(state: GameState, rng: Rng, _content: GameContent, def: InjuryDef, source: InjurySource, monthsOverride?: number): GameState {
   const h = state.health;
-  const months = monthsOverride ?? rng.int(def.months[0], def.months[1]);
+  // saúde de ferro/frágil (talento) muda o tempo de recuperação
+  const months = monthsOverride ?? Math.max(1, Math.round(rng.int(def.months[0], def.months[1]) * talentMod(state, _content, 'injuryMonthsMult')));
   const injury: ActiveInjury = { id: `i${h.nextId}`, defId: def.id, severity: def.severity, months, treatment: 'none', aggravated: false, age: state.character.age, source };
   let s: GameState = {
     ...state,
@@ -146,7 +148,7 @@ export function applyFightInjuries(state: GameState, rng: Rng, content: GameCont
     s = aggravate(s, inj.id, content);
     texts.push(`a lesão (${injuryDef(content, inj.defId)?.name ?? inj.defId}) piorou`);
   }
-  if (rng.chance(fightInjuryChance(input))) {
+  if (rng.chance(Math.min(0.9, fightInjuryChance(input) * talentMod(state, content, 'injuryChanceMult')))) {
     const def = pickInjury(rng, content, 'luta', ZONES[input.rules]);
     if (def) {
       s = addInjury(s, rng, content, def, 'luta');

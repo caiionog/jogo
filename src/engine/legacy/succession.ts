@@ -1,3 +1,4 @@
+import { rollLuck, talentRng } from '../character/talents';
 import { inheritAppearance, lookRng } from '../character/appearance/inherit';
 import { defaultWardrobe } from '../character/appearance/outfits';
 import { coupleSurnames } from '../relationships/romance';
@@ -157,6 +158,9 @@ export function continueAsChild(state: GameState, personId: string, content: Gam
   const familyWealth = estateGross >= 3_000_000 ? 92 : estateGross >= 500_000 ? 72 : estateGross >= 100_000 ? 50 : 25;
   const character: Character = {
     ...base,
+    // o herdeiro já nasceu com os talentos dele (ocultos de novo para o jogador) e uma sorte própria
+    talents: (child.talents ?? []).map((id) => ({ id, revealed: false })),
+    luck: rollLuck(talentRng(state.seed, `sorte:${child.id}`)),
     name: child.name,
     age,
     birthYear: state.year - age,

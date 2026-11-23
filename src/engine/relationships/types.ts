@@ -25,6 +25,8 @@ export type PartnerPreference = 'M' | 'F' | 'any';
 /** Modelo único de pessoa (NPC) — família, amigos, amores, filhos, treinadores, rivais. */
 export interface Person {
   id: string;
+  /** Talentos de nascimento do NPC (release 0.0.1; filhos herdam com chance maior). */
+  talents?: string[];
   name: string;
   sex: Sex;
   age: number;

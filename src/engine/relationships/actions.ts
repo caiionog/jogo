@@ -1,3 +1,4 @@
+import { talentMod } from '../character/talents';
 /** Ações de relacionamento na tela de detalhe da pessoa. */
 import type { GameContent } from '../core/content';
 import { createRng } from '../core/rng';
@@ -128,7 +129,7 @@ function runInteraction(state: GameState, person: Person, rel: Relation, kind: I
   let s = state;
   const n = firstName(person.name);
   // ganhos de afeto: traços × retorno decrescente da repetição no ano
-  const m = traitMult(person, kind, content) * rep;
+  const m = traitMult(person, kind, content) * rep * talentMod(state, content, 'affectionMult');
   const happy = (d: number) => {
     s = { ...s, character: { ...s.character, stats: addStats(s.character.stats, { happiness: d }) } };
   };

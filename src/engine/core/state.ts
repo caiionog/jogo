@@ -1,3 +1,4 @@
+import type { CharacterTalent } from '../character/talents';
 import type { Appearance } from '../character/appearance/genes';
 import type { Wardrobe } from '../character/appearance/outfits';
 import type { HealthState } from '../health/types';
@@ -23,6 +24,10 @@ export type Stats = Record<StatKey, number>;
 export type Sex = 'M' | 'F';
 
 export interface Character {
+  /** Talentos de nascimento (ocultos até revelados por evento; release 0.0.1). */
+  talents: CharacterTalent[];
+  /** Sorte oculta 0–100 (nunca exibida como número). */
+  luck: number;
   name: string;
   sex: Sex;
   age: number;
@@ -173,4 +178,4 @@ export interface GameState {
   wardrobe: Wardrobe;
 }
 
-export const STATE_VERSION = 10;
+export const STATE_VERSION = 11;

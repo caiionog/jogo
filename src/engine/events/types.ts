@@ -13,6 +13,8 @@ export interface StatRange {
 export type SchoolResultTag = 'passed' | 'failed' | 'honors' | 'graduated' | 'expelled';
 
 export interface EventConditions {
+  /** Talento de nascimento do personagem (revealed: só se ainda não/já revelado). */
+  talent?: { id: string; revealed?: boolean };
   minAge?: number;
   maxAge?: number;
   sex?: Sex;
@@ -100,7 +102,7 @@ export interface RelationshipCondition {
 }
 
 /** Tags de evento. 'adult' = conteúdo adulto (só 18+, com a opção ligada; ver guards.ts). */
-export type EventTag = 'adult';
+export type EventTag = 'adult' | 'briga';
 
 export interface FightingConditions {
   /** Organização do contrato atual. */
@@ -159,6 +161,8 @@ export interface LegacyConditions {
 }
 
 export interface EventRisk {
+  /** O risco é bom ou ruim para o personagem (padrão 'bad'): a sorte inclina a chance. */
+  tone?: 'good' | 'bad';
   /** Probabilidade (0–1) de o resultado alternativo acontecer. */
   chance: number;
   effects?: Effects;
@@ -187,6 +191,8 @@ export interface GameEvent {
   conditions: EventConditions;
   /** Peso relativo no sorteio (> 0 para eventos 'random'). */
   weight: number;
+  /** Evento bom ou ruim: a sorte inclina o peso no sorteio do ano. Tag `briga` pesa mais com pavio curto. */
+  tone?: 'good' | 'bad';
   trigger?: EventTrigger;
   /** Se true, só acontece uma vez por vida. */
   once?: boolean;

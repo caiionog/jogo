@@ -1,3 +1,4 @@
+import { rollLuck, rollTalents } from '../engine/character/talents';
 import type { Education, Enrollment, GameState, Skills, Stats } from '../engine';
 import {
   STATE_VERSION,
@@ -55,6 +56,7 @@ export const migrations: Record<number, (save: AnySave) => AnySave> = {
   7: migrateV7toV8,
   8: migrateV8toV9,
   9: migrateV9toV10,
+  10: migrateV10toV11,
 };
 
 export class SaveMigrationError extends Error {}
@@ -524,5 +526,28 @@ export function migrateV9toV10(save: AnySave): AnySave {
     fighter: { ...restF, skills, grades, trainedThisYear: trainedBjjThisYear ? ['jiujitsu'] : [], offers },
     world: { ...s0.world, rosters },
     activeFight,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// v10 → v11 (release 0.0.1: talentos de nascimento e sorte)
+// ---------------------------------------------------------------------------
+
+/**
+ * Talentos (todos ainda ocultos) e sorte para o personagem; talentos para as pessoas. Sorteio determinístico por RNG
+ * derivado (`seed:v11:…`), sem mexer no `rngState`. Os bônus iniciais de atributo NÃO são aplicados a saves antigos
+ * (a vida já aconteceu); os demais efeitos valem dali em diante.
+ */
+export function migrateV10toV11(save: AnySave): AnySave {
+  const s0 = save as unknown as AnyObj;
+  const seed = String(s0.seed);
+  const r = (k: string) => createRng(seedToState(`${seed}:v11:${k}`));
+  const talents = rollTalents(r('player'), GAME_CONTENT).map((id) => ({ id, revealed: false }));
+  const people = ((s0.relationships?.people ?? []) as AnyObj[]).map((p) => ({ ...p, talents: p.talents ?? rollTalents(r(`p:${p.id}`), GAME_CONTENT) }));
+  return {
+    ...(s0 as AnySave),
+    version: 11,
+    character: { ...s0.character, talents: s0.character.talents ?? talents, luck: s0.character.luck ?? rollLuck(r('sorte')) },
+    relationships: { ...s0.relationships, people },
   };
 }

@@ -1,3 +1,4 @@
+import { talentMod } from '../character/talents';
 import { addBrainDamage, addInjury, injuryVeto, pickInjury, sparringAggravation } from './injuries';
 import type { InjuryDef } from '../health/types';
 /** Treino de luta: ganhos com retornos decrescentes, curva de idade, academia e saúde. */
@@ -126,7 +127,7 @@ export function trainFighter(state: GameState, kind: TrainingKind, content: Game
   const rng = createRng(state.rngState);
   const gym = currentGym(state, content);
   // companheiros de treino próximos e treinador querido rendem um treino melhor
-  const ctx: GainContext = { age: state.character.age, health: state.character.stats.health, gym, talent: state.fighter.talent * (1 + socialTrainingBonus(state) + ownGymBonus(state, content)) };
+  const ctx: GainContext = { age: state.character.age, health: state.character.stats.health, gym, talent: state.fighter.talent * (1 + socialTrainingBonus(state) + ownGymBonus(state, content) + talentMod(state, content, 'trainingGain')) };
   const sk = state.fighter.skills;
   const delta: Partial<Skills> = {};
   const g = (base: number, k: SkillKey, modality?: ModalityId) => {
@@ -162,7 +163,7 @@ export function trainFighter(state: GameState, kind: TrainingKind, content: Game
     next = { ...next, character: { ...next.character, stats: addStats(next.character.stats, { athletic: gain, health: 1 }) } };
     text = 'Você fez um treino físico puxado.';
     coachValue = athletic;
-    if (state.character.stats.health < 50 && rng.chance(OVERTRAINING_INJURY_CHANCE)) injury = pickInjury(rng, content, 'treino');
+    if (state.character.stats.health < 50 && rng.chance(OVERTRAINING_INJURY_CHANCE * talentMod(state, content, 'injuryChanceMult'))) injury = pickInjury(rng, content, 'treino');
   } else {
     g(2.8, 'grappling');
     g(3.2, 'trocacao');
@@ -170,7 +171,7 @@ export function trainFighter(state: GameState, kind: TrainingKind, content: Game
     text = 'Você fez sparring pesado com os colegas de equipe.';
     coachValue = (sk.grappling + sk.trocacao) / 2;
     coachKey = 'sparring';
-    if (rng.chance(SPARRING_INJURY_CHANCE)) injury = pickInjury(rng, content, 'sparring');
+    if (rng.chance(SPARRING_INJURY_CHANCE * talentMod(state, content, 'injuryChanceMult'))) injury = pickInjury(rng, content, 'sparring');
     // pancadas de treino também contam (pouco) no dano cerebral; lesionado pode agravar
     next = addBrainDamage(next, 0.15);
     next = sparringAggravation(next, rng, content);

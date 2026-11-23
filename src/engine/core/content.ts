@@ -10,6 +10,7 @@ import type { HealthContent } from '../health/types';
 import type { LegacyContent } from '../legacy/types';
 import type { AchievementDef } from '../meta/types';
 import type { LimitsConfig } from '../lifeStages/sessions';
+import type { LuckConfig, TalentDef } from '../character/talents';
 
 /** Risco de uma ação: efeitos ADICIONAIS aplicados com probabilidade `chance`. */
 export interface ActionRisk {
@@ -94,4 +95,7 @@ export interface GameContent {
   outfits: readonly OutfitDef[];
   /** Limites anuais: sessões de treino e retorno decrescente (release 0.0.1). */
   limits: LimitsConfig;
+  /** Talentos de nascimento e limites da sorte (release 0.0.1). */
+  talents: readonly TalentDef[];
+  luck: LuckConfig;
 }

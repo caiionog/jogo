@@ -1,3 +1,4 @@
+import { changeLuck, revealTalent } from '../character/talents';
 import { applySkillDelta } from '../fighting/profile';
 import type { GameContent } from './content';
 import type { Rng } from './rng';
@@ -42,6 +43,10 @@ export interface SchoolEffects {
 /** Efeito declarativo, usado por ações, clubes e escolhas de eventos. */
 export interface Effects {
   stats?: Partial<Record<StatKey, number>>;
+  /** Revela um talento de nascimento do personagem (se ele tiver). */
+  revealTalent?: string;
+  /** Muda a sorte oculta (limitado por `luck.maxEventChange`). */
+  luck?: number;
   money?: number;
   setFlags?: Record<string, FlagValue>;
   clearFlags?: string[];
@@ -84,7 +89,10 @@ export function applyEffects(state: GameState, effects: Effects | undefined, ctx
     character: effects.stats
       ? { ...state.character, stats: addStats(state.character.stats, effects.stats) }
       : state.character,
-  };
+  };  // talentos e sorte (release 0.0.1)
+  if (effects.revealTalent && ctx) next = revealTalent(next, effects.revealTalent, ctx.content);
+  if (effects.luck && ctx) next = changeLuck(next, effects.luck, ctx.content);
+
   // dinheiro só via extrato (inteiro)
   if (effects.money) next = post(next, effects.money > 0 ? 'eventos' : 'eventos', effects.money, 'Evento');
   if (effects.school) next = applySchoolEffects(next, effects.school, ctx);

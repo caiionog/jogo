@@ -3,6 +3,7 @@ import { COACH_LINES } from './fightText/coach';
 import type { GameContent } from '../engine';
 import { ACTIONS } from './actions';
 import { LIMITS } from './config';
+import { LUCK, TALENTS } from './talents';
 import { CLUBS } from './clubs';
 import { CHILDHOOD_EVENTS } from './events/childhood';
 import { SCHOOL_EVENTS } from './events/school';
@@ -25,11 +26,14 @@ import { ECONOMY_CONTENT } from './economy';
 import { ECONOMY_EVENTS } from './events/economy';
 import { HEALTH_EVENTS } from './events/health';
 import { LEGACY_EVENTS } from './events/legacy';
+import { TALENT_EVENTS } from './events/talents';
 
 export const GAME_CONTENT: GameContent = {
   limits: LIMITS,
+  talents: TALENTS,
+  luck: LUCK,
   actions: ACTIONS,
-  events: [...CHILDHOOD_EVENTS, ...SCHOOL_EVENTS, ...FIGHTING_EVENTS, ...RELATIONSHIP_EVENTS, ...ECONOMY_EVENTS, ...JOB_EVENTS, ...HEALTH_EVENTS, ...LEGACY_EVENTS],
+  events: [...CHILDHOOD_EVENTS, ...SCHOOL_EVENTS, ...FIGHTING_EVENTS, ...RELATIONSHIP_EVENTS, ...ECONOMY_EVENTS, ...JOB_EVENTS, ...HEALTH_EVENTS, ...LEGACY_EVENTS, ...TALENT_EVENTS],
   geo: GEO_CONTENT,
   clubs: CLUBS,
   names: NAMES,

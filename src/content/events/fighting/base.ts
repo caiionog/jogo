@@ -70,6 +70,8 @@ export const FIGHT_BASE_EVENTS: readonly GameEvent[] = [
   },
   {
     id: 'fight_street_brawl',
+    tags: ['briga'],
+    tone: 'bad',
     conditions: { minAge: 15, maxAge: 26, flagsAll: ['brigou_na_escola'] },
     weight: 4,
     once: true,

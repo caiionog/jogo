@@ -17,6 +17,7 @@ import type { EventVars, GameState, PendingEvent, Sex, StatKey } from './state';
 import { STATE_VERSION } from './state';
 import { addStats, appendLog } from './stats';
 import { createCharacter } from '../character/create';
+import { applyBirthTalents, luckHint, luckRiskChance, rollLuck, rollTalents, talentMod, talentRng } from '../character/talents';
 import { randomPersonName, randomTeacherName } from '../character/names';
 import { bumpUse, repeatMultiplier, scalePositiveEffects } from '../lifeStages/sessions';
 import {
@@ -82,6 +83,8 @@ export function newGame(options: NewGameOptions, content: GameContent): GameStat
   }
   const character = createCharacter(rng, { ...options, name: fullName }, content.geo, birthYear, options.uf && options.city ? { uf: options.uf, city: options.city } : undefined, options.appearance);
   const talent = Math.round((0.65 + 0.7 * ((rng.next() + rng.next()) / 2)) * 100) / 100;
+  // talentos de nascimento e sorte (release 0.0.1): RNG derivado da seed, não mexe no rngState
+  applyBirthTalents(character, rollTalents(talentRng(seed, 'player'), content), rollLuck(talentRng(seed, 'sorte')), content);
   const state: GameState = {
     version: STATE_VERSION,
     seed,
@@ -170,15 +173,26 @@ export function performAction(state: GameState, actionId: string, content: GameC
     const ctx = { rng, content, immediateSource: 'action' as const };
     const key = actionUseKey(action.id);
     const mult = repeatMultiplier(s, key, content);
-    const effects = scalePositiveEffects(withVariance(action.effects, action.variance ?? 0, rng), mult);
+    // prodígio intelectual (talento): estudar rende mais
+    const study = action.id === 'study' || action.id === 'study_exams' ? 1 + talentMod(s, content, 'studyGain') : 1;
+    const effects = scalePositiveEffects(boostPositive(withVariance(action.effects, action.variance ?? 0, rng), study), mult);
     let next = applyEffects(bumpUse(s, key), effects, ctx);
     next = appendLog(next, formatText(next, rng.pick(action.logTexts)));
-    if (action.risk && rng.chance(action.risk.chance)) {
+    if (action.risk && rng.chance(luckRiskChance(next, action.risk.chance, 'bad', content))) {
       next = applyEffects(next, action.risk.effects, ctx);
       next = appendLog(next, formatText(next, action.risk.logText));
     }
     return withEventVars(next, rng, content);
   });
+}
+
+/** Multiplica os ganhos positivos de inteligência e de média escolar (talento prodígio). */
+function boostPositive(effects: Effects, k: number): Effects {
+  if (k === 1) return effects;
+  const out: Effects = { ...effects };
+  if (effects.stats?.intelligence && effects.stats.intelligence > 0) out.stats = { ...effects.stats, intelligence: Math.round(effects.stats.intelligence * k) };
+  if (effects.school?.average && effects.school.average > 0) out.school = { ...effects.school, average: Math.round(effects.school.average * k) };
+  return out;
 }
 
 function withVariance(effects: Effects, variance: number, rng: Rng): Effects {
@@ -354,6 +368,9 @@ export function advanceYear(
     next = { ...next, yearUses: {} };
     next = relationshipsYear(next, rng, content);
     next = startFightingYear(next, rng, content);
+    // pista da sorte (oculta): de vez em quando, nos extremos, uma frase no log
+    const hint = luckHint(next);
+    if (hint && next.character.age >= 8 && next.character.age % 7 === 1) next = appendLog(next, hint);
 
     const target = rng.chance(twoEventChance) ? 2 : 1;
     return pickYearEvents(next, content, rng, target);
@@ -378,7 +395,8 @@ export function resolveEvent(
   if (!pending || !event || !choice) return state;
 
   return withRng(state, (rng, s) => {
-    const risky = choice.risk !== undefined && rng.chance(choice.risk.chance);
+    // a sorte inclina a chance do risco (com limite); risco 'good' fica mais provável para quem tem sorte
+    const risky = choice.risk !== undefined && rng.chance(luckRiskChance(s, choice.risk.chance, choice.risk.tone, content));
     const effects = risky ? choice.risk?.effects : choice.effects;
     const resultText = risky ? (choice.risk?.resultText ?? choice.resultText) : choice.resultText;
     // o texto usa o estado ANTES dos efeitos (ex.: nome da escola antiga numa transferência)
