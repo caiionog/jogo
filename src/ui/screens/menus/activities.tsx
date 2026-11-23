@@ -5,6 +5,7 @@ import { GAME_CONTENT as C } from '../../../content';
 import type { GameState, TrainingKind } from '../../../engine';
 import { CNH_COST, TRAINING_MIN_AGE, actionBlockReason, actionUseKey, cnhBlockReason, coachAssessment, meetBlockReason, sessionsBreakdown, sessionsLeft, sessionsReserved, trainingBlockReason, usesThisYear } from '../../../engine';
 import { TrainingMeter } from '../Life';
+import { gymModalitiesText } from '../../text/fight';
 import { ListGroup, ListItem } from '../../design/components';
 import { useNav } from '../../nav';
 import { useGameStore } from '../../store';
@@ -16,13 +17,13 @@ import MoveSheet from '../../components/MoveSheet';
 import { WillSection } from '../../components/FinancePanel';
 import { money } from '../../components/ecoUi';
 
+/** Lista de treinos (release 0.0.1): as modalidades do conteúdo, o físico e o sparring. */
 const TRAIN: { kind: TrainingKind; title: string; sub: string; emoji: string }[] = [
-  { kind: 'jiujitsu', title: 'Treinar jiu-jitsu', sub: 'Chão, quedas e finalizações', emoji: '🥋' },
-  { kind: 'trocacao', title: 'Treinar trocação', sub: 'Socos, chutes e defesa em pé', emoji: '🥊' },
-  { kind: 'fisico', title: 'Treinar físico', sub: 'Sobe a Capacidade atlética', emoji: '🏃' },
+  ...C.fighting.modalities.map((m) => ({ kind: m.id, title: `Treinar ${m.label.toLowerCase()}`, sub: m.sub, emoji: m.emoji })),
+  { kind: 'fisico', title: 'Treino físico', sub: 'Sobe a Capacidade atlética', emoji: '🏃' },
   { kind: 'sparring', title: 'Sparring', sub: 'Um pouco de tudo — risco de lesão', emoji: '🤼' },
 ];
-const TRAIN_REASON: Record<string, string> = { 'no-sessions': 'Sem sessões de treino livres neste ano', busy: 'Resolva o acontecimento pendente', injured: 'Lesionado(a): sparring vetado', retired: 'Aposentado(a)', dead: '—' };
+const TRAIN_REASON: Record<string, string> = { 'no-sessions': 'Sem sessões de treino livres neste ano', 'no-gym': 'Precisa de uma academia (Carreira de Luta)', 'not-offered': 'Sua academia não oferece esta modalidade', busy: 'Resolva o acontecimento pendente', injured: 'Lesionado(a): sparring vetado', retired: 'Aposentado(a)', dead: '—' };
 const MEET_REASON: Record<string, string> = { 'too-young': 'Disponível a partir dos 14 anos', 'app-adult': 'Disponível a partir dos 18 anos', taken: 'Você já está com alguém', busy: 'Resolva o acontecimento pendente', dead: '—' };
 const CNH_REASON: Record<string, string> = { age: 'Disponível a partir dos 18 anos', has: 'Você já tem CNH', 'no-money': `Custa ${money.format(CNH_COST)}`, busy: 'Resolva o acontecimento pendente', tried: 'Você já tentou este ano' };
 
@@ -70,10 +71,10 @@ export function TreinoScreen({ game }: { game: GameState }) {
           />
         );
       })}
-      <p className="text-sm text-[var(--ds-text-muted)]">{gym ? `Treinando na ${gym.name}.` : 'Sem academia, o treino rende bem menos. Matricule-se em Ocupação → Carreiras → Carreira de lutador.'}</p>
+      <p className="text-sm text-[var(--ds-text-muted)]">{gym ? `Treinando na ${gym.name} (${gymModalitiesText(gym)}).` : 'Sem academia, só dá para fazer o treino físico. Escolha uma academia em Ocupação → Carreira de luta.'}</p>
       {game.character.age >= 6 && (
         <p className="text-sm" data-testid="coach-words">
-          Treinador: geral <b>{coachAssessment(game)}</b> · chão <b>{coachAssessment(game, 'jiujitsu')}</b> · em pé <b>{coachAssessment(game, 'trocacao')}</b>
+          Treinador: geral <b>{coachAssessment(game)}</b> · agarre <b>{coachAssessment(game, 'grappling')}</b> · em pé <b>{coachAssessment(game, 'trocacao')}</b>
         </p>
       )}
     </>

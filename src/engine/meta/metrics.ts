@@ -1,3 +1,4 @@
+import { bjjRank } from '../fighting/belts';
 /**
  * Registro de métricas das conquistas (Etapa 6). Cada métrica é uma função pura do estado da vida e do
  * armazenamento meta. As conquistas (conteúdo) só referenciam o id e o limite (`min`/`max`).
@@ -20,7 +21,7 @@ export const METRICS: Record<string, Metric> = {
   subWins: (s) => wins(s, 'SUB'),
   koWins: (s) => wins(s, 'KO'),
   bjjWins: (s) => s.fighter.bjj.wins,
-  belt: (s) => s.fighter.belt.rank,
+  belt: (s) => bjjRank(s),
   regionalTitles: (s) => s.feats.regionalTitles ?? 0,
   majorTitles: (s) => s.feats.majorTitles ?? 0,
   titleDefenses: (s) => s.feats.titleDefenses ?? 0,

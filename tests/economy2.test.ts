@@ -45,7 +45,7 @@ describe('empregos', () => {
     expect(jobBlockReason(weak, job('seguranca'))).toBe('stats');
     expect(jobBlockReason(adult(30), job('comentarista'))).toBe('reputation');
     expect(jobBlockReason(adult(30), job('instrutor'))).toBe('fight');
-    const black = { ...adult(30), fighter: { ...adult(30).fighter, belt: { rank: 2, years: 0 } } };
+    const black = { ...adult(30), fighter: { ...adult(30).fighter, grades: { jiujitsu: { system: 'bjj_adulto', rank: 2, degree: 0, years: 0 } } } };
     expect(jobBlockReason(black, job('instrutor'))).toBeNull();
   });
 

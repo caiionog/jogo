@@ -102,9 +102,9 @@ describe('migração v2 → v3 (carreira de luta)', () => {
   it('flags e clubes da Etapa 2 viram vantagens de lutador', () => {
     const plain = migrate(structuredClone(v2['2']!));
     const veteran = migrate(structuredClone(v2['16']!)); // jiu-jitsu, luta olímpica, brigou na escola, medalha
-    expect(veteran.fighter.skills.jiujitsu).toBeGreaterThan(plain.fighter.skills.jiujitsu + 10);
+    expect(veteran.fighter.skills.grappling).toBeGreaterThan(plain.fighter.skills.grappling + 10);
     expect(veteran.fighter.reputation).toBe(5);
-    expect(veteran.fighter.belt.years).toBeGreaterThan(0);
+    expect(veteran.fighter.grades.jiujitsu).toBeDefined();
     expect(veteran.fighter.gymId).toBe('gen_bairro');
     expect(plain.fighter.gymId).toBeNull();
   });

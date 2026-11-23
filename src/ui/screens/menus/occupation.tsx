@@ -13,6 +13,7 @@ import { jobReasonText } from '../../text/jobs';
 import CareerPanel from '../../components/CareerPanel';
 import SchoolPanel from '../../components/SchoolPanel';
 import { money } from '../../components/ecoUi';
+import { gradesSummary, gymModalitiesText } from '../../text/fight';
 
 /** "Ocupa 4 sessões de treino por ano" (tempo integral) / 2 (meio período) / nenhuma. */
 export function sessionsText(n: number): string {
@@ -47,7 +48,7 @@ export function OcupacaoScreen({ game }: { game: GameState }) {
       <ListItem icon={UserRound} title="Minha ocupação" subtitle={[enrolled && 'Escola', def && jobTitle(def, job!.level), game.fighter.gymId && 'Treino de luta'].filter(Boolean).join(' · ') || 'Nada por enquanto'} onClick={() => nav.push('minha-ocupacao')} testId="occ-mine" />
       <ListItem icon={Briefcase} title="Carreiras" subtitle="Empregos, carreira de lutador, estudos e empreender" onClick={() => nav.push('carreiras')} testId="occ-careers" />
       <ListItem icon={School} title="Escola" subtitle={enrolled ? 'Série, nota, clube e ações escolares' : undefined} disabled={!enrolled} reason="Você não está matriculado(a)" onClick={() => nav.push('escola')} testId="occ-school" />
-      <ListItem icon={Swords} title="Carreira de luta" subtitle={`${STAGE_LABEL[fighterNextStep(game, C).stage]} · faixa ${BELTS[game.fighter.belt.rank]}`} onClick={() => nav.push('luta')} testId="occ-fight" />
+      <ListItem icon={Swords} title="Carreira de luta" subtitle={`${STAGE_LABEL[fighterNextStep(game, C).stage]} · ${gradesSummary(game)}`} onClick={() => nav.push('luta')} testId="occ-fight" />
     </>
   );
 }
@@ -293,7 +294,7 @@ export function CarreiraLutaScreen({ game }: { game: GameState }) {
                   key={g.id}
                   emoji="🥋"
                   title={g.name}
-                  subtitle={`${money.format(g.fee)}/ano${game.character.age < 18 ? ' (pais pagam)' : ''} · treinador ${g.coach >= 75 ? 'renomado' : g.coach >= 55 ? 'experiente' : 'de bairro'} · ${g.specialty === 'jiujitsu' ? 'jiu-jitsu' : g.specialty === 'trocacao' ? 'trocação' : 'MMA'}`}
+                  subtitle={`${money.format(g.fee)}/ano${game.character.age < 18 ? ' (pais pagam)' : ''} · treinador ${g.coach >= 75 ? 'renomado' : g.coach >= 55 ? 'experiente' : 'de bairro'} · ${gymModalitiesText(g)}`}
                   disabled={!!r}
                   reason={r === 'current' ? 'Você treina aqui' : r === 'no-money' ? 'Dinheiro insuficiente' : r === 'too-young' ? 'Muito novo(a)' : r ? 'Indisponível' : undefined}
                   onClick={() => {

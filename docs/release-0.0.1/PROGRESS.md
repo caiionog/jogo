@@ -22,7 +22,22 @@ Para retomar numa sessão nova: "Continue a release 0.0.1 a partir do docs/relea
     (`removeFromRanking`/`world.ts`) — teste em `ranking.test.ts`.
   - Balanceamento provisório: `SESSION_GAIN = 0.45` em `training.ts` (10 sessões ≈ 3× mais treinos que a energia).
     Sim 300 vidas: Titã 38% (antes 28,6%), campeão Titã 5% (2,8%). A fase 2 recalibra.
-- [ ] **2. Modalidades, grappling, graduações, academias, ganho de treino** (save v10)
+- [x] **2. Modalidades, grappling, graduações, academias, ganho de treino** (save v10)
+  - Habilidade `jiujitsu` → `grappling` (jiu-jitsu, judô, wrestling); `trocacao` (muay thai, boxe, kickboxing).
+  - `src/content/martialArts/`: 6 modalidades + 4 sistemas de graduação (jiu-jitsu infantil com faixas de duas cores,
+    adulto com graus, judô, prajied da FSBMT fictícia). Boxe/wrestling/kickboxing sem graduação.
+  - Engine `fighting/belts.ts` reescrito: `grades` por modalidade, `gradeReady`/`promoteGrade`, `graduationYear`
+    (tempo só corre na modalidade treinada; grau por ano), `kidsToAdult` aos 16 (laranja+ e nível de azul → azul).
+    `bjjRank` mantém requisitos antigos (orgs, empregos, conquistas). Exames: jiu-jitsu, judô, muay thai (eventos auto).
+  - Academias: `modalities` no lugar de `specialty`; 31 academias (novas de muay thai e mistas). Modalidade e
+    sparring exigem academia que ofereça; sem academia só o treino físico.
+  - Treino: toda modalidade dá ~30–50% da atlética do físico (arredondamento estocástico com RNG da seed — antes os
+    ganhos fracionários sumiam); atlética com retorno decrescente mais suave; `FIGHT_XP = 1.5` (camp ocupa sessões).
+  - Metas (perfil 7 sessões na modalidade + 3 físico desde os 10, 200 vidas): **Sólido aos 17, Elite aos 25 (talento
+    ≥ 1,1), atlética 79 aos 21** — `tests/trainingTargets.test.ts` com tolerância; seção nova no `npm run sim`.
+  - Sim de carreira (300 vidas): Titã ~34%, campeão do Titã ~2,3%, faixa preta ~4% (Etapa 8: 28,6% / 2,8% / 12,6%).
+  - Avatar: contexto `treino` (kimono + faixa da graduação com listra infantil; regata + shorts + prajied no braço).
+  - Migração v9→v10 (+ fixture real `saves-v9.json` com luta em andamento).
 - [ ] **3. Tela central da Carreira de Luta** (meta: `seenTips`)
 - [ ] **4. Talentos e sorte** (save v11)
 - [ ] **5. Faculdade, cursos e empregos de nível superior** (save v12)
@@ -41,5 +56,7 @@ Para retomar numa sessão nova: "Continue a release 0.0.1 a partir do docs/relea
 - Uma versão de save por fase que muda o estado (v9…v14).
 
 ## Pendências / notas
+- Avatar: a listra branca da faixa infantil quase some sobre o kimono branco (rever na fase 8).
+- Faixa preta caiu para ~4% no sim (exige grappling 78 e o sim divide sessões entre camps); rever na fase 11.
 - Scripts de apoio: `scripts/gen-fixtures.ts` (fixture da versão atual), `scripts/e2e/state.ts` (cenário) e
   `scripts/e2e/shot.mjs` (Playwright: injeta o save no IndexedDB e tira capturas; `URL` opcional).

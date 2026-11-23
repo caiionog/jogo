@@ -61,9 +61,9 @@ describe('limite de 10 sessões de treino por ano', () => {
   });
 
   it('as modalidades e o físico dividem as mesmas sessões', () => {
-    let g = adult();
+    let g = enterGym(adult(), 'gen_bairro', C);
     g = trainFighter(g, 'fisico', C);
-    g = trainFighter(g, 'trocacao', C);
+    g = trainFighter(g, 'muaythai', C);
     g = trainFighter(g, 'jiujitsu', C);
     expect(g.fighter.sessionsThisYear).toBe(3);
     expect(sessionsLeft(g, C)).toBe(7);

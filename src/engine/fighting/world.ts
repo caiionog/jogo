@@ -16,8 +16,8 @@ export const rosterKey = (orgId: string, divisionId: string) => `${orgId}:${divi
 const EXTRA_UNRANKED = 6;
 
 const STYLE_BONUS: Record<FightStyle, Partial<Skills>> = {
-  striker: { trocacao: 12, jiujitsu: -8 },
-  grappler: { jiujitsu: 13, trocacao: -8 },
+  striker: { trocacao: 12, grappling: -8 },
+  grappler: { grappling: 13, trocacao: -8 },
   allround: {},
 };
 export const FIGHT_STYLES: readonly FightStyle[] = ['striker', 'grappler', 'allround'];
@@ -29,7 +29,7 @@ export function npcRating(n: Pick<Npc, 'skills' | 'athletic' | 'chinBase'> & { a
 export function npcSkills(rng: Rng, level: number, style: FightStyle): Skills {
   const base = (bonus = 0) => clampSkill(level + bonus + rng.int(-6, 6));
   const b = STYLE_BONUS[style];
-  return { jiujitsu: base(b.jiujitsu), trocacao: base(b.trocacao) };
+  return { grappling: base(b.grappling), trocacao: base(b.trocacao) };
 }
 
 /** Físico e queixo inato de um NPC em torno do nível. */
@@ -133,9 +133,9 @@ function evolveNpc(rng: Rng, n: Npc, cap: number): Npc {
   const age = n.age + 1;
   let delta: Partial<Skills>;
   let dAth = 0;
-  if (age < 28) { delta = { trocacao: rng.int(0, 3), jiujitsu: rng.int(0, 3) }; dAth = rng.int(0, 2); }
-  else if (age <= 32) delta = { trocacao: rng.int(0, 1), jiujitsu: rng.int(0, 1) };
-  else { delta = { trocacao: -rng.int(0, 2), jiujitsu: -rng.int(0, 1) }; dAth = -rng.int(1, 3); }
+  if (age < 28) { delta = { trocacao: rng.int(0, 3), grappling: rng.int(0, 3) }; dAth = rng.int(0, 2); }
+  else if (age <= 32) delta = { trocacao: rng.int(0, 1), grappling: rng.int(0, 1) };
+  else { delta = { trocacao: -rng.int(0, 2), grappling: -rng.int(0, 1) }; dAth = -rng.int(1, 3); }
   const capped: Partial<Skills> = {};
   for (const [k, v] of Object.entries(delta) as [keyof Skills, number][]) capped[k] = v > 0 && n.skills[k] >= cap ? 0 : v;
   const athletic = clampSkill(n.athletic + (dAth > 0 && n.athletic >= cap ? 0 : dAth));

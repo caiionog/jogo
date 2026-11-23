@@ -42,7 +42,7 @@ function adult(age = 25, money = 300000): GameState {
     education: { ...g.education, current: null, graduated: true },
     economy: { ...g.economy, ledger: { year: 2000 + age, opening: money, entries: [] }, lastIncome: 90000, housing: 'aluguel' },
     // valores distintos para garantir que não aparecem em lugar nenhum
-    fighter: { ...g.fighter, skills: { jiujitsu: 87.3, trocacao: 91.7 }, chinBase: 63 },
+    fighter: { ...g.fighter, skills: { grappling: 87.3, trocacao: 91.7 }, chinBase: 63 },
   };
 }
 
@@ -116,7 +116,12 @@ describe('barra inferior e menus em camadas', () => {
     expect((screen.getByTestId('act-mudar') as HTMLButtonElement).disabled).toBe(true);
     fireEvent.click(screen.getByTestId('act-treino'));
     const g = useGameStore.getState().game!;
-    const noSessions = { ...g, fighter: { ...g.fighter, sessionsThisYear: 10 } };
+    // sem academia, modalidade não dá
+    expect(screen.getByTestId('train-jiujitsu').textContent).toContain('Precisa de uma academia');
+    // academia de boxe: jiu-jitsu não é oferecido
+    act(() => useGameStore.setState({ game: { ...g, fighter: { ...g.fighter, gymId: 'gen_boxe' } } }));
+    expect(screen.getByTestId('train-jiujitsu').textContent).toContain('Sua academia não oferece esta modalidade');
+    const noSessions = { ...g, fighter: { ...g.fighter, gymId: 'gen_bairro', sessionsThisYear: 10 } };
     act(() => useGameStore.setState({ game: noSessions }));
     expect(screen.getByTestId('train-jiujitsu').textContent).toContain('Sem sessões de treino livres neste ano');
     for (const el of screen.getAllByTestId('sessions')) expect(el.textContent).toContain('Treinos: 0/10');

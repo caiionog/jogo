@@ -26,7 +26,7 @@ function stateFor(id: string): { s: GameState; meta?: MetaState } {
     case 'dez_pro': return { s: pro(10) };
     case 'vinte_cinco_pro': return { s: pro(25) };
     case 'invicto_10': return { s: feats({ maxUnbeaten: 10 }) };
-    case 'faixa_roxa': case 'faixa_preta': return { s: { ...s, fighter: { ...f, belt: { rank: 4, years: 1 } } } };
+    case 'faixa_roxa': case 'faixa_preta': return { s: { ...s, fighter: { ...f, grades: { jiujitsu: { system: 'bjj_adulto', rank: 4, degree: 0, years: 1 } } } } };
     case 'campeao_regional': return { s: feats({ regionalTitles: 1 }) };
     case 'campeao_tita': return { s: feats({ majorTitles: 1 }) };
     case 'tres_defesas': return { s: feats({ titleDefenses: 3 }) };
@@ -66,7 +66,7 @@ function stateFor(id: string): { s: GameState; meta?: MetaState } {
     }
     case 'academia_herdada': return { s: flags({ academia_herdada: true }) };
     case 'vida_exemplar': {
-      s = { ...s, money: 20_000_000, character: { ...s.character, age: 95, stats: { ...s.character.stats, happiness: 95 } }, feats: { ...s.feats, majorTitles: 3, titleDefenses: 3, peakRep: 95 }, fighter: { ...f, pro: { ...emptyRecord(), wins: 30 }, belt: { rank: 4, years: 3 } } };
+      s = { ...s, money: 20_000_000, character: { ...s.character, age: 95, stats: { ...s.character.stats, happiness: 95 } }, feats: { ...s.feats, majorTitles: 3, titleDefenses: 3, peakRep: 95 }, fighter: { ...f, pro: { ...emptyRecord(), wins: 30 }, grades: { jiujitsu: { system: 'bjj_adulto', rank: 4, degree: 0, years: 3 } } } };
       s = { ...flags({ casado: true }) };
       [s] = withPerson(s, 'conjuge', 90, { stage: 'casados' });
       for (let i = 0; i < 3; i++) [s] = withPerson(s, 'filho', 60 + i);

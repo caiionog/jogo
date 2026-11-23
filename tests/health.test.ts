@@ -72,11 +72,11 @@ describe('lesões', () => {
     let withSeq = 0;
     let withSeqAggr = 0;
     for (let i = 1; i <= 200; i++) {
-      const g = withInjury(fighterGame(25, { jiujitsu: 60 }), 'lca', 6);
+      const g = withInjury(fighterGame(25, { grappling: 60 }), 'lca', 6);
       const r = injuriesYear(g, createRng(i), C);
       if (r.health.sequelae.includes('joelho_instavel')) {
         withSeq++;
-        expect(r.fighter.skills.jiujitsu).toBeLessThan(60);
+        expect(r.fighter.skills.grappling).toBeLessThan(60);
       }
       const r2 = injuriesYear(withInjury(fighterGame(25), 'lca', 6, { aggravated: true }), createRng(i), C);
       if (r2.health.sequelae.length) withSeqAggr++;
@@ -119,7 +119,7 @@ describe('dano cerebral', () => {
   });
 
   it('enfraquece o queixo e aumenta a chance de ser nocauteado de novo', () => {
-    const base = fighterGame(25, { trocacao: 55, jiujitsu: 55, athletic: 60, chin: 60 });
+    const base = fighterGame(25, { trocacao: 55, grappling: 55, athletic: 60, chin: 60 });
     const hurt: GameState = { ...base, health: { ...base.health, brainDamage: 80 } };
     expect(playerSnapshot(hurt, 0).chin).toBe(40);
     const opp = { ...playerSnapshot(base, 0), id: 'opp', name: 'Rival', fullName: 'Rival' };

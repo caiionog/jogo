@@ -9,7 +9,7 @@ export const FIGHT_BASE_EVENTS: readonly GameEvent[] = [
     once: true,
     text: 'Seus pais viram o quanto você gosta de luta e perguntaram se você quer fazer uma aula experimental numa academia do bairro.',
     choices: [
-      { id: 'go', label: 'Quero muito!', effects: { stats: { happiness: 4 }, fighter: { joinGym: 'local', skills: { jiujitsu: 1.1 } } }, resultText: 'Você amarrou a faixa branca pela primeira vez e saiu da aula sorrindo.' },
+      { id: 'go', label: 'Quero muito!', effects: { stats: { happiness: 4 }, fighter: { joinGym: 'local', skills: { grappling: 1.1 } } }, resultText: 'Você amarrou a faixa branca pela primeira vez e saiu da aula sorrindo.' },
       { id: 'later', label: 'Agora não', effects: {}, resultText: 'Você preferiu deixar para depois.' },
     ],
   },
@@ -21,18 +21,40 @@ export const FIGHT_BASE_EVENTS: readonly GameEvent[] = [
     text: 'O professor quer inscrever você no seu primeiro campeonato infantil. Sua barriga gela só de pensar.',
     choices: [
       { id: 'brave', label: 'Encarar o frio na barriga', effects: { stats: { happiness: 2 }, fighter: { reputation: 2, skills: { trocacao: 1 } } }, resultText: 'Você decidiu competir. A emoção é parte do esporte.' },
-      { id: 'train_more', label: 'Treinar mais antes de competir', effects: { fighter: { skills: { jiujitsu: 1.1 } } }, resultText: 'Você pediu mais um tempo para se preparar.' },
+      { id: 'train_more', label: 'Treinar mais antes de competir', effects: { fighter: { skills: { grappling: 1.1 } } }, resultText: 'Você pediu mais um tempo para se preparar.' },
     ],
   },
   {
     id: 'fight_belt_exam',
     trigger: 'auto',
-    conditions: { fighting: { beltPromotionReady: true } },
+    conditions: { fighting: { gradeReady: 'jiujitsu' } },
     weight: 1,
     text: 'Seu professor de jiu-jitsu marcou seu exame de faixa. Toda a academia vai assistir.',
     choices: [
-      { id: 'exam', label: 'Fazer o exame', effects: { stats: { happiness: 6 }, fighter: { promoteBelt: true } }, resultText: 'Depois de muito suor e de passar pelo corredor de faixas, você foi graduad{o/a}!' },
-      { id: 'wait', label: 'Pedir mais um tempo', effects: { fighter: { skills: { jiujitsu: 1 } } }, resultText: 'Você preferiu se sentir mais preparad{o/a} antes de trocar de faixa.' },
+      { id: 'exam', label: 'Fazer o exame', effects: { stats: { happiness: 6 }, fighter: { promoteGrade: 'jiujitsu' } }, resultText: 'Depois de muito suor e de passar pelo corredor de faixas, você foi graduad{o/a}!' },
+      { id: 'wait', label: 'Pedir mais um tempo', effects: { fighter: { skills: { grappling: 1 } } }, resultText: 'Você preferiu se sentir mais preparad{o/a} antes de trocar de faixa.' },
+    ],
+  },
+  {
+    id: 'fight_judo_exam',
+    trigger: 'auto',
+    conditions: { fighting: { gradeReady: 'judo' } },
+    weight: 1,
+    text: 'O sensei chamou você para o exame de faixa do judô: quedas, rolamentos e os nomes dos golpes em japonês.',
+    choices: [
+      { id: 'exam', label: 'Fazer o exame', effects: { stats: { happiness: 5 }, fighter: { promoteGrade: 'judo' } }, resultText: 'Você fez a saudação, projetou o parceiro limpo e saiu com a faixa nova na cintura.' },
+      { id: 'wait', label: 'Esperar o próximo exame', effects: { fighter: { skills: { grappling: 1 } } }, resultText: 'Você preferiu treinar mais um pouco antes do exame.' },
+    ],
+  },
+  {
+    id: 'fight_muaythai_exam',
+    trigger: 'auto',
+    conditions: { fighting: { gradeReady: 'muaythai' } },
+    weight: 1,
+    text: 'Dia de graduação no muay thai: o kru vai avaliar sua base, os chutes e o wai kru.',
+    choices: [
+      { id: 'exam', label: 'Fazer a graduação', effects: { stats: { happiness: 5 }, fighter: { promoteGrade: 'muaythai' } }, resultText: 'O kru amarrou o prajied novo no seu braço. A academia inteira aplaudiu.' },
+      { id: 'wait', label: 'Pedir mais um tempo', effects: { fighter: { skills: { trocacao: 1 } } }, resultText: 'Você preferiu lapidar a técnica antes de trocar de prajied.' },
     ],
   },
   {
@@ -92,7 +114,7 @@ export const FIGHT_BASE_EVENTS: readonly GameEvent[] = [
     choices: [
       { id: 'trocacao', label: 'Mãos pesadas (trocação)', effects: { fighter: { skills: { trocacao: 3 } } }, resultText: 'Você passou meses batendo manopla até a mão doer.' },
       { id: 'fisico', label: 'Preparação física', effects: { stats: { athletic: 3 } }, resultText: 'Tiro, escada, corda: o fôlego nunca esteve tão bom.' },
-      { id: 'jiujitsu', label: 'Quedas e finalizações (jiu-jitsu)', effects: { fighter: { skills: { jiujitsu: 3 } } }, resultText: 'Você estudou cada detalhe da queda ao mata-leão.' },
+      { id: 'jiujitsu', label: 'Quedas e finalizações (jiu-jitsu)', effects: { fighter: { skills: { grappling: 3 } } }, resultText: 'Você estudou cada detalhe da queda ao mata-leão.' },
     ],
   },
   {

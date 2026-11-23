@@ -73,13 +73,15 @@ for (let age = 1; age <= 70; age++) {
 }
 // luta em andamento (para migrar activeFight)
 let f = E.newGame({ seed: `fx${E.STATE_VERSION}-luta`, name: 'Fixture Luta', sex: 'F', birthYear: 2000 }, C);
-for (let i = 0; i < 26 && !f.activeFight; i++) {
-  f = playYear(drain(E.advanceYear(f, C)), f.character.age + 1);
-  const o = f.fighter.offers[0];
-  if (o && f.character.age >= 18) {
-    const t = api.acceptOffer(f, o.id, {}, C);
-    if (t.activeFight) { f = t; break; }
+for (let i = 0; i < 30 && !f.activeFight; i++) {
+  f = drain(E.advanceYear(f, C));
+  if (f.character.age >= 16) {
+    for (const o of f.fighter.offers) {
+      const t = api.acceptOffer(f, o.id, {}, C);
+      if (t.activeFight && t.activeFight.fight.phase !== 'finished') { f = t; break; }
+    }
   }
+  if (!f.activeFight) f = playYear(f, f.character.age);
 }
 if (f.activeFight) out.luta = f;
 

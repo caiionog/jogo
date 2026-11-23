@@ -15,6 +15,7 @@ import { HEALTH_CONTENT } from './health';
 import { LEGACY_CONTENT } from './legacy';
 import { ACHIEVEMENTS } from './achievements';
 import { GYMS } from './gyms';
+import { GRADUATIONS, MODALITIES } from './martialArts';
 import { ORGANIZATIONS } from './organizations';
 import { DIVISIONS } from './organizations/divisions';
 import { FIGHTING_EVENTS } from './events/fighting';
@@ -39,6 +40,8 @@ export const GAME_CONTENT: GameContent = {
     text: FIGHT_TEXT,
     nicknames: NICKNAMES,
     coachLines: COACH_LINES,
+    modalities: MODALITIES,
+    graduations: GRADUATIONS,
     hooks: { weightMissEventId: 'fight_weight_miss', farewellEventId: 'retire_farewell', losingStreakEventId: 'retire_losing_streak', doctorRetireEventId: 'retire_doctor' },
   },
   relationships: RELATIONSHIPS_CONTENT,

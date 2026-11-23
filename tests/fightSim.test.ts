@@ -11,7 +11,7 @@ const mk = (id: string, s: Mk = {}, base = 50): FighterSnapshot => ({
   athletic: s.athletic ?? base,
   chin: s.chin ?? base,
   sizeEdge: 0,
-  skills: { jiujitsu: s.jiujitsu ?? base, trocacao: s.trocacao ?? base },
+  skills: { grappling: s.grappling ?? base, trocacao: s.trocacao ?? base },
 });
 
 const seedOf = (i: number) => (i * 2654435761) >>> 0;
@@ -23,7 +23,7 @@ const FINISH_KINDS = ['ko', 'tko', 'sub_win', 'doctor'];
 describe('simulateFight', () => {
   it('é determinístico: mesmo seed + mesmos lutadores = luta idêntica', () => {
     const a = mk('Kauã', { trocacao: 62 });
-    const b = mk('Trovão', { jiujitsu: 60 });
+    const b = mk('Trovão', { grappling: 60 });
     expect(fight(a, b, 42)).toEqual(fight(a, b, 42));
     const results = new Set(Array.from({ length: 30 }, (_, i) => JSON.stringify(fight(a, b, i).result)));
     expect(results.size).toBeGreaterThan(10);
@@ -42,7 +42,7 @@ describe('simulateFight', () => {
     const count = { KO: 0, SUB: 0, DEC: 0 };
     const N = 1000;
     for (let i = 0; i < N; i++) {
-      const m = fight(mk('A', { trocacao: 58 }, 52), mk('B', { jiujitsu: 60 }, 50), i).result!.method;
+      const m = fight(mk('A', { trocacao: 58 }, 52), mk('B', { grappling: 60 }, 50), i).result!.method;
       if (m === 'KO' || m === 'TKO' || m === 'DOC') count.KO++;
       else if (m === 'SUB') count.SUB++;
       else count.DEC++;
@@ -89,8 +89,8 @@ describe('simulateFight', () => {
   });
 
   it('a escolha do córner altera o resultado conforme o matchup', () => {
-    const grappler = mk('G', { jiujitsu: 80, trocacao: 40 });
-    const striker = mk('S', { trocacao: 80, jiujitsu: 37 });
+    const grappler = mk('G', { grappling: 80, trocacao: 40 });
+    const striker = mk('S', { trocacao: 80, grappling: 37 });
     const rate = (a: FighterSnapshot, b: FighterSnapshot, st: Strategy) => {
       let w = 0;
       for (let i = 0; i < 800; i++) if (fight(a, b, i, 3, () => st).result!.winner === 0) w++;
@@ -106,8 +106,8 @@ describe('simulateFight', () => {
 describe('máquina de estados', () => {
   it('round → break → escolha → round → … → finished', () => {
     // dois lutadores muito defensivos para chegar ao fim
-    const a = mk('A', { trocacao: 30, jiujitsu: 30, athletic: 95, chin: 95 });
-    const b = mk('B', { trocacao: 30, jiujitsu: 30, athletic: 95, chin: 95 });
+    const a = mk('A', { trocacao: 30, grappling: 30, athletic: 95, chin: 95 });
+    const b = mk('B', { trocacao: 30, grappling: 30, athletic: 95, chin: 95 });
     let s = startFight(a, b, { rounds: 3, rngState: 99 });
     expect(s.phase).toBe('round');
     expect(chooseCorner(s, 'pressure', FIGHT_TEXT)).toBe(s); // não pode escolher no meio do round
@@ -149,7 +149,7 @@ describe('máquina de estados', () => {
 
   it('regra de grappling: sem golpes, termina por finalização ou pontos', () => {
     for (let i = 0; i < 100; i++) {
-      const f = simulateFight(mk('A', { jiujitsu: 60 }), mk('B', { jiujitsu: 50 }), { rounds: 1, rngState: seedOf(i), rules: 'grappling' }, FIGHT_TEXT);
+      const f = simulateFight(mk('A', { grappling: 60 }), mk('B', { grappling: 50 }), { rounds: 1, rngState: seedOf(i), rules: 'grappling' }, FIGHT_TEXT);
       expect(['SUB', 'DEC']).toContain(f.result!.method);
       expect(f.log.some((l) => ['strike_land', 'strike_heavy', 'knockdown', 'ko', 'tko', 'gnp'].includes(l.kind))).toBe(false);
     }
@@ -159,7 +159,7 @@ describe('máquina de estados', () => {
 describe('narração', () => {
   it('não repete a mesma variação de texto em lances seguidos do mesmo tipo', () => {
     for (let i = 0; i < 50; i++) {
-      const f = simulateFight(mk('A', { jiujitsu: 70 }), mk('B'), { rounds: 1, rngState: seedOf(i), rules: 'grappling' }, FIGHT_TEXT);
+      const f = simulateFight(mk('A', { grappling: 70 }), mk('B'), { rounds: 1, rngState: seedOf(i), rules: 'grappling' }, FIGHT_TEXT);
       for (let j = 1; j < f.log.length; j++) {
         const [a, b] = [f.log[j - 1]!, f.log[j]!];
         if (a.kind === b.kind && FIGHT_TEXT[a.kind].length > 1) expect(b.raw).not.toBe(a.raw);

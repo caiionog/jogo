@@ -1,3 +1,4 @@
+import { bjjRank } from '../fighting/belts';
 import { bumpUse, repeatMultiplier, scaleGain, usesThisYear } from '../lifeStages/sessions';
 import { cityMultOf } from '../geo';
 /** Empregos: requisitos, contratação, salário por nível, promoção, demissão e energia reservada. */
@@ -77,7 +78,7 @@ export function jobRequirementGaps(state: GameState, def: JobDef): JobBlockReaso
   if ((m.intelligence ?? 0) > st.intelligence || (m.athletic ?? 0) > st.athletic || (m.looks ?? 0) > st.looks) gaps.push('stats');
   if ((def.minReputation ?? 0) > state.fighter.reputation) gaps.push('reputation');
   if (def.fightReq) {
-    const okBelt = def.fightReq.minBelt !== undefined && state.fighter.belt.rank >= def.fightReq.minBelt;
+    const okBelt = def.fightReq.minBelt !== undefined && bjjRank(state) >= def.fightReq.minBelt;
     const okWins = def.fightReq.minProWins !== undefined && state.fighter.pro.wins >= def.fightReq.minProWins;
     // alternativa: instrutor com Capacidade atlética alta (minStats.athletic) dispensa faixa/vitórias
     const okAthletic = def.minStats?.athletic === undefined && def.fightReq.minBelt !== undefined && st.athletic >= 70;

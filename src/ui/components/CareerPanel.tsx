@@ -6,7 +6,6 @@ import {
   coachAssessment,
   AGGRESSIVE_CUT_MISS_CHANCE,
   BELTS,
-  BELT_EMOJI,
   PLAYER_ID,
   currentRosterKey,
   fightBlockReason,
@@ -28,6 +27,7 @@ import {
 } from '../../engine';
 import type { CareerRecord, FightOffer, GameState, OrgBlockReason, TrainingKind } from '../../engine';
 import { useGameStore } from '../store';
+import { gradesSummary, gymModalitiesText } from '../text/fight';
 import { Bar, STYLE_LABEL, money } from './fightUi';
 
 const C = GAME_CONTENT;
@@ -104,9 +104,9 @@ function NextStep({ game }: { game: GameState }) {
 
 function TrainingButtons({ game }: { game: GameState }) {
   const train = useGameStore((s) => s.train);
+  const gym = GAME_CONTENT.fighting.gyms.find((g) => g.id === game.fighter.gymId);
   const items: { kind: TrainingKind; label: string; emoji: string }[] = [
-    { kind: 'jiujitsu', label: 'Jiu-jitsu', emoji: '🥋' },
-    { kind: 'trocacao', label: 'Trocação', emoji: '🥊' },
+    ...GAME_CONTENT.fighting.modalities.filter((m) => gym?.modalities.includes(m.id)).map((m) => ({ kind: m.id, label: m.label, emoji: m.emoji })),
     { kind: 'fisico', label: 'Físico', emoji: '🫀' },
     { kind: 'sparring', label: 'Sparring', emoji: '🤼' },
   ];
@@ -139,7 +139,6 @@ function GymSection({ game }: { game: GameState }) {
   const leaveGym = useGameStore((s) => s.leaveGym);
   const [open, setOpen] = useState(false);
   const gym = C.fighting.gyms.find((g) => g.id === game.fighter.gymId);
-  const spec = { trocacao: 'trocação', jiujitsu: 'jiu-jitsu', mma: 'MMA' } as const;
   return (
     <section className="rounded-2xl border border-slate-800 bg-slate-900/50 p-3">
       <div className="flex items-center justify-between gap-2">
@@ -147,7 +146,7 @@ function GymSection({ game }: { game: GameState }) {
           <div className="truncate font-semibold">🏟️ {gym ? gym.name : 'Sem academia'}</div>
           {gym ? (
             <div className="text-[11px] text-slate-400">
-              Treinador {gym.coach} · {spec[gym.specialty]} · {money.format(gym.fee)}/ano
+              Treinador {gym.coach} · {gymModalitiesText(gym)} · {money.format(gym.fee)}/ano
               {game.character.age < 18 ? ' (pais pagam)' : game.fighter.reputation >= 15 ? ' (bolsa de atleta)' : ''}
             </div>
           ) : (
@@ -178,7 +177,7 @@ function GymSection({ game }: { game: GameState }) {
                     <span className="min-w-0">
                       <span className="block truncate">{g.name}</span>
                       <span className="text-[11px] text-slate-400">
-                        Treinador {g.coach} · {spec[g.specialty]} · {money.format(g.fee)}/ano
+                        Treinador {g.coach} · {gymModalitiesText(g)} · {money.format(g.fee)}/ano
                       </span>
                     </span>
                     <span className="shrink-0 text-[11px] text-slate-400">{reason ? BLOCK_TEXT[reason] : 'Entrar'}</span>
@@ -305,8 +304,7 @@ export default function CareerPanel({ game }: { game: GameState }) {
             <Bar value={f.reputation} color="bg-amber-400" />
           </div>
           <div className="text-slate-300" data-testid="career-belt">
-            {BELT_EMOJI[f.belt.rank]} Faixa {BELTS[f.belt.rank]}
-            <span className="text-slate-500"> · {f.belt.years} ano{f.belt.years === 1 ? '' : 's'}</span>
+            🥋 {gradesSummary(game)}
           </div>
         </div>
         {(worst || f.suspendedYears > 0 || f.retired) && (
@@ -323,7 +321,7 @@ export default function CareerPanel({ game }: { game: GameState }) {
       <section className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
         <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Avaliação do treinador</h2>
         <p className="text-sm" data-testid="coach-assessment">
-          Geral: <b>{coachAssessment(game)}</b> · Chão: <b>{coachAssessment(game, 'jiujitsu')}</b> · Em pé: <b>{coachAssessment(game, 'trocacao')}</b>
+          Geral: <b>{coachAssessment(game)}</b> · Chão: <b>{coachAssessment(game, 'grappling')}</b> · Em pé: <b>{coachAssessment(game, 'trocacao')}</b>
         </p>
       </section>
 

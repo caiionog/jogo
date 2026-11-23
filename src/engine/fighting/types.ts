@@ -2,10 +2,11 @@
 
 /**
  * Habilidades de luta OCULTAS (Etapa 8): o jogador nunca vê estes números, só pistas qualitativas.
- * jiujitsu = todo o jogo de chão e de agarre (quedas, controle, finalização); trocacao = todo o jogo em pé.
+ * grappling = todo o jogo de agarre (jiu-jitsu, judô, wrestling: quedas, controle, finalização);
+ * trocacao = todo o jogo em pé (muay thai, boxe, kickboxing). Release 0.0.1: `jiujitsu` virou `grappling`.
  * O físico é o atributo visível `athletic` (Capacidade atlética); o queixo é derivado (`chinOf`).
  */
-export const SKILL_KEYS = ['jiujitsu', 'trocacao'] as const;
+export const SKILL_KEYS = ['grappling', 'trocacao'] as const;
 export type SkillKey = (typeof SKILL_KEYS)[number];
 export type Skills = Record<SkillKey, number>;
 /** Mudança em habilidades e físico (efeitos de evento, lesão e sequela): athletic vai para o atributo visível; chin, para o queixo inato. */
@@ -183,7 +184,68 @@ export interface OrgDef {
   titleShotStreak?: number;
 }
 
-export type GymSpecialty = 'trocacao' | 'jiujitsu' | 'mma';
+/** Modalidades treináveis (release 0.0.1). */
+export type ModalityId = 'jiujitsu' | 'judo' | 'wrestling' | 'muaythai' | 'boxe' | 'kickboxing';
+
+export interface ModalityDef {
+  id: ModalityId;
+  label: string;
+  emoji: string;
+  /** Habilidade oculta que a modalidade desenvolve. */
+  skill: SkillKey;
+  /** Ganho base por sessão na habilidade. */
+  base: number;
+  /** Fração do ganho de Capacidade atlética do treino físico que a sessão também dá. */
+  athletic: number;
+  /** Sistema de graduação (sem = sem graduação: boxe, wrestling, kickboxing). */
+  graduation?: string;
+  /** Sistema infantil (jiu-jitsu) até `kidsUntil` anos. */
+  kidsGraduation?: string;
+  kidsUntil?: number;
+  sub: string;
+}
+
+export interface GradeLevel {
+  id: string;
+  /** Nome no texto ("faixa azul", "prajied vermelho com ponta azul-clara"). */
+  label: string;
+  /** Cor principal (avatar). */
+  color: string;
+  /** Listra no meio da faixa infantil. */
+  stripe?: string;
+  /** Ponta do prajied. */
+  tip?: string;
+  minAge: number;
+  /** Anos treinados na graduação anterior. */
+  minYears: number;
+  /** Nível mínimo da habilidade oculta da modalidade. */
+  minSkill: number;
+  /** Graus possíveis nesta faixa (1 por ano treinado; `degreeEvery` anos por grau). */
+  degrees?: number;
+  degreeEvery?: number;
+}
+
+export interface GraduationSystem {
+  id: string;
+  label: string;
+  kind: 'faixa' | 'prajied';
+  /** Federação fictícia (muay thai). */
+  federation?: string;
+  note: string;
+  levels: readonly GradeLevel[];
+  /** Transição para o sistema adulto (jiu-jitsu infantil → adulto aos 16). */
+  adultAt?: { age: number; system: string; minKidsLevel: string; toLevel: string };
+}
+
+/** Graduação do personagem numa modalidade. */
+export interface GradeState {
+  system: string;
+  /** Índice em `levels`. */
+  rank: number;
+  degree: number;
+  /** Anos treinados na graduação atual. */
+  years: number;
+}
 
 export interface GymDef {
   id: string;
@@ -194,7 +256,8 @@ export interface GymDef {
   fee: number;
   /** Qualidade do treinador (0–100). */
   coach: number;
-  specialty: GymSpecialty;
+  /** Modalidades oferecidas (só dá para treinar uma modalidade numa academia que a ofereça). */
+  modalities: readonly ModalityId[];
   minAge: number;
 }
 
@@ -315,8 +378,8 @@ export interface FighterProfile {
   sessionsThisYear: number;
   /** Potencial atlético (0,65–1,35, média 1): multiplica os ganhos de treino. */
   talent: number;
-  /** Faixa de jiu-jitsu: 0 branca … 4 preta; `years` = anos treinando na faixa atual. */
-  belt: { rank: number; years: number };
+  /** Graduações por modalidade (release 0.0.1; substitui a faixa única de jiu-jitsu). */
+  grades: Partial<Record<ModalityId, GradeState>>;
   reputation: number;
   gymId: string | null;
   amateur: CareerRecord;
@@ -331,7 +394,8 @@ export interface FighterProfile {
   retired: Retirement | null;
   suspendedYears: number;
   history: FightHistoryEntry[];
-  trainedBjjThisYear: boolean;
+  /** Modalidades treinadas no ano (o tempo de graduação só corre nelas). */
+  trainedThisYear: ModalityId[];
   offers: FightOffer[];
   nextOfferId: number;
   proDebutAge: number | null;
@@ -346,7 +410,10 @@ export interface FightingContent {
   text: FightTextPack;
   nicknames: readonly string[];
   /** Frases do treinador depois do treino, por nível oculto (pista qualitativa; Etapa 8). */
-  coachLines?: Record<'jiujitsu' | 'trocacao' | 'fisico' | 'sparring', { low: readonly string[]; mid: readonly string[]; high: readonly string[] }>;
+  coachLines?: Record<'grappling' | 'trocacao' | 'fisico' | 'sparring', { low: readonly string[]; mid: readonly string[]; high: readonly string[] }>;
+  /** Modalidades e sistemas de graduação (release 0.0.1). */
+  modalities: readonly ModalityDef[];
+  graduations: readonly GraduationSystem[];
   hooks: {
     /** Evento disparado quando o jogador falha o corte de peso. */
     weightMissEventId?: string;

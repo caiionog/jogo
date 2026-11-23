@@ -54,6 +54,7 @@ export const migrations: Record<number, (save: AnySave) => AnySave> = {
   6: migrateV6toV7,
   7: migrateV7toV8,
   8: migrateV8toV9,
+  9: migrateV9toV10,
 };
 
 export class SaveMigrationError extends Error {}
@@ -184,7 +185,8 @@ function migrateV2toV3(save: AnySave): AnySave {
   const talent = Math.round((0.65 + 0.7 * ((rng.next() + rng.next()) / 2)) * 100) / 100;
   const fighter = newFighterProfile(skills as unknown as Skills, talent);
   fighter.reputation = flags.medalha_interescolar ? 5 : 0;
-  if (flags.artesMarciais === 'jiujitsu') fighter.belt = { rank: 0, years: Math.max(0, Math.min(6, c.age - 6)) };
+  // formato v3: faixa única de jiu-jitsu (`belt`), convertida em `grades` na migração v9→v10
+  if (flags.artesMarciais === 'jiujitsu') (fighter as unknown as { belt: { rank: number; years: number } }).belt = { rank: 0, years: Math.max(0, Math.min(6, c.age - 6)) };
   if (flags.artesMarciais) {
     const gymId = flags.artesMarciais === 'judo' ? 'gen_judo_clube' : 'gen_bairro';
     if (GYMS.some((g) => g.id === gymId)) fighter.gymId = gymId;
@@ -365,8 +367,8 @@ function migrateV6toV7(save: AnySave): AnySave {
 type OldSkills = Partial<Record<'striking' | 'wrestling' | 'grappling' | 'defense' | 'cardio' | 'chin', number>>;
 const r1 = (x: number) => Math.round(Math.max(0, Math.min(100, x)) * 10) / 10;
 
-/** Habilidades antigas → jiu-jitsu (chão e agarre) e trocação (em pé). */
-export function convertSkills(o: OldSkills): Skills {
+/** Habilidades antigas → jiu-jitsu (chão e agarre) e trocação (em pé) — formato do save v8 (vira `grappling` na v10). */
+export function convertSkills(o: OldSkills): { jiujitsu: number; trocacao: number } {
   const g = o.grappling ?? 5;
   const w = o.wrestling ?? 5;
   const st = o.striking ?? 5;
@@ -464,6 +466,63 @@ function migrateV8toV9(save: AnySave): AnySave {
     version: 9,
     yearUses: {},
     fighter: { ...f, sessionsThisYear: Math.min(GAME_CONTENT.limits.trainingSessions, f.sessionsThisYear ?? 0), offers: (f.offers ?? []).map(camp) },
+    activeFight,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// v9 → v10 (release 0.0.1: grappling, modalidades e graduações)
+// ---------------------------------------------------------------------------
+
+type AnyObj = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+
+/** `{ jiujitsu, trocacao }` → `{ grappling, trocacao }` (personagem, NPCs, ofertas, luta em andamento). */
+function renameSkills<T extends AnyObj | undefined>(sk: T): T {
+  if (!sk || !('jiujitsu' in sk)) return sk;
+  const { jiujitsu, ...rest } = sk;
+  return { ...rest, grappling: jiujitsu } as unknown as T;
+}
+
+const withSkills = (x: AnyObj) => (x && x.skills ? { ...x, skills: renameSkills(x.skills) } : x);
+
+/**
+ * A habilidade `jiujitsu` vira `grappling` em todo o save. A faixa única (`belt`) vira `grades.jiujitsu`:
+ * adulto (16+) mantém a faixa e os anos; quem tem menos de 16 entra no sistema infantil com a faixa estimada pelo
+ * nível de grappling e pela idade (determinístico, sem RNG). `trainedBjjThisYear` vira `trainedThisYear`.
+ */
+export function migrateV9toV10(save: AnySave): AnySave {
+  const s0 = save as unknown as AnyObj;
+  const f = s0.fighter as AnyObj;
+  const age = s0.character.age as number;
+  const skills = renameSkills(f.skills) as AnyObj;
+  let grades: AnyObj = f.grades ?? {};
+  const belt = f.belt as { rank: number; years: number } | undefined;
+  const practiced = !!belt && (belt.rank > 0 || belt.years > 0 || (f.bjj?.wins ?? 0) + (f.bjj?.losses ?? 0) > 0);
+  if (belt && practiced && !grades.jiujitsu) {
+    if (age >= 16) grades = { ...grades, jiujitsu: { system: 'bjj_adulto', rank: belt.rank, degree: Math.min(4, belt.years), years: belt.years } };
+    else {
+      const kids = GAME_CONTENT.fighting.graduations.find((g) => g.id === 'bjj_infantil')!;
+      let rank = 0;
+      kids.levels.forEach((l, i) => {
+        if (i > 0 && age >= l.minAge && (skills.grappling ?? 0) >= l.minSkill && i <= belt.years * 2) rank = i;
+      });
+      grades = { ...grades, jiujitsu: { system: 'bjj_infantil', rank, degree: 0, years: Math.min(1, belt.years) } };
+    }
+  }
+  const { belt: _belt, trainedBjjThisYear, ...restF } = f;
+  void _belt;
+  const rosters: AnyObj = {};
+  for (const [k, r] of Object.entries((s0.world?.rosters ?? {}) as AnyObj)) rosters[k] = { ...r, npcs: (r.npcs ?? []).map(withSkills) };
+  const offers = (f.offers ?? []).map((o: AnyObj) => ({ ...o, opponent: withSkills(o.opponent) }));
+  let activeFight = s0.activeFight;
+  if (activeFight) {
+    activeFight = { ...activeFight, offer: { ...activeFight.offer, opponent: withSkills(activeFight.offer.opponent) }, fight: { ...activeFight.fight, fighters: activeFight.fight.fighters.map(withSkills) } };
+  }
+  return {
+    ...(s0 as AnySave),
+    version: 10,
+    fighter: { ...restF, skills, grades, trainedThisYear: trainedBjjThisYear ? ['jiujitsu'] : [], offers },
+    world: { ...s0.world, rosters },
     activeFight,
   };
 }

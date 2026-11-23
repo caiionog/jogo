@@ -18,6 +18,8 @@ import { emptyEconomy, post, toMoney } from '../economy/ledger';
 import { bodyFor } from '../fighting/body';
 import { leaveRankings } from '../fighting/orgs';
 import { baseSkills, newFighterProfile } from '../fighting/profile';
+import { bjjRank } from '../fighting/belts';
+import type { FighterProfile } from '../fighting/types';
 import { emptyHealth } from '../health/types';
 import { educationForAge } from '../lifeStages/school';
 import { addRelation, createPerson, getPerson, relationsOf } from '../relationships/people';
@@ -60,7 +62,7 @@ export function dynastyMember(state: GameState, heirName?: string): DynastyMembe
     score: state.ending?.score ?? 0,
     record: `${f.pro.wins}-${f.pro.losses}-${f.pro.draws}`,
     titles,
-    belt: f.belt.rank,
+    belt: bjjRank(state),
     peakRep: Math.max(state.feats.peakRep ?? 0, f.reputation),
     children: relationsOf(state, ['filho'], false).map((r) => r.person.name),
     ...(heirName ? { heir: heirName } : {}),
@@ -174,7 +176,11 @@ export function continueAsChild(state: GameState, personId: string, content: Gam
   const skills = baseSkills(5 + Math.round(trainedYears * 2.2));
   let fighter = newFighterProfile(skills, talent, rng.int(40, 75));
   const famous = Math.min(content.legacy.famousRepMax, Math.round(Math.max(state.feats.peakRep ?? 0, state.fighter.reputation) / content.legacy.famousRepDivisor));
-  fighter = { ...fighter, reputation: famous, belt: { rank: mirim && age >= 14 ? 1 : 0, years: mirim ? Math.min(3, trainedYears) : 0 } };
+  // lutador mirim herda a base: faixa de jiu-jitsu coerente com a idade (infantil até os 15; azul a partir dos 16)
+  const grades: FighterProfile['grades'] = mirim
+    ? { jiujitsu: age >= 16 ? { system: 'bjj_adulto', rank: 1, degree: 0, years: Math.min(3, trainedYears) } : { system: 'bjj_infantil', rank: Math.min(12, trainedYears * 2), degree: 0, years: 1 } }
+    : {};
+  fighter = { ...fighter, reputation: famous, grades };
 
   // relações do ponto de vista do herdeiro
   const people: Person[] = [];

@@ -3,7 +3,7 @@ import type { GameContent } from '../core/content';
 import type { GameState } from '../core/state';
 import { appendLog } from '../core/stats';
 import { netWorth } from '../economy/worth';
-import { BELTS } from '../fighting/belts';
+import { BELTS, bjjRank } from '../fighting/belts';
 import { childrenOf, relationsOf, updatePerson } from '../relationships/people';
 import { splitEstate } from './will';
 import type { LifeEnding, Obituary } from './types';
@@ -16,7 +16,7 @@ export function lifeScore(state: GameState): { score: number; parts: Record<stri
   const feats = state.feats;
   const career = Math.min(
     35,
-    (feats.majorTitles ?? 0) * 10 + (feats.regionalTitles ?? 0) * 4 + (feats.titleDefenses ?? 0) * 2 + f.pro.wins * 0.4 + (f.belt.rank >= 4 ? 5 : f.belt.rank) + (feats.peakRep ?? f.reputation) / 6,
+    (feats.majorTitles ?? 0) * 10 + (feats.regionalTitles ?? 0) * 4 + (feats.titleDefenses ?? 0) * 2 + f.pro.wins * 0.4 + (bjjRank(state) >= 4 ? 5 : bjjRank(state)) + (feats.peakRep ?? f.reputation) / 6,
   );
   const nw = netWorth(state);
   const wealth = nw <= 0 ? 0 : Math.min(20, Math.max(0, (Math.log10(nw) - 4) * 6.5));
@@ -75,7 +75,7 @@ export function buildObituary(state: GameState, cause: string): Obituary {
   if ((state.feats.majorTitles ?? 0) > 0) headline = `Morre ${c.name}, ${he ? 'ex-campeão' : 'ex-campeã'} do Circuito Titã, aos ${c.age} anos.`;
   else if (totalFights >= 10) headline = `Morre ${he ? 'o lutador' : 'a lutadora'} ${c.name}, aos ${c.age} anos.`;
   if (totalFights) lines.push(`Cartel profissional: ${f.pro.wins}-${f.pro.losses}-${f.pro.draws}${titles ? `, ${titles} cinturão${titles > 1 ? 'ões' : ''}` : ''}.`);
-  if (f.belt.rank > 0) lines.push(`Faixa ${BELTS[f.belt.rank]} de jiu-jitsu.`);
+  if (bjjRank(state) > 0) lines.push(`Faixa ${BELTS[bjjRank(state)]} de jiu-jitsu.`);
   if (f.retired) lines.push(`Aposentou-se aos ${f.retired.age} anos.`);
   const spouse = relationsOf(state, ['conjuge'])[0];
   const kids = childrenOf(state);

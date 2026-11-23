@@ -8,7 +8,7 @@ import { createRng } from '../core/rng';
 import type { Rng } from '../core/rng';
 import type { EventVars, GameState } from '../core/state';
 import { addStats, appendLog } from '../core/stats';
-import { beltPromotionReady, promoteBelt } from './belts';
+import { bjjRank, graduationYear, promoteGrade } from './belts';
 import { findMatches, ephemeralOpponent, npcToOpponent, opponentFullName, playerLevel } from './matchmaking';
 import { currentRosterKey, getOrg, leaveRankings, playerDivision, signWith, tierIndex } from './orgs';
 import { PLAYER_ID, applySkillDelta, playerSnapshot, shortName } from './profile';
@@ -17,6 +17,7 @@ import { applyRankingResult, rankOf } from './ranking';
 import { DECISION_TEXT, aiStrategy, chooseCorner, playRound, startFight } from './simulateFight';
 import { ageDecline, currentGym, fightExperience, trainingYear } from './training';
 import type {
+  ModalityId,
   CareerRecord,
   FightOffer,
   FighterSnapshot,
@@ -113,7 +114,7 @@ export function generateOffers(state: GameState, rng: Rng, content: GameContent)
     const count = org.sport === 'bjj' ? 1 : org.tier === 'kids' ? (rng.chance(0.85) ? 1 : 0) : org.offersPerYear;
     for (let i = 0; i < count; i++) {
       const level = org.sport === 'bjj' && org.tier === 'amateur'
-        ? 25 + f.belt.rank * 13 + rng.int(-6, 6)
+        ? 25 + bjjRank(state) * 13 + rng.int(-6, 6)
         : lvl + rng.int(-9, 5);
       const kind: OfferKind = org.tier === 'kids' ? 'kids' : org.sport === 'bjj' ? 'bjj' : 'regular';
       s = pushOffer(s, makeOffer(s, org, kind, ephemeral(s, rng, org, level, content), false), content);
@@ -188,7 +189,7 @@ export function acceptOffer(state: GameState, offerId: string, opts: AcceptOptio
   // lesões ativas pesam na luta (lutar machucado) e o dano cerebral enfraquece o queixo (em playerSnapshot)
   let player = playerSnapshot(s, aggressive ? AGGRESSIVE_CUT_EDGE : 0, missed ? 85 : 100);
   const pen = injuryFightPenalty(s, content);
-  player = { ...player, skills: addSk(player.skills, { jiujitsu: pen.jiujitsu ?? 0, trocacao: pen.trocacao ?? 0 }), athletic: Math.max(0, player.athletic + (pen.athletic ?? 0)), chin: Math.max(0, player.chin + (pen.chin ?? 0)) };
+  player = { ...player, skills: addSk(player.skills, { grappling: pen.grappling ?? 0, trocacao: pen.trocacao ?? 0 }), athletic: Math.max(0, player.athletic + (pen.athletic ?? 0)), chin: Math.max(0, player.chin + (pen.chin ?? 0)) };
   // parceiro(a) que apoia a carreira: ânimo extra (+3 de fôlego na luta)
   if (partnerSupportsFighting(s, content)) player = { ...player, athletic: Math.min(100, player.athletic + 3) };
   let fight = startFight(player, opponentSnapshot(offer.opponent), {
@@ -383,15 +384,12 @@ export function endFightingYear(state: GameState, content: GameContent): GameSta
   const f = state.fighter;
   const gym = currentGym(state, content);
   let s: GameState = state;
-  const trainedBjj = f.trainedBjjThisYear || gym?.specialty === 'jiujitsu';
   const foughtThisYear = f.history.some((h) => h.year === state.year);
   s = {
     ...s,
     fighter: {
       ...f,
       offers: [],
-      trainedBjjThisYear: false,
-      belt: trainedBjj ? { ...f.belt, years: f.belt.years + 1 } : f.belt,
       suspendedYears: Math.max(0, f.suspendedYears - 1),
       // a fama precisa de manutenção: cai um pouco todo ano (mais se não lutou); aposentado: lenda, cai devagar
       reputation: f.retired
@@ -400,6 +398,8 @@ export function endFightingYear(state: GameState, content: GameContent): GameSta
     },
   };
   if (f.suspendedYears === 1) s = appendLog(s, 'Sua suspensão acabou. Você pode voltar a lutar.');
+  // graduações: o tempo só corre nas modalidades treinadas; aos 16, jiu-jitsu infantil → adulto
+  s = graduationYear(s, content);
 
   // mensalidade (a partir dos 18; reputação ≥ 15 rende bolsa de atleta)
   if (gym && state.character.age >= 18 && s.fighter.reputation < 15) {
@@ -444,7 +444,10 @@ export interface FighterEffects {
   injury?: { name?: string; years: number };
   suspendYears?: number;
   vacateTitles?: boolean;
+  /** Legado: promove a faixa de jiu-jitsu (= `promoteGrade: 'jiujitsu'`). */
   promoteBelt?: boolean;
+  /** Promove a graduação da modalidade, se os requisitos forem atendidos. */
+  promoteGrade?: ModalityId;
   offer?: { kind: 'shortNotice' | 'rival' | 'titleDefense' | 'bjjOpen' | 'farewell' };
   /** Aposenta (Etapa 6). */
   retire?: RetireReason;
@@ -500,7 +503,8 @@ export function applyFighterEffects(state: GameState, fx: FighterEffects, rng: R
     if (gym) s = enterGym(s, gym.id, content);
   }
   if (fx.signWith) s = signWith(s, fx.signWith, content);
-  if (fx.promoteBelt && beltPromotionReady(s)) s = promoteBelt(s);
+  if (fx.promoteBelt) s = promoteGrade(s, 'jiujitsu', content);
+  if (fx.promoteGrade) s = promoteGrade(s, fx.promoteGrade, content);
   if (fx.offer) s = effectOffer(s, fx.offer.kind, rng, content, vars);
   if (fx.retire) s = completeRetirement(s, fx.retire);
   if (fx.unretire) s = unretire(s);
@@ -527,7 +531,7 @@ function effectOffer(state: GameState, kind: NonNullable<FighterEffects['offer']
   const bjj = content.fighting.orgs.find((o) => o.tier === 'amateur' && o.sport === 'bjj');
   const lvl = playerLevel(state);
   if (kind === 'bjjOpen' && bjj) {
-    return pushOffer(state, makeOffer(state, bjj, 'bjj', ephemeral(state, rng, bjj, 25 + state.fighter.belt.rank * 13, content), false, 2), content);
+    return pushOffer(state, makeOffer(state, bjj, 'bjj', ephemeral(state, rng, bjj, 25 + bjjRank(state) * 13, content), false, 2), content);
   }
   if (kind === 'rival') {
     const org = contract ?? amateur;

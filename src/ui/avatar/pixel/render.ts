@@ -146,12 +146,27 @@ function applyClothing(cv: Canvas, b: BodySprite, layer: string, p: OutfitPiece,
   if (det.has('tira')) for (const x of [A.ankleL[0], A.ankleR[0]]) { const y = A.ankleL[1] + 1; if (cv.r(x, y) === 'p') cv.set(x, y, id, undefined, 2); }
 }
 
-function drawBelt(cv: Canvas, b: BodySprite, color: string) {
+function drawBelt(cv: Canvas, b: BodySprite, color: string, accent?: string) {
   cv.ramp('faixa', color, { satCap: 0.6 });
+  // faixa infantil de duas cores: a linha de baixo leva a listra (branca ou preta)
+  if (accent) cv.ramp('faixa_listra', accent, { satCap: 0.6 });
   const y0 = b.anchors.waist[1] - 1;
-  for (let y = y0; y <= y0 + 1; y++) for (let x = 0; x < W; x++) if (cv.r(x, y) === 't' || cv.r(x, y) === 'c') cv.set(x, y, 'faixa', undefined, y === y0 ? 2 : 1);
+  for (let y = y0; y <= y0 + 1; y++) for (let x = 0; x < W; x++) if (cv.r(x, y) === 't' || cv.r(x, y) === 'c') cv.set(x, y, accent && y === y0 + 1 ? 'faixa_listra' : 'faixa', undefined, y === y0 ? 2 : 1);
   // nó e pontas
   for (const [x, y] of [[13, y0 + 2], [13, y0 + 3], [12, y0 + 3]] as const) if (cv.inside(x, y)) cv.set(x, y, 'faixa', 'c', 1);
+}
+
+/** Prajied: uma braçadeira de 2 px no alto de cada braço (cor da graduação) com a ponta pendurada no braço da frente. */
+function drawPrajied(cv: Canvas, b: BodySprite, color: string, tip?: string) {
+  cv.ramp('prajied', color, { satCap: 0.75 });
+  cv.ramp('prajied_ponta', tip ?? color, { satCap: 0.75 });
+  for (const [sh, el] of [[b.anchors.shoulderL, b.anchors.elbowL], [b.anchors.shoulderR, b.anchors.elbowR]] as const) {
+    const y0 = Math.round(sh[1] + (el[1] - sh[1]) * 0.35);
+    for (let y = y0; y <= y0 + 1; y++) for (let x = 0; x < W; x++) if (cv.r(x, y) === 'a') cv.set(x, y, 'prajied', undefined, y === y0 ? 2 : 1);
+  }
+  const [ex, ey] = b.anchors.shoulderL;
+  const ty = Math.round(ey + (b.anchors.elbowL[1] - ey) * 0.35) + 2;
+  for (const [x, y] of [[ex - 1, ty], [ex - 1, ty + 1]] as const) if (cv.inside(x, y)) cv.set(x, y, 'prajied_ponta', 'a', 1);
 }
 
 // ---------------------------------------------------------------------------
@@ -501,10 +516,14 @@ export function renderAvatar(d: AvatarDescriptor, opts: RenderOptions = {}): Pix
   }
 
   // ---- acessórios ----
-  if (o.acessorio?.id === 'faixa') {
-    drawBelt(cv, b, o.acessorio.color);
-    const fr = cv.ramps.get('faixa')!;
-    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (cv.m(x, y) === 'faixa') paint(x, y, fr[cv.tone[cv.idx(x, y)]!]);
+  if (o.acessorio?.id === 'faixa' || o.acessorio?.id === 'prajied') {
+    if (o.acessorio.id === 'faixa') drawBelt(cv, b, o.acessorio.color, o.acessorio.accent);
+    else drawPrajied(cv, b, o.acessorio.color, o.acessorio.accent);
+    for (const mat of ['faixa', 'faixa_listra', 'prajied', 'prajied_ponta']) {
+      const fr = cv.ramps.get(mat);
+      if (!fr) continue;
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (cv.m(x, y) === mat) paint(x, y, fr[cv.tone[cv.idx(x, y)]!]);
+    }
   }
   if (o.acessorio?.id === 'bone') {
     const cap = makeRamp(o.acessorio.color);

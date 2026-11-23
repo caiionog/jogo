@@ -40,7 +40,7 @@ export function coachWord(value: number): CoachWord {
  * Avaliação do treinador em palavras, com um erro determinístico de até ±COACH_NOISE que muda a cada ano
  * (o jogador nunca sabe o número exato).
  */
-export function coachAssessment(state: GameState, skill?: 'jiujitsu' | 'trocacao'): CoachWord {
+export function coachAssessment(state: GameState, skill?: 'grappling' | 'trocacao'): CoachWord {
   const rng = createRng(seedToState(`${state.seed}:coach:${state.year}:${skill ?? 'geral'}`));
   const noise = (rng.next() * 2 - 1) * COACH_NOISE;
   const base = skill ? state.fighter.skills[skill] : playerRating(state);

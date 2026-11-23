@@ -18,6 +18,8 @@ export function validateContent(content: GameContent): string[] {
   const fc = content.fighting;
   const orgIds = new Set(fc.orgs.map((o) => o.id));
   const gymIds = new Set(fc.gyms.map((g) => g.id));
+  const modIds = new Set<string>(fc.modalities.map((m) => m.id));
+  const gradIds = new Set(fc.graduations.map((g) => g.id));
   const traitIds = new Set(content.relationships.traits.map((t) => t.id));
 
   const checkEffects = (where: string, fx: Effects | undefined) => {
@@ -32,8 +34,9 @@ export function validateContent(content: GameContent): string[] {
     if (ff?.joinGym && !['local', 'best'].includes(ff.joinGym) && !gymIds.has(ff.joinGym)) errors.push(`${where}: academia inexistente "${ff.joinGym}"`);
     if (ff?.signWith && !orgIds.has(ff.signWith)) errors.push(`${where}: organização inexistente "${ff.signWith}"`);
     for (const k of Object.keys(ff?.skills ?? {})) {
-      if (!['jiujitsu', 'trocacao', 'athletic', 'chin'].includes(k)) errors.push(`${where}: habilidade desconhecida "${k}"`);
+      if (!['grappling', 'trocacao', 'athletic', 'chin'].includes(k)) errors.push(`${where}: habilidade desconhecida "${k}"`);
     }
+    if (ff?.promoteGrade && !modIds.has(ff.promoteGrade)) errors.push(`${where}: modalidade inexistente "${ff.promoteGrade}"`);
     const he = fx.health;
     if (he?.injury && he.injury !== 'random' && !content.health.injuries.some((d) => d.id === he.injury)) errors.push(`${where}: lesão inexistente "${he.injury}"`);
     if (he?.condition && !content.health.conditions.some((d) => d.id === he.condition)) errors.push(`${where}: doença inexistente "${he.condition}"`);
@@ -74,6 +77,7 @@ export function validateContent(content: GameContent): string[] {
     }
     if (c.fighting?.orgEligible && !orgIds.has(c.fighting.orgEligible)) errors.push(`${e.id}: organização inexistente "${c.fighting.orgEligible}"`);
     for (const o of c.fighting?.orgs ?? []) if (!orgIds.has(o)) errors.push(`${e.id}: organização inexistente "${o}"`);
+    if (c.fighting?.gradeReady && !modIds.has(c.fighting.gradeReady)) errors.push(`${e.id}: modalidade inexistente "${c.fighting.gradeReady}"`);
     const choiceIds = new Set<string>();
     for (const ch of e.choices) {
       if (choiceIds.has(ch.id)) errors.push(`${e.id}: escolha duplicada ${ch.id}`);
@@ -126,6 +130,21 @@ export function validateContent(content: GameContent): string[] {
     seenGyms.add(g.id);
     if (g.coach < 0 || g.coach > 100) errors.push(`academia ${g.id}: coach fora de 0–100`);
     if (g.city && !content.geo.ufs.some((u) => u.cities.some((c) => c.name === g.city))) errors.push(`academia ${g.id}: cidade inexistente "${g.city}"`);
+    if (!g.modalities.length) errors.push(`academia ${g.id}: sem modalidades`);
+    for (const m of g.modalities) if (!modIds.has(m)) errors.push(`academia ${g.id}: modalidade inexistente "${m}"`);
+  }
+  // modalidades e graduações (release 0.0.1)
+  for (const m of fc.modalities) {
+    for (const sys of [m.graduation, m.kidsGraduation]) if (sys && !gradIds.has(sys)) errors.push(`modalidade ${m.id}: graduação inexistente "${sys}"`);
+    if (!(m.athletic > 0 && m.athletic < 1)) errors.push(`modalidade ${m.id}: athletic deve estar em (0,1)`);
+  }
+  for (const g of fc.graduations) {
+    if (g.levels.length < 2) errors.push(`graduação ${g.id}: poucos níveis`);
+    g.levels.forEach((l, i) => {
+      const prev = g.levels[i - 1];
+      if (prev && (l.minAge < prev.minAge || l.minSkill < prev.minSkill)) errors.push(`graduação ${g.id}: nível ${l.id} exige menos que o anterior`);
+    });
+    if (g.adultAt && !gradIds.has(g.adultAt.system)) errors.push(`graduação ${g.id}: sistema adulto inexistente`);
   }
   for (const k of FIGHT_TEXT_KEYS) if (!fc.text[k]?.length) errors.push(`fightText: sem textos para "${k}"`);
   for (const w of ['standing', 'clinch', 'ground'] as const) if (!fc.text.strikes[w].length) errors.push(`fightText: sem golpes "${w}"`);

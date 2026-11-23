@@ -10,7 +10,7 @@ export function emptyRecord(): CareerRecord {
 }
 
 export function baseSkills(level = 5): Skills {
-  return { jiujitsu: level, trocacao: level };
+  return { grappling: level, trocacao: level };
 }
 
 export function newFighterProfile(skills: Skills = baseSkills(), talent = 1, chinBase = 55): FighterProfile {
@@ -20,7 +20,7 @@ export function newFighterProfile(skills: Skills = baseSkills(), talent = 1, chi
     trainingLoad: 0,
     sessionsThisYear: 0,
     talent,
-    belt: { rank: 0, years: 0 },
+    grades: {},
     reputation: 0,
     gymId: null,
     amateur: emptyRecord(),
@@ -33,7 +33,7 @@ export function newFighterProfile(skills: Skills = baseSkills(), talent = 1, chi
     retired: null,
     suspendedYears: 0,
     history: [],
-    trainedBjjThisYear: false,
+    trainedThisYear: [],
     offers: [],
     nextOfferId: 1,
     proDebutAge: null,
@@ -57,11 +57,11 @@ export function addSkills(skills: Skills, delta: Partial<Skills>): Skills {
 }
 
 /**
- * "Nível" geral do lutador (0–100), na mesma escala da Etapa 3: trocação e jiu-jitsu pesam mais, físico e queixo
+ * "Nível" geral do lutador (0–100), na mesma escala da Etapa 3: trocação e grappling pesam mais, físico e queixo
  * completam. Usado no matchmaking, na elegibilidade das ligas e na avaliação do treinador (nunca exibido).
  */
 export function skillRating(s: Skills, athletic: number, chin: number): number {
-  return s.trocacao * 0.36 + s.jiujitsu * 0.36 + athletic * 0.14 + chin * 0.14;
+  return s.trocacao * 0.36 + s.grappling * 0.36 + athletic * 0.14 + chin * 0.14;
 }
 
 /** Aplica um SkillDelta ao estado: habilidades ocultas, Capacidade atlética (visível) e queixo inato. */

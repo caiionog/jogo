@@ -13,7 +13,7 @@ function signed(skills: Record<string, number>, seed: string): GameState {
 
 describe('rivais do mundo da luta (Etapa 6)', () => {
   it('quem te nocauteia vira rival, ligado ao NPC do elenco', () => {
-    const weak = { trocacao: 8, jiujitsu: 10, athletic: 20, chin: 5 };
+    const weak = { trocacao: 8, grappling: 10, athletic: 20, chin: 5 };
     let found = false;
     for (let i = 0; i < 60 && !found; i++) {
       const g = signed(weak, `fraco-${i}`);
@@ -31,7 +31,7 @@ describe('rivais do mundo da luta (Etapa 6)', () => {
   });
 
   it('nocautear o rival conta para "Acerto de contas"', () => {
-    const strong = { trocacao: 96, jiujitsu: 60, athletic: 95, chin: 95 };
+    const strong = { trocacao: 96, grappling: 60, athletic: 95, chin: 95 };
     let ko = false;
     for (let i = 0; i < 80 && !ko; i++) {
       let g = signed(strong, `forte-${i}`);

@@ -37,7 +37,7 @@ export interface CombatProfile {
 }
 
 export function combat(f: FighterSnapshot): CombatProfile {
-  const j = f.skills.jiujitsu;
+  const j = f.skills.grappling;
   const t = f.skills.trocacao;
   const a = f.athletic;
   return {

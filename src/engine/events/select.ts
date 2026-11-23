@@ -12,7 +12,7 @@ import { netWorth } from '../economy/worth';
 import { marketYear } from '../economy/market';
 import { jobDef } from '../economy/jobs';
 import type { GameContent } from '../core/content';
-import { beltPromotionReady } from '../fighting/belts';
+import { bjjRank, gradeReady } from '../fighting/belts';
 import { getOrg, isOrgEligible, currentRosterKey } from '../fighting/orgs';
 import { PLAYER_ID } from '../fighting/profile';
 import { rankOf } from '../fighting/ranking';
@@ -59,12 +59,13 @@ function fightingConditionsMet(state: GameState, c: FightingConditions, content?
   if (c.retired !== undefined && !!f.retired !== c.retired) return false;
   if (c.retiredYears && (!f.retired || !inRange(state.character.age - f.retired.age, c.retiredYears))) return false;
   if (c.lossStreak && !inRange(state.feats.curLosses ?? 0, c.lossStreak)) return false;
-  if (!inRange(f.belt.rank, c.belt)) return false;
+  if (!inRange(bjjRank(state), c.belt)) return false;
   if (!inRange(f.amateur.wins, c.amateurWins)) return false;
   if (!inRange(f.pro.wins, c.proWins)) return false;
   if (!inRange(f.reputation, c.reputation)) return false;
   if (c.champion !== undefined && (f.titles.length > 0) !== c.champion) return false;
-  if (c.beltPromotionReady !== undefined && beltPromotionReady(state) !== c.beltPromotionReady) return false;
+  if (c.beltPromotionReady !== undefined && (!!content && gradeReady(state, 'jiujitsu', content)) !== c.beltPromotionReady) return false;
+  if (c.gradeReady && !(content && gradeReady(state, c.gradeReady, content))) return false;
   if (c.hasFought !== undefined && (f.history.length > 0) !== c.hasFought) return false;
   // condições que dependem do conteúdo (organizações)
   if (c.tiers || c.orgEligible || c.ranked !== undefined || c.rankMax !== undefined) {

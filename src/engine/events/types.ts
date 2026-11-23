@@ -1,3 +1,4 @@
+import type { ModalityId } from '../fighting/types';
 import type { Effects } from '../core/effects';
 import type { ClubId, SchoolStage, SchoolType, Sex, StatKey } from '../core/state';
 import type { Tier } from '../fighting/types';
@@ -112,7 +113,7 @@ export interface FightingConditions {
   /** Posição máxima no ranking (1 = #1; o campeão conta como 0). */
   rankMax?: number;
   champion?: boolean;
-  /** Faixa de jiu-jitsu: 0 branca … 4 preta. */
+  /** Faixa ADULTA de jiu-jitsu: 0 branca … 4 preta (quem está no sistema infantil conta como branca). */
   belt?: StatRange;
   amateurWins?: StatRange;
   proWins?: StatRange;
@@ -122,7 +123,10 @@ export interface FightingConditions {
   suspended?: boolean;
   /** Atende aos requisitos e pode receber proposta desta organização. */
   orgEligible?: string;
+  /** Legado: pronto para a próxima faixa de jiu-jitsu (= `gradeReady: 'jiujitsu'`). */
   beltPromotionReady?: boolean;
+  /** Pronto para a próxima graduação desta modalidade (exame de faixa/prajied). */
+  gradeReady?: ModalityId;
   /** Já lutou alguma vez (qualquer cartel). */
   hasFought?: boolean;
   /** Aposentado da luta (Etapa 6). */
