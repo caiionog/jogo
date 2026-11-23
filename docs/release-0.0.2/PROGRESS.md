@@ -11,7 +11,7 @@ Branch `release/0.0.2`, criada a partir de `release/0.0.1` (tag local `v0.0.1`).
 - [x] **3. Eventos da PM e da Civil**, dilemas e força especial (≥ 25 eventos) — 41 eventos `pol_*`; 748 testes
 - [x] **4. Delitos**, nível de procurado, reputação no crime e dinheiro sujo — 763 testes
 - [x] **5. Facções e tráfico** — 773 testes
-- [ ] **6. Justiça**, processo, sentença e ficha criminal
+- [x] **6. Justiça**, processo, sentença e ficha criminal — 783 testes
 - [ ] **7. Prisão e reintegração** (≥ 20 eventos)
 - [ ] **8. Cruzamentos** entre polícia, crime, luta e relacionamentos
 - [ ] **9. Interface**, fardas, uniformes e ícones
@@ -107,11 +107,33 @@ Branch `release/0.0.2`, criada a partir de `release/0.0.1` (tag local `v0.0.1`).
   Tráfico (`crime-trafico-<nivel>`, `crime-trafico-stop`) na tela de Crime; store `tryLeaveFaction`, `setTrafficking`.
 - `tests/adultSafety.test.ts` agora também tenta todos os delitos, o plano e o tráfico com 12–17 anos (`crimeMinor`).
 
+## Notas da fase 6
+- **Dados** `content/crime/sentences.ts`: `SENTENCES` (faixas fictícias por delito/motivo, inclusive `corrupcao`,
+  `excesso`, `fuga`, `investigacao`), `BAILABLE`, `FACILITIES` (Vale Cinzento provisório, Pedra Funda fechado, Boa
+  Semente semiaberto, Recomeço aberto, Ala de Custódia Especial). `CRIME.justiceEvents` (delegacia, defesa,
+  julgamento) em `content/events/crime/justice.ts`.
+- **Engine** `engine/crime/justice.ts`: `arrest` de adulto agora registra a passagem e chama `openCase` (campo
+  opcional `crime.case`: `crimeId`, `confessed`, `lawyer`, `quality`, `free`, `wasPolice`); efeitos `crime.plea`,
+  `crime.lawyer` (`chooseLawyer`: Defensoria; particular caro — amigo/parente com `job` /Advogad/ cobra metade;
+  quem trabalha como advogado se defende; fiança automática se cabível e houver dinheiro, ou liberdade provisória →
+  julgamento agendado para o ano seguinte; senão julgamento imediato), `crime.verdict` (`verdict`: absolvição
+  0,05–0,6; `computeSentence` = faixa × 1,5 reincidência × 1,25 facção × (1 − defesa/400) × 0,67 confissão × sorte
+  ±10%; ≤ 1 ano = pena alternativa; senão `imprison`). `imprison`: regime por `regimeFor` (> 8 fechado, 4–8
+  semiaberto, < 4 aberto), perde emprego (exceto aberto), policial demitido → ala especial, facção = proteção.
+  `prisonYear` (no `advanceYear` logo depois do `crimeYear`): +1 ano, soltura quando `served + remission ≥ sentence`
+  (flag `egresso`), condicional na metade com comportamento ≥ 60 (60%), progressão fechado→semiaberto em 1/4 e
+  →aberto em 2/4 com comportamento ≥ 50. **A remição (`prison.remission`) ainda não é preenchida: fase 7 (ações de
+  trabalhar/estudar na prisão, +0,25/ano).**
+- Condição `crime`: `inCase`, `imprisoned`. `JobDef.requires.cleanRecord` (professor particular, cuidador,
+  segurança) → motivo `'record'`; `hireChance` −0,25 com condenação; preso (fechado/semiaberto) não se candidata.
+
 ## Próximo passo exato (para a sessão nova)
-1. `npm install`. Confira `npm run lint`, `npm test` (773 testes) e `npx tsc --noEmit`.
-2. **Fase 6 — Justiça e ficha criminal**, conforme `PLAN.md`: trocar a passagem simples de `engine/crime/arrest.ts`
-   (adulto) por processo (`crime.case`: fiança, advogado NPC/defensor, responder em liberdade, sentença por faixas
-   em `content/crime/sentences.ts`, agravantes/atenuantes, regime), ficha bloqueando `JobDef.requires.cleanRecord` e
-   reduzindo `hireChance`.
+1. `npm install`. Confira `npm run lint`, `npm test` (783 testes) e `npx tsc --noEmit`.
+2. **Fase 7 — Prisão e reintegração** (≥ 20 eventos em `src/content/events/prison/`), conforme `PLAN.md`:
+   ações da prisão (trabalhar/estudar → remição 0,25 e comportamento; treinar no pátio com limite 4; conversar;
+   visita; ficar fora de confusão), bloquear as ações normais enquanto preso (escola pausada, faculdade trancada),
+   eventos (briga no pátio, recrutamento, dívida, revista, rebelião, transferência, fuga — falha aumenta a pena
+   (`SENTENCES.fuga`) —, visita que não vem, mentor), reintegração (Programa Portas Abertas), teste de termos
+   proibidos de violência sexual. A ala especial tem eventos próprios.
 3. Depois da 0.0.2: o usuário pediu a **release 0.0.3** (texto completo no fim do pedido da sessão anterior; começa
    pela fase 0 = plano com aprovação).

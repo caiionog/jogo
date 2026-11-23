@@ -1,3 +1,4 @@
+import { prisonYear } from '../crime/justice';
 import { crimeYear } from '../crime/crimes';
 import { policeYear } from '../police/career';
 import { emptyPolice } from '../police/types';
@@ -371,6 +372,8 @@ export function advanceYear(
     // crime: investigação pelo procurado, suspeita do dinheiro sujo, procurado cai (release 0.0.2)
     next = crimeYear(next, rng, content);
     if (!next.alive) return next;
+    // pena: tempo cumprido, progressão de regime, condicional, soltura (release 0.0.2)
+    next = prisonYear(next, rng, content);
     // fecha o ano econômico (salário, custos, impostos, dívida) e abre o extrato do novo ano
     next = closeEconomicYear(next, rng, content);
     // carreira policial: formação, estágio, promoção, aposentadoria (release 0.0.2)

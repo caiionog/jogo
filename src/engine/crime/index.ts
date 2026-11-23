@@ -4,3 +4,4 @@ export * from './arrest';
 export * from './crimes';
 export * from './plan';
 export * from './faction';
+export * from './justice';

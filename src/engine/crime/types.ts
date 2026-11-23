@@ -33,6 +33,8 @@ export interface CrimeState {
   trafficking: { level: TraffickingLevel; years: number } | null;
   /** Delito grave sendo planejado (opcional na v15). */
   plan?: CrimePlan | null;
+  /** Processo em andamento (fase 6; opcional na v15). */
+  case?: CrimeCase | null;
   /** Delitos cometidos na vida (contador). */
   committed?: number;
   /** Total ganho com crime (R$). */
@@ -47,6 +49,19 @@ export interface CrimePlan {
   teamQuality?: number;
   target?: 'pequeno' | 'medio' | 'grande';
   time?: 'dia' | 'noite';
+}
+
+export interface CrimeCase {
+  crimeId: string;
+  year: number;
+  confessed: boolean;
+  lawyer: 'publico' | 'particular' | 'proprio' | null;
+  /** Qualidade da defesa (0–100). */
+  quality: number;
+  /** Responde em liberdade (fiança ou decisão do juiz). */
+  free: boolean;
+  /** Era policial quando foi preso (ala especial). */
+  wasPolice?: boolean;
 }
 
 export interface CrimeDef {
@@ -101,6 +116,12 @@ export interface CrimeContent {
   factionRanks: readonly string[];
   /** Evento anual de missão da facção e de tentativa de saída. */
   factionEvents: { mission: string; leave: string };
+  /** Justiça (fase 6): faixas de pena, fiança, estabelecimentos e eventos do processo. */
+  sentences: Record<string, [number, number]>;
+  bailable: readonly string[];
+  facilities: Record<'provisorio' | 'fechado' | 'semiaberto' | 'aberto' | 'especial', string>;
+  /** Eventos do processo: delegacia, defesa, julgamento. */
+  justiceEvents: { station: string; defense: string; trial: string };
 }
 
 export function emptyCrime(): CrimeState {

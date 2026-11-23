@@ -4,6 +4,7 @@
  * sai do RNG com sorte, atlética, inteligência, reputação no crime e a qualidade (oculta) da equipe.
  * Também ficam aqui as condições e os efeitos `crime` dos eventos.
  */
+import { chooseLawyer, setPlea, verdict } from './justice';
 import { factionAtWar, factionsHere, joinFaction, leaveFaction } from './faction';
 import type { GameContent } from '../core/content';
 import type { Rng } from '../core/rng';
@@ -35,6 +36,10 @@ export interface CrimeConditions {
   factionWar?: boolean;
   /** Há facção com território aqui (para convites). */
   factionHere?: boolean;
+  /** Processo em andamento. */
+  inCase?: boolean;
+  /** Preso agora. */
+  imprisoned?: boolean;
   /** Já cometeu algum delito. */
   committed?: boolean;
 }
@@ -57,6 +62,10 @@ export interface CrimeEffects {
   /** Dívida com a facção (R$; cobrada na virada do ano). */
   factionDebt?: number;
   stopTrafficking?: boolean;
+  /** Processo (fase 6): depoimento, defesa e julgamento. */
+  plea?: 'confessar' | 'silencio' | 'negar';
+  lawyer?: 'publico' | 'particular';
+  verdict?: boolean;
 }
 
 const inR = (v: number, r?: { min?: number; max?: number }) => !r || (v >= (r.min ?? -Infinity) && v <= (r.max ?? Infinity));
@@ -75,6 +84,8 @@ export function crimeConditionsMet(state: GameState, c: CrimeConditions, content
   if (c.trafficking !== undefined && !!k.trafficking !== c.trafficking) return false;
   if (c.factionWar !== undefined && (!content || factionAtWar(state, content) !== c.factionWar)) return false;
   if (c.factionHere !== undefined && (!content || (factionsHere(state, content).length > 0) !== c.factionHere)) return false;
+  if (c.inCase !== undefined && !!k.case !== c.inCase) return false;
+  if (c.imprisoned !== undefined && !!state.prison !== c.imprisoned) return false;
   if (c.committed !== undefined && ((k.committed ?? 0) > 0) !== c.committed) return false;
   // regra de menores: condição de facção/tráfico/delito grave nunca vale abaixo dos 18
   if ((c.faction || c.trafficking || c.planning || c.factionWar || c.factionHere) && !crimeAllowed(state, 'faccao')) return false;
@@ -93,6 +104,9 @@ export function applyCrimeEffects(state: GameState, fx: CrimeEffects, rng: Rng, 
   if (fx.leaveFaction) s = leaveFaction(s);
   if (fx.factionDebt && s.crime.faction) s = { ...s, crime: { ...s.crime, faction: { ...s.crime.faction, debt: Math.max(0, s.crime.faction.debt + fx.factionDebt) } } };
   if (fx.stopTrafficking) s = { ...s, crime: { ...s.crime, trafficking: null } };
+  if (fx.plea) s = setPlea(s, fx.plea);
+  if (fx.lawyer) s = chooseLawyer(s, fx.lawyer, rng, content);
+  if (fx.verdict) s = verdict(s, rng, content);
   const plan = s.crime.plan;
   if (!plan) return s;
   const ev = content.crime.planEvents;

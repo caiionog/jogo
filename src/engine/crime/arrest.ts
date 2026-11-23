@@ -3,6 +3,7 @@
  * comunitário ou internação curta no Centro Socioeducativo), registrada só na ficha juvenil. Adultos: passagem na
  * ficha criminal; o processo e a sentença ficam com a justiça (fase 6).
  */
+import { openCase } from './justice';
 import type { GameContent } from '../core/content';
 import type { Rng } from '../core/rng';
 import type { GameState } from '../core/state';
@@ -44,5 +45,7 @@ export function arrest(state: GameState, crimeId: string, rng: Rng, content: Gam
   s = parentsUpset(s, -8);
   s = { ...s, character: { ...s.character, stats: addStats(s.character.stats, { happiness: -6 }) } };
   const how = source === 'investigacao' ? 'A polícia chegou à sua porta com um mandado.' : 'Você foi pres' + g(s, 'o', 'a') + ' em flagrante.';
-  return appendLog(s, `${how} Depois de uma noite na delegacia, você foi liberad${g(s, 'o', 'a')} para responder ao processo.`);
+  s = appendLog(s, `${how} Você foi levad${g(s, 'o', 'a')} para a delegacia.`);
+  // processo (fase 6): delegacia → defesa → julgamento
+  return openCase(s, crimeId, content);
 }

@@ -207,6 +207,8 @@ export interface JobDef {
     degree?: readonly string[];
     /** Registro profissional (flag): `oab` (exame da ordem fictício) ou `crm` (medicina). */
     license?: 'oab' | 'crm';
+    /** Ficha criminal limpa (sem condenação; release 0.0.2). */
+    cleanRecord?: boolean;
   };
   /** Carteira assinada (padrão true). Informal paga 15% a mais, sem INSS e sem imposto retido. */
   formal?: boolean;

@@ -116,6 +116,8 @@ function reqLabel(key: RequirementKey, game: GameState, jobId: string): string {
       return `Diploma: ${(def.requires?.degree ?? []).map((d) => C.college.courses.find((c) => c.id === d)?.label ?? d).join(' ou ')}`;
     case 'license':
       return def.requires?.license === 'oab' ? 'Aprovação no Exame da Ordem' : 'Registro de médico (CRM)';
+    case 'record':
+      return 'Ficha criminal limpa';
   }
 }
 

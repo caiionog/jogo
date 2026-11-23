@@ -5,6 +5,7 @@
  */
 import type { CrimeContent, CrimeDef } from '../../engine';
 import { FACTION_RANKS, FACTIONS } from './factions';
+import { BAILABLE, FACILITIES, SENTENCES } from './sentences';
 
 export const CRIMES: readonly CrimeDef[] = [
   // --- leves (12+) ---
@@ -33,4 +34,8 @@ export const CRIME: CrimeContent = {
   factions: FACTIONS,
   factionRanks: FACTION_RANKS,
   factionEvents: { mission: 'crime_faccao_missao', leave: 'crime_faccao_saida' },
+  sentences: SENTENCES,
+  bailable: BAILABLE,
+  facilities: FACILITIES,
+  justiceEvents: { station: 'justica_delegacia', defense: 'justica_defesa', trial: 'justica_julgamento' },
 };

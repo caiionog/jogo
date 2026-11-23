@@ -23,7 +23,7 @@ export function validateContent(content: GameContent): string[] {
   const gradIds = new Set(fc.graduations.map((g) => g.id));
   const traitIds = new Set(content.relationships.traits.map((t) => t.id));
   for (const id of content.police.specialEvents) if (!allEventIds.has(id)) errors.push(`polícia: evento do curso especial inexistente "${id}"`);
-  for (const id of [...content.crime.planEvents, content.crime.suspicionEventId, content.crime.factionEvents.mission, content.crime.factionEvents.leave]) if (!allEventIds.has(id)) errors.push(`crime: evento inexistente "${id}"`);
+  for (const id of [...content.crime.planEvents, content.crime.suspicionEventId, content.crime.factionEvents.mission, content.crime.factionEvents.leave, ...Object.values(content.crime.justiceEvents)]) if (!allEventIds.has(id)) errors.push(`crime: evento inexistente "${id}"`);
   const crimeIds = new Set(content.crime.crimes.map((c) => c.id));
 
   const checkEffects = (where: string, fx: Effects | undefined) => {
