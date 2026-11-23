@@ -1,3 +1,4 @@
+import type { CrimeConditions } from '../crime/plan';
 import type { PoliceConditions } from '../police/events';
 import type { ModalityId } from '../fighting/types';
 import type { Effects } from '../core/effects';
@@ -69,6 +70,8 @@ export interface EventConditions {
 
   // --- polícia (release 0.0.2) ---
   police?: PoliceConditions;
+  /** Crime: procurado, reputação, dinheiro sujo, ficha, facção, tráfico, plano (release 0.0.2). */
+  crime?: CrimeConditions;
 }
 
 export interface EconomyConditions {

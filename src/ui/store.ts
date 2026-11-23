@@ -49,6 +49,9 @@ import {
   requestTransfer,
   resignPolice,
   trySpecialCourse,
+  commitCrime,
+  startPlan,
+  launderMoney,
   askRaise,
   quitJob,
   fireAgent,
@@ -235,6 +238,10 @@ interface GameStore {
   takePoliceExam(track: PoliceTrackId): void;
   policeAction(kind: 'afinco' | 'curso' | 'estande' | 'transferencia' | 'exoneracao'): void;
   trySpecialCourse(): void;
+  /** Crime (release 0.0.2). */
+  commitCrime(id: string): void;
+  startPlan(id: string): void;
+  launderMoney(): void;
   askRaise(): void;
   quitJob(): void;
   /** Faculdade (release 0.0.1). */
@@ -478,6 +485,14 @@ export const useGameStore = create<GameStore>((setState, getState) => {
     workHard: () => act((g) => economyAction(g, (x) => workHard(x, GAME_CONTENT))),
     takePoliceExam: (track) => act((g) => takePoliceExam(g, track, GAME_CONTENT)),
     trySpecialCourse: () => update((g) => trySpecialCourse(g, GAME_CONTENT)),
+    commitCrime: (id) => {
+      const before = getState().game;
+      update((g) => commitCrime(g, id, GAME_CONTENT));
+      const after = getState().game;
+      if (before && after && after !== before) setState({ outcome: diffOf(before, after) });
+    },
+    startPlan: (id) => update((g) => startPlan(g, id, GAME_CONTENT)),
+    launderMoney: () => act((g) => launderMoney(g, GAME_CONTENT)),
     policeAction: (kind) => {
       const fn = { afinco: policeWorkHard, curso: policeCourse, estande: shootingRange, transferencia: requestTransfer, exoneracao: resignPolice }[kind];
       act((g) => fn(g, GAME_CONTENT));

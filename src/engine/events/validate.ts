@@ -23,6 +23,8 @@ export function validateContent(content: GameContent): string[] {
   const gradIds = new Set(fc.graduations.map((g) => g.id));
   const traitIds = new Set(content.relationships.traits.map((t) => t.id));
   for (const id of content.police.specialEvents) if (!allEventIds.has(id)) errors.push(`polícia: evento do curso especial inexistente "${id}"`);
+  for (const id of [...content.crime.planEvents, content.crime.suspicionEventId]) if (!allEventIds.has(id)) errors.push(`crime: evento inexistente "${id}"`);
+  const crimeIds = new Set(content.crime.crimes.map((c) => c.id));
 
   const checkEffects = (where: string, fx: Effects | undefined) => {
     if (!fx) return;
@@ -44,6 +46,7 @@ export function validateContent(content: GameContent): string[] {
     const pe = fx.police;
     if (pe?.caseStart && !content.police.cases.some((c) => c.id === pe.caseStart)) errors.push(`${where}: caso policial inexistente "${pe.caseStart}"`);
     if (pe?.shootout && !['avancar', 'abrigar', 'negociar', 'recuar'].includes(pe.shootout)) errors.push(`${where}: tática inexistente "${pe.shootout}"`);
+    if (fx.crime?.arrest && fx.crime.arrest !== 'investigacao' && !crimeIds.has(fx.crime.arrest)) errors.push(`${where}: delito inexistente "${fx.crime.arrest}"`);
     const he = fx.health;
     if (he?.injury && he.injury !== 'random' && !content.health.injuries.some((d) => d.id === he.injury)) errors.push(`${where}: lesão inexistente "${he.injury}"`);
     if (he?.condition && !content.health.conditions.some((d) => d.id === he.condition)) errors.push(`${where}: doença inexistente "${he.condition}"`);

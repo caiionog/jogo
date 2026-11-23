@@ -1,5 +1,5 @@
 /** Atividades (treino com limite oculto; o resto sem limite, com retorno decrescente), Relacionamentos, Saúde, Testamento e Perfil. */
-import { BookOpen, Car, Dumbbell, Heart, HeartPulse, MapPin, PartyPopper, Plane, ScrollText, Trophy } from 'lucide-react';
+import { BookOpen, Car, Dumbbell, Heart, HeartPulse, MapPin, PartyPopper, Plane, ScrollText, Siren, Trophy } from 'lucide-react';
 import { useState } from 'react';
 import { GAME_CONTENT as C } from '../../../content';
 import type { GameState, TrainingKind } from '../../../engine';
@@ -43,6 +43,7 @@ export function AtividadesScreen({ game }: { game: GameState }) {
       <ListItem icon={Heart} title="Amor" subtitle="Conhecer alguém, encontros" disabled={age < 14} reason="Disponível a partir dos 14 anos" onClick={() => nav.push('amor')} testId="act-amor" />
       <ListItem icon={MapPin} title="Mudar de cidade" subtitle={`Hoje: ${game.character.city} – ${game.character.uf}`} disabled={age < 18} reason="Disponível a partir dos 18 anos" onClick={() => setMove(true)} testId="act-mudar" />
       <ListItem icon={ScrollText} title="Testamento" subtitle="Quem fica com o quê" disabled={age < 18} reason="Disponível a partir dos 18 anos" onClick={() => nav.push('testamento')} />
+      <ListItem icon={Siren} title="Crime" subtitle={age >= 18 ? 'Delitos, risco e dinheiro sujo' : 'Só infrações leves (12–17)'} disabled={age < 12} reason="Disponível a partir dos 12 anos" onClick={() => nav.push('crime')} testId="act-crime" />
       <ListItem icon={Car} title="Tirar a CNH" subtitle={`${money.format(CNH_COST)} · uma tentativa por ano · pode reprovar`} disabled={!!cnh} reason={cnh ? CNH_REASON[cnh] : undefined} onClick={getCnh} chevron={false} testId="act-cnh" />
       {move && <MoveSheet onClose={() => setMove(false)} />}
     </>

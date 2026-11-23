@@ -9,7 +9,7 @@ Branch `release/0.0.2`, criada a partir de `release/0.0.1` (tag local `v0.0.1`).
 - [x] **1. Treino invisível** — `engine/fighting/overtrain.ts` + textos em `content/fightText/overtrain.ts`; sem contador em nenhuma tela; 703 testes
 - [x] **2. Base da carreira policial** (concurso, formação, Tiro, cargos, promoções; save v15; teste de nomes proibidos) — 732 testes
 - [x] **3. Eventos da PM e da Civil**, dilemas e força especial (≥ 25 eventos) — 41 eventos `pol_*`; 748 testes
-- [ ] **4. Delitos**, nível de procurado, reputação no crime e dinheiro sujo
+- [x] **4. Delitos**, nível de procurado, reputação no crime e dinheiro sujo — 763 testes
 - [ ] **5. Facções e tráfico**
 - [ ] **6. Justiça**, processo, sentença e ficha criminal
 - [ ] **7. Prisão e reintegração** (≥ 20 eventos)
@@ -70,10 +70,32 @@ Branch `release/0.0.2`, criada a partir de `release/0.0.1` (tag local `v0.0.1`).
 - RelType novo `conhecido` (grupo "Conhecidos" em Relações); `arrest` cria pessoa com `preso_por_voce`.
 - Eventos: `content/events/police/{pm,civil,life}.ts` (PM 9, Civil 14 em 4 casos, vida/dilemas/academia/curso 18).
 
+## Notas da fase 4
+- **Dados** `src/content/crime/index.ts`: 13 `CrimeDef` (4 leves 12+, 4 médios 18+, 5 graves 18+; 4 graves com
+  `plan`), `CRIME` (`planEvents`, `suspicionEventId`, `places`: Centro Socioeducativo Rumo Novo, Programa Portas
+  Abertas). O tráfico fica na fase 5.
+- **Engine** `engine/crime/`: `crimes.ts` — **guarda única `crimeAllowed(state, def | 'faccao' | 'trafico')`**,
+  `crimeBlockReason` (máx. 2× o mesmo delito/ano), `crimeSuccessChance`, `commitCrime`/`runCrime` (ganho via
+  `post('crime')` → `dirty`, `committed`/`earned`, ferimento, morte rara via `killCharacter`, pego →
+  `arrest`), `crimeRiskLabel`, pistas `wantedHint`/`crimeRepHint` (com sexo), `crimeYear` (no `advanceYear` ANTES
+  do fechamento econômico: investigação com chance `wanted/250` se ≥ 20, suspeita do dinheiro sujo agendada,
+  procurado −15, rep −2 sem crime, `dirty ≤ money`), `launderBlockReason`/`launderMoney` (60% do sujo, taxa 20%,
+  risco). `arrest.ts`: `arrest(state, crimeId, rng, content, source)` — menor → `juvenileMeasure` (advertência,
+  serviço comunitário ou internação curta com flag `internacao_ano`), adulto → passagem na ficha + `feats.arrested`.
+  **A fase 6 deve trocar a passagem por processo/sentença dentro de `arrest`.** `plan.ts`: `startPlan`,
+  condição `crime` e efeito `crime` (`wanted`, `rep`, `planTeam/Target/Time/Go`, `arrest`, `seizeDirty`); os
+  eventos do plano são enfileirados pela engine.
+- Campos opcionais novos na v15: `crime.plan`, `crime.committed`, `crime.earned`.
+- **Eventos** `content/events/crime/index.ts` (11): 4 etapas do plano, suspeita, 2 de adolescência (só leves),
+  convite da Turma do Viaduto, testemunha, família descobre, parceiro preso.
+- **UI** `menus/crime.tsx` (Atividades → Crime, `act-crime`, `crime-<id>`, `crime-launder`, `crime-hints`);
+  store: `commitCrime` (abre o pop-up de resultado), `startPlan`, `launderMoney`.
+
 ## Próximo passo exato (para a sessão nova)
-1. `npm install`. Confira `npm run lint`, `npm test` (748 testes) e `npx tsc --noEmit`.
-2. **Fase 4 — Delitos, procurado, reputação no crime e dinheiro sujo**, conforme `PLAN.md`: `CrimeDef` em
-   `src/content/crime/index.ts`, `engine/crime/` (guarda única `crimeAllowed`, `commitCrime`, planejamento dos graves
-   em etapas abstratas, `wanted` −15/ano, pistas em palavras, suspeita por gastar dinheiro sujo, lavagem por
-   empreendimento, sorteio anual de investigação → por enquanto só registro de passagem; a justiça é a fase 6),
-   consequências socioeducativas para 12–17. `crime.dirty` já recebe os ganhos de `post('crime')`.
+1. `npm install`. Confira `npm run lint`, `npm test` (763 testes) e `npx tsc --noEmit`.
+2. **Fase 5 — Facções e tráfico**, conforme `PLAN.md`: `FactionDef` em `src/content/crime/factions/` (Liga da
+   Serpente, Clã do Corvo, Ordem do Sol Partido, Maré Cinzenta; rivalidades Liga×Ordem, Clã×Maré, Liga×Maré),
+   `crime.faction` (`id`, `rank` 0–4 membro→cúpula, `years`, `debt`), entrada só por evento de convite (18+,
+   `crimeAllowed(state, 'faccao')`, rep ou amigo com flag `faccao:<id>`), missões anuais, guerras, dívida, traição,
+   saída arriscada; tráfico (`crime.trafficking` pequeno/médio/grande, lucro e risco no ano). Estender
+   `tests/adultSafety.test.ts` (1000 vidas: nenhum menor comete grave, entra em facção ou trafica).

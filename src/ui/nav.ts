@@ -9,7 +9,7 @@ export type ScreenId =
   | 'ocupacao' | 'minha-ocupacao' | 'carreiras' | 'carreiras-cat' | 'carreira' | 'carreira-luta' | 'estudos' | 'escola' | 'luta' | 'ranking' | 'clube' | 'intercambio' | 'noite'
   | 'bens' | 'meus-bens' | 'bem' | 'empresa' | 'mercado' | 'mercado-cat' | 'financas'
   | 'relacoes'
-  | 'atividades' | 'treino' | 'estudo' | 'saude' | 'lazer' | 'amor' | 'testamento'
+  | 'atividades' | 'treino' | 'estudo' | 'saude' | 'lazer' | 'amor' | 'testamento' | 'crime'
   | 'perfil';
 
 export interface ScreenRef {

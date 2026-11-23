@@ -1,3 +1,4 @@
+import { crimeYear } from '../crime/crimes';
 import { policeYear } from '../police/career';
 import { emptyPolice } from '../police/types';
 import { emptyCrime } from '../crime/types';
@@ -367,6 +368,8 @@ export function advanceYear(
     next = endFightingYear(next, content);
     // lesões: 12 meses de recuperação (sequelas ao sarar)
     next = injuriesYear(next, rng, content);
+    // crime: investigação pelo procurado, suspeita do dinheiro sujo, procurado cai (release 0.0.2)
+    next = crimeYear(next, rng, content);
     // fecha o ano econômico (salário, custos, impostos, dívida) e abre o extrato do novo ano
     next = closeEconomicYear(next, rng, content);
     // carreira policial: formação, estágio, promoção, aposentadoria (release 0.0.2)
