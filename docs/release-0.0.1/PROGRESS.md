@@ -109,6 +109,15 @@ Para retomar numa sessão nova: "Continue a release 0.0.1 a partir do docs/relea
     adulto sem barba; faixa infantil em 3 linhas (cor/listra/cor).
   - `scripts/sprites/avatar-audit.ts` (grades: 48 NPCs, fases × sexo, rampa de pele, cabelos);
     `tests/avatarQuality.test.ts` (ombro−quadril M > F em todos os tipos, olhos ≥ 2 px, cabelo sem bloco).
+  - Rodada 3 (pedidos do usuário depois da 1ª revisão): boca redesenhada (uma linha limpa; cantos sobem/descem com
+    a expressão; nariz só com a sombra da ponta, sem "coluna"; lábio de baixo só em lábios cheios); tipos físicos bem
+    distintos (magro estreito, atlético em V, musculoso com ombro/braço/pescoço largos, acima do peso com barriga,
+    quadril e pernas grossas); curvas femininas só em adulta/idosa e sempre sob a roupa (volume do busto por
+    luz/sombra, quadril e coxas arredondados na silhueta); perfil do NPC (Relações → pessoa → "Ver perfil" ou toque
+    na miniatura: corpo inteiro 4×, idade, relação, profissão e traços conhecidos).
+  - Nome provisório do jogo: **Vida Real** (título, PWA, tela inicial, ícone "VR"); o id interno do formato de save
+    continua `vida-de-lutador` para importar saves antigos.
+  - Capturas novas: `avatars-tipos-fisicos.png`, `avatars-rostos.png`, `avatars-roupas-curvas.png`.
   - Pendente se o usuário pedir: roupas variadas na amostra de auditoria (o `previewAvatar` usa sempre a mesma),
     pescoço da mulher, ajuste fino por fase.
 - [ ] **9. Roupas de banho e ícones de negócios** (save v14)

@@ -6,7 +6,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-const out = process.argv[2] ?? 'dist/vida-de-lutador.html';
+const out = process.argv[2] ?? 'dist/vida-real.html';
 const html = readFileSync('dist/index.html', 'utf8');
 const js = html.match(/<script type="module" crossorigin src="\/([^"]+)"><\/script>/);
 const css = html.match(/<link rel="stylesheet" crossorigin href="\/([^"]+)">/);
@@ -15,7 +15,7 @@ const code = readFileSync(join('dist', js[1]), 'utf8').replaceAll('</script', '<
 const style = readFileSync(join('dist', css[1]), 'utf8').replaceAll('</style', '<\\/style');
 
 const page = `<meta charset="utf-8">
-<title>Vida de Lutador</title>
+<title>Vida Real</title>
 <meta name="theme-color" content="#0f172a">
 <style>${style}</style>
 <div id="root"></div>

@@ -45,11 +45,15 @@ const BASE: Record<AgeStage, BodyParams> = {
 
 /** Ajustes por tipo físico (em px) — a diferença precisa aparecer na silhueta. */
 const BUILD_DELTA: Record<Build, Partial<Record<'shoulder' | 'chest' | 'waist' | 'hip' | 'armW' | 'forearmW' | 'legW' | 'neckW' | 'cheek', number>>> = {
-  magro: { shoulder: -1, chest: -1, waist: -1, hip: -1, armW: -1, forearmW: -1, legW: -1 },
+  // release 0.0.1: silhuetas bem diferentes à primeira vista (o tamanho máximo é a moldura de 32 px)
+  magro: { shoulder: -1, chest: -2, waist: -2, hip: -1, armW: -1, forearmW: -1, legW: -1 },
   medio: {},
-  atletico: { shoulder: 1, chest: 1, armW: 0, legW: 0 },
-  musculoso: { shoulder: 2, chest: 2, waist: 0, armW: 1, forearmW: 1, legW: 1, neckW: 1 },
-  acima: { shoulder: 1, chest: 2, waist: 3, hip: 2, armW: 1, forearmW: 1, legW: 1, cheek: 1 },
+  // atlético: "V" (ombro largo, cintura fina)
+  atletico: { shoulder: 1, chest: 1, waist: -1, hip: -1 },
+  // musculoso: ombros, peito, braços e pescoço grandes; cintura fina
+  musculoso: { shoulder: 2, chest: 2, waist: -1, armW: 1, forearmW: 1, legW: 1, neckW: 1 },
+  // acima do peso: barriga (cintura maior que o peito), quadril e pernas grossas, rosto mais cheio
+  acima: { shoulder: 0, chest: 2, waist: 4, hip: 3, armW: 1, forearmW: 1, legW: 2, cheek: 1 },
 };
 
 export function bodyParams(stage: AgeStage, sex: 'M' | 'F', build: Build): BodyParams & { neckW: number; cheek: number } {
@@ -131,7 +135,12 @@ export function generateBody(stage: AgeStage, sex: 'M' | 'F', build: Build): Bod
   }
   const waistY = y;
   // ---- quadril ----
-  for (let i = 0; i < p.hipRows; i++) span(y++, L(p.hip), R(p.hip), 'c');
+  // quadril: na mulher adulta/idosa, arredondado (a linha do meio é 1 px mais larga) — curva visível de frente
+  const curvy = sex === 'F' && (stage === 'adulto' || stage === 'idoso');
+  for (let i = 0; i < p.hipRows; i++) {
+    const round = curvy && i >= 1 && i <= p.hipRows - 2 ? 1 : 0;
+    span(y++, L(p.hip + round), R(p.hip + round), 'c');
+  }
   const crotchY = y;
   // ---- braços: do ombro para baixo, encostados no tronco na altura do peito ----
   const armTop = shoulderY + 1;
@@ -157,7 +166,8 @@ export function generateBody(stage: AgeStage, sex: 'M' | 'F', build: Build): Bod
     const gap = i < thighRows ? 0 : stage === 'bebe' ? 1 : 2;
     const half = gap / 2;
     // coxas saem do quadril (mesma largura) e afinam até a largura da perna
-    const thigh = Math.max(p.legW, p.hip);
+    // coxa: na mulher adulta/idosa continua a curva do quadril nas primeiras linhas
+    const thigh = Math.max(p.legW, p.hip) + (curvy && i < 2 ? 1 : 0);
     const lw = i < thighRows ? thigh : i < thighRows + 3 ? Math.max(p.legW, thigh - 1) : p.legW - (i >= p.legRows - 2 ? 1 : 0);
     const lx1 = Math.floor(15.5 - half);
     const rx0 = Math.ceil(15.5 + half);

@@ -241,3 +241,19 @@ describe('talentos e sorte na UI (release 0.0.1)', () => {
     expect(document.body.textContent).not.toMatch(/\b77\b|[Ss]orte: ?\d/);
   });
 });
+
+describe('perfil do NPC (release 0.0.1)', () => {
+  it('Relações → pessoa → Ver perfil mostra o corpo inteiro e fecha', () => {
+    start(adult());
+    fireEvent.click(screen.getByTestId('nav-relacoes'));
+    fireEvent.click(screen.getAllByTestId('person-row')[0]!);
+    fireEvent.click(screen.getByTestId('person-profile'));
+    const view = screen.getByTestId('person-profile-view');
+    expect(view.textContent).toMatch(/anos|Faleceu/);
+    fireEvent.click(screen.getByTestId('person-profile-close'));
+    expect(screen.queryByTestId('person-profile-view')).toBeNull();
+    // a miniatura também abre o perfil
+    fireEvent.click(screen.getByTestId('person-avatar'));
+    expect(screen.getByTestId('person-profile-view')).toBeTruthy();
+  });
+});

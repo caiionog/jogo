@@ -415,6 +415,25 @@ export function renderAvatar(d: AvatarDescriptor, opts: RenderOptions = {}): Pix
     cv.tone[cv.idx(x, y)] = t;
   }
 
+  // curvas femininas (release 0.0.1; só adulta e idosa, sempre sob a roupa): volume do busto por luz e sombra e o
+  // quadril arredondado (a silhueta vem do bodygen). Nada disso existe em criança ou adolescente.
+  if (d.sex === 'F' && (d.stage === 'adulto' || d.stage === 'idoso')) {
+    const [, cy] = A.chest;
+    const tone = (x: number, y: number, v: Tone) => {
+      const i = cv.idx(x, y);
+      if (cv.r(x, y) === 't' && cv.mat[i]) { cv.tone[i] = v; cv.fixed[i] = true; }
+    };
+    for (const [x0, x1] of [[11, 14], [17, 20]] as [number, number][]) {
+      // brilho em cima de cada lado e a sombra embaixo (arco)
+      for (let x = x0; x <= x1; x++) tone(x, cy - 1, x === x0 ? 2 : 3);
+      for (let x = x0; x <= x1; x++) tone(x, cy, 2);
+      for (let x = x0; x <= x1; x++) tone(x, cy + 1, x === x0 || x === x1 ? 1 : 0);
+    }
+    // vão entre os dois volumes
+    tone(15, cy, 0);
+    tone(16, cy, 0);
+  }
+
   if (opts.inspect) for (let i = 0; i < W * H; i++) if (cv.mat[i]) opts.inspect(cv.mat[i]!, i % W, Math.floor(i / W));
 
   // ---- contorno seletivo ----
@@ -494,27 +513,35 @@ export function renderAvatar(d: AvatarDescriptor, opts: RenderOptions = {}): Pix
       }
     }
   }
-  // nariz pela largura (3 larguras); nariz torto desloca a sombra
+  // nariz: só a sombra da ponta (1–3 px pela largura), sem "coluna" que se junta à boca; nariz torto desloca
   const [mx, my] = A.mouth;
   const nb = d.marks.brokenNose ? -1 : 0;
   const nw = d.noseWidth < 0.34 ? 1 : d.noseWidth < 0.67 ? 2 : 3;
   if (!baby) {
-    paint(mx + 1 + nb, my - 3, skin[1]);
-    if (nw >= 2) paint(mx + nb, my - 2, skin[1]);
-    paint(mx + 1 + nb, my - 2, skin[0]);
-    if (nw >= 3) { paint(mx - 1 + nb, my - 2, skin[1]); paint(mx + 2 + nb, my - 2, skin[1]); }
+    const ny = my - 2;
+    if (nw === 1) paint(mx + 1 + nb, ny, skin[1]);
+    else if (nw === 2) { paint(mx + nb, ny, skin[1]); paint(mx + 1 + nb, ny, skin[1]); }
+    else { paint(mx - 1 + nb, ny, skin[1]); paint(mx + 1 + nb, ny, skin[0]); paint(mx + 2 + nb, ny, skin[1]); }
   } else paint(mx + 1, my - 2, skin[1]);
-  // boca: expressão e volume dos lábios
-  // lábios: rosados nas mulheres; discretos (tom da pele mais escuro) nos homens e nas crianças
+  // boca: UMA linha limpa (a expressão só dobra os cantos) + lábio de baixo discreto. Mulheres: tom rosado e lábio
+  // de baixo quando os lábios são cheios; homens e crianças: tom da pele mais escuro, sem "batom".
   const grownF = d.sex === 'F' && !baby && d.stage !== 'crianca';
-  const lipHex = grownF ? mix(d.skin, '#b3404f', 0.4) : mix(d.skin, '#7d3b3b', d.stage === 'crianca' || baby ? 0.22 : 0.2);
+  const lipHex = grownF ? mix(d.skin, '#b3404f', 0.42) : mix(d.skin, '#6e3434', 0.28);
   const lip = makeRamp(lipHex, { satCap: grownF ? 0.55 : 0.35 });
-  const lw = baby ? 2 : d.sex === 'M' ? 3 : d.lipVolume < 0.34 ? 3 : 4;
-  const lx0 = mx - (lw === 4 ? 1 : lw === 3 ? 0 : 0);
   const ex = d.expression;
-  const curve = (k: number) => (ex === 'feliz' ? (k === 0 || k === lw - 1 ? -1 : 0) : ex === 'triste' ? (k === 0 || k === lw - 1 ? 1 : 0) : ex === 'machucado' ? (k === lw - 1 ? 1 : 0) : 0);
-  for (let k = 0; k < lw; k++) paint(lx0 + k, my + curve(k), ex === 'bravo' ? lip[0] : lip[1]);
-  if (d.lipVolume >= 0.34 && !baby && (grownF || d.lipVolume >= 0.67)) for (let k = 1; k < lw - 1; k++) paint(lx0 + k, my + 1, lip[2]);
+  const lw = baby ? 2 : ex === 'cansado' || ex === 'bravo' ? 2 : grownF && d.lipVolume >= 0.34 ? 4 : 3;
+  const lx0 = mx - (lw === 4 ? 1 : 0) + (lw === 2 && !baby ? 1 : 0);
+  const line = ex === 'bravo' ? lip[0] : grownF ? lip[1] : lip[0];
+  for (let k = 0; k < lw; k++) {
+    const edge = k === 0 || k === lw - 1;
+    // sorriso: só os cantos sobem; tristeza: só os cantos descem (nunca um "x")
+    const dy = edge && lw >= 3 ? (ex === 'feliz' ? -1 : ex === 'triste' ? 1 : 0) : 0;
+    paint(lx0 + k, my + dy, line);
+  }
+  // lábio de baixo: mulheres com lábios médios/cheios, e qualquer um com lábios bem cheios (1 tom mais claro)
+  if (!baby && (grownF ? d.lipVolume >= 0.34 : d.lipVolume >= 0.75) && ex !== 'bravo' && ex !== 'cansado') {
+    for (let k = 1; k < lw - 1; k++) paint(lx0 + k, my + 1, grownF ? lip[2] : skin[1]);
+  }
   // homem adulto sem barba: maxilar marcado (sombra nos cantos de baixo do rosto)
   if (d.sex === 'M' && (d.stage === 'adulto' || d.stage === 'idoso') && d.facialHair === 'nenhuma') {
     const [hx0, hy0, hw0, hh0] = b.headBox;
