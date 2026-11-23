@@ -3,6 +3,7 @@ import { COACH_LINES } from './fightText/coach';
 import { POLICE } from './careers/police';
 import { CRIME } from './crime';
 import { CRIME_EVENTS } from './events/crime';
+import { PRISON_EVENTS } from './events/prison';
 import { POLICE_EVENTS } from './events/police';
 import { OVERTRAIN } from './fightText/overtrain';
 import type { GameContent } from '../engine';
@@ -52,7 +53,7 @@ export const GAME_CONTENT: GameContent = {
   police: POLICE,
   crime: CRIME,
   actions: ACTIONS,
-  events: [...CHILDHOOD_EVENTS, ...SCHOOL_EVENTS, ...FIGHTING_EVENTS, ...RELATIONSHIP_EVENTS, ...ECONOMY_EVENTS, ...JOB_EVENTS, ...HEALTH_EVENTS, ...LEGACY_EVENTS, ...TALENT_EVENTS, ...COLLEGE_EVENTS, ...CLUB_EXCHANGE_EVENTS, ...NIGHTLIFE_EVENTS, ...RANDOM_EVENTS, ...POLICE_EVENTS, ...CRIME_EVENTS],
+  events: [...CHILDHOOD_EVENTS, ...SCHOOL_EVENTS, ...FIGHTING_EVENTS, ...RELATIONSHIP_EVENTS, ...ECONOMY_EVENTS, ...JOB_EVENTS, ...HEALTH_EVENTS, ...LEGACY_EVENTS, ...TALENT_EVENTS, ...COLLEGE_EVENTS, ...CLUB_EXCHANGE_EVENTS, ...NIGHTLIFE_EVENTS, ...RANDOM_EVENTS, ...POLICE_EVENTS, ...CRIME_EVENTS, ...PRISON_EVENTS],
   geo: GEO_CONTENT,
   clubs: CLUBS,
   names: NAMES,

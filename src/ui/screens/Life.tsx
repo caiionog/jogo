@@ -2,6 +2,7 @@
  * Tela principal (Etapa 8): busto do personagem no topo, o log da vida como feed por ano, energia, barras dos
  * atributos visíveis (recolhíveis) e a barra inferior com os menus e o botão "+ Idade".
  */
+import { PrisonBanner } from './menus/prison';
 import { Briefcase, ChevronDown, ChevronUp, HeartHandshake, Sparkles, Wallet } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { GAME_CONTENT } from '../../content';
@@ -99,6 +100,7 @@ export default function Life({ onShowObituary }: { onShowObituary?: () => void }
         </button>
       )}
 
+      {game.prison && <PrisonBanner game={game} />}
       <LifeFeed log={game.log} />
 
       <div className="border-t border-[var(--ds-border)] bg-[var(--ds-surface)] px-3 pt-2">

@@ -130,7 +130,7 @@ export function hireChance(state: GameState, def: JobDef, market: MarketYear): n
   const st = state.character.stats;
   const surplus = (st.intelligence - (def.minStats?.intelligence ?? 0)) / 200 + (st.looks - (def.minStats?.looks ?? 0)) / 400;
   // ficha criminal com condenação derruba a chance nos demais empregos (release 0.0.2)
-  const record = hasConviction(state) ? 0.25 : 0;
+  const record = hasConviction(state) ? (state.flags.portas_abertas ? 0.1 : 0.25) : 0;
   return Math.min(0.95, Math.max(0.05, (def.hireChance ?? 0.6) + surplus - (market.kind === 'crise' ? 0.25 : 0) - record));
 }
 

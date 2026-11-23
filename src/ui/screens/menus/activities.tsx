@@ -3,11 +3,12 @@ import { BookOpen, Car, Dumbbell, Heart, HeartPulse, MapPin, PartyPopper, Plane,
 import { useState } from 'react';
 import { GAME_CONTENT as C } from '../../../content';
 import type { GameState, TrainingKind } from '../../../engine';
-import { CNH_COST, TRAINING_MIN_AGE, actionBlockReason, actionUseKey, cnhBlockReason, coachAssessment, meetBlockReason, trainingBlockReason, usesThisYear } from '../../../engine';
+import { behindBars, CNH_COST, TRAINING_MIN_AGE, actionBlockReason, actionUseKey, cnhBlockReason, coachAssessment, meetBlockReason, trainingBlockReason, usesThisYear } from '../../../engine';
 import { gymModalitiesText } from '../../text/fight';
 import { ListGroup, ListItem } from '../../design/components';
 import { useNav } from '../../nav';
 import { useGameStore } from '../../store';
+import { PrisaoScreen } from './prison';
 import { ACTION_REASON } from './occupation';
 import HealthPanel from '../../components/HealthPanel';
 import RelationshipsPanel from '../../components/RelationshipsPanel';
@@ -27,6 +28,12 @@ const MEET_REASON: Record<string, string> = { 'too-young': 'Disponível a partir
 const CNH_REASON: Record<string, string> = { age: 'Disponível a partir dos 18 anos', has: 'Você já tem CNH', 'no-money': `Custa ${money.format(CNH_COST)}`, busy: 'Resolva o acontecimento pendente', tried: 'Você já tentou este ano' };
 
 export function AtividadesScreen({ game }: { game: GameState }) {
+  // preso (fechado/semiaberto): as atividades viram as ações da prisão
+  if (behindBars(game)) return <PrisaoScreen game={game} />;
+  return <AtividadesLivre game={game} />;
+}
+
+function AtividadesLivre({ game }: { game: GameState }) {
   const nav = useNav();
   const [move, setMove] = useState(false);
   const getCnh = useGameStore((s) => s.getDriversLicense);

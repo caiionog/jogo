@@ -12,7 +12,7 @@ Branch `release/0.0.2`, criada a partir de `release/0.0.1` (tag local `v0.0.1`).
 - [x] **4. Delitos**, nível de procurado, reputação no crime e dinheiro sujo — 763 testes
 - [x] **5. Facções e tráfico** — 773 testes
 - [x] **6. Justiça**, processo, sentença e ficha criminal — 783 testes
-- [ ] **7. Prisão e reintegração** (≥ 20 eventos)
+- [x] **7. Prisão e reintegração** (≥ 20 eventos) — 22 eventos `prisao_*`; 790 testes
 - [ ] **8. Cruzamentos** entre polícia, crime, luta e relacionamentos
 - [ ] **9. Interface**, fardas, uniformes e ícones
 - [ ] **10. Balanceamento** (`npm run sim`, tabelas no GDD)
@@ -127,13 +127,28 @@ Branch `release/0.0.2`, criada a partir de `release/0.0.1` (tag local `v0.0.1`).
 - Condição `crime`: `inCase`, `imprisoned`. `JobDef.requires.cleanRecord` (professor particular, cuidador,
   segurança) → motivo `'record'`; `hireChance` −0,25 com condenação; preso (fechado/semiaberto) não se candidata.
 
+## Notas da fase 7
+- **Engine** `engine/crime/prison.ts`: `behindBars` (fechado/semiaberto), `prisonAction` (`trabalhar`/`estudar` =
+  remição 0,25 e +comportamento, 1×/ano; `treinar` até `PRISON_TRAIN_LIMIT` = 4; `conversar` cria conhecido com flag
+  `detento`; `visita` pelo afeto do parente mais próximo; `quieto` +8 comportamento), `attemptEscape` (5–30%;
+  falha = pena + `SENTENCES.fuga`, volta ao fechado, condenação "fuga"; sucesso = foragido, procurado 90),
+  `yearsLeft`. Efeito `crime`: `behavior`, `remission`, `escape`, `protection`. Condição `crime`: `wing`, `regime`.
+- Bloqueios enquanto atrás das grades: `actionBlockReason` → `'prison'`, `trainingBlockReason` → `'prison'`,
+  empregos; faculdade trancada no `imprison`; **só eventos com `conditions.crime.imprisoned` são sorteados**
+  (`isEligible`).
+- Reintegração: `prisonYear` marca a flag `egresso`; o evento `auto` `prisao_reintegracao` (Programa Portas Abertas
+  → flag `portas_abertas` reduz a penalidade da ficha na contratação para 0,1; família; antigos parceiros).
+- **Eventos** `content/events/prison/index.ts` (22, inclusive 2 da Ala de Custódia Especial e 3 de egresso).
+  `tests/prison.test.ts` varre termos de violência sexual.
+- **UI** `menus/prison.tsx`: `PrisonBanner` (na tela principal, `prison-banner`) e `PrisaoScreen` (Atividades vira
+  Prisão; `prison-<acao>`). Store `prisonAction`.
+
 ## Próximo passo exato (para a sessão nova)
-1. `npm install`. Confira `npm run lint`, `npm test` (783 testes) e `npx tsc --noEmit`.
-2. **Fase 7 — Prisão e reintegração** (≥ 20 eventos em `src/content/events/prison/`), conforme `PLAN.md`:
-   ações da prisão (trabalhar/estudar → remição 0,25 e comportamento; treinar no pátio com limite 4; conversar;
-   visita; ficar fora de confusão), bloquear as ações normais enquanto preso (escola pausada, faculdade trancada),
-   eventos (briga no pátio, recrutamento, dívida, revista, rebelião, transferência, fuga — falha aumenta a pena
-   (`SENTENCES.fuga`) —, visita que não vem, mentor), reintegração (Programa Portas Abertas), teste de termos
-   proibidos de violência sexual. A ala especial tem eventos próprios.
+1. `npm install`. Confira `npm run lint`, `npm test` (790 testes) e `npx tsc --noEmit`.
+2. **Fase 8 — Cruzamentos**, conforme `PLAN.md`: policial prende NPC ligado a você (família/ex-amigo com flag
+   `crime`/`faccao`) num dilema; policial com corregedoria alta pode ser preso por corrupção/excesso
+   (`openCase(state, 'corrupcao'|'excesso')` → ala especial já existe em `imprison`); lutador: brigas de rua/prisão
+   mexem na reputação, ser preso cancela contrato e patrocínios (`cancelSponsors`), evento de redenção na luta
+   para egresso; parentes com crime/facção geram eventos para o policial e para o criminoso.
 3. Depois da 0.0.2: o usuário pediu a **release 0.0.3** (texto completo no fim do pedido da sessão anterior; começa
    pela fase 0 = plano com aprovação).

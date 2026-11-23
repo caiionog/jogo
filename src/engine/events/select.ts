@@ -238,6 +238,8 @@ function legacyConditionsMet(state: GameState, c: LegacyConditions): boolean {
 export function isEligible(state: GameState, event: GameEvent, content?: GameContent): boolean {
   if ((event.trigger ?? 'random') !== 'random') return false;
   if (event.weight <= 0) return false;
+  // atrás das grades (fechado/semiaberto), só eventos da prisão são sorteados (release 0.0.2)
+  if (state.prison && state.prison.regime !== 'aberto' && event.conditions.crime?.imprisoned !== true) return false;
   // intervalo de repetição (release 0.0.1): um evento sorteado não volta antes de `cooldownYears` anos
   const last = state.eventLastAge?.[event.id];
   const cooldown = event.cooldownYears ?? content?.limits.eventCooldown ?? 0;

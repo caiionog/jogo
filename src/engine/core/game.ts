@@ -147,12 +147,15 @@ export type ActionBlockReason =
   | 'too-young'
   | 'too-old'
   | 'not-enrolled'
-  | 'wrong-stage';
+  | 'wrong-stage'
+  | 'prison';
 
 export function actionBlockReason(state: GameState, action: ActionDef | undefined): ActionBlockReason | null {
   if (!action) return 'unknown';
   if (!state.alive) return 'dead';
   if (state.pendingEvents.length > 0 || state.activeFight) return 'pending-event';
+  // preso (fechado/semiaberto): só as ações da prisão (release 0.0.2)
+  if (state.prison && state.prison.regime !== 'aberto') return 'prison';
   if (state.character.age < action.minAge) return 'too-young';
   if (action.maxAge !== undefined && state.character.age > action.maxAge) return 'too-old';
   const req = action.requires;

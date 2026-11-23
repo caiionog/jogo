@@ -4,6 +4,7 @@
  * sai do RNG com sorte, atlética, inteligência, reputação no crime e a qualidade (oculta) da equipe.
  * Também ficam aqui as condições e os efeitos `crime` dos eventos.
  */
+import { attemptEscape } from './prison';
 import { chooseLawyer, setPlea, verdict } from './justice';
 import { factionAtWar, factionsHere, joinFaction, leaveFaction } from './faction';
 import type { GameContent } from '../core/content';
@@ -40,6 +41,9 @@ export interface CrimeConditions {
   inCase?: boolean;
   /** Preso agora. */
   imprisoned?: boolean;
+  /** Ala da prisão e regime atual. */
+  wing?: 'comum' | 'especial';
+  regime?: ('fechado' | 'semiaberto' | 'aberto')[];
   /** Já cometeu algum delito. */
   committed?: boolean;
 }
@@ -66,6 +70,11 @@ export interface CrimeEffects {
   plea?: 'confessar' | 'silencio' | 'negar';
   lawyer?: 'publico' | 'particular';
   verdict?: boolean;
+  /** Prisão (fase 7): comportamento, remição, tentativa de fuga, proteção. */
+  behavior?: number;
+  remission?: number;
+  escape?: boolean;
+  protection?: boolean;
 }
 
 const inR = (v: number, r?: { min?: number; max?: number }) => !r || (v >= (r.min ?? -Infinity) && v <= (r.max ?? Infinity));
@@ -86,6 +95,8 @@ export function crimeConditionsMet(state: GameState, c: CrimeConditions, content
   if (c.factionHere !== undefined && (!content || (factionsHere(state, content).length > 0) !== c.factionHere)) return false;
   if (c.inCase !== undefined && !!k.case !== c.inCase) return false;
   if (c.imprisoned !== undefined && !!state.prison !== c.imprisoned) return false;
+  if (c.wing !== undefined && state.prison?.wing !== c.wing) return false;
+  if (c.regime && (!state.prison || !c.regime.includes(state.prison.regime))) return false;
   if (c.committed !== undefined && ((k.committed ?? 0) > 0) !== c.committed) return false;
   // regra de menores: condição de facção/tráfico/delito grave nunca vale abaixo dos 18
   if ((c.faction || c.trafficking || c.planning || c.factionWar || c.factionHere) && !crimeAllowed(state, 'faccao')) return false;
@@ -107,6 +118,8 @@ export function applyCrimeEffects(state: GameState, fx: CrimeEffects, rng: Rng, 
   if (fx.plea) s = setPlea(s, fx.plea);
   if (fx.lawyer) s = chooseLawyer(s, fx.lawyer, rng, content);
   if (fx.verdict) s = verdict(s, rng, content);
+  if (s.prison && (fx.behavior || fx.remission || fx.protection)) s = { ...s, prison: { ...s.prison, behavior: clamp100(s.prison.behavior + (fx.behavior ?? 0)), remission: s.prison.remission + (fx.remission ?? 0), protection: fx.protection ?? s.prison.protection } };
+  if (fx.escape) s = attemptEscape(s, rng, content);
   const plan = s.crime.plan;
   if (!plan) return s;
   const ev = content.crime.planEvents;

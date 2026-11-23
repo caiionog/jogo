@@ -101,11 +101,12 @@ export function currentGym(state: GameState, content: GameContent): GymDef | und
   return id ? content.fighting.gyms.find((g) => g.id === id) : undefined;
 }
 
-export type TrainingBlockReason = 'dead' | 'busy' | 'too-young' | 'no-gym' | 'not-offered' | 'injured' | 'retired';
+export type TrainingBlockReason = 'dead' | 'busy' | 'too-young' | 'no-gym' | 'not-offered' | 'injured' | 'retired' | 'prison';
 
 export function trainingBlockReason(state: GameState, kind: TrainingKind, content: GameContent): TrainingBlockReason | null {
   if (!state.alive) return 'dead';
   if (state.pendingEvents.length > 0 || state.activeFight) return 'busy';
+  if (state.prison && state.prison.regime !== 'aberto') return 'prison';
   if (state.character.age < TRAINING_MIN_AGE[kind]) return 'too-young';
   if (state.fighter.retired && kind === 'sparring') return 'retired';
   if (kind === 'sparring' && injuryVeto(state)) return 'injured';
