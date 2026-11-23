@@ -356,7 +356,7 @@ function migrateV6toV7(save: AnySave): AnySave {
     set(kid.id, look);
   }
   // demais pessoas: lutadores do elenco pela aparência derivada; o resto pela UF
-  for (const p of [...people.values()]) {
+  for (const p of Array.from(people.values())) {
     if (p.appearance) continue;
     set(p.id, p.npcId ? npcAppearance(s0.seed, { id: p.npcId }, p.sex, GAME_CONTENT) : randomAppearance(rng, uf, p.sex));
   }

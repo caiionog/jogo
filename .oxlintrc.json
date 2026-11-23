@@ -1,0 +1,7 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "react", "unicorn", "oxc"],
+  "categories": { "correctness": "error" },
+  "rules": { "react/react-in-jsx-scope": "off" },
+  "ignorePatterns": ["dist", "tmp", "node_modules", "src/content/geo/brasil/data.generated.ts", "src/content/sprites/body/generated.ts"]
+}

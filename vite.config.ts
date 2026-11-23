@@ -3,8 +3,11 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import pkg from './package.json' with { type: 'json' };
 
 export default defineConfig({
+  // versão do jogo exibida em Configurações (release 0.0.1)
+  define: { __APP_VERSION__: JSON.stringify(pkg.version) },
   plugins: [
     react(),
     tailwindcss(),
@@ -42,9 +45,9 @@ export default defineConfig({
     }),
   ],
   build: {
-    // 3D (three + R3F) em chunk próprio, carregado sob demanda; na versão de teste em arquivo único
-    // (VITE_SINGLE_FILE) tudo vai num só JS.
-    chunkSizeWarningLimit: 800,
+    // Bundle único de propósito (versão de teste em arquivo único + precache offline): ~290 KB gzip na 0.0.1.
+    // Na versão em arquivo único (VITE_SINGLE_FILE) tudo vai num só JS.
+    chunkSizeWarningLimit: 1200,
     ...(process.env.VITE_SINGLE_FILE ? { rolldownOptions: { output: { codeSplitting: false } } } : {}),
   },
   test: {

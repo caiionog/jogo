@@ -20,8 +20,12 @@ export default function App() {
   useEffect(() => {
     document.documentElement.style.fontSize = fontScale === 'grande' ? '112.5%' : '';
   }, [fontScale]);
-  // vida nova/herdeiro: volta para a visão normal
-  useEffect(() => setViewLife(false), [lifeKey]);
+  // vida nova/herdeiro: volta para a visão normal (ajuste de estado durante o render, sem efeito)
+  const [seenLifeKey, setSeenLifeKey] = useState(lifeKey);
+  if (seenLifeKey !== lifeKey) {
+    setSeenLifeKey(lifeKey);
+    setViewLife(false);
+  }
 
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col">

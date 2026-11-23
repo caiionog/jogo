@@ -145,7 +145,22 @@ Para retomar numa sessão nova: "Continue a release 0.0.1 a partir do docs/relea
   - "Gerenciar de perto" ×1,03 (antes ×1,1) e margens dos empreendimentos novos ~15% do custo: empreendedor com
     mediana de R$ 1,02 mi aos 50 (Etapa 8: R$ 1,07 mi), 18% das empresas quebram.
   - Ponto de atenção registrado: casamentos até os 40 ~27% na política do sim.
-- [ ] **12. Documentação e release** (CHANGELOG, versão 0.0.1, tag local `v0.0.1`)
+- [x] **12. Documentação e release** (CHANGELOG, versão 0.0.1, tag local `v0.0.1`)
+  - Lint: oxlint (`npm run lint`, `.oxlintrc.json`), porque o typescript-eslint não suporta o TypeScript 7. Erros
+    corrigidos.
+  - Versão 0.0.1 no `package.json`, exibida em Configurações (`__APP_VERSION__`). O build sai sem avisos e o bundle tem
+    ~288 KB gzip.
+  - Roteiro de release no navegador (`scripts/e2e/release-check.mjs` + `states.ts`) em 375×667 e 414×896, com o
+    console sem erros. Verifica:
+    - uma vida criada pela tela até os 30;
+    - o limite de 10 treinos;
+    - nenhuma "energia";
+    - faixas e prajied;
+    - o diploma;
+    - clube e intercâmbio;
+    - a casa de strip oculta e visível conforme a opção;
+    - os ícones do mercado.
+  - As capturas estão em `screenshots/`. CHANGELOG.md, CLAUDE.md, ASSETS.md e docs/HANDOFF.md foram atualizados.
 
 ## Decisões
 - Fixtures de saves passaram de `tests/fixtures/` para `src/save/__fixtures__/` (checklist da release). Cada versão
@@ -160,6 +175,9 @@ Para retomar numa sessão nova: "Continue a release 0.0.1 a partir do docs/relea
   `scripts/e2e/shot.mjs` (Playwright: injeta o save no IndexedDB e tira capturas; `URL` opcional).
 
 ## Próximo passo exato (para a sessão nova)
+**Release 0.0.1 concluída** (tag local `v0.0.1`). Próximo: release 0.0.2, Fase 0 (plano), em `release/0.0.2`.
+O texto abaixo é histórico.
+
 1. `npm install` (node_modules não vem no clone) e `git checkout release/0.0.1`; confira `npm test` (618 testes) e
    `npx tsc --noEmit`.
 2. **Fase 4 — Talentos e sorte (save v11)**, conforme `PLAN.md`:

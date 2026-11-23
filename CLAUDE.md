@@ -1,6 +1,7 @@
-# CLAUDE.md — Vida de Lutador
+# CLAUDE.md — Vida Real (release 0.0.1)
 
-Simulador de vida no navegador, estilo BitLife, focado na carreira de lutador.
+Simulador de vida no navegador, estilo BitLife: escola, faculdade, trabalho, empresas, esporte, carreira de luta
+(destaque), família, dinheiro e legado. Nome provisório "Vida Real" (o formato do save continua `vida-de-lutador`).
 Design completo e roadmap em [`GDD.md`](./GDD.md). Textos do jogo em português (BR).
 
 ## Stack
@@ -23,8 +24,11 @@ npm run icons       # regera os PNGs do PWA a partir de public/icons/icon.svg
 npx tsx scripts/sprites/gen-bodies.ts            # regera as silhuetas de pixel art (body/generated.ts)
 npx tsx scripts/sprites/png-to-grid.ts arq.png   # importa um corpo desenhado no Aseprite (ver ASSETS.md)
 npm run build:artifact -- caminho.html   # versão de teste em arquivo único (sem service worker)
+npm run lint        # oxlint (o typescript-eslint ainda não suporta o TypeScript 7)
+npx tsx scripts/gen-fixtures.ts                  # fixture de saves reais da versão atual (antes de mudar o formato)
+node scripts/e2e/release-check.mjs 375 667 tmp/rc tmp/e2e-states.json   # roteiro de release no navegador
 ```
-Antes de commitar: `npm test && npm run build`.
+Antes de commitar: `npm run lint && npm test && npm run build`.
 
 ## Regras de arquitetura (obrigatórias)
 1. **`src/engine/` é TypeScript puro.** Nunca importa React, DOM, `src/ui`, `src/content` ou `src/save`,
@@ -36,7 +40,12 @@ Antes de commitar: `npm test && npm run build`.
    detalhado abaixo) e são validados por `validateContent` (`engine/events/validate.ts`) nos testes.
 4. **`GameState` é JSON puro** com campo `version`. Ao mudar o formato: incremente `STATE_VERSION`
    (`engine/core/state.ts`) e adicione a migração `n → n+1` em `src/save/migrations.ts` + teste.
-   Versão atual: **8** (v7→v8: `strength/fitness` viram `athletic`; as 6 habilidades viram `jiujitsu`/`trocacao` +
+   Versão atual: **14**. Release 0.0.1: v8→v9 `energy` sai, entra `yearUses` e ofertas com `campSessions`; v9→v10
+   `skills.jiujitsu` → `grappling`, `belt` → `fighter.grades` por modalidade, academias com `modalities`; v10→v11
+   talentos e sorte (RNG `seed:v11:*`); v11→v12 `college` e `character.diplomas`; v12→v13 `sportsClub` e `exchange`;
+   v13→v14 `character.scene` (praia/piscina) e `eventLastAge` (intervalo de repetição). Fixtures novas em
+   `src/save/__fixtures__/saves-v8..v13.json` (as antigas foram movidas de `tests/fixtures/`). Cadeia testada: v1 → v14.
+   v7→v8: `strength/fitness` viram `athletic`; as 6 habilidades viram `jiujitsu`/`trocacao` +
    `chinBase` no personagem, nos elencos, nas ofertas e na luta em andamento; guarda-roupa por camadas; sardas e pintas
    por RNG próprio `seed:v8:*`; fixtures em `tests/fixtures/saves-v7.json`). Cadeia testada: v1 → v8.
    v6→v7: só Brasil (cidade estrangeira → UF/cidade sorteada), aparência/genes para todas as pessoas com família
@@ -49,7 +58,7 @@ Antes de commitar: `npm test && npm run build`.
    v3→v4 adicionou `relationships` com família coerente com a idade e "Conteúdo adulto" desligado. v2→v3 adicionou corpo, `fighter`, `world` e `activeFight`.
    Versão 2: A migração v1→v2 cria `education` coerente com a idade, `familyWealth` e `scheduledEvents`,
    usando um RNG próprio (derivado da seed) para não alterar o `rngState`. Antes de mudar o formato de novo, gere
-   uma fixture com saves reais da versão atual em `tests/fixtures/`.
+   uma fixture com saves reais da versão atual em `src/save/__fixtures__/` (`npx tsx scripts/gen-fixtures.ts`).
    O **armazenamento meta** (conquistas, Hall da Fama, estatísticas, preferências) é separado do save da vida: chave
    `meta` no IndexedDB, `META_VERSION` e `metaMigrations` em `src/save/meta.ts`. Saves de vida ficam em 3 slots
    (`save:slot1..3`, slot ativo em `slot:active`); a chave antiga `save:current` migra para o slot 1.
@@ -71,7 +80,7 @@ src/
   engine/                 # regras do jogo (puro, testável)
     core/                 # rng, state (tipos), stats, effects, content (tipos), game (newGame/performAction/advanceYear/resolveEvent)
     character/            # criação de personagem, names.ts (geradores de nomes/escolas + preposições)
-    lifeStages/           # fases da vida, energia, school.ts (matrícula, ano letivo, transferência, clubes)
+    lifeStages/           # fases da vida, sessions.ts (10 treinos/ano, retorno decrescente), college.ts, sportsClub.ts, nightlife.ts, school.ts (matrícula, ano letivo, transferência, clubes)
     events/               # schema (types.ts), seleção (select.ts), validação de conteúdo (validate.ts)
     fighting/             # carreira de luta (Etapa 3)
       simulateFight.ts    # luta round a round (máquina de estados) — narração vem de content.fighting.text
@@ -88,7 +97,7 @@ src/
       types.ts            # EconomyState, Ledger, Loan, Job, Business, Asset, defs de conteúdo
       ledger.ts           # post (ÚNICA forma de mudar dinheiro), categorias, histórico, toMoney
       market.ts bank.ts taxes.ts   # ano econômico por seed, poupança/índice/empréstimos (Price), IR/previdência/IPTU
-      jobs.ts business.ts fightIncome.ts   # empregos (energia reservada), empresas, empresário/contrato/patrocínio
+      jobs.ts business.ts fightIncome.ts   # empregos (sessões reservadas), empresas, empresário/contrato/patrocínio
       living.ts family.ts worth.ts close.ts  # custo de vida/dívida/falência, herança/divórcio/pensão, patrimônio, fechamento
       effects.ts actions.ts   # efeitos `economy` de eventos; ações prontas para a UI (com a guarda economyAction)
     assets/               # bens: mercado anual, compra/financiamento/venda, aluguel, depreciação
@@ -135,7 +144,8 @@ tests/                    # Vitest; fixtures/saves-v1.json = saves reais da Etap
 - **`Person`** (`engine/relationships/types.ts`) é o modelo único de NPC (família, amigos, amores, filhos, treinador,
   rivais). **`Relation`** liga o personagem a cada pessoa (tipo, afeto, histórico curto, romance). Lutadores do elenco
   (Etapa 3) entram por referência (`Person.npcId`), nunca copiados. Respeite `MAX_ACTIVE_PEOPLE` (`enforcePeopleLimit`).
-- **`canHaveSexualContent(personagem, parceiro)`** (`guards.ts`) exige **as duas idades ≥ 18**. TODA ação, evento ou
+- **`canHaveSexualContent(personagem, parceiro)`** (`guards.ts`) exige **as duas idades ≥ 18** (com não parceiros, use
+  `canHaveSexualContentWith`). TODA ação, evento ou
   efeito sexual tem de passar por ela (inclusive gravidez e IST) — não reimplemente a regra em outro lugar.
   Parceiros só via `isValidPartnerAge` (14–17 → 14–17 com no máximo 2 anos de diferença; 18+ → 18+); noivado/casamento
   via `canMarry`.
@@ -200,7 +210,7 @@ tests/                    # Vitest; fixtures/saves-v1.json = saves reais da Etap
 - **Ordem do tick anual** (`advanceYear`): fim do ano letivo → fim do ano de luta (ofertas expiram, faixa, mensalidade,
   lesão) → lesões (`injuriesYear`: 12 meses, sequelas) → fechamento econômico (`closeEconomicYear`: emprego, patrocínios, empresas, bens, juros, custo de vida,
   parcelas, impostos, dívida, arquivo do extrato) → envelhecer → saúde (`healthYear`: doenças, dano cerebral, hábitos)
-  → corpo → sorteio de morte (`deathCheck` → `killCharacter`: obituário, nota, partilha) → início do ano letivo/matrícula → energia → relacionamentos (envelhecer/morte,
+  → corpo → sorteio de morte (`deathCheck` → `killCharacter`: obituário, nota, partilha) → início do ano letivo/matrícula → ano da faculdade → zera `yearUses`/sessões → relacionamentos (envelhecer/morte,
   nascimentos, despesas, decaimento, desgaste, carreira × família, limite) → início do ano de luta (declínio, mundo
   dos NPCs, ofertas) → eventos (agendados vencidos + `auto` + 1–2 aleatórios).
 - **Luta em andamento** (`GameState.activeFight`) bloqueia ações, avançar ano e novas lutas até `closeFight`.
@@ -214,7 +224,7 @@ tests/                    # Vitest; fixtures/saves-v1.json = saves reais da Etap
      `effects.followUps` da escolha.
   4. Rode `npm test`: `tests/content.test.ts` roda `validateContent` (ids, clubes e alvos de `followUp` existentes,
      `risk.chance` entre 0 e 1).
-- **Ação:** adicione um `ActionDef` em `src/content/actions.ts` com `category`, custo de energia, idade mínima,
+- **Ação:** adicione um `ActionDef` em `src/content/actions.ts` com `category`, idade mínima,
   `requires?: { enrolled, schoolStages }`, efeitos, textos e `risk?` (efeitos extras com probabilidade).
 - **Clube:** adicione um `ClubDef` em `src/content/clubs.ts` (`minStage`, `combat`, `joinEffects`, `yearlyEffects`).
 - **Organização:** adicione um `OrgDef` em `src/content/organizations/index.ts` (tier, sport, regras, idade, requisitos,
@@ -238,7 +248,7 @@ tests/                    # Vitest; fixtures/saves-v1.json = saves reais da Etap
 - **Emprego:** prefira o formato da Etapa 8 em `src/content/jobs/basic/` (ver "Como adicionar (Etapa 8)"). Os empregos
   da Etapa 5 continuam em `src/content/jobs/index.ts` (`category` 'aprendiz'|'meio_periodo'|'formal'|'luta', `minAge`,
   `education`, `minStats?`, `minReputation?`, `fightReq?`, `salary: [nível 1, nível 5]` antes do custo da cidade,
-  `energy` reservada/ano).
+  `trainingSessions` reservadas/ano: 0, 2 ou 4).
 - **Bem:** `AssetDef` em `src/content/assets/index.ts` (`kind`, `price: [min,max]` — imóveis × cidade —, `happiness`,
   `reputation?`, `article?` para o log, `variants?`). Taxas/depreciação ficam em `engine/assets/assets.ts`.
 - **Empresa:** `BusinessDef` em `src/content/businesses/index.ts` (`startCost`, `revenue`, `cost`, `managerCost`, `combat?`;
@@ -275,7 +285,7 @@ tests/                    # Vitest; fixtures/saves-v1.json = saves reais da Etap
 - **Cidade nova**: entra pelo script de dados; academia nova precisa de `city` existente nos dados de geo.
 
 ## Interface (Etapa 8)
-- **Tela principal** (`screens/Life.tsx`): busto pixel (toque → Perfil/guarda-roupa), feed da vida por idade, energia,
+- **Tela principal** (`screens/Life.tsx`): busto pixel (toque → Perfil/guarda-roupa), feed da vida por idade, "Treinos: X/10", atalho "Carreira de Luta",
   5 barras, barra inferior Ocupação · Bens · **+ Idade** · Relações · Atividades. Menu ≡: Conquistas, Hall da Fama,
   Saves, Configurações, Nova vida.
 - **Menus em camadas**: `useNav().open(id, params)` empilha uma tela; `NavHost.tsx` mapeia o id para título e corpo
@@ -307,7 +317,8 @@ tests/                    # Vitest; fixtures/saves-v1.json = saves reais da Etap
   `'id'` em `NavHost.tsx`. Se precisar de regra, crie a função na engine e a ação no store.
 - **Emprego básico**: `JobDef` em `src/content/jobs/basic/index.ts` (`minAge`, `requires { studying, schoolStages,
   acceptGraduated, cnh }`, `salaryMW: [início, teto]` em salários mínimos/mês, `formal`, `ladder` com títulos e
-  multiplicadores, `hireChance`, `yearlyEffects`, `energy`, `description`). Aparece sozinho em Carreiras.
+  multiplicadores, `hireChance`, `yearlyEffects`, `trainingSessions`, `description`; nível superior: `requires.degree`/`license` em
+  `src/content/jobs/superior/`). Aparece sozinho em Carreiras.
 - **Categoria de carreira**: `CareerCategory` e `careerCategoryOf` em `engine/economy/careers.ts` + título em
   `CAT_TITLE` (NavHost).
 - **Atividade**: `ActionDef` em `src/content/actions.ts` e o item no grupo certo de `menus/activities.tsx`.
@@ -324,6 +335,51 @@ tests/                    # Vitest; fixtures/saves-v1.json = saves reais da Etap
   (obituário, nota, partilha). `continueAsChild` cria o novo estado mantendo `world`, `year`, `seed` e `rngState`.
 - O Hall da Fama e as conquistas são calculados pela engine (`evaluateAchievements`, `recordLifeEnd`) e gravados pela
   UI no meta; a data (ISO) vem da UI.
+
+## Release 0.0.1 — vida além da luta
+- **Sem energia.** Cada ano tem **10 sessões de treino** (`content/config.ts`, `LIMITS`), divididas entre modalidades,
+  físico, sparring, clube esportivo e camps de luta (`offer.campSessions`). Ficam reservadas 4 sessões com emprego
+  integral, 2 com meio período ou estágio, 2 com a faculdade e 2 com "gerenciar de perto". Tudo isso está em
+  `engine/lifeStages/sessions.ts` (`sessionsLeft`, `sessionsReserved`, `sessionsBreakdown`, `useSessions`). As outras
+  atividades não têm limite, mas rendem menos a cada repetição no ano: `repeatMultiplier`/`scalePositiveEffects`,
+  contadas em `yearUses`. Só os efeitos positivos diminuem. Não use mais "energia" nem "⚡" em textos (há um teste).
+- **Talentos ocultos** (`content/talents/`, `engine/character/talents.ts`): sorteados ao nascer com o RNG derivado e
+  herdáveis (`heritBonus`). Só aparecem no Perfil depois de revelados por evento (`effects.revealTalent`, condição
+  `talent`). Os `mods` são pequenos e lidos por funções puras.
+- **Sorte oculta** (`character.luck`, 0–100): nunca aparece como número. Os limites ficam em `LUCK`: peso de evento ±25%
+  conforme `tone: 'good'|'bad'`, risco ±8 pp (`risk.tone`, padrão `'bad'`), lances de KO e finalização ±3% e no
+  máximo ±10 por evento (`effects.luck`). Os valores novos usam sempre um RNG derivado, `createRng(seedToState(\`${seed}:…\`))`,
+  e nunca o `rngState` (fairness).
+- **Interações sexuais com não parceiros** (amigo, colega de treino, treinador, `professor`) passam por
+  `canHaveSexualContentWith(state, pessoa)` (`guards.ts`). A função usa `adultContentAllowed`, que exige 18+ dos dois e
+  a opção ligada, e barra o professor da escola enquanto o personagem estuda. Não reimplemente essa regra.
+- **Roupa de banho só para 18+** quando é peça adulta (`minAge: 18`). As peças infantis têm `maxAge: 17`, e
+  `swimOutfit`/`outfitFitsAge` filtram por idade. A cena (`character.scene`) vem de um efeito `scene`. Há uma
+  varredura em `tests/swimwear.test.ts`.
+- **Intervalo de repetição**: um evento `random` sem `once` não volta antes de `LIMITS.eventCooldown` (5) anos, ou do
+  `cooldownYears` do próprio evento (`eventLastAge`).
+
+### Como adicionar (release 0.0.1)
+- **Curso**: `CourseDef` em `src/content/college/index.ts` (`years`, `cutoffPublic`, `cutoffPrivate`, `tuition` em
+  salários mínimos, `difficulty`, `develops`). Os empregos que exigem o curso usam `requires.degree: [id]`.
+- **Modalidade**: `ModalityDef` em `src/content/martialArts/index.ts` (`skill: 'grappling'|'trocacao'`,
+  `graduation?`). Ela precisa estar em `modalities` de alguma academia (`content/gyms/`), além do rótulo em
+  `ui/text/fight.ts`.
+- **Graduação**: um sistema em `GRADUATIONS` (mesmo arquivo), com níveis `{ id, label, color, stripe?, minAge,
+  minYears, minSkill }`. O exame é o evento automático com a condição `fighting.gradeReady` e o efeito
+  `fighter.promoteGrade`.
+- **Clube esportivo**: `SportsClubDef` em `src/content/sportsClubs/index.ts` (`city|null`, `fee`, `sports`, `minAge`).
+  Os eventos ficam em `events/clubs/`, com a condição `sportsClub`.
+- **Intercâmbio**: `ExchangeProgramDef` em `src/content/exchange/index.ts`.
+- **Local da vida noturna**: `VenueDef` em `src/content/nightlife/index.ts` (`minAge`, `maxAge?`, `adult?`, `cost`,
+  `events`). Local `adult` exige 18+ e "Conteúdo adulto". Os eventos ficam em `events/nightlife/`.
+- **Talento**: `TalentDef` em `src/content/talents/index.ts`, com `chance` 0,05–0,15 (negativos menos), `mods`
+  existentes e `hint`. Inclua também um evento de revelação em `events/talents/`.
+- **Ícone de negócio**: um glifo 8×7 em `BUSINESS_GLYPHS` (`content/sprites/market/business.ts`), com o mesmo id do
+  `BusinessDef`. A fachada comum, o contorno e a moldura saem de `businessIcon`. O teste exige um ícone por negócio,
+  todos distintos e com no máximo 6 cores.
+- **Evento**: marque `tone` (bom ou ruim) para a sorte agir, e `cooldownYears` se 5 anos não servir.
+  `tests/eventsCoverage.test.ts` confere que toda idade tem eventos elegíveis.
 
 ## Flags importantes (ganchos entre etapas)
 `interesse_luta`, `brigou_na_escola`, `medalha_interescolar`, `caminho_18` ('faculdade' | 'trabalho' | 'luta'),

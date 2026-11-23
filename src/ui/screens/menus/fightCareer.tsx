@@ -66,7 +66,9 @@ export function FightCareerScreen({ game }: { game: GameState }) {
   const nav = useNav();
   const f = game.fighter;
   const desc = useMemo(() => deriveAvatar(game, C, 'treino'), [game]);
-  const refs = { treino: useRef<HTMLDivElement>(null), ofertas: useRef<HTMLDivElement>(null), academia: useRef<HTMLDivElement>(null) };
+  const treinoRef = useRef<HTMLDivElement>(null);
+  const ofertasRef = useRef<HTMLDivElement>(null);
+  const academiaRef = useRef<HTMLDivElement>(null);
   const idx = timelineIndex(game);
   const next = fighterNextStepText(game, C);
   const org = getOrg(C, f.orgId);
@@ -78,7 +80,8 @@ export function FightCareerScreen({ game }: { game: GameState }) {
   const worst = worstInjury(game, C);
   const go = () => {
     if (next.target === 'ranking') return nav.push('ranking');
-    if (next.target) refs[next.target].current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const el = next.target === 'treino' ? treinoRef.current : next.target === 'ofertas' ? ofertasRef.current : next.target === 'academia' ? academiaRef.current : null;
+    el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
   const btn = next.target === 'ofertas' ? 'Ver as ofertas' : next.target === 'academia' ? 'Escolher academia' : next.target === 'treino' ? 'Treinar' : next.target === 'ranking' ? 'Ver o ranking' : null;
 
@@ -137,7 +140,7 @@ export function FightCareerScreen({ game }: { game: GameState }) {
         )}
       </Section>
 
-      <div ref={refs.academia}>
+      <div ref={academiaRef}>
         <Section title="Academia">
           <GymSection game={game} />
         </Section>
@@ -152,7 +155,7 @@ export function FightCareerScreen({ game }: { game: GameState }) {
         </Section>
       )}
 
-      <div ref={refs.treino}>
+      <div ref={treinoRef}>
         <Section title="Treinos do ano" testId="fight-training">
           <TrainingMeter left={sessionsLeft(game, C)} reserved={sessionsReserved(game, C)} limit={C.limits.trainingSessions} notes={sessionsBreakdown(game, C).map((p) => p.text)} />
           <TrainingButtons game={game} />
@@ -172,7 +175,7 @@ export function FightCareerScreen({ game }: { game: GameState }) {
         </button>
       </Section>
 
-      <div ref={refs.ofertas}>
+      <div ref={ofertasRef}>
         <Section title={`Ofertas de luta deste ano (${f.offers.length})`} testId="fight-offers">
           {f.offers.length > 0 && <FirstTimeTip id="bolsa" />}
           {f.offers.length === 0 ? (

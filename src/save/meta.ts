@@ -30,8 +30,8 @@ export function migrateMeta(raw: unknown): MetaState {
   return {
     ...base,
     ...meta,
-    stats: { ...base.stats, ...(meta.stats ?? {}) },
-    settings: { ...base.settings, ...(meta.settings ?? {}) },
+    stats: { ...base.stats, ...meta.stats },
+    settings: { ...base.settings, ...meta.settings },
     achievements: meta.achievements ?? {},
     hallOfFame: meta.hallOfFame ?? [],
     seenTips: meta.seenTips ?? [],

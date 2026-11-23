@@ -13,7 +13,7 @@ describe('sexo legível no corpo', () => {
       // largura real da silhueta (tronco + braços) na linha do ombro e na linha do quadril
       const spread = (sex: 'M' | 'F') => {
         const b = bodySprite(stage, sex, build);
-        const w = (y: number) => [...b.shape[y]!].filter((c) => c !== '.').length;
+        const w = (y: number) => Array.from(b.shape[y]!).filter((c) => c !== '.').length;
         return w(b.anchors.shoulderL[1] + 1) - w(b.anchors.hipL[1]);
       };
       expect(spread('M'), `${stage} ${build}`).toBeGreaterThan(spread('F'));
@@ -28,7 +28,7 @@ describe('rosto e cabelo na amostra de 48 pessoas', () => {
       if (d.stage === 'bebe') continue;
       const img = renderAvatar(d);
       const [ex, ey] = bodySprite(d.stage, d.sex, d.build).anchors.eyeL;
-      const px = (x: number, y: number) => [...img.data.slice((y * img.w + x) * 4, (y * img.w + x) * 4 + 3)].join(',');
+      const px = (x: number, y: number) => img.data.slice((y * img.w + x) * 4, (y * img.w + x) * 4 + 3).join(',');
       const skin = px(ex, ey + 2);
       expect(px(ex + 1, ey)).not.toBe(skin);
       expect(px(ex, ey - 1)).not.toBe(skin);
