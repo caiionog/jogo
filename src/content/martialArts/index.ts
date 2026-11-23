@@ -63,10 +63,10 @@ export const GRADUATIONS: readonly GraduationSystem[] = [
     note: 'Branca, azul, roxa, marrom e preta. Cada ano treinado dá um grau (até 4) na faixa atual; na preta, um grau a cada 3 anos.',
     levels: [
       { id: 'branca', label: 'branca', color: WHITE, minAge: 0, minYears: 0, minSkill: 0, degrees: 4 },
-      { id: 'azul', label: 'azul', color: BLUE, minAge: 16, minYears: 2, minSkill: 35, degrees: 4 },
-      { id: 'roxa', label: 'roxa', color: PURPLE, minAge: 16, minYears: 2, minSkill: 50, degrees: 4 },
-      { id: 'marrom', label: 'marrom', color: BROWN, minAge: 18, minYears: 2, minSkill: 65, degrees: 4 },
-      { id: 'preta', label: 'preta', color: BLACK, minAge: 19, minYears: 1, minSkill: 78, degrees: 6, degreeEvery: 3 },
+      { id: 'azul', label: 'azul', color: BLUE, minAge: 16, minYears: 2, minSkill: 32, degrees: 4 },
+      { id: 'roxa', label: 'roxa', color: PURPLE, minAge: 16, minYears: 2, minSkill: 46, degrees: 4 },
+      { id: 'marrom', label: 'marrom', color: BROWN, minAge: 18, minYears: 2, minSkill: 59, degrees: 4 },
+      { id: 'preta', label: 'preta', color: BLACK, minAge: 19, minYears: 1, minSkill: 70, degrees: 6, degreeEvery: 3 },
     ],
   },
   {

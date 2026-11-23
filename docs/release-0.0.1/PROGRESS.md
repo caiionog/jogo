@@ -138,7 +138,13 @@ Para retomar numa sessão nova: "Continue a release 0.0.1 a partir do docs/relea
   - Intervalo de repetição: `GameState.eventLastAge` + `GameEvent.cooldownYears` (padrão `limits.eventCooldown` = 5).
   - `tests/eventsCoverage.test.ts`: ≥ 40 novos, ids únicos, todo ano de 3 a 85 com ≥ 5 elegíveis, intervalo
     respeitado numa vida de 70 anos.
-- [ ] **11. Balanceamento geral** (`npm run sim`, GDD)
+- [x] **11. Balanceamento geral** (`npm run sim`, GDD §10b)
+  - Faixas adultas de jiu-jitsu mais fáceis (azul 32, roxa 46, marrom 59, preta 70): faixa preta 1,8% → 11,5%.
+  - Titã com NPCs 54–74 (antes 55–77): campeão do Titã 2,7% em 1000 vidas (Etapa 8: 2,8%; caiu com a correção do
+    cinturão vago). Liga principal 25,4%.
+  - "Gerenciar de perto" ×1,03 (antes ×1,1) e margens dos empreendimentos novos ~15% do custo: empreendedor com
+    mediana de R$ 1,02 mi aos 50 (Etapa 8: R$ 1,07 mi), 18% das empresas quebram.
+  - Ponto de atenção registrado: casamentos até os 40 ~27% na política do sim.
 - [ ] **12. Documentação e release** (CHANGELOG, versão 0.0.1, tag local `v0.0.1`)
 
 ## Decisões
