@@ -16,7 +16,7 @@ type AnyMeta = Record<string, unknown> & { version: number };
  */
 export const metaMigrations: Record<number, (m: AnyMeta) => AnyMeta> = {
   1: (m) => ({ ...m, version: 2, seenTips: [] }),
-  2: (m) => ({ ...m, version: 3, settings: { ...((m.settings as Record<string, unknown>) ?? {}), avatarStyle: 'cartoon' } }),
+  2: (m) => ({ ...m, version: 3, settings: { ...(m.settings as Record<string, unknown> | undefined), avatarStyle: 'cartoon' } }),
 };
 
 export function migrateMeta(raw: unknown): MetaState {

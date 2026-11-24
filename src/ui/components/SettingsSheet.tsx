@@ -74,6 +74,16 @@ export default function SettingsSheet({ game, onClose }: { game: GameState | nul
           </div>
         </div>
         <div>
+          <p className="mb-2 text-sm font-semibold">Visual dos personagens</p>
+          <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Visual dos personagens">
+            {([['cartoon', 'Cartoon'], ['pixel', 'Pixel art']] as const).map(([v, label]) => (
+              <button key={v} type="button" role="radio" aria-checked={meta.settings.avatarStyle === v} data-testid={`style-${v}`} onClick={() => setMeta({ avatarStyle: v })} className={`min-h-11 rounded-xl border px-2 text-sm ${meta.settings.avatarStyle === v ? 'border-emerald-500 bg-emerald-500/15 text-emerald-200' : 'border-slate-700 bg-slate-950'}`}>
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
           <p className="mb-2 text-sm font-semibold">Tamanho do texto</p>
           <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Tamanho do texto">
             {(['normal', 'grande'] as const).map((v) => (

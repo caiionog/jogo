@@ -97,3 +97,11 @@ export class ThumbnailCache {
 
 /** Cache global do app (busto em pixel art; o tamanho na tela é só escala CSS). */
 export const thumbnails = new ThumbnailCache(() => import('./renderer').then((m) => (d: AvatarDescriptor) => m.PixelAvatarRenderer.snapshot(d)));
+
+/** Cache das miniaturas no visual cartoon (release 0.0.3): busto em SVG (dataURL), composto uma vez por descriptor. */
+export const vectorThumbnails = new ThumbnailCache(() => import('./vector').then((m) => (d: AvatarDescriptor) => m.VectorAvatarRenderer.snapshot(d)));
+
+/** Cache do visual ativo. */
+export function thumbnailsFor(style: 'pixel' | 'cartoon'): ThumbnailCache {
+  return style === 'cartoon' ? vectorThumbnails : thumbnails;
+}

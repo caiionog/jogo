@@ -2,6 +2,7 @@
  * Tela principal (Etapa 8): busto do personagem no topo, o log da vida como feed por ano, energia, barras dos
  * atributos visíveis (recolhíveis) e a barra inferior com os menus e o botão "+ Idade".
  */
+import { useAvatarStyle } from '../avatar/style';
 import { PrisonBanner } from './menus/prison';
 import { Briefcase, ChevronDown, ChevronUp, HeartHandshake, Sparkles, Wallet } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -64,6 +65,7 @@ export default function Life({ onShowObituary }: { onShowObituary?: () => void }
   const intimacy = useGameStore((s) => s.intimacy);
   const endIntimacy = useGameStore((s) => s.endIntimacy);
   const nav = useNav();
+  const avatarStyle = useAvatarStyle();
   const [profile, setProfile] = useState(false);
   const [statsOpen, setStatsOpen] = useState(true);
   const desc = useMemo(() => (game ? deriveAvatar(game, GAME_CONTENT, game.activeFight ? 'luta' : game.pendingEvents[0]?.eventId.startsWith('justica_') ? 'prisao' : 'principal') : null), [game]);
@@ -153,7 +155,7 @@ export default function Life({ onShowObituary }: { onShowObituary?: () => void }
       {!pending && !intimacy && outcome && <ResultModal outcome={outcome} onClose={dismissOutcome} />}
       {profile && <AvatarSheet onClose={() => setProfile(false)} />}
       {/* cena íntima: a transição toca por cima de tudo e o resultado em texto vem depois (visual 'pixel' por ora) */}
-      {intimacy && <IntimacyTransition variant={intimacy.variant} style="pixel" onDone={endIntimacy} />}
+      {intimacy && <IntimacyTransition variant={intimacy.variant} style={avatarStyle} onDone={endIntimacy} />}
     </div>
   );
 }
