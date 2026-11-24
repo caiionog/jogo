@@ -5,8 +5,8 @@ Pedido original: [`SPEC.md`](SPEC.md). Plano: [`PLAN.md`](PLAN.md). Commits na b
 
 ## Checklist
 - [x] **0. Plano** aprovado ("comece o próximo")
-- [ ] **1. Skills** — `find-skills` instalada (`.agents/skills/find-skills`, link em `.claude/skills/`,
-  `skills-lock.json`); lista curta apresentada, **aguardando aprovação**
+- [x] **1. Skills** — `find-skills` + 7 escolhidas pelo usuário ("as que achar melhor"): web-design-guidelines,
+  accessibility, vitest, react-testing-library, frontend-design, code-review, better-portuguese; seção no CLAUDE.md
 - [ ] **2. Subagents** e regras de orquestração
 - [ ] **3. Primeiro personagem cartoon** (pausa para ver)
 - [ ] **4. Passar tempo com todos** e eventos de grupo
@@ -25,7 +25,8 @@ Pedido original: [`SPEC.md`](SPEC.md). Plano: [`PLAN.md`](PLAN.md). Commits na b
     externas.
 
 ## Próximo passo exato
-Esperar o usuário escolher na lista. Depois disso:
-1. Instalar com `npx -y skills add https://github.com/<repo> --skill <nome> --yes`.
-2. Conferir que nada além de `.agents/skills/<nome>`, o link em `.claude/skills` e o `skills-lock.json` mudou.
-3. Escrever a seção "Skills do projeto" no CLAUDE.md, commit e seguir para a Fase 2 (subagents).
+**Fase 2 — Subagents** em `.claude/agents/`:
+- os seis agentes (`engine-dev`, `ui-dev`, `content-writer`, `avatar-artist`, `test-runner`, `reviewer`), com
+  frontmatter `name`, `description`, `tools` e `model`;
+- seção "Subagents e orquestração" no CLAUDE.md;
+- `tests/agents.test.ts`, que faz o parse do frontmatter.

@@ -436,6 +436,22 @@ tests/                    # Vitest; fixtures/saves-v1.json = saves reais da Etap
 - **Balanceamento:** `npm run sim` (6º argumento = vidas por perfil de polícia e crime) ou
   `SIM_CRIME_N=200 npx tsx scripts/simCrime.ts`. Metas e tabela no GDD §10c.
 
+## Skills do projeto (release 0.0.3)
+Instaladas com `npx skills add` em `.agents/skills/` (link em `.claude/skills/`; versões travadas em
+`skills-lock.json`). Todas são só instruções em Markdown, sem scripts. Antes de instalar outra, leia o SKILL.md e os
+scripts dela; nada de origem duvidosa, binários ou acesso amplo.
+
+| Skill | Para que serve | Quando usar |
+|---|---|---|
+| `find-skills` | Procurar skills no índice skills.sh | Antes de propor uma skill nova (se a CLI vier vazia, use `https://skills.sh/api/search?q=…`) |
+| `web-design-guidelines` | Revisão de UI e UX contra diretrizes de interface | Ao terminar uma tela nova ou mexer em layout |
+| `accessibility` | Auditoria WCAG 2.2 | Toque ≥ 44 px, contraste nos dois temas, `prefers-reduced-motion`, leitores de tela |
+| `vitest` | Referência do Vitest | Testes da engine, mocks, benchmarks (ex.: avatar em < 5 ms) |
+| `react-testing-library` | Testes de componentes centrados no usuário | `tests/ui.test.tsx` e testes novos de tela |
+| `frontend-design` | Direção visual e tipografia | Visual cartoon, cenários e telas novas |
+| `code-review` | Revisão de um diff contra os padrões do repositório e o pedido | Antes de cada commit de fase (o subagente `reviewer` se apoia nela) |
+| `better-portuguese` | Revisão de texto em PT-BR | Eventos, textos de UI, CHANGELOG e documentação |
+
 ## Flags importantes (ganchos entre etapas)
 `interesse_luta`, `brigou_na_escola`, `medalha_interescolar`, `caminho_18` ('faculdade' | 'trabalho' | 'luta'),
 `gostaDeLuta`, `artesMarciais`, `sonhaSerLutador`, `formado`, `repetente`, `expulso`, `suspenso`, `bolsista`,
