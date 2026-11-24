@@ -121,3 +121,54 @@ describe('fama pública (release 0.0.4)', () => {
     expect(fameAsRep(addFame(g, 40))).toBe(50);
   });
 });
+
+import fixturesV17 from '../src/save/__fixtures__/saves-v17.json';
+import { cityNeighborhoods, cityResidents, generateResidents, homeNeighborhood, meetResident, meetResidentBlockReason, residentAge, residentCount } from '../src/engine';
+
+describe('população da cidade (release 0.0.4)', () => {
+  it('migração v17 → v18 cria a população vazia', () => {
+    const v17 = fixturesV17 as unknown as Record<string, unknown>;
+    for (const k of Object.keys(v17)) {
+      const m = migrate(structuredClone(v17[k]) as never);
+      expect(m.version).toBe(STATE_VERSION);
+      expect(m.population).toEqual({ version: 1, met: {} });
+    }
+  });
+
+  it('60 a 400 moradores conforme a população; bairros fixos por cidade', () => {
+    expect(residentCount(3000)).toBe(60);
+    expect(residentCount(20_000_000)).toBe(400);
+    const g = makeGame('pop');
+    const n = residentCount(GAME_CONTENT.geo.ufs.find((u) => u.sigla === g.character.uf)!.cities.find((c) => c.name === g.character.city)!.populacao);
+    expect(generateResidents(g, GAME_CONTENT)).toHaveLength(n);
+    const hoods = cityNeighborhoods(GAME_CONTENT, g.character.uf, g.character.city);
+    expect(hoods.length).toBeGreaterThanOrEqual(6);
+    expect(cityNeighborhoods(GAME_CONTENT, g.character.uf, g.character.city)).toEqual(hoods);
+    expect(hoods).toContain(homeNeighborhood(g, GAME_CONTENT));
+  });
+
+  it('determinístico, não mexe no rngState e envelhece com o ano', () => {
+    const g = makeGame('pop2');
+    const a = generateResidents(g, GAME_CONTENT);
+    expect(generateResidents(g, GAME_CONTENT)).toEqual(a);
+    expect(g.rngState).toBe(makeGame('pop2').rngState);
+    const later = withAge({ ...g, year: g.year + 10 }, g.character.age + 10);
+    const b = generateResidents(later, GAME_CONTENT);
+    expect(b.map((r) => r.id)).toEqual(a.map((r) => r.id));
+    expect(residentAge(later, b[0]!)).toBe(residentAge(g, a[0]!) + 10);
+  });
+
+  it('conhecer um morador cria a pessoa uma vez só e respeita idade', () => {
+    const g = withAge(makeGame('pop3'), 30);
+    const adult = cityResidents(g, GAME_CONTENT).find((r) => residentAge(g, r) >= 20)!;
+    const minor = cityResidents(g, GAME_CONTENT).find((r) => residentAge(g, r) < 16);
+    if (minor) expect(meetResidentBlockReason(g, minor.id, GAME_CONTENT)).toBe('minor');
+    const s = meetResident(g, adult.id, GAME_CONTENT);
+    const pid = s.population.met[adult.id]!;
+    const person = s.relationships.people.find((p) => p.id === pid)!;
+    expect(person.name).toBe(adult.name);
+    expect(s.relationships.relations.find((r) => r.personId === pid)!.type).toBe('conhecido');
+    expect(cityResidents(s, GAME_CONTENT).some((r) => r.id === adult.id)).toBe(false);
+    expect(meetResident(s, adult.id, GAME_CONTENT)).toBe(s);
+  });
+});

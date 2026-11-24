@@ -1,3 +1,4 @@
+import type { PopulationContent } from '../population/population';
 import type { FriendsContent } from '../relationships/types';
 import type { CrimeContent } from '../crime/types';
 import type { PoliceContent } from '../police/types';
@@ -119,4 +120,6 @@ export interface GameContent {
   crime: CrimeContent;
   /** Passar tempo com todos os amigos: atividades e eventos de grupo (release 0.0.3). */
   friends: FriendsContent;
+  /** Moradores da cidade: bairros, ocupações e imigração (release 0.0.4). */
+  population: PopulationContent;
 }

@@ -1,4 +1,5 @@
 /** Renderiza o topo da pilha de navegação (um MenuScreen por nível; "Voltar" fecha o nível de cima). */
+import { PessoasCidadeScreen } from './city';
 import { CrimeScreen, FichaScreen } from './crime';
 import { PolicePanel } from './police';
 import { useEffect } from 'react';
@@ -40,6 +41,7 @@ function screenOf(r: ScreenRef, game: GameState): { title: string; body: ReactNo
     case 'mercado': return { title: 'Mercado', body: <MercadoScreen game={game} /> };
     case 'mercado-cat': return { title: MARKET_TITLE[p.cat ?? ''] ?? 'Mercado', body: <MercadoCatScreen game={game} cat={p.cat as AssetKind | 'negocios'} /> };
     case 'financas': return { title: 'Finanças', body: <FinancasScreen game={game} /> };
+    case 'cidade': return { title: 'Pessoas da cidade', body: <PessoasCidadeScreen game={game} /> };
     case 'relacoes': return { title: 'Relacionamentos', body: <RelacoesScreen game={game} /> };
     case 'atividades': return { title: 'Atividades', body: <AtividadesScreen game={game} /> };
     case 'treino': return { title: 'Treino', body: <TreinoScreen game={game} /> };

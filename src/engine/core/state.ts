@@ -1,3 +1,4 @@
+import type { PopulationState } from '../population/population';
 import type { PoliceState } from '../police/types';
 import type { CrimeState, PrisonState } from '../crime/types';
 import type { ExchangeState, SportsClubMembership } from '../lifeStages/sportsClub';
@@ -206,6 +207,8 @@ export interface GameState {
   crime: CrimeState;
   /** Pena em andamento (null = livre) — release 0.0.2. */
   prison: PrisonState | null;
+  /** Moradores da cidade que viraram pessoas do save (release 0.0.4). */
+  population: PopulationState;
 }
 
-export const STATE_VERSION = 17;
+export const STATE_VERSION = 18;

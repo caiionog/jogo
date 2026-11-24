@@ -1,3 +1,4 @@
+import { emptyPopulation } from '../population/population';
 import { emptyPolice } from '../police/types';
 import { emptyCrime } from '../crime/types';
 import { emptyCollege } from '../lifeStages/college';
@@ -283,6 +284,8 @@ export function continueAsChild(state: GameState, personId: string, content: Gam
     police: emptyPolice(),
     crime: emptyCrime(),
     prison: null,
+    // a cidade é a mesma, mas o herdeiro conhece outra gente (a lista nasce no ano de nascimento dele)
+    population: emptyPopulation(),
   };
   const items = pickInheritedItems(state, heir.amount);
   const cash = Math.max(0, heir.amount - items.used);

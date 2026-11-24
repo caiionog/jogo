@@ -142,8 +142,10 @@ export function TestamentoScreen({ game }: { game: GameState }) {
 }
 
 export function RelacoesScreen({ game }: { game: GameState }) {
+  const nav = useNav();
   return (
     <>
+      <ListItem icon={MapPin} title="Pessoas da cidade" subtitle={`Vizinhos e moradores de ${game.character.city}`} onClick={() => nav.push('cidade')} testId="nav-cidade" />
       <RelationshipsPanel game={game} />
       {(game.dynasty.generation > 1 || game.relationships.relations.some((r) => r.type === 'filho')) && (
         <ListGroup title="Árvore da família">

@@ -40,7 +40,7 @@ Antes de commitar: `npm run lint && npm test && npm run build`.
    detalhado abaixo) e são validados por `validateContent` (`engine/events/validate.ts`) nos testes.
 4. **`GameState` é JSON puro** com campo `version`. Ao mudar o formato: incremente `STATE_VERSION`
    (`engine/core/state.ts`) e adicione a migração `n → n+1` em `src/save/migrations.ts` + teste.
-   Versão atual: **17** (release 0.0.4: v16→v17 cria `character.fame` a partir de `fighter.reputation` × 0,8, metade
+   Versão atual: **18** (release 0.0.4: v17→v18 cria `population` vazia, fixture `saves-v17.json`; v16→v17 cria `character.fame` a partir de `fighter.reputation` × 0,8, metade
    para aposentados; fixture `saves-v16.json`). Release 0.0.3 (v16: v15→v16 amplia `scene` com `{ kind: 'intimo', variant, seq }` e cria
    `relationships.lastGroup`; fixture `saves-v15.json`; meta v3 com `settings.avatarStyle`). Release 0.0.2: v14→v15 cria `police`, `crime` e `prison: null`; a flag antiga `preso`
    vira passagem leve na ficha; campos opcionais `police.case`, `crime.plan/case/committed/earned`; fixture
@@ -531,3 +531,6 @@ Plano em `docs/release-0.0.4/PLAN.md` e diário em `docs/release-0.0.4/PROGRESS.
   O esporte sustenta a fama (`fameYear`); sem ele, cai 4% ao ano. Efeito `fame` e condição `fame` nos eventos.
 - **Exame da Ordem**: ação anual em Ocupação → Estudos (`takeBarExam`, `content.college.barExam`); o evento
   `oab_exam` virou um aviso único, com a opção "Não tenho interesse em advogar" (`sem_interesse_oab`).
+- **População da cidade** (`engine/population/`): moradores gerados por (seed, UF, cidade, `POP_VERSION`), nunca
+  salvos; só `population.met` vai para o save. Mudar nomes ou fórmula do gerador exige subir `POP_VERSION`.
+  `content.population.immigration` só recebe números com fonte oficial por UF e nacionalidade.

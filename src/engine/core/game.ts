@@ -1,3 +1,4 @@
+import { emptyPopulation } from '../population/population';
 import { fameYear } from '../fame/fame';
 import { prisonYear } from '../crime/justice';
 import { crimeYear } from '../crime/crimes';
@@ -126,6 +127,7 @@ export function newGame(options: NewGameOptions, content: GameContent): GameStat
     police: emptyPolice(),
     crime: emptyCrime(),
     prison: null,
+    population: emptyPopulation(),
   };
   const withFamily = generateFamily(state, rng, content, 0);
   state.relationships = withFamily.relationships;

@@ -83,6 +83,7 @@ import {
   recordLifeStart,
   takeExam,
   takeBarExam,
+  meetResident,
   enrollCollege,
   lockCollege,
   unlockCollege,
@@ -267,6 +268,7 @@ interface GameStore {
   /** Faculdade (release 0.0.1). */
   takeExam(): void;
   takeBarExam(): void;
+  meetResident(residentId: string): void;
   /** Vida noturna (release 0.0.1): sai e o evento do local abre como pop-up. */
   goOut(venueId: string): void;
   /** Clube esportivo e intercâmbio (release 0.0.1). */
@@ -534,6 +536,7 @@ export const useGameStore = create<GameStore>((setState, getState) => {
     quitJob: () => eco((g) => quitJob(g, GAME_CONTENT)),
     takeExam: () => act((g) => takeExam(g, GAME_CONTENT)),
     takeBarExam: () => act((g) => takeBarExam(g, GAME_CONTENT)),
+    meetResident: (id) => act((g) => meetResident(g, id, GAME_CONTENT)),
     goOut: (id) => update((g) => goOut(g, id, GAME_CONTENT)),
     joinSportsClub: (id, sport) => update((g) => joinSportsClub(g, id, sport, GAME_CONTENT)),
     leaveSportsClub: () => update((g) => leaveSportsClub(g, GAME_CONTENT)),

@@ -3,6 +3,7 @@ export * from './core';
 export * from './character';
 export * from './lifeStages';
 export * from './fame';
+export * from './population';
 export * from './events';
 export * from './fighting';
 export * from './relationships';

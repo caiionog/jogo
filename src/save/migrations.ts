@@ -63,6 +63,7 @@ export const migrations: Record<number, (save: AnySave) => AnySave> = {
   14: migrateV14toV15,
   15: migrateV15toV16,
   16: migrateV16toV17,
+  17: migrateV17toV18,
 };
 
 export class SaveMigrationError extends Error {}
@@ -648,4 +649,14 @@ export function migrateV16toV17(save: AnySave): AnySave {
   const rep = typeof f.reputation === 'number' ? f.reputation : 0;
   const fame = typeof ch.fame === 'number' ? ch.fame : Math.max(0, Math.min(100, Math.round(rep * 0.8 * (f.retired ? 0.5 : 1))));
   return { ...(s0 as AnySave), version: 17, character: { ...ch, fame } };
+}
+
+// ---------------------------------------------------------------------------
+// v17 → v18 (release 0.0.4: população da cidade)
+// ---------------------------------------------------------------------------
+
+/** Ninguém da cidade foi conhecido pelo gerador novo ainda (sem RNG). */
+export function migrateV17toV18(save: AnySave): AnySave {
+  const s0 = save as unknown as AnyObj;
+  return { ...(s0 as AnySave), version: 18, population: s0.population ?? { version: 1, met: {} } };
 }

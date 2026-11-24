@@ -9,6 +9,7 @@ export type ScreenId =
   | 'ocupacao' | 'minha-ocupacao' | 'carreiras' | 'carreiras-cat' | 'carreira' | 'carreira-luta' | 'estudos' | 'escola' | 'luta' | 'ranking' | 'clube' | 'intercambio' | 'noite'
   | 'bens' | 'meus-bens' | 'bem' | 'empresa' | 'mercado' | 'mercado-cat' | 'financas'
   | 'relacoes'
+  | 'cidade'
   | 'atividades' | 'treino' | 'estudo' | 'saude' | 'lazer' | 'amor' | 'testamento' | 'crime' | 'ficha' | 'policia'
   | 'perfil';
 
