@@ -1,3 +1,5 @@
+import type { MinigameContext, MinigameKind } from '../minigames/types';
+import { startMinigame } from '../minigames/play';
 import type { FootballSkill } from '../football/types';
 import { addFame } from '../fame/fame';
 import { applyCrimeEffects } from '../crime/plan';
@@ -58,6 +60,8 @@ export interface Effects {
   fame?: number;
   /** Futebol (release 0.0.4): prestígio no esporte e habilidades ocultas (ignorado sem carreira). */
   football?: { reputation?: number; skills?: Partial<Record<FootballSkill, number>> };
+  /** Abre um minigame (release 0.0.4): o pênalti no jogo ou no treino. */
+  minigame?: { kind: MinigameKind; context: MinigameContext };
   /** Faculdade: fazer o exame nacional agora. */
   college?: { exam?: boolean };
   /** Cena do ano: praia ou piscina (o avatar veste roupa de banho da idade). */
@@ -112,6 +116,7 @@ export function applyEffects(state: GameState, effects: Effects | undefined, ctx
   if (effects.revealTalent && ctx) next = revealTalent(next, effects.revealTalent, ctx.content);
   if (effects.luck && ctx) next = changeLuck(next, effects.luck, ctx.content);
   if (effects.fame) next = addFame(next, effects.fame);
+  if (effects.minigame) next = startMinigame(next, effects.minigame.kind, effects.minigame.context);
   if (effects.football && next.football) {
     const f = next.football;
     const skills = { ...f.skills };

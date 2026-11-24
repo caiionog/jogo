@@ -5,7 +5,7 @@
 import { useState } from 'react';
 import { GAME_CONTENT as C } from '../../../content';
 import type { FootballClubDef, FootballPosition, GameState } from '../../../engine';
-import { POSITIONS, POSITION_LABEL, clubDef, divisionOf, footballHint, footballOfferBlockReason, footballTrainBlockReason, leagueOf, potentialHint, tryoutBlockReason, tryoutChance } from '../../../engine';
+import { POSITIONS, POSITION_LABEL, clubDef, divisionOf, footballHint, footballOfferBlockReason, footballTrainBlockReason, leagueOf, practiceBlockReason, potentialHint, tryoutBlockReason, tryoutChance } from '../../../engine';
 import { DsButton, ListGroup, ListItem } from '../../design/components';
 import { money } from '../../components/ecoUi';
 import { useGameStore } from '../../store';
@@ -61,6 +61,7 @@ export function FutebolScreen({ game }: { game: GameState }) {
   const league = leagueOf(C, f.clubId);
   const last = f.history.at(-1);
   const tr = footballTrainBlockReason(game, C);
+  const pr = practiceBlockReason(game);
   return (
     <>
       <div className="flex items-center gap-3 rounded-[var(--ds-radius)] bg-[var(--ds-surface)] p-3" data-testid="football-card">
@@ -100,6 +101,7 @@ export function FutebolScreen({ game }: { game: GameState }) {
       )}
       {f.stage !== 'aposentado' && (
         <ListGroup title="Rotina">
+          <ListItem emoji="🥅" title="Treinar pênaltis" subtitle="Minigame: mire e acerte a força (até 3 por ano)" disabled={!!pr} reason={pr === 'tried' ? 'Você já treinou pênaltis 3 vezes este ano' : 'Indisponível agora'} onClick={st.practicePenalty} chevron={false} testId="football-penalty" />
           <ListItem emoji="🏃" title="Treino extra" subtitle="Gasta 1 sessão de treino do ano; rende menos a cada repetição" disabled={!!tr} reason={tr === 'sessions' ? 'Sem sessões de treino livres este ano' : 'Indisponível agora'} onClick={st.trainFootball} chevron={false} testId="football-train" />
           {f.stage === 'pro' && <DsButton tone="danger" full testId="football-retire" onClick={st.retireFootball}>Pendurar as chuteiras</DsButton>}
         </ListGroup>

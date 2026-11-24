@@ -103,4 +103,16 @@ describe('telas da release 0.0.4', () => {
     expect(text).toContain('Atlético Litorâneo');
     for (const n of ['71', '55', '66', '83']) expect(document.body.textContent).not.toContain(` ${n} `);
   });
+
+  it('Pênalti: o treino abre o minigame com tutorial; Simular mostra o resultado e Continuar fecha', () => {
+    const g = adult(18, 'ui-pen');
+    const pro = { ...g, football: { stage: 'pro' as const, position: 'ATA' as const, skills: { finishing: 70, passing: 55, defending: 20, goalkeeping: 10, pace: 66 }, potential: 83, reputation: 20, clubId: 'litoraneo', contract: { clubId: 'litoraneo', years: 2, salary: 300000 }, offers: [], history: [], titles: [], caps: 0, divisions: {} } };
+    open(pro, ['nav-ocupacao', 'occ-careers', 'career-football', 'football-penalty']);
+    expect(screen.getByTestId('penalty-tutorial').textContent).toContain('Toque no gol');
+    act(() => fireEvent.click(screen.getByTestId('penalty-simulate')));
+    expect(screen.getByTestId('penalty-result').textContent).toMatch(/GOOOL|Defendeu|fora|trave/i);
+    act(() => fireEvent.click(screen.getByTestId('penalty-ok')));
+    expect(useGameStore.getState().game!.minigame).toBeNull();
+    expect(screen.queryByTestId('penalty-game')).toBeNull();
+  });
 });

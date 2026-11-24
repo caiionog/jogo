@@ -107,5 +107,15 @@
   exterior, ~5% chegam à Seleção, nota de pico média 7,7, ~2 títulos por carreira.
 - Save v20 (`migrateV19toV20`, `football: null`), fixture `saves-v19.json`.
 
-## Próximo
-Fase 7: minigames (pênalti primeiro, depois pausa para teste; depois finalização, passe, goleiro e MMA).
+## Fase 7 — Minigames: pênalti (concluído; **pausa para o teste do usuário**)
+- Interface em `engine/minigames/types.ts` (`MinigameDef`: `setup` com RNG próprio, `resolve` puro, `simulate` pela
+  habilidade). Pênalti em `penalty.ts`: gol 3 × 2 zonas, força (> 0,9 isola, < 0,25 o goleiro pega), desvio pela
+  pressão e pela finalização, trave no limite, goleiro que pula numa zona (ou fica no meio) com alcance.
+- Ligação (`play.ts`): `state.minigame` (opcional, sem migração), `startMinigame`, `finishMinigame` (entrada ou
+  `null` = simular), treino de pênaltis (até 3 por ano, ganho pequeno de finalização) e o efeito de evento
+  `minigame`. Evento `fut_penalti_jogo` (pênalti decisivo: prestígio, fama e felicidade). Se o ano virar com o
+  minigame aberto, ele é simulado.
+- Tela `components/PenaltyGame.tsx`: toque para mirar, barra de força oscilando (toque para parar), "Chutar",
+  "Simular", tutorial curto, goleiro e bola animados; com movimento reduzido, a força vira um controle deslizante e
+  nada anima. Testado no navegador (dev server): mirar, força, resultado e fechar, console sem erros.
+- **Próximos minigames só depois do teste do pênalti pelo usuário**: finalização, passe, goleiro e MMA.

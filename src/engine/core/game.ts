@@ -1,3 +1,4 @@
+import { finishMinigame } from '../minigames/play';
 import { footballYear } from '../football/football';
 import { eatingYear } from '../fighting/body';
 import { policeColleaguesYear } from '../police/colleagues';
@@ -371,6 +372,8 @@ export function advanceYear(
   options: AdvanceYearOptions = {},
 ): GameState {
   if (!state.alive || state.pendingEvents.length > 0 || state.activeFight) return state;
+  // minigame deixado aberto (release 0.0.4): resolve pela habilidade antes de virar o ano
+  if (state.minigame) state = finishMinigame(state, null);
   const twoEventChance = options.twoEventChance ?? 0.35;
 
   return withRng(state, (rng, s) => {

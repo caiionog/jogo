@@ -6,6 +6,7 @@ export * from './fame';
 export * from './population';
 export * from './civilService';
 export * from './football';
+export * from './minigames';
 export * from './exams/stages';
 export * from './events';
 export * from './fighting';

@@ -30,6 +30,11 @@ export const FOOTBALL_EVENTS: readonly GameEvent[] = [
       { id: 'coletivo', label: 'Jogar para o time', resultText: 'O técnico anotou seu nome: "Esse entende de jogo."', effects: { football: { reputation: 2, skills: { passing: 1 } } } },
     ] },
   // ----- profissional: vestiário e jogo -----
+  { id: 'fut_penalti_jogo', weight: 8, conditions: { minAge: 16, football: { ...PRO, position: ['ATA', 'MEI', 'VOL', 'LAT', 'ZAG'] } }, text: 'Pênalti para o seu time aos 44 do segundo tempo, jogo empatado. O técnico olha para você.',
+    choices: [
+      { id: 'cobrar', label: 'Pegar a bola e cobrar', resultText: 'Você ajeitou a bola na marca e respirou fundo.', effects: { minigame: { kind: 'penalty', context: 'jogo' } } },
+      { id: 'passar', label: 'Deixar para o batedor oficial', resultText: 'O batedor converteu. Você comemorou junto, mas ficou a vontade.', effects: { stats: { happiness: 1 } } },
+    ] },
   { id: 'fut_estreia', weight: 9, once: true, conditions: { minAge: 16, football: PRO }, text: 'Estreia como profissional! O estádio canta o hino e suas pernas tremem no túnel.',
     choices: [
       { id: 'fome', label: 'Entrar com fome de bola', resultText: 'Você deu um drible logo no primeiro lance e a torcida gostou.', effects: { football: { reputation: 3 }, stats: { happiness: 8 } } },

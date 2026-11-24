@@ -1,3 +1,4 @@
+import type { ActiveMinigame } from '../minigames/types';
 import type { FootballState } from '../football/types';
 import type { Eating } from '../fighting/body';
 import type { CivilServiceState } from '../civilService/civil';
@@ -218,6 +219,8 @@ export interface GameState {
   civilService: CivilServiceState;
   /** Carreira de futebol (release 0.0.4; null = nunca jogou). */
   football: FootballState | null;
+  /** Minigame aberto (release 0.0.4; opcional): se o ano virar com ele aberto, é simulado. */
+  minigame?: ActiveMinigame | null;
 }
 
 export const STATE_VERSION = 20;

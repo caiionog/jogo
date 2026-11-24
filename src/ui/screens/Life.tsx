@@ -12,6 +12,7 @@ import { LIFE_STAGE_LABEL, deriveAvatar, lifeStage } from '../../engine';
 import { AgeButton, BottomNav, StatBar } from '../design/components';
 import { EventModal, ResultModal } from '../design/modals';
 import FightScreen from '../components/FightScreen';
+import PenaltyGame from '../components/PenaltyGame';
 import IntimacyTransition from '../components/IntimacyTransition';
 import MenuHost from '../components/MenuHost';
 import PixelAvatar from '../avatar/PixelAvatar';
@@ -74,7 +75,7 @@ export default function Life({ onShowObituary }: { onShowObituary?: () => void }
   const pending = game.pendingEvents[0];
   const pendingEvent = pending ? GAME_CONTENT.events.find((e) => e.id === pending.eventId) : undefined;
   const root = nav.stack[0]?.id;
-  const busy = game.pendingEvents.length > 0 || !!game.activeFight;
+  const busy = game.pendingEvents.length > 0 || !!game.activeFight || !!game.minigame;
   // atalho para a tela central da luta: quem tem academia, interesse ou já lutou
   const fightShortcut = !!game.fighter.gymId || game.fighter.history.length > 0 || !!game.flags.interesse_luta || !!game.flags.gostaDeLuta || Object.keys(game.fighter.grades).length > 0;
 
@@ -151,6 +152,7 @@ export default function Life({ onShowObituary }: { onShowObituary?: () => void }
 
       <NavHost game={game} />
       {game.activeFight && <FightScreen key={game.activeFight.offer.id} af={game.activeFight} />}
+      {!game.activeFight && game.minigame && !pendingEvent && <PenaltyGame key={JSON.stringify(game.minigame.setup.noise)} game={game} />}
       {!game.activeFight && pending && pendingEvent && <EventModal game={game} event={pendingEvent} pending={pending} onChoose={choose} />}
       {!pending && !intimacy && outcome && <ResultModal outcome={outcome} onClose={dismissOutcome} />}
       {profile && <AvatarSheet onClose={() => setProfile(false)} />}

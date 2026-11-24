@@ -545,3 +545,6 @@ Plano em `docs/release-0.0.4/PLAN.md` e diário em `docs/release-0.0.4/PROGRESS.
 - **Futebol** (fase 6): `engine/football/`; habilidades e potencial do futebol são **ocultos** como os da luta (UI só
   com `footballHint`/`potentialHint`). Clube novo em `content/football/clubs.ts` precisa passar em
   `tests/football.test.ts` (nomes reais, cidade + cores, 20 por divisão). Força do clube é `power`.
+- **Minigames** (fase 7): `engine/minigames/` (`MinigameDef` puro: `setup`/`resolve`/`simulate`); o estado só guarda
+  `state.minigame`. Abra por efeito de evento `minigame: { kind, context }` ou por ação; a UI é um modal em
+  `components/` e sempre oferece "Simular".
