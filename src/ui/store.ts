@@ -93,6 +93,7 @@ import {
   askJobLeave,
   startExchange,
   goOut,
+  hangOutAll,
 } from '../engine';
 import type { CollegeType, PoliceTrackId, PrisonAction, SportId, TraffickingLevel } from '../engine';
 import type {
@@ -106,6 +107,7 @@ import type {
   Housing,
   LivingStandard,
   InteractionKind,
+  IntimacyVariant,
   MeetMode,
   MetaSettings,
   MetaState,
@@ -181,6 +183,16 @@ interface GameStore {
   /** Pop-up de resultado depois de uma escolha de evento. */
   outcome: Outcome | null;
   dismissOutcome(): void;
+  /**
+   * Transição de cena íntima (release 0.0.3): a engine grava `game.scene = { kind: 'intimo', seq }` só depois das
+   * guardas (18+ dos dois e "Conteúdo adulto"); a UI apenas toca a animação quando chega um `seq` novo.
+   */
+  intimacy: { variant: IntimacyVariant } | null;
+  /** Último `seq` de cena íntima já visto (o do save carregado não toca). */
+  intimacySeen: number;
+  endIntimacy(): void;
+  /** Passar tempo com todos os amigos (release 0.0.3). */
+  hangOutAll(activityId: string): void;
   // Etapa 8: trabalho, CNH, mercado e negócios
   talkToColleagues(): void;
   getDriversLicense(): void;
@@ -284,6 +296,11 @@ interface GameStore {
   newLife(): Promise<void>;
 }
 
+/** `seq` da cena íntima do estado (0 se a cena atual é outra ou não há cena). */
+export function intimacySeqOf(game: GameState | null | undefined): number {
+  return game?.scene?.kind === 'intimo' ? game.scene.seq : 0;
+}
+
 export const useGameStore = create<GameStore>((setState, getState) => {
   let toastId = 1;
   /** Depois de cada mudança: avalia conquistas (toast) e registra a vida no Hall da Fama ao morrer. */
@@ -332,6 +349,10 @@ export const useGameStore = create<GameStore>((setState, getState) => {
     toasts: [],
     outcome: null,
     dismissOutcome: () => setState({ outcome: null }),
+    intimacy: null,
+    intimacySeen: 0,
+    endIntimacy: () => setState({ intimacy: null }),
+    hangOutAll: (activityId) => act((g) => hangOutAll(g, activityId, GAME_CONTENT)),
     talkToColleagues: () => act((g) => talkToColleagues(g, GAME_CONTENT)),
     getDriversLicense: () => act((g) => economyAction(g, (x) => getDriversLicense(x))),
     renovate: (id) => eco((g) => renovateAsset(g, id)),
@@ -340,14 +361,14 @@ export const useGameStore = create<GameStore>((setState, getState) => {
     async init() {
       const [slot, meta] = await Promise.all([getActiveSlot(), loadMeta()]);
       const game = await loadGame();
-      setState({ game, meta, slot, status: 'ready' });
+      setState({ game, meta, slot, status: 'ready', intimacySeen: intimacySeqOf(game), intimacy: null });
       void getState().refreshSlots();
     },
     startLife(name, sex, opts = {}) {
       // A seed vem da UI; a engine nunca usa fontes de aleatoriedade não determinísticas.
       const seed = `${Date.now()}-${Math.floor(performance.now() * 1000)}`;
       const meta = recordLifeStart(getState().meta);
-      setState({ game: newGame({ seed, name, sex, ...opts }, GAME_CONTENT), meta });
+      setState({ game: newGame({ seed, name, sex, ...opts }, GAME_CONTENT), meta, intimacySeen: 0, intimacy: null });
       void saveMeta(meta);
     },
     selectOutfit: (id, color) => update((g) => selectOutfit(g, GAME_CONTENT, id, color)),
@@ -367,7 +388,7 @@ export const useGameStore = create<GameStore>((setState, getState) => {
       const next = continueAsChild(g, personId, GAME_CONTENT);
       if (next === g) return;
       const meta = recordLifeStart(getState().meta);
-      setState({ game: next, meta });
+      setState({ game: next, meta, intimacySeen: intimacySeqOf(next), intimacy: null });
       void saveMeta(meta);
       afterChange(next);
     },
@@ -380,7 +401,7 @@ export const useGameStore = create<GameStore>((setState, getState) => {
       if (g) await saveSlot(getState().slot, g);
       await setActiveSlot(slot);
       const game = await loadSlot(slot);
-      setState({ slot, game });
+      setState({ slot, game, intimacySeen: intimacySeqOf(game), intimacy: null });
       await getState().refreshSlots();
     },
     async deleteSlot(slot) {
@@ -397,7 +418,7 @@ export const useGameStore = create<GameStore>((setState, getState) => {
     async importFile(text) {
       const r = importSave(text);
       if (!r.ok) return { ok: false, error: r.error };
-      setState({ game: r.state });
+      setState({ game: r.state, intimacySeen: intimacySeqOf(r.state), intimacy: null });
       await saveGame(r.state);
       await getState().refreshSlots();
       return { ok: true };
@@ -541,6 +562,16 @@ export const useGameStore = create<GameStore>((setState, getState) => {
       await getState().refreshSlots();
     },
   };
+});
+
+// Cena íntima nova (seq maior que o último visto): monta a transição antes do pop-up de resultado.
+// A engine reinicia o seq em 1 depois de outra cena (praia/piscina), então uma cena não íntima zera o último visto.
+useGameStore.subscribe((s, prev) => {
+  if (!s.game || s.game === prev.game) return;
+  const sc = s.game.scene;
+  if (sc?.kind === 'intimo') {
+    if (sc.seq > s.intimacySeen) useGameStore.setState({ intimacy: { variant: sc.variant }, intimacySeen: sc.seq });
+  } else if (s.intimacySeen !== 0) useGameStore.setState({ intimacySeen: 0 });
 });
 
 // Autosave: toda mudança no jogo é gravada no IndexedDB.

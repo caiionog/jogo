@@ -11,6 +11,7 @@ import { LIFE_STAGE_LABEL, deriveAvatar, lifeStage } from '../../engine';
 import { AgeButton, BottomNav, StatBar } from '../design/components';
 import { EventModal, ResultModal } from '../design/modals';
 import FightScreen from '../components/FightScreen';
+import IntimacyTransition from '../components/IntimacyTransition';
 import MenuHost from '../components/MenuHost';
 import PixelAvatar from '../avatar/PixelAvatar';
 import AvatarSheet from '../avatar/AvatarSheet';
@@ -60,6 +61,8 @@ export default function Life({ onShowObituary }: { onShowObituary?: () => void }
   const choose = useGameStore((s) => s.choose);
   const outcome = useGameStore((s) => s.outcome);
   const dismissOutcome = useGameStore((s) => s.dismissOutcome);
+  const intimacy = useGameStore((s) => s.intimacy);
+  const endIntimacy = useGameStore((s) => s.endIntimacy);
   const nav = useNav();
   const [profile, setProfile] = useState(false);
   const [statsOpen, setStatsOpen] = useState(true);
@@ -147,8 +150,10 @@ export default function Life({ onShowObituary }: { onShowObituary?: () => void }
       <NavHost game={game} />
       {game.activeFight && <FightScreen key={game.activeFight.offer.id} af={game.activeFight} />}
       {!game.activeFight && pending && pendingEvent && <EventModal game={game} event={pendingEvent} pending={pending} onChoose={choose} />}
-      {!pending && outcome && <ResultModal outcome={outcome} onClose={dismissOutcome} />}
+      {!pending && !intimacy && outcome && <ResultModal outcome={outcome} onClose={dismissOutcome} />}
       {profile && <AvatarSheet onClose={() => setProfile(false)} />}
+      {/* cena íntima: a transição toca por cima de tudo e o resultado em texto vem depois (visual 'pixel' por ora) */}
+      {intimacy && <IntimacyTransition variant={intimacy.variant} style="pixel" onDone={endIntimacy} />}
     </div>
   );
 }

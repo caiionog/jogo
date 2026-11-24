@@ -6,15 +6,17 @@ import { applyUpdate, onNeedRefresh } from '../pwa';
 export default function Toasts() {
   const toasts = useGameStore((s) => s.toasts);
   const dismiss = useGameStore((s) => s.dismissToast);
+  // durante a transição de cena íntima os toasts esperam (aparecem quando a tela volta)
+  const hold = useGameStore((s) => !!s.intimacy);
   const [update, setUpdate] = useState(false);
   useEffect(() => onNeedRefresh(() => setUpdate(true)), []);
   // conquistas somem sozinhas depois de alguns segundos
   useEffect(() => {
-    if (!toasts.length) return;
+    if (!toasts.length || hold) return;
     const t = setTimeout(() => dismiss(toasts[0]!.id), 4500);
     return () => clearTimeout(t);
-  }, [toasts, dismiss]);
-  if (!toasts.length && !update) return null;
+  }, [toasts, dismiss, hold]);
+  if ((!toasts.length || hold) && !update) return null;
   return (
     <div className="pointer-events-none fixed inset-x-0 top-[max(0.5rem,env(safe-area-inset-top))] z-50 mx-auto flex w-full max-w-md flex-col gap-2 px-4" aria-live="polite">
       {update && (
@@ -28,7 +30,7 @@ export default function Toasts() {
           </button>
         </div>
       )}
-      {toasts.map((t) => (
+      {!hold && toasts.map((t) => (
         <button
           key={t.id}
           onClick={() => dismiss(t.id)}

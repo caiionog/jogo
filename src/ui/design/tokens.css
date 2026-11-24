@@ -70,7 +70,20 @@
 .ds-anim-pop { animation: ds-pop var(--ds-dur) ease-out; }
 .ds-anim-bump { animation: ds-bump 320ms ease-out; }
 .ds-bar-fill { transition: width 400ms ease-out; }
+/* transição de cena íntima (1,5 s): a luz apaga devagar; o coração surge, pulsa uma vez e some */
+@keyframes ds-intimacy-dim { from { opacity: 0; } to { opacity: 0.6; } }
+@keyframes ds-intimacy-heart {
+  0%, 40% { opacity: 0; transform: scale(0.8); }
+  55% { opacity: 1; transform: scale(1); }
+  68% { opacity: 1; transform: scale(1.18); }
+  80% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1); }
+}
+.ds-intimacy-dim { opacity: 0; animation: ds-intimacy-dim 1200ms ease-in forwards; }
+.ds-intimacy-heart { opacity: 0; transform-box: fill-box; transform-origin: center; animation: ds-intimacy-heart 1500ms ease-out forwards; }
 @media (prefers-reduced-motion: reduce) {
+  .ds-intimacy-dim { animation: none; opacity: 0.55; }
+  .ds-intimacy-heart { animation: none; opacity: 1; transform: none; }
   .ds-anim-slide, .ds-anim-rise, .ds-anim-pop, .ds-anim-bump { animation: none; }
   .ds-bar-fill { transition: none; }
 }

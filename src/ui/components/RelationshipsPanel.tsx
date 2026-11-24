@@ -7,6 +7,7 @@ import type { GameState, MeetMode, Person, RelType, Relation } from '../../engin
 import { useGameStore } from '../store';
 import { Bar } from './fightUi';
 import PersonSheet from './PersonSheet';
+import GroupHangout from './GroupHangout';
 
 const GROUPS: { title: string; emoji: string; types: RelType[] }[] = [
   { title: 'Família', emoji: '🏠', types: ['pai', 'mae', 'irmao'] },
@@ -95,12 +96,18 @@ export default function RelationshipsPanel({ game }: { game: GameState }) {
         const items = pairs
           .filter((x) => g.types.includes(x.rel.type))
           .sort((a, b) => Number(b.person.alive) - Number(a.person.alive) || g.types.indexOf(a.rel.type) - g.types.indexOf(b.rel.type) || b.rel.affection - a.rel.affection);
-        if (!items.length) return null;
+        const friends = g.title === 'Amigos' && game.alive;
+        if (!items.length && !friends) return null;
         return (
           <section key={g.title}>
             <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
               {g.emoji} {g.title}
             </h2>
+            {friends && (
+              <div className="mb-2">
+                <GroupHangout game={game} />
+              </div>
+            )}
             <ul className="flex flex-col gap-1.5">
               {items.map(({ person, rel }) => (
                 <Row key={person.id} person={person} rel={rel} onOpen={() => setOpenId(person.id)} />
