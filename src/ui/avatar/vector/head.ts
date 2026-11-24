@@ -258,7 +258,8 @@ const FRECKLES: [number, number][] = [
 function skinDetails(doc: Doc, d: AvatarDescriptor, fc: Face, h: Head, skin: Ramp): void {
   const female = d.sex === 'F';
   const blush = mix(skin.base, '#e2686d', 0.5);
-  const bo = (female ? 0.34 : 0.16) + (d.expression === 'feliz' ? 0.1 : 0);
+  // rubor discreto; nas peles escuras, mais sutil (senão vira mancha avermelhada)
+  const bo = ((female ? 0.34 : 0.16) + (d.expression === 'feliz' ? 0.1 : 0)) * (0.45 + 0.55 * clamp(luminance(skin.base) * 2.2, 0, 1));
   for (const side of [-1, 1] as const) doc.fill(ellipse(h.cx + side * (fc.eyeDx + 4.5 * fc.s), fc.noseY + 1, 5.6 * fc.s, 3.2 * fc.s), blush, bo);
   const nf = Math.round(clamp(d.freckles, 0, 1) * FRECKLES.length);
   const fcol = darken(skin.base, 0.72, 0.1, 6);

@@ -15,7 +15,7 @@ import type { AvatarRenderer, Crop } from '../renderer';
 import type { RenderOptions } from '../pixel/render';
 import { CX, VIEW_H, VIEW_W, drawFrontArm, drawGroundShadow, drawSkin, figure } from './body';
 import type { FrontSleeve } from './body';
-import { drawBelt, drawBottom, drawObiBelt, drawOuter, drawTop, drawWhole, tucked } from './clothes';
+import { drawBottom, drawObiBelt, drawOuter, drawTop, drawWhole, tucked } from './clothes';
 import { n } from './geom';
 import { hairPlan } from './hair';
 import { drawBeard, drawEars, drawFace, drawHead, faceOf } from './head';
@@ -146,7 +146,6 @@ export function renderVectorSvg(d: AvatarDescriptor, opts: RenderOptions = {}, v
     drawAccessoryHead(doc, f, o.acessorio, fc.eyeY, fc.eyeDx, plan.top);
     doc.close();
   }
-  void drawBelt;
   const vb = viewBox ?? { x: 0, y: 0, w: VIEW_W, h: VIEW_H };
   return doc.svg(`${n(vb.x)} ${n(vb.y)} ${n(vb.w)} ${n(vb.h)}`, ` width="${n(vb.w)}" height="${n(vb.h)}" data-avatar="cartoon"`);
 }

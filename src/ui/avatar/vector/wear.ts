@@ -5,7 +5,7 @@
  */
 import type { OutfitPiece } from '../../../engine';
 import type { Fig, Head } from './body';
-import { along, clamp, ellipse, limb, n, offsetAt, poly, smooth } from './geom';
+import { along, clamp, ellipse, lerp, limb, n, offsetAt, poly, smooth } from './geom';
 import type { Pt } from './geom';
 import { headPt } from './head';
 import { contrast, mix, ramp } from './palette';
@@ -91,9 +91,10 @@ export function drawPrajied(doc: Doc, f: Fig, p: OutfitPiece): void {
   const tip = ramp(p.accent ?? p.color);
   for (const side of [-1, 1] as const) {
     const axis = f.arm(side);
-    doc.group([limb(axis, 0.24, 0.31, 1.3, { steps: 3 }).d], r, { shift: [-1.5, -1], sw: 1.2 });
-    const k = offsetAt(axis, 0.275, side * 1.05, 1.3);
-    doc.group([poly([[k[0], k[1] - 1], [k[0] + side * 7 * f.ws, k[1] + 5 * f.bs], [k[0] + side * 4.5 * f.ws, k[1] + 7 * f.bs], [k[0] - side * 0.5, k[1] + 1.5]])], tip, { flat: true, sw: 1 });
+    doc.group([limb(axis, 0.36, 0.46, 1.2, { steps: 4 }).d], r, { shift: [-1.5, -1], sw: 1.2, inner: strokeEl(limb(axis, 0.405, 0.415, 1.2, { steps: 2 }).d, r.shade, 1, 0.8) });
+    const k = offsetAt(axis, 0.42, side * 1.0, 1.2);
+    // pontas penduradas (cor da ponta da graduação)
+    doc.group([poly([[k[0] - 1.5, k[1]], [k[0] + side * 3 * f.ws, k[1] + 11 * f.bs], [k[0] + side * 6 * f.ws, k[1] + 10 * f.bs], [k[0] + 1.5, k[1] - 0.5]]), poly([[k[0] - 1, k[1]], [k[0] - side * 1 * f.ws, k[1] + 12 * f.bs], [k[0] + side * 2 * f.ws, k[1] + 12.5 * f.bs], [k[0] + 1.5, k[1]]])], tip, { flat: true, sw: 1 });
     doc.fill(ellipse(k[0], k[1], 2.4, 2.2), r.base);
     doc.stroke(ellipse(k[0], k[1], 2.4, 2.2), r.line, 0.9);
   }
@@ -163,8 +164,18 @@ function helmet(doc: Doc, h: Head, p: OutfitPiece, hairTop: number): void {
   for (const side of [-1, 1] as const) doc.region(smooth([[h.cx + side * (w - 4), rim - 12, 1], [h.cx + side * (w + 1.5), rim - 12, 1], [h.cx + side * (w + 1.5), rim - 2, 1], [h.cx + side * (w - 4), rim - 2, 1]]), ramp(mix(p.color, '#5b6470', 0.4)), { flat: true, sw: 1 });
   doc.region(smooth([[h.cx - 5, top + 6, 1], [h.cx + 5, top + 6, 1], [h.cx + 5, top + 12, 1], [h.cx - 5, top + 12, 1]]), ramp(mix(p.color, '#5b6470', 0.4)), { flat: true, sw: 1 });
   // jugular (tira do queixo)
-  const a = headPt(h, Math.PI / 2 + 0.25, 0.5);
-  const b = headPt(h, Math.PI - 0.35, 0.5);
-  for (const side of [-1, 1] as const) doc.stroke(`M${n(h.cx + side * (a[0] - h.cx))} ${n(rim + 2)}L${n(h.cx + side * (b[0] - h.cx))} ${n(b[1])}`, mix(p.color, '#000000', 0.2), 1.6, 0.9);
+  // jugular: da borda do capacete, descendo rente ao contorno do rosto, até embaixo do queixo
+  let strap = '';
+  for (const side of [-1, 1] as const) {
+    const pts: Pt[] = [];
+    for (let i = 0; i <= 6; i++) {
+      const th = lerp(Math.PI / 2 + 0.05, Math.PI - 0.02, i / 6);
+      const q = headPt(h, th, 1.4);
+      pts.push([h.cx + side * (q[0] - h.cx), q[1]]);
+    }
+    strap += smooth(pts, false);
+  }
+  doc.stroke(strap, '#14161a', 2.4, 0.95);
+  doc.stroke(strap, mix(p.color, '#6b7280', 0.35), 1.2);
 }
 

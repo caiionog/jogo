@@ -245,7 +245,7 @@ export function hairPlan(d: AvatarDescriptor, f: Fig, hair: Ramp): HairPlan {
     case 'curto':
       if (female && d.age > 2) {
         plan.front = cap(5 * v, 'side', type === 'crespo' || type === 'cacheado' ? 1.68 : 1.76);
-        plan.locks = (doc) => { for (const s of [-1, 1] as const) doc.region(lockPath(h, f, s, type, 4 * v, h.cy + 18), hair, { shift: [-2, -2], sw: 1.6 }); };
+        plan.locks = (doc) => { for (const s of [-1, 1] as const) doc.region(lockPath(h, f, s, type, 3 * v, h.cy + 12 * h.s), hair, { shift: [-2, -2], sw: 1.6 }); };
       } else {
         const vol = d.age <= 2 ? 2.2 : (type === 'liso' ? 5.4 : 4.4) * v;
         plan.top = h.crown - vol * h.s;

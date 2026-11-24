@@ -12,7 +12,7 @@
  * nem inteira, uma bermuda (ver `index.ts`). Roupas de banho cobrem com decência e não têm detalhe anatômico.
  */
 import type { OutfitPiece } from '../../../engine';
-import { CX, SW, armInnerX, sideX, torsoSide } from './body';
+import { ARM_STEPS, CX, SW, armInnerX, sideX, torsoSide } from './body';
 import type { Fig, FrontSleeve } from './body';
 import { along, axisT, clamp, ellipse, growAxis, lerp, limb, mirror, n, offsetAt, poly, smooth } from './geom';
 import type { Node, Pt } from './geom';
@@ -40,13 +40,13 @@ function sleeveAxis(f: Fig, side: -1 | 1, g: SleeveGeom): Node[] {
 }
 
 export function sleeveD(f: Fig, side: -1 | 1, g: SleeveGeom, t0 = 0): string {
-  return limb(sleeveAxis(f, side, g), t0, g.t1, 0, { capStart: t0 === 0, capEnd: false, steps: 10 }).d;
+  return limb(sleeveAxis(f, side, g), t0, g.t1, 0, { capStart: t0 === 0, capEnd: false, grid: ARM_STEPS }).d;
 }
 
 /** Borda de dentro da manga, da axila ao punho (dobra: o braço fica na frente do corpo da peça). */
 function sleeveInnerEdge(f: Fig, side: -1 | 1, g: SleeveGeom): string {
   // deslocada meia linha para dentro do corpo: coincide com o contorno do antebraço da frente
-  const l = limb(sleeveAxis(f, side, g), 0.16, g.t1, SW / 2, { steps: 8 });
+  const l = limb(sleeveAxis(f, side, g), 0.16, g.t1, SW / 2, { grid: ARM_STEPS });
   return smooth(side < 0 ? l.right : l.left, false);
 }
 
@@ -594,7 +594,7 @@ export function drawBottom(doc: Doc, f: Fig, p: OutfitPiece, o: { belt?: boolean
   if (p.id === 'saia') return skirt(doc, f, p, r);
   if (p.id === 'sunga') return brief(doc, f, r, p);
   const k = BOTTOMS[p.id] ?? GENERIC_BOTTOM;
-  const pp = pantsPath(f, k.len, k.ease, { ...(k.flare ? { flare: k.flare } : {}) });
+  const pp = pantsPath(f, k.len, k.ease, k.flare ? { flare: k.flare } : {});
   const bs = f.bs;
   let inner = patternInner(p, r, f, 'bottom');
   // dobras: virilha, joelho (calça comprida)
@@ -950,7 +950,7 @@ export function drawOuter(doc: Doc, f: Fig, p: OutfitPiece, under: { armEase: nu
   inner += clipped(unionClip, armholeSeam(f, r, ease));
   if (leather || id === 'roupao' || id === 'cronos_terno') inner += sheen(f, r, leather ? 1 : 0.8);
   if (f.fat > 0.5) inner += strokeEl(`M${n(CX + f.waist * 0.5)} ${n(f.yWaist + 14 * bs)}q${n(f.waist * 0.4)} 4 ${n(f.waist * 0.6)} -2`, r.shade, 1.5, 0.7);
-  doc.group([...panels, ...sleeves], r, { shift: CLOTH_SHIFT, inner, sw: 1.7, ...(id === 'saida_praia' ? { opacity: 0.94 } : {}) });
+  doc.group([...panels, ...sleeves], r, { shift: CLOTH_SHIFT, inner, sw: 1.7 });
   // borda da frente da peça de baixo do traspasse (terno, roupão)
   if (closeY !== null) doc.stroke(`M${n(CX + 1.5)} ${n(closeY)}L${n(CX + 3)} ${n(closeY + 6)}L${n(CX + 4)} ${n(hemY + 1)}`, r.line, 1.4, 0.75);
   // lapelas

@@ -86,12 +86,19 @@ export function along(axis: Node[], t: number): Node & { dx: number; dy: number 
  * Contorno de um trecho de membro [t0, t1], com folga `grow` (roupa). `capStart`/`capEnd`: ponta arredondada.
  * Devolve as duas bordas (esquerda e direita da imagem, de cima para baixo) e o caminho fechado.
  */
-export function limb(axis: Node[], t0: number, t1: number, grow = 0, opts: { capStart?: boolean; capEnd?: boolean; steps?: number } = {}) {
+export function limb(axis: Node[], t0: number, t1: number, grow = 0, opts: { capStart?: boolean; capEnd?: boolean; steps?: number; grid?: number } = {}) {
   const steps = opts.steps ?? 7;
   const a: Pt[] = [];
   const b: Pt[] = [];
-  for (let i = 0; i <= steps; i++) {
-    const p = along(axis, lerp(t0, t1, i / steps));
+  // `grid`: amostras nos múltiplos de 1/grid (dois trechos do mesmo membro coincidem ponto a ponto)
+  const ts: number[] = [];
+  if (opts.grid) {
+    ts.push(t0);
+    for (let k = Math.floor(t0 * opts.grid) + 1; k / opts.grid < t1 - 1e-6; k++) if (k / opts.grid - t0 > 0.25 / opts.grid) ts.push(k / opts.grid);
+    ts.push(t1);
+  } else for (let i = 0; i <= steps; i++) ts.push(lerp(t0, t1, i / steps));
+  for (const t of ts) {
+    const p = along(axis, t);
     const r = p.r + grow;
     // normal à direção (dx, dy)
     const nx = -p.dy;
@@ -103,8 +110,21 @@ export function limb(axis: Node[], t0: number, t1: number, grow = 0, opts: { cap
   const s = along(axis, t0);
   const e = along(axis, t1);
   const pts: Pt[] = [];
-  const startCap: Pt[] = opts.capStart ? [[s.x - s.dx * (s.r + grow) * 0.85, s.y - s.dy * (s.r + grow) * 0.85]] : [];
-  const endCap: Pt[] = opts.capEnd ? [[e.x + e.dx * (e.r + grow) * 0.7, e.y + e.dy * (e.r + grow) * 0.7]] : [];
+  // pontas arredondadas (meio círculo aproximado por 3 pontos)
+  const cap = (p: typeof s, sign: number, k: number): Pt[] => {
+    const r = (p.r + grow) * k;
+    const nx = -p.dy;
+    const ny = p.dx;
+    const side = nx < 0 ? 1 : -1;
+    const c = 0.72;
+    return [
+      [p.x + sign * p.dx * r * c + nx * r * c * side * sign, p.y + sign * p.dy * r * c + ny * r * c * side * sign],
+      [p.x + sign * p.dx * r, p.y + sign * p.dy * r],
+      [p.x + sign * p.dx * r * c - nx * r * c * side * sign, p.y + sign * p.dy * r * c - ny * r * c * side * sign],
+    ];
+  };
+  const startCap: Pt[] = opts.capStart ? cap(s, -1, 0.92) : [];
+  const endCap: Pt[] = opts.capEnd ? cap(e, 1, 0.8) : [];
   const aa = a.map((p, i): Pt => (!opts.capStart && i === 0) || (!opts.capEnd && i === a.length - 1) ? [p[0], p[1], 1] : p);
   const bb = b.map((p, i): Pt => (!opts.capStart && i === 0) || (!opts.capEnd && i === b.length - 1) ? [p[0], p[1], 1] : p);
   pts.push(...startCap, ...aa, ...endCap, ...[...bb].reverse());

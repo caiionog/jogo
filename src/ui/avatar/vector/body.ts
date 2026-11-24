@@ -25,7 +25,7 @@ export const SKIN_SHIFT: [number, number] = [-3.4, -1.6];
 /** Espessura visível do contorno do corpo e das roupas. */
 export const SW = 1.7;
 /** Amostras do eixo do braço (o antebraço da frente usa as mesmas, para coincidir com o de trás). */
-const ARM_STEPS = 12;
+export const ARM_STEPS = 16;
 
 export interface Head {
   cx: number;
@@ -146,20 +146,22 @@ export function figure(d: AvatarDescriptor): Fig {
     baby,
   };
 
-  const neck = (sx(10.6, 7.9) + muscle * sx(3.8, 1.2) + fat * 2.8 + baby * 1.5) * ws;
+  // magreza: pouca gordura e pouco músculo afinam tudo (contínuo)
+  const thin = clamp((0.32 - fat) / 0.3, 0, 1) * clamp(1 - muscle * 1.6, 0, 1) * (1 - baby);
+  const neck = (sx(10.6, 7.9) - thin * 1.2 + muscle * sx(3.8, 1.2) + fat * 2.8 + baby * 1.5) * ws;
   const trap = (1.2 + muscle * sx(4.6, 1.4) + elder * 4) * bs;
-  const shoulder0 = (sx(43.5, 36) + muscle * sx(13, 6.5) + fat * 4 - elder * 2 + baby * 1) * ws;
-  const chest = (sx(34, 30.5) + muscle * sx(8, 3) + fat * 9 + baby * 2) * ws;
-  const waist = (sx(30, 25.5) + fat * sx(22, 18) - muscle * sx(3.5, 1.8) + baby * 6 + elder * 1.5) * ws;
-  const hip = (sx(33, 37) + fat * 12 + muscle * 1.5 + baby * 3) * ws;
+  const shoulder0 = (sx(43.5, 36) - thin * 3.5 + muscle * sx(13, 8) + fat * 4 - elder * 2 + baby * 1) * ws;
+  const chest = (sx(34, 30.5) - thin * 3 + muscle * sx(8, 3) + fat * 9 + baby * 2) * ws;
+  const waist = (sx(30, 25.5) - thin * 2.5 + fat * sx(22, 18) - muscle * sx(3.5, 2.8) + baby * 6 + elder * 1.5) * ws;
+  const hip = (sx(33, 37) - thin * 2.5 + fat * 12 + muscle * 1.5 + baby * 3) * ws;
   const belly = fat > 0.42 ? (fat - 0.42) * 14 * ws + baby * 2 : baby * 2;
   const bust = female ? sexK * (1.3 + fat * 1.2) : 0;
 
   // braços: deltoide, bíceps, cotovelo, antebraço, pulso
-  const rD = (sx(9.4, 7.6) + muscle * sx(7.5, 3.4) + fat * 3 + baby * 2.6) * ws;
-  const rB = (sx(7.4, 6.1) + muscle * sx(5.6, 2.6) + fat * 3.8 + baby * 2.8) * ws;
-  const rE = (sx(5.5, 4.7) + muscle * 1.4 + fat * 2.5 + baby * 3) * ws;
-  const rF = (sx(6.3, 5.1) + muscle * sx(3.2, 1.4) + fat * 2.4 + baby * 3.2) * ws;
+  const rD = (sx(9.4, 7.6) - thin * 1.6 + muscle * sx(7.5, 4.4) + fat * 3 + baby * 2.6) * ws;
+  const rB = (sx(7.4, 6.1) - thin * 1.5 + muscle * sx(5.6, 3.4) + fat * 3.8 + baby * 2.8) * ws;
+  const rE = (sx(5.5, 4.7) - thin * 0.6 + muscle * 1.4 + fat * 2.5 + baby * 3) * ws;
+  const rF = (sx(6.3, 5.1) - thin * 1 + muscle * sx(3.2, 1.9) + fat * 2.4 + baby * 3.2) * ws;
   const rW = (sx(4.5, 3.8) + muscle * 0.9 + fat * 1.4 + baby * 1.8) * ws;
   // o braço pende ao lado do tronco: a borda de dentro encosta no peito na altura da axila
   const shoulder = Math.max(shoulder0, chest - 1.5 * ws + rD * 1.64);
@@ -182,8 +184,8 @@ export function figure(d: AvatarDescriptor): Fig {
   // pernas: coxa (quadríceps), joelho, panturrilha, tornozelo
   const x0 = hip * 0.5 + 1.2;
   const rT = hip * 0.5 + 0.2;
-  const rK = (sx(8.8, 8.2) + fat * 3 + muscle * 1.4 + baby * 4) * ws;
-  const rC = (sx(9.8, 9.1) + muscle * sx(4, 2.6) + fat * 3 + baby * 4.5) * ws;
+  const rK = (sx(8.8, 8.2) - thin * 1 + fat * 3 + muscle * 1.4 + baby * 4) * ws;
+  const rC = (sx(9.8, 9.1) - thin * 1.6 + muscle * sx(4, 3.3) + fat * 3 + baby * 4.5) * ws;
   const rA = (sx(4.8, 4.3) + fat * 1.4 + muscle * 0.5 + baby * 1.5) * ws;
   const L = (t: number) => lerp(yHip, yKnee, t);
   const leg = (side: -1 | 1): Node[] => [
@@ -247,7 +249,7 @@ export function torsoPath(f: Fig): string {
 }
 
 export function armPath(f: Fig, side: -1 | 1, t0 = 0, t1 = 1, grow = 0): string {
-  return limb(f.arm(side), t0, t1, grow, { capStart: t0 === 0, capEnd: false, steps: Math.max(2, Math.round((t1 - t0) * ARM_STEPS)) }).d;
+  return limb(f.arm(side), t0, t1, grow, { capStart: t0 === 0, capEnd: false, grid: ARM_STEPS }).d;
 }
 
 export function legPath(f: Fig, side: -1 | 1): string {
@@ -397,7 +399,9 @@ export function drawFrontArm(doc: Doc, f: Fig, side: -1 | 1, skin: Ramp, sleeves
   const fo0 = offsetAt(axis, t0 + 0.04, side * 0.85);
   const fo1 = offsetAt(axis, 0.8, side * 0.3);
   const fore = f.muscle > 0.3 && f.baby < 0.5 ? strokeEl(`M${n(fo0[0])} ${n(fo0[1])}Q${n(offsetAt(axis, 0.72, side * 0.8)[0])} ${n(offsetAt(axis, 0.72, side * 0.8)[1])} ${n(fo1[0])} ${n(fo1[1])}`, skin.shade, 1.3 * f.ws, 0.3 + f.muscle * 0.5) : '';
-  doc.group([armPath(f, side, t0, 1), hand.palm, hand.thumb], skin, { shift: SKIN_SHIFT, outlineClip: clip, sw: SW, inner: fore, lightWith: [torsoPath(f)] });
+  // sob uma manga que desce além do recorte, a pele começa um pouco abaixo (sem borda de pele sob a borda da manga)
+  const covered = sleeves.some((sl) => sl.t1 > t0 + 0.08);
+  doc.group([armPath(f, side, covered ? t0 + 0.05 : t0, 1), hand.palm, hand.thumb], skin, { shift: SKIN_SHIFT, outlineClip: clip, sw: SW, inner: fore, lightWith: [torsoPath(f)] });
   doc.stroke(hand.folds, skin.line, 1, 0.55);
   for (const sl of sleeves) {
     if (sl.t1 <= t0 + 0.02) continue;
