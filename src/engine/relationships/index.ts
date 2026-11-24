@@ -7,3 +7,5 @@ export * from './romance';
 export * from './actions';
 export * from './social';
 export * from './year';
+export * from './intimacy';
+export * from './group';

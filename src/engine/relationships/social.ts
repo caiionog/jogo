@@ -7,6 +7,7 @@ import { canHaveSexualContent, canMarry, isValidPartnerAge } from './guards';
 import { ADOPTION_COST, breakUp, divorce, marry, setStage, startPregnancy } from './romance';
 import { post } from '../economy/ledger';
 import { contractIst, checkTypeShift } from './actions';
+import { recordIntimacy } from './intimacy';
 import {
   addRelation,
   archivePerson,
@@ -159,10 +160,45 @@ export function applySocialEffects(state: GameState, fx: SocialEffects, rng: Rng
     if (fx.pregnancyChance && canHaveSexualContent(s.character, target) && rng.chance(fx.pregnancyChance)) s = startPregnancy(s, target.id, content);
     if (fx.endRelation) s = archivePerson(s, target.id, fx.endRelation);
   }
+  if (fx.groupAffection) {
+    const g = s.relationships.lastGroup;
+    if (g && g.year === s.year) for (const id of g.present) if (getRelation(s, id)) s = changeAffection(s, id, fx.groupAffection);
+  }
+  if (fx.pairFriends || fx.npcCouple) s = applyPairEffects(s, fx, vars);
+  if (fx.intimacy) s = recordIntimacy(s, getPerson(s, targetId));
   if (fx.ist && s.character.age >= 18 && rng.chance(fx.ist)) s = contractIst(s);
   if (fx.giveUpPregnancy && s.relationships.pregnancy) {
     s = { ...s, relationships: { ...s.relationships, pregnancy: null } };
     s = appendLog(s, 'Vocês decidiram entregar o bebê para adoção ao nascer.');
+  }
+  return s;
+}
+
+/**
+ * Eventos de grupo (release 0.0.3): {pessoa} e {pessoa2} viram amigos/rivais (`pairFriends`) ou um casal (`npcCouple`).
+ * Não há relação NPC × NPC no modelo: fica nas flags das duas pessoas (`amigo_de_<id>`, `rival_de_<id>`, `casal_com`)
+ * e numa linha do histórico. Casal só com a faixa de `isValidPartnerAge` (os dois 18+ ou os dois 14–17, ≤ 2 anos).
+ */
+function applyPairEffects(state: GameState, fx: SocialEffects, vars?: EventVars): GameState {
+  const a = getPerson(state, vars?.pessoa_id);
+  const b = getPerson(state, vars?.pessoa2_id);
+  if (!a || !b || a.id === b.id || !a.alive || !b.alive) return state;
+  let s = state;
+  const mark = (p: Person, other: Person, flags: Record<string, boolean | string>, note: string) => {
+    s = updatePerson(s, p.id, (x) => ({ ...x, flags: { ...x.flags, ...flags } }));
+    if (getRelation(s, p.id)) s = updateRelation(s, p.id, (r) => withHistory(r, note.replace('{outro}', firstName(other.name))));
+  };
+  if (fx.pairFriends) {
+    const friends = fx.pairFriends === 'amizade';
+    const key = friends ? 'amigo_de_' : 'rival_de_';
+    const note = friends ? 'Ficou amig{x} de {outro}.' : 'Virou rival de {outro}.';
+    const g = (p: Person) => note.replace('{x}', p.sex === 'M' ? 'o' : 'a');
+    mark(a, b, { [`${key}${b.id}`]: true }, g(a));
+    mark(b, a, { [`${key}${a.id}`]: true }, g(b));
+  }
+  if (fx.npcCouple && isValidPartnerAge(a.age, b.age)) {
+    mark(a, b, { casal_com: b.id }, 'Começou a namorar {outro}.');
+    mark(b, a, { casal_com: a.id }, 'Começou a namorar {outro}.');
   }
   return s;
 }

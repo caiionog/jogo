@@ -13,6 +13,7 @@ import type { InteractionKind, Person, RelType, Relation } from './types';
 import { post } from '../economy/ledger';
 import { moneyFromParent } from '../economy/family';
 import { bumpUse, repeatMultiplier } from '../lifeStages/sessions';
+import { recordIntimacy } from './intimacy';
 
 export const GIFT_COST = 200;
 
@@ -240,6 +241,7 @@ function runInteraction(state: GameState, person: Person, rel: Relation, kind: I
     case 'try_baby': {
       if (!canConceive(s, person)) return s;
       s = changeAffection(s, person.id, gain(rng, 3, 6, 1));
+      s = recordIntimacy(s, person); // só grava com a opção adulta ligada (canHaveSexualContentWith)
       if (rng.chance(0.45)) return startPregnancy(s, person.id, content);
       return appendLog(s, `Você e ${n} estão tentando ter um filho. Ainda não foi desta vez.`);
     }
@@ -260,6 +262,7 @@ function intimacy(state: GameState, person: Person, protectedSex: boolean, rng: 
   let s = changeAffection(state, person.id, rng.int(5, 10), 'Noite a dois.');
   s = { ...s, character: { ...s.character, stats: addStats(s.character.stats, { happiness: 4 }) } };
   s = appendLog(s, `Você e ${firstName(person.name)} tiveram uma noite especial${protectedSex ? '' : ', sem se proteger'}.`);
+  s = recordIntimacy(s, person);
   const rel = getRelation(s, person.id);
   const newPartner = rel ? s.character.age - rel.since <= 1 : true;
   const ist = protectedSex ? 0.005 : newPartner ? 0.05 : 0.01;
@@ -321,6 +324,7 @@ function nightTogether(state: GameState, person: Person, rel: Relation, rng: Rng
   if (!canHaveSexualContentWith(state, person)) return state; // defesa em profundidade
   const n = firstName(person.name);
   let s = appendLog(state, `Você e ${n} passaram a noite juntos. Na manhã seguinte, um café meio sem graça e muitos pensamentos.`);
+  s = recordIntimacy(s, person);
   s = { ...s, character: { ...s.character, stats: addStats(s.character.stats, { happiness: 3 }) } };
   s = jealousy(s, person, rng, 0.5);
   const roll = rng.next();

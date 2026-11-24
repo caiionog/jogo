@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { GAME_CONTENT } from '../src/content';
 import {
   ADULT_INTERACTIONS,
+  groupActivities,
+  groupBlockReason,
+  hangOutAll,
   commitCrime,
   startPlan,
   startTrafficking,
@@ -29,6 +32,8 @@ interface Violations {
   teenPartnerRange: number;
   adultActionMinor: number;
   crimeMinor: number;
+  /** release 0.0.3: cena `intimo` com menor de 18 (personagem ou parceiro) ou com a opção desligada. */
+  intimateScene: number;
 }
 
 /** Verifica todo evento pendente: nenhum 'adult' com menor de 18 ou com a opção desligada. */
@@ -56,6 +61,16 @@ function checkCrime(s: GameState, v: Violations) {
   if (s.pendingEvents.some((p) => ADULT_CRIME_EVENTS.has(p.eventId))) v.crimeMinor++;
 }
 
+/** Cena íntima do ano: nunca com personagem < 18, opção desligada ou parceiro(a) atual < 18. */
+function checkScene(s: GameState, v: Violations) {
+  const sc = s.scene;
+  if (!sc || sc.kind !== 'intimo' || sc.year !== s.year) return;
+  if (s.character.age < 18) v.intimateScene++;
+  if (!s.relationships.settings.adultContent) v.intimateScene++;
+  const p = currentPartner(s);
+  if (p && p.person.age < 18) v.intimateScene++;
+}
+
 function checkPartner(s: GameState, v: Violations) {
   const p = currentPartner(s);
   if (!p) return;
@@ -67,9 +82,10 @@ function checkPartner(s: GameState, v: Violations) {
 
 describe('conteúdo adulto: 1000 vidas simuladas', () => {
   it('nenhum evento adult com menor de 18 (personagem ou parceiro) nem com a opção desligada; namoros adolescentes na faixa', () => {
-    const v: Violations = { adultMinor: 0, adultOff: 0, adultPartnerMinor: 0, teenPartnerRange: 0, adultActionMinor: 0, crimeMinor: 0 };
+    const v: Violations = { adultMinor: 0, adultOff: 0, adultPartnerMinor: 0, teenPartnerRange: 0, adultActionMinor: 0, crimeMinor: 0, intimateScene: 0 };
     let adultSeen = 0;
     let teenRomances = 0;
+    let scenesSeen = 0;
     for (let i = 0; i < 1000; i++) {
       const rng = createRng(5000 + i);
       const on = i % 3 !== 0; // 2/3 das vidas com a opção ligada
@@ -81,6 +97,7 @@ describe('conteúdo adulto: 1000 vidas simuladas', () => {
         checkPending(s, v);
         checkPartner(s, v);
         checkCrime(s, v);
+        checkScene(s, v);
         let guard = 0;
         while (s.pendingEvents.length && guard++ < 10) {
           const p = s.pendingEvents[0]!;
@@ -102,6 +119,25 @@ describe('conteúdo adulto: 1000 vidas simuladas', () => {
             checkCrime(s, v);
           }
         }
+        // release 0.0.3: passar tempo com todos (eventos de grupo, casais NPC × NPC)
+        if (!s.pendingEvents.length && s.alive && y % 2 === 0) {
+          const act = groupActivities(s, C).find((a) => groupBlockReason(s, a.id, C) === null);
+          if (act) {
+            s = hangOutAll(s, act.id, C);
+            let g4 = 0;
+            while (s.pendingEvents.length && g4++ < 5) {
+              const ev = C.events.find((e) => e.id === s.pendingEvents[0]!.eventId)!;
+              if (adultIds.has(ev.id)) adultSeen++;
+              checkPending(s, v);
+              s = resolveEvent(s, ev.id, rng.pick(ev.choices).id, C);
+            }
+            for (const p of s.relationships.people) {
+              const other = typeof p.flags.casal_com === 'string' ? s.relationships.people.find((q) => q.id === p.flags.casal_com) : undefined;
+              // casal NPC × NPC: menor com adulto só é tolerável como envelhecimento natural (diferença ≤ 2 anos)
+              if (other && (p.age < 18) !== (other.age < 18) && Math.abs(p.age - other.age) > 2) v.teenPartnerRange++;
+            }
+          }
+        }
         // tenta romance e ações íntimas de qualquer jeito (o motor deve bloquear)
         if (!s.pendingEvents.length) {
           s = meetSomeone(s, rng.chance(0.5) ? 'social' : 'app', C, createRng(i * 100 + y));
@@ -119,6 +155,8 @@ describe('conteúdo adulto: 1000 vidas simuladas', () => {
                 if (s !== before && JSON.stringify({ ...s, yearUses: before.yearUses }) !== JSON.stringify(before)) v.adultActionMinor++;
               }
               checkPending(s, v);
+              checkScene(s, v);
+              if (s.scene?.kind === 'intimo' && s.scene !== before.scene) scenesSeen++;
               let g2 = 0;
               while (s.pendingEvents.length && g2++ < 5) {
                 const ev = C.events.find((e) => e.id === s.pendingEvents[0]!.eventId)!;
@@ -129,10 +167,11 @@ describe('conteúdo adulto: 1000 vidas simuladas', () => {
         }
       }
     }
-    expect(v).toEqual({ adultMinor: 0, adultOff: 0, adultPartnerMinor: 0, teenPartnerRange: 0, adultActionMinor: 0, crimeMinor: 0 });
+    expect(v).toEqual({ adultMinor: 0, adultOff: 0, adultPartnerMinor: 0, teenPartnerRange: 0, adultActionMinor: 0, crimeMinor: 0, intimateScene: 0 });
     // a simulação de fato exercitou os dois lados
     expect(adultSeen).toBeGreaterThan(50);
     expect(teenRomances).toBeGreaterThan(50);
+    expect(scenesSeen).toBeGreaterThan(50);
   }, 240_000);
 });
 
