@@ -28,9 +28,9 @@ function reducedMotion(): boolean {
 export default function PixelAvatar(props: { d: AvatarDescriptor; scale: number; bust?: boolean; animate?: boolean; label?: string; className?: string }) {
   const style = useAvatarStyle();
   if (style === 'cartoon') {
-    const { d, scale, bust = false, label, className = '' } = props;
+    const { d, scale, bust = false, animate = false, label, className = '' } = props;
     const h = (bust ? R.bust(d).h : PIXEL_H) * scale;
-    return <VectorAvatar d={d} size={h} bust={bust} label={label ?? 'Avatar'} className={className} />;
+    return <VectorAvatar d={d} size={h} bust={bust} animate={animate} label={label ?? 'Avatar'} className={className} />;
   }
   return <PixelArtAvatar {...props} />;
 }
