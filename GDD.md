@@ -1091,6 +1091,49 @@ CFO 42, Civil 30–32), requisitos da força especial (4 anos, atlética 62–68
 `0,22 + folga` limitada a 0,58 e no máximo 2 tentativas na carreira; `crime.earned` passou a somar tudo o que entra
 como dinheiro ilícito (delitos, tráfico, facção, propina).
 
+## 10d. Release 0.0.3 — visual cartoon, amigos em grupo e cena íntima discreta
+
+**Visual dos personagens (teste A/B → cartoon é o padrão).**
+- Um renderizador vetorial novo consome o mesmo `AvatarDescriptor` do pixel art.
+- Estilo: traço limpo com contorno colorido, cores chapadas com uma sombra suave e cabeça um pouco maior que o real.
+- Cobre as 5 fases com transição contínua, os 5 biotipos (com atlético e musculoso definidos), todos os cabelos, barbas
+  e rostos, as 59 peças de roupa (fardas, kimono com faixa, prajied, presidiário, algemas, roupas de banho só 18+) e as
+  marcas da luta.
+- Depois da comparação lado a lado, o usuário escolheu o **cartoon como padrão**. O pixel art continua em Configurações
+  → "Visual dos personagens".
+- Os ícones do Mercado, dos delitos, das fardas e das facções também ganharam versão cartoon.
+- Regra: o avatar é sempre renderizado vestido.
+
+**Passar tempo com todos os amigos.**
+- Fica em Relações → Amigos.
+- Atividades por idade:
+  - criança: brincar na rua, videogame, festa de aniversário;
+  - adolescente: shopping, praia, festa, jogar bola;
+  - adulto: churrasco, bar, praia, viagem curta, jogo de futebol, treinar juntos (conta como sessão), noite de jogos.
+- Afeto com todos os presentes (+50% com os mais próximos), felicidade, custo e retorno decrescente no ano.
+- A lista mostra quem não pôde ir: ocupado ou viajando (sorte do ano) e brigado (afeto < 25).
+- Em 45% das saídas com dois ou mais presentes, acontece um dos 21 eventos de grupo:
+  - amigos que se conhecem (amizade ou rivalidade entre eles);
+  - casal entre NPCs (só com idades compatíveis);
+  - briga no churrasco;
+  - a conta que some;
+  - a foto que vira lembrança;
+  - pedido de ajuda;
+  - o ex no rolê;
+  - versões para crianças.
+
+**Momentos íntimos.**
+- As interações e os eventos existentes mantêm as regras: só 18+ dos dois, "Conteúdo adulto" ligado e texto
+  sugestivo, nunca gráfico.
+- No lugar da cena, toca uma transição de 1,5 s: cama vista de frente, cobertor cobrindo tudo, a luz apaga e um coração
+  pulsa uma vez.
+- Pula com um toque. Com movimento reduzido, mostra só o coração parado.
+- O cenário varia: casa, hotel, quarto simples, cama de casal.
+
+**Fluxo de trabalho.** Skills do projeto e seis subagents (engine, UI, conteúdo, avatar, testes, revisão), com as
+regras de orquestração no CLAUDE.md. Nesta release, conteúdo, engine, UI e avatar foram feitos em paralelo e passaram
+por revisão. A revisão pegou um caso de casal NPC menor × adulto antes do commit.
+
 ## 11. Ideias futuras
 - **Outras carreiras**: boxe olímpico, wrestling universitário, árbitro, treinador de seleção, empresário de lutadores.
 - **Faculdade**: vestibular, cursos e vida universitária (a partir de `caminho_18 = 'faculdade'`).

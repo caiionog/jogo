@@ -1,70 +1,60 @@
-# HANDOFF — Vida Real 0.0.2
+# HANDOFF — Vida Real 0.0.3
 
-Estado do projeto em 2026-11-23, branch de trabalho `claude/beautiful-ptolemy-z8zx6u` (a partir de `release/0.0.2`),
-tag local `v0.0.2`. Documentos de referência:
-- [`GDD.md`](../GDD.md): design e balanceamento (§10c para esta release);
-- [`CLAUDE.md`](../CLAUDE.md): regras, regras de conteúdo da 0.0.2 e como adicionar conteúdo;
-- [`ASSETS.md`](../ASSETS.md): avatar e ícones;
-- [`CHANGELOG.md`](../CHANGELOG.md): tudo o que entrou nesta versão;
-- [`docs/release-0.0.2/PROGRESS.md`](release-0.0.2/PROGRESS.md): o diário das 12 fases, com notas técnicas de cada uma.
+Estado do projeto em 2026-11-24, branch de trabalho `claude/beautiful-ptolemy-z8zx6u`, tag local `v0.0.3`
+(a `v0.0.2` também é local). Documentos de referência:
+- [`GDD.md`](../GDD.md): design e balanceamento (§10d para esta release);
+- [`CLAUDE.md`](../CLAUDE.md): regras, skills, subagents e "Release 0.0.3";
+- [`ASSETS.md`](../ASSETS.md): guia do cartoon (padrão) e do pixel art;
+- [`CHANGELOG.md`](../CHANGELOG.md): o que entrou em cada versão;
+- [`docs/release-0.0.3/PROGRESS.md`](release-0.0.3/PROGRESS.md): o diário das fases, com notas técnicas.
 
 ## Números de saúde do projeto
 | Item | Valor |
 |---|---|
-| Testes (Vitest) | **798 passando** em 62 arquivos |
-| Typecheck / lint / build | limpos (`npx tsc --noEmit`, `npm run lint`, `npm run build`) |
-| Versão do save | **15** (cadeia v1 → v15; fixture com saves reais da 0.0.1 em `src/save/__fixtures__/saves-v14.json`) |
-| Bundle | ~328 KB gzip · 1161 KB sem compressão de JS, mais 42 KB de CSS |
-| Navegador | 375×667 e 414×896, console sem erros nas telas novas |
+| Testes (Vitest) | **860 passando** em 71 arquivos |
+| Typecheck / lint / build | limpos; o build só avisa do tamanho do chunk |
+| Versões | save **16** (fixture da 0.0.2 em `saves-v15.json`); meta **3** (`settings.avatarStyle`) |
+| Bundle | ~371 KB gzip (1284 KB) de JS, mais 13 KB gzip de CSS |
+| Avatar cartoon | ~1,6 ms por avatar; miniaturas em cache |
+| Navegador | 375×667 e 414×896 com `scripts/e2e/check003.mjs`: tudo ok, console sem erros |
 
 ## O que ficou pronto
-Fases 0 a 11, todas detalhadas no CHANGELOG e no PROGRESS:
-1. treino invisível;
-2. carreira policial: concurso, formação, Tiro, postos e save v15;
-3. 41 eventos policiais, troca de tiro, investigações, dilemas e força especial;
-4. delitos, procurado, reputação, dinheiro sujo e planejamento;
-5. facções e tráfico;
-6. justiça e ficha criminal;
-7. prisão e reintegração;
-8. cruzamentos;
-9. interface, fardas, uniforme, algemas e ícones;
-10. balanceamento (`scripts/simCrime.ts`);
-11. documentação e release.
+1. **Skills:** `find-skills` e mais 7 do projeto, todas revisadas e sem scripts (seção no CLAUDE.md).
+2. **Subagents:** 6 agentes em `.claude/agents/`, com as regras de orquestração no CLAUDE.md. Eles carregam nas
+   sessões novas.
+3. **Visual cartoon:**
+   - renderizador vetorial completo, agora o padrão (escolhido pelo usuário);
+   - opção em Configurações e 54 ícones em cartoon;
+   - regra: o avatar é sempre renderizado vestido.
+4. **Passar tempo com todos:** botão, atividades por idade e 21 eventos de grupo.
+5. **Transição da cama** nos momentos íntimos: só para adultos com "Conteúdo adulto" ligado, com versão estática para
+   movimento reduzido.
 
-Capturas em `docs/release-0.0.2/screenshots/`: carreira policial (PM, Civil em 414×896, força especial), troca de
-tiro e resultado, investigação, menu de crime e prisão (banner e ações).
+Capturas em `docs/release-0.0.3/screenshots/`:
+- A/B: `ab-*`;
+- físicos, roupas, fardas e praia: `cartoon-*`;
+- ícones: `icones-cartoon.png`;
+- amigos em 3 idades: `amigos-*`;
+- evento de grupo: `evento-grupo-*`;
+- animação da cama: `cama-*`.
 
 ## O que ficou pendente
-1. **Release 0.0.3**, já pedida pelo usuário. O texto completo está em
-   [`docs/release-0.0.3/SPEC.md`](release-0.0.3/SPEC.md):
-   - visual cartoon em teste A/B;
-   - "Passar tempo com todos os amigos";
-   - animação da cama;
-   - subagents e skills.
-
-   A Fase 0 é o plano, com aprovação antes de qualquer código. Branch `release/0.0.3`.
-2. **Foragido**: hoje só aumenta o procurado. Faltam eventos próprios de quem vive foragido e de quem cumpre pena no
-   regime aberto.
-3. **Roteiro de release no navegador** (`scripts/e2e/release-check.mjs`): ainda não tem os cenários da 0.0.2. As
-   capturas desta release saíram do `scripts/e2e/shot.mjs` com estados gerados pela engine.
-4. **Pendências antigas:** dieta e alimentação, pós-graduação e migração das telas antigas para `var(--ds-*)`.
+- Carregar sob demanda o renderizador que não está em uso. O bundle cresceu ~43 KB gzip.
+- Pendências da 0.0.2: eventos de foragido e de regime aberto, investigações num ano só e lesão genérica na troca de
+  tiro.
+- Pendências antigas: dieta, pós-graduação e migração das telas antigas para `var(--ds-*)`.
 
 ## Problemas conhecidos
-- **Lesão na troca de tiro:** vem do catálogo geral (fonte `evento`), então às vezes aparece algo como "distensão
-  muscular" depois de "você foi atingido".
-- **Investigações da Civil:** todas as etapas acontecem no mesmo ano.
-- **Herdados da 0.0.1:** taxa de casamento, oxlint no lugar do ESLint e "Exportar save" na versão em arquivo único.
+- **Tom de pele mais escuro:** no cartoon, o contorno não chega a 3:1 contra a própria pele (o máximo físico é ~1,5:1).
+- **Zoom de 8×:** aparece um fio de anti-aliasing no cotovelo.
+- **Herdados:** taxa de casamento, oxlint no lugar do ESLint e "Exportar save" na versão em arquivo único.
 
 ## Como retomar
 ```bash
 npm install
 npm run lint && npm test && npm run build
-npm run sim -- 300 150 150 60 150        # balanceamento (o 5º número = vidas por perfil de polícia e crime)
-SIM_CRIME_N=200 npx tsx scripts/simCrime.ts   # só polícia e crime
-npm run dev                               # http://localhost:5173 e /dev/avatars
-# capturas com um estado gerado pela engine:
-npx tsx scripts/e2e/state.ts lutador20 tmp/e2e-state.json
-node scripts/e2e/shot.mjs tmp/e2e-state.json tmp/shot 375 667 nav-atividades,act-crime
+npm run dev                                   # http://localhost:5173 e /dev/avatars?modo=lado-a-lado
+npx tsx scripts/e2e/states003.ts tmp/s003      # estados de cenário da 0.0.3
+node scripts/e2e/check003.mjs 375 667 tmp      # verificação no navegador (dev server na 5173)
 ```
-Antes de mudar o formato do save, gere a fixture da versão atual: `npx tsx scripts/gen-fixtures.ts` (vai criar
-`saves-v15.json`).
+Antes de mudar o formato do save, gere a fixture: `npx tsx scripts/gen-fixtures.ts` (vai criar `saves-v16.json`).

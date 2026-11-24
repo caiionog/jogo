@@ -3,6 +3,101 @@
 Todas as mudanças relevantes do jogo. Formato [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/),
 versões em [SemVer](https://semver.org/lang/pt-BR/).
 
+## [0.0.3] — 2026-11-24
+
+Visual cartoon, amigos em grupo, transição discreta nos momentos íntimos, subagents e skills. Save **v16** e meta
+**v3**: saves da 0.0.2 migram sozinhos (fixture `src/save/__fixtures__/saves-v15.json`).
+
+### Adicionado
+- **Visual cartoon dos personagens**, agora o padrão:
+  - vetorial, com traço limpo, contorno colorido, sombra suave e cabeça um pouco maior;
+  - 5 fases contínuas e 5 biotipos (atlético e musculoso com forma);
+  - todos os cabelos, barbas, rostos e expressões;
+  - as 59 peças de roupa, inclusive fardas, kimono com faixa, prajied, presidiário e algemas;
+  - roupas de banho só para 18+;
+  - marcas da luta;
+  - cerca de 1,6 ms por avatar e miniaturas em cache;
+  - o avatar sempre sai vestido (regra testada).
+- **Configurações → "Visual dos personagens":** Cartoon ou Pixel art. A escolha vale para o avatar, as miniaturas dos
+  NPCs, os ícones e a animação da cama.
+- **54 ícones em cartoon:** 33 do Mercado e dos empreendimentos, 14 de delitos, 3 fardas e 4 facções.
+- **"Passar tempo com todos"** em Relações → Amigos:
+  - atividades por idade e dinheiro;
+  - lista de quem foi e de quem não pôde ir (ocupado, viajando, brigado);
+  - afeto com todos e felicidade, com retorno decrescente;
+  - "treinar juntos" conta como treino;
+  - **21 eventos de grupo**.
+- **Transição da cama** nos momentos íntimos já existentes:
+  - cama coberta, luz que apaga e coração; dura 1,5 s e pula com um toque;
+  - versão estática com movimento reduzido; cenário por contexto;
+  - só toca entre adultos com "Conteúdo adulto" ligado; nunca com menores (testado em 1000 vidas).
+- **/dev/avatars:** modo lado a lado com 5 fases, 24 NPCs, físicos, roupas, fardas e praia.
+- **Fluxo de trabalho:**
+  - 8 skills do projeto, revisadas antes da instalação e sem scripts;
+  - 6 subagents em `.claude/agents/`;
+  - regras de orquestração no CLAUDE.md.
+
+### Alterado
+- `AvatarRenderer` generalizado (`kind: 'pixel' | 'vector'`, imagem ou SVG).
+- O avatar da tela principal respira e pisca também no cartoon.
+- **Bundle:** ~371 KB gzip (1284 KB sem compressão) de JS, mais 46 KB de CSS (13 KB gzip).
+
+### Problemas conhecidos
+- **Tom de pele mais escuro:** o contorno do cartoon não chega a 3:1 contra a própria pele, porque o máximo físico é
+  ~1,5:1. Contra o fundo do avatar passa de 3:1.
+- **Zoom de 8×:** aparece um fio de anti-aliasing no cotovelo, onde o antebraço passa para a frente. Não se vê em
+  tamanhos normais.
+- **Bundle maior:** cresceu ~43 KB gzip com o renderizador cartoon e os ícones. Vale carregar sob demanda o
+  renderizador que não está em uso.
+- **Herdados da 0.0.2:** foragido sem eventos próprios, investigações num ano só e lesão genérica na troca de tiro.
+
+### Próximos passos
+- Carregar sob demanda o renderizador que não está em uso.
+- Eventos de foragido e de regime aberto.
+- Dieta e alimentação; pós-graduação.
+
+## [0.0.2] — 2026-11-23
+
+Treino invisível, carreira policial, crime, justiça e prisão. Save **v15**: saves da 0.0.1 migram sozinhos
+(fixture `saves-v14.json`).
+
+### Adicionado
+- **Carreira policial** (Polícia Militar e Polícia Civil, em Carreiras → "Segurança pública"):
+  - concurso de 18 a 30 anos com prova, TAF, saúde, psicológico e investigação social;
+  - academia, estágio probatório e promoções;
+  - Tiro oculto, mostrado só em palavras;
+  - tela central com avatar fardado;
+  - 41 eventos: troca de tiro, 4 investigações e dilemas;
+  - forças especiais fictícias.
+- **Crime:**
+  - 13 delitos (leves a partir dos 12; médios e graves só a partir dos 18), com planejamento abstrato dos graves;
+  - procurado e reputação ocultos;
+  - dinheiro sujo e lavagem;
+  - 4 facções fictícias e tráfico abstrato.
+- **Justiça e prisão:**
+  - processo, fiança, defesa e sentença por faixas fictícias;
+  - regimes, progressão, remição e ficha criminal;
+  - 22 eventos de prisão sem violência sexual;
+  - reintegração.
+- **Cruzamentos entre polícia, crime, luta e família**; fardas, uniforme de presidiário e algemas no avatar; ícones dos
+  delitos, das fardas e das facções.
+- **Testes:**
+  - nomes proibidos;
+  - 1000 vidas sem menor cometendo delito grave, entrando em facção ou traficando;
+  - termos proibidos na prisão.
+
+### Alterado
+- **Treino invisível:** nenhuma tela mostra o contador. Acima do limite, o treino não rende, mostra um aviso e pode
+  causar lesão leve.
+- O patrocinador "Energético Choque" virou "Energético Faísca".
+- `npm run sim` ganhou a seção de polícia e crime (GDD §10c).
+- **Bundle:** ~328 KB gzip de JS.
+
+### Problemas conhecidos
+- Foragido sem eventos próprios.
+- Investigações num ano só.
+- Lesão genérica na troca de tiro.
+
 ## [0.0.1] — 2026-11-23
 
 Primeira release numerada. O jogo deixa de ser só "Vida de Lutador" e vira um simulador de vida, **Vida Real** (nome

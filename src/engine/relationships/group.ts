@@ -108,8 +108,9 @@ export function hangOutAll(state: GameState, activityId: string, content: GameCo
     s = updateRelation(s, p.id, (r) => ({ ...r, interactedYear: s.year }));
   }
   s = { ...s, relationships: { ...s.relationships, lastGroup: { year: s.year, activityId: a.id, present: present.map((p) => p.id) } } };
-  s = appendLog(s, a.text.replace(/\{n\}/g, String(present.length)));
+  // quem não foi vem antes: a última linha (a atividade) é a que vira o toast
   if (absent.length) s = appendLog(s, `Não foram: ${absent.map((x) => absenceText(x.person, x.reason)).join(', ')}.`);
+  s = appendLog(s, a.text.replace(/\{n\}/g, String(present.length)));
 
   s = maybeGroupEvent(s, present, rng, content);
   return { ...s, rngState: rng.state };

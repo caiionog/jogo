@@ -1,4 +1,4 @@
-# ASSETS.md — Direção de arte do avatar em pixel art (Etapa 8)
+# ASSETS.md — Direção de arte do avatar: cartoon (padrão, release 0.0.3) e pixel art (Etapa 8)
 
 O avatar é **derivado na engine e desenhado na UI**. `deriveAvatar` (engine, TS puro) devolve um `AvatarDescriptor`
 com fase, tipo físico, cores, cabelo, barba, rosto, expressão, marcas e a roupa por camadas. O renderizador só traduz
@@ -19,6 +19,73 @@ GameState ──deriveAvatar()──▶ AvatarDescriptor ──renderAvatar()─
 | `PixelCanvas` / `PixelAvatar` | `src/ui/avatar/` | exibição com `image-rendering: pixelated`, respiração e piscar |
 | `ThumbnailCache` / `AvatarThumb` | `src/ui/avatar/thumbnails.ts` | miniaturas (LRU por hash do descriptor) |
 | Grades e regras | `src/content/sprites/` | corpos (`body/`), roupas (`clothes.ts`), ícones do Mercado (`market/`) |
+
+
+## Visual cartoon (padrão desde a release 0.0.3)
+Renderizador vetorial em `src/ui/avatar/vector/` (`VectorAvatarRenderer`). Ele implementa a mesma interface
+`AvatarRenderer` do pixel art e consome o mesmo `AvatarDescriptor`. O jogador escolhe o visual em Configurações →
+"Visual dos personagens" (`meta.settings.avatarStyle`, padrão `cartoon`). `PixelAvatar`, `AvatarThumb` (cache próprio:
+`vectorThumbnails`), `GameIcon` e a `IntimacyTransition` seguem a escolha.
+
+**Proporções**
+- Moldura de 200 × 420 unidades (`VIEW_W`/`VIEW_H`), com o personagem centrado e uma sombra no chão.
+- No adulto, a cabeça tem cerca de 1/5 da altura (um pouco maior que o real). No bebê é bem maior, com membros curtos e
+  gordinhos.
+- A transição entre fases é contínua pelos fatores `growth`, `elder`, `baby` e `sexK` (dimorfismo zero na infância).
+  O idoso tem ombros caídos, cabeça um pouco mais baixa, pele mais opaca (`agedSkin`), bolsas e rugas.
+- Os 5 biotipos variam continuamente por `fat` e `muscle`:
+  - magro e médio;
+  - atlético e musculoso, com trapézio, deltoide e bíceps por sombra suave, cintura em V, coxas e panturrilhas;
+  - acima do peso, com barriga e papada.
+
+  A roupa acompanha a silhueta.
+
+**Traço e cor** (`palette.ts`)
+- Cada região tem uma rampa curta: base, uma sombra suave (a mesma cor escurecida e um pouco mais saturada, puxada
+  para o vermelho ou roxo) e o contorno, bem mais escuro e colorido, **nunca preto puro**.
+- A luz vem de cima à esquerda: a sombra fica embaixo e à direita de cada forma.
+- O contorno da pele tem contraste ≥ 3:1 com a própria pele até o tom 0,75 da rampa. No tom mais escuro, ele é mais
+  escuro que a pele e tem ≥ 3:1 contra o fundo do avatar (testado).
+
+**Camadas e sobreposição** (`svg.ts`)
+- `group` desenha várias formas como uma peça só (pele inteira; roupa com mangas): o contorno de todas por baixo e os
+  preenchimentos por cima. Assim só a silhueta externa ganha traço, nunca as emendas (ombro, quadril, pulso).
+- Uma peça da frente sempre cobre a de trás por inteiro. O antebraço e a mão são redesenhados por cima de saia, barra
+  e colete.
+- Camisas de farda e social entram por dentro da calça, com cinto. O coturno fica por cima da calça; os outros calçados
+  ficam por baixo da barra.
+
+**Regras**
+- **O avatar é SEMPRE renderizado vestido**, em qualquer renderizador. Não existe camada de corpo sem roupa visível.
+  Sem parte de cima nem inteira, entra uma camiseta; sem parte de baixo nem inteira, uma bermuda (`wornLayers`). A
+  sunga sozinha ganha a camiseta de reserva.
+- Roupa de banho adulta só para 18+. Isso vem da engine (`swimOutfit`), e as peças cobrem com decência.
+- Diversidade sem caricatura: as mesmas faixas amplas de traços para todos. Cor ou raça nunca muda mecânica.
+- Determinismo: o mesmo descriptor gera o mesmo SVG. Os ids internos vêm do hash do descriptor; não há
+  `Math.random`.
+- Desempenho: um avatar leva menos de 5 ms (cerca de 1,6 ms medido). As miniaturas ficam em cache.
+- Identidade própria: nada de formas, peças ou marcas de outros apps.
+
+**Ícones cartoon** (`src/ui/icons/vector/` + `GameIcon`)
+- Mesma linguagem dos avatares: contorno colorido e uma sombra por forma.
+- Cada família tem uma base comum:
+  - bens: cartão;
+  - empreendimentos: fachada com toldo na cor do ramo e placa com o símbolo;
+  - delitos: medalhão com anel de gravidade;
+  - fardas: escudo;
+  - facções: brasão nas cores da facção.
+- Os ícones em pixel art continuam em `src/content/sprites/` para o visual pixel.
+
+**Como adicionar no cartoon**
+- **Roupa:** além do `OutfitDef` e da regra de pixel em `sprites/clothes.ts`, faça o desenho em
+  `vector/clothes.ts` (corpo, camadas inteira e agasalho) ou em `vector/wear.ts` (calçados e acessórios). Peça sem
+  desenho próprio cai no genérico da camada, na cor da peça.
+- **Ícone:** uma entrada em `vector/market.ts` ou `vector/badges.ts`. `tests/vectorIcons.test.ts` exige SVG válido,
+  todos diferentes entre si e sem `#000`.
+- **Verificação:** use `/dev/avatars?modo=lado-a-lado`, que mostra fases, 24 NPCs, físicos, roupas, fardas, praia,
+  pele, cabelos e rostos. Os testes ficam em `tests/vectorAvatar.test.ts`.
+
+## Pixel art (alternativa)
 
 ## Direção de arte
 

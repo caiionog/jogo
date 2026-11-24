@@ -1,4 +1,4 @@
-# CLAUDE.md — Vida Real (release 0.0.1)
+# CLAUDE.md — Vida Real (release 0.0.3)
 
 Simulador de vida no navegador, estilo BitLife: escola, faculdade, trabalho, empresas, esporte, carreira de luta
 (destaque), família, dinheiro e legado. Nome provisório "Vida Real" (o formato do save continua `vida-de-lutador`).
@@ -18,7 +18,7 @@ npm test            # Vitest (uma execução); npm run test:watch para modo watc
 npm run typecheck   # tsc --noEmit
 npm run build       # typecheck + build de produção em dist/
 npm run preview     # serve o build de produção (PWA: service worker, offline, instalar) em http://localhost:4173
-npm run sim         # balanceamento: npm run sim -- N M L D (carreiras até 40, perfis econômicos, vidas completas, dinastias)
+npm run sim         # balanceamento: npm run sim -- N M L D P (carreiras até 40, perfis econômicos, vidas completas, dinastias, polícia/crime)
 npm run bench       # performance: "Avançar ano" com save de 80 anos (grava tmp/save-80.json)
 npm run icons       # regera os PNGs do PWA a partir de public/icons/icon.svg
 npx tsx scripts/sprites/gen-bodies.ts            # regera as silhuetas de pixel art (body/generated.ts)
@@ -40,7 +40,8 @@ Antes de commitar: `npm run lint && npm test && npm run build`.
    detalhado abaixo) e são validados por `validateContent` (`engine/events/validate.ts`) nos testes.
 4. **`GameState` é JSON puro** com campo `version`. Ao mudar o formato: incremente `STATE_VERSION`
    (`engine/core/state.ts`) e adicione a migração `n → n+1` em `src/save/migrations.ts` + teste.
-   Versão atual: **15** (release 0.0.2: v14→v15 cria `police`, `crime` e `prison: null`; a flag antiga `preso`
+   Versão atual: **16** (release 0.0.3: v15→v16 amplia `scene` com `{ kind: 'intimo', variant, seq }` e cria
+   `relationships.lastGroup`; fixture `saves-v15.json`; meta v3 com `settings.avatarStyle`). Release 0.0.2: v14→v15 cria `police`, `crime` e `prison: null`; a flag antiga `preso`
    vira passagem leve na ficha; campos opcionais `police.case`, `crime.plan/case/committed/earned`; fixture
    `saves-v14.json`). Release 0.0.1: v8→v9 `energy` sai, entra `yearUses` e ofertas com `campSessions`; v9→v10
    `skills.jiujitsu` → `grappling`, `belt` → `fighter.grades` por modalidade, academias com `modalities`; v10→v11
@@ -435,6 +436,37 @@ tests/                    # Vitest; fixtures/saves-v1.json = saves reais da Etap
   `crime: { imprisoned: true }` (com `wing`/`regime` se quiser). Nada de violência sexual.
 - **Balanceamento:** `npm run sim` (6º argumento = vidas por perfil de polícia e crime) ou
   `SIM_CRIME_N=200 npx tsx scripts/simCrime.ts`. Metas e tabela no GDD §10c.
+
+## Release 0.0.3 — visual cartoon, amigos em grupo e cena íntima discreta
+- **O avatar é SEMPRE renderizado vestido.** Isso vale para o cartoon e para o pixel art, e não existe camada de corpo
+  sem roupa visível. `tests/vectorAvatar.test.ts` falha se alguma combinação ficar sem parte de cima e de baixo (ou
+  inteira). Roupa de banho adulta continua só para 18+.
+- **Visual dos personagens:**
+  - `meta.settings.avatarStyle` (`'cartoon'` é o padrão, `'pixel'` a alternativa), lido por `useAvatarStyle()`
+    (`ui/avatar/style.ts`);
+  - `PixelAvatar` escolhe o renderizador; `AvatarThumb` usa `thumbnailsFor(style)`;
+  - os ícones passam por `GameIcon` (`ui/icons/`);
+  - guia de estilo no `ASSETS.md`.
+- **Passar tempo com todos** (`engine/relationships/group.ts`):
+  - `groupActivities`, `groupAvailability` (ocupado/viajando por RNG derivado, brigado = afeto < 25),
+    `groupBlockReason` e `hangOutAll`;
+  - custo em `post('familia')`, retorno decrescente (`grupo:todos`), "treinar juntos" gasta uma sessão;
+  - o evento de grupo (`content.friends.groupEvents`, ids `grupo_*`) recebe `{pessoa}` e `{pessoa2}`;
+  - `groupEventFits` barra casal NPC fora de `isValidPartnerAge` e eventos `adult` sem as duas pessoas 18+ com a opção
+    ligada;
+  - efeitos `social.pairFriends`, `npcCouple` e `groupAffection`.
+- **Cena íntima:**
+  - interações sexuais e o efeito `social.intimacy` gravam `scene = { kind: 'intimo', variant, seq }` só por
+    `recordIntimacy` (`canHaveSexualContentWith`: 18+ dos dois e "Conteúdo adulto" ligado);
+  - a UI toca a `IntimacyTransition` quando o `seq` muda: cama coberta, luz que apaga, um coração que pulsa uma vez,
+    versão estática com `prefers-reduced-motion`, nenhuma parte de personagem;
+  - a engine não sabe nada de animação;
+  - `tests/adultSafety.test.ts` confere a cena nas 1000 vidas.
+- **Como adicionar:**
+  - atividade em grupo: `GroupActivityDef` em `src/content/friends/index.ts` (`minAge`, `maxAge`, `cost`,
+    `happiness`, `affection`, `training?`, `text` com `{n}`);
+  - evento de grupo: em `src/content/events/friends/`, com `trigger: 'followUp'`, `weight: 0`, `{pessoa}`/`{pessoa2}`
+    e sem condição `relationship` (entra sozinho em `groupEvents`).
 
 ## Skills do projeto (release 0.0.3)
 Instaladas com `npx skills add` em `.agents/skills/` (link em `.claude/skills/`; versões travadas em
