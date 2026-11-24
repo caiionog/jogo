@@ -36,6 +36,8 @@ export interface MetaSettings {
   /** Narração das lutas: lenta, normal, rápida. */
   fightSpeed: 'lenta' | 'normal' | 'rapida';
   fontScale: 'normal' | 'grande';
+  /** Visual dos personagens e ícones (release 0.0.3): cartoon vetorial (padrão) ou pixel art. */
+  avatarStyle: 'cartoon' | 'pixel';
 }
 
 export interface MetaState {
@@ -48,7 +50,7 @@ export interface MetaState {
   seenTips: string[];
 }
 
-export const META_VERSION = 2;
+export const META_VERSION = 3;
 export const MAX_HALL = 200;
 
 export function emptyMeta(): MetaState {
@@ -57,7 +59,7 @@ export function emptyMeta(): MetaState {
     achievements: {},
     hallOfFame: [],
     stats: { lives: 0, deaths: 0, generations: 0, totalYears: 0, totalFights: 0, bestScore: 0 },
-    settings: { fightSpeed: 'normal', fontScale: 'normal' },
+    settings: { fightSpeed: 'normal', fontScale: 'normal', avatarStyle: 'cartoon' },
     seenTips: [],
   };
 }

@@ -10,9 +10,13 @@ export const META_KEY = 'meta';
 
 type AnyMeta = Record<string, unknown> & { version: number };
 
-/** metaMigrations[n] converte o meta da versão n para n+1. v1→v2: dicas de primeira vez (`seenTips`). */
+/**
+ * metaMigrations[n] converte o meta da versão n para n+1. v1→v2: dicas de primeira vez (`seenTips`).
+ * v2→v3 (release 0.0.3): `settings.avatarStyle` = 'cartoon' (o visual novo vira o padrão para todos).
+ */
 export const metaMigrations: Record<number, (m: AnyMeta) => AnyMeta> = {
   1: (m) => ({ ...m, version: 2, seenTips: [] }),
+  2: (m) => ({ ...m, version: 3, settings: { ...((m.settings as Record<string, unknown>) ?? {}), avatarStyle: 'cartoon' } }),
 };
 
 export function migrateMeta(raw: unknown): MetaState {

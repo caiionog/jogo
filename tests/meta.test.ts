@@ -98,6 +98,16 @@ describe('Hall da Fama', () => {
     expect(partial.settings.fightSpeed).toBe('normal');
     expect(partial.hallOfFame).toEqual([]);
   });
+
+  it('v2 → v3 (release 0.0.3): visual dos personagens vira cartoon; a preferência persiste', async () => {
+    const v2 = migrateMeta({ version: 2, achievements: {}, hallOfFame: [], seenTips: ['x'], settings: { fightSpeed: 'rapida', fontScale: 'grande' } });
+    expect(v2.version).toBe(3);
+    expect(v2.settings).toEqual({ fightSpeed: 'rapida', fontScale: 'grande', avatarStyle: 'cartoon' });
+    expect(v2.seenTips).toEqual(['x']);
+    const pixel = { ...v2, settings: { ...v2.settings, avatarStyle: 'pixel' as const } };
+    await saveMeta(pixel);
+    expect((await loadMeta()).settings.avatarStyle).toBe('pixel');
+  });
 });
 
 describe('slots e exportação', () => {
