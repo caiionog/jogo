@@ -95,7 +95,7 @@ describe('avatar cartoon vetorial', () => {
             n++;
           }
     expect(n).toBe(STAGE_AGES.length * 2 * BUILDS.length * HAIR_STYLES.length);
-  });
+  }, 30_000); // ~2.160 avatares: com a suíte inteira em paralelo passa de 5 s
 
   it('desenha TODAS as peças do catálogo em adultos e cada peça permitida em menores', () => {
     const minors = [1, 4, 8, 12, 15, 17];

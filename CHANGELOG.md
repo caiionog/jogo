@@ -3,6 +3,21 @@
 Todas as mudanças relevantes do jogo. Formato [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/),
 versões em [SemVer](https://semver.org/lang/pt-BR/).
 
+## [Não lançado]
+
+### Adicionado
+- **Vida de foragido:** 7 eventos (blitz, vizinho desconfiado, saudade da família, bico sem documento, foto no
+  noticiário, advogado propondo se entregar, mudar de cidade). Ser pego de novo encerra a fuga.
+- **Regime aberto:** 5 eventos (atraso no albergue, emprego formal, antigos parceiros, família ajudando, curso
+  noturno com remição).
+
+### Alterado
+- **Investigações da Polícia Civil:** a 2ª etapa de cada caso agora acontece no ano seguinte, e o caso ocupa dois anos.
+- **Troca de tiro:** ferimentos próprios ("de raspão" ou "grave em serviço"), em vez de uma lesão qualquer do catálogo.
+- **Carregamento:** o visual que não está em uso (cartoon ou pixel art) sai do pacote principal e só carrega se for
+  escolhido. Chunk principal: ~323 KB gzip (antes ~371).
+- O validador aceita prisão por evento com qualquer motivo que tenha faixa de pena (fuga, corrupção…).
+
 ## [0.0.3] — 2026-11-24
 
 Visual cartoon, amigos em grupo, transição discreta nos momentos íntimos, subagents e skills. Save **v16** e meta

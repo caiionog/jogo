@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 /** Visual dos personagens (release 0.0.3): a preferência troca o renderizador e persiste no meta. */
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { GAME_CONTENT } from '../src/content';
 import { emptyMeta, newGame } from '../src/engine';
@@ -39,26 +39,26 @@ function start(style: 'pixel' | 'cartoon') {
 afterEach(() => cleanup());
 
 describe('visual dos personagens', () => {
-  it('cartoon (padrão) desenha SVG; pixel art desenha canvas', () => {
+  it('cartoon (padrão) desenha SVG; pixel art desenha canvas', async () => {
     expect(emptyMeta().settings.avatarStyle).toBe('cartoon');
     start('cartoon');
     const btn = screen.getByTestId('avatar-button');
-    expect(btn.querySelector('svg')).not.toBeNull();
+    await waitFor(() => expect(btn.querySelector('svg')).not.toBeNull()); // visual em chunk lazy
     expect(btn.querySelector('canvas')).toBeNull();
     cleanup();
     start('pixel');
     const btn2 = screen.getByTestId('avatar-button');
-    expect(btn2.querySelector('canvas')).not.toBeNull();
+    await waitFor(() => expect(btn2.querySelector('canvas')).not.toBeNull());
     expect(btn2.querySelector('svg')).toBeNull();
   });
 
-  it('a opção nas Configurações troca o visual e grava no meta', () => {
+  it('a opção nas Configurações troca o visual e grava no meta', async () => {
     start('cartoon');
     fireEvent.click(screen.getByTestId('menu-button'));
     fireEvent.click(screen.getByTestId('menu-settings'));
     fireEvent.click(screen.getByTestId('style-pixel'));
     expect(useGameStore.getState().meta.settings.avatarStyle).toBe('pixel');
     expect((saved.at(-1) as { settings: { avatarStyle: string } }).settings.avatarStyle).toBe('pixel');
-    expect(screen.getByTestId('avatar-button').querySelector('canvas')).not.toBeNull();
+    await waitFor(() => expect(screen.getByTestId('avatar-button').querySelector('canvas')).not.toBeNull());
   });
 });
