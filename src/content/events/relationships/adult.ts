@@ -24,8 +24,8 @@ export const ADULT_EVENTS: readonly GameEvent[] = [
     weight: 5,
     text: 'Velas acesas, música baixa: {pessoa} preparou uma noite romântica só para vocês dois.',
     choices: [
-      { id: 'safe', label: 'Aproveitar a noite (com proteção)', effects: { stats: { happiness: 4 }, social: { affection: 8 } }, resultText: 'O resto fica entre vocês dois.' },
-      { id: 'unsafe', label: 'Deixar rolar, sem proteção', effects: { stats: { happiness: 4 }, social: { affection: 8, pregnancyChance: 0.25 } }, resultText: 'Uma noite para lembrar... e talvez com consequências.' },
+      { id: 'safe', label: 'Aproveitar a noite (com proteção)', effects: { stats: { happiness: 4 }, social: { affection: 8, intimacy: true } }, resultText: 'O resto fica entre vocês dois.' },
+      { id: 'unsafe', label: 'Deixar rolar, sem proteção', effects: { stats: { happiness: 4 }, social: { affection: 8, pregnancyChance: 0.25, intimacy: true } }, resultText: 'Uma noite para lembrar... e talvez com consequências.' },
     ],
   },
   {
@@ -35,7 +35,7 @@ export const ADULT_EVENTS: readonly GameEvent[] = [
     weight: 3,
     text: 'No calor do momento, você e {pessoa} percebem que a camisinha acabou.',
     choices: [
-      { id: 'go', label: 'Seguir mesmo assim', effects: { social: { affection: 4, pregnancyChance: 0.3, ist: 0.02 } }, resultText: 'Agora é torcer (ou não) para o teste dar negativo.' },
+      { id: 'go', label: 'Seguir mesmo assim', effects: { social: { affection: 4, pregnancyChance: 0.3, ist: 0.02, intimacy: true } }, resultText: 'Agora é torcer (ou não) para o teste dar negativo.' },
       { id: 'stop', label: 'Parar e deixar para outro dia', effects: { social: { affection: -1 } }, resultText: 'Prudência venceu. Vocês riram da situação.' },
     ],
   },
