@@ -40,7 +40,7 @@ Antes de commitar: `npm run lint && npm test && npm run build`.
    detalhado abaixo) e são validados por `validateContent` (`engine/events/validate.ts`) nos testes.
 4. **`GameState` é JSON puro** com campo `version`. Ao mudar o formato: incremente `STATE_VERSION`
    (`engine/core/state.ts`) e adicione a migração `n → n+1` em `src/save/migrations.ts` + teste.
-   Versão atual: **19** (release 0.0.4: v18→v19 cria `civilService`, fixture `saves-v18.json`; v17→v18 cria `population` vazia, fixture `saves-v17.json`; v16→v17 cria `character.fame` a partir de `fighter.reputation` × 0,8, metade
+   Versão atual: **20** (release 0.0.4: v19→v20 cria `football: null`, fixture `saves-v19.json`; v18→v19 cria `civilService`, fixture `saves-v18.json`; v17→v18 cria `population` vazia, fixture `saves-v17.json`; v16→v17 cria `character.fame` a partir de `fighter.reputation` × 0,8, metade
    para aposentados; fixture `saves-v16.json`). Release 0.0.3 (v16: v15→v16 amplia `scene` com `{ kind: 'intimo', variant, seq }` e cria
    `relationships.lastGroup`; fixture `saves-v15.json`; meta v3 com `settings.avatarStyle`). Release 0.0.2: v14→v15 cria `police`, `crime` e `prison: null`; a flag antiga `preso`
    vira passagem leve na ficha; campos opcionais `police.case`, `crime.plan/case/committed/earned`; fixture
@@ -542,3 +542,6 @@ Plano em `docs/release-0.0.4/PLAN.md` e diário em `docs/release-0.0.4/PROGRESS.
 - **Fama no dia a dia** (fase 5): redes e comerciais em `engine/fame/social.ts`; eventos com a condição `fame`.
   Condição `love` para caso, relação aberta, gravidez casual e uso do app. Alimentação em `fighting/body.ts`
   (`character.eating`); pós-graduação em `lifeStages/college.ts`. A imigração é uma estimativa não oficial.
+- **Futebol** (fase 6): `engine/football/`; habilidades e potencial do futebol são **ocultos** como os da luta (UI só
+  com `footballHint`/`potentialHint`). Clube novo em `content/football/clubs.ts` precisa passar em
+  `tests/football.test.ts` (nomes reais, cidade + cores, 20 por divisão). Força do clube é `power`.

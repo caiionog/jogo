@@ -91,6 +91,10 @@ import {
   postOnSocial,
   setEating,
   startPostgrad,
+  tryout,
+  trainFootball,
+  acceptFootballOffer,
+  retireFootball,
   doCommercial,
   enrollCollege,
   lockCollege,
@@ -105,7 +109,7 @@ import {
   goOut,
   hangOutAll,
 } from '../engine';
-import type { Eating, PostgradKind, PostKind } from '../engine';
+import type { Eating, FootballPosition, PostgradKind, PostKind } from '../engine';
 import type { CollegeType, PoliceTrackId, PrisonAction, SportId, TraffickingLevel } from '../engine';
 import type {
   AchievementDef,
@@ -285,6 +289,10 @@ interface GameStore {
   postOnSocial(kind: PostKind): void;
   setEating(eating: Eating): void;
   startPostgrad(kind: PostgradKind, field: string): void;
+  footballTryout(position: FootballPosition): void;
+  trainFootball(): void;
+  acceptFootballOffer(clubId: string): void;
+  retireFootball(): void;
   doCommercial(): void;
   /** Vida noturna (release 0.0.1): sai e o evento do local abre como pop-up. */
   goOut(venueId: string): void;
@@ -561,6 +569,10 @@ export const useGameStore = create<GameStore>((setState, getState) => {
     postOnSocial: (kind) => act((g) => postOnSocial(g, kind, GAME_CONTENT)),
     setEating: (e) => act((g) => setEating(g, e)),
     startPostgrad: (k, f) => act((g) => startPostgrad(g, k, f, GAME_CONTENT)),
+    footballTryout: (pos) => act((g) => tryout(g, pos, GAME_CONTENT)),
+    trainFootball: () => act((g) => trainFootball(g, GAME_CONTENT)),
+    acceptFootballOffer: (id) => act((g) => acceptFootballOffer(g, id, GAME_CONTENT)),
+    retireFootball: () => act((g) => retireFootball(g)),
     doCommercial: () => act((g) => doCommercial(g, GAME_CONTENT)),
     goOut: (id) => update((g) => goOut(g, id, GAME_CONTENT)),
     joinSportsClub: (id, sport) => update((g) => joinSportsClub(g, id, sport, GAME_CONTENT)),

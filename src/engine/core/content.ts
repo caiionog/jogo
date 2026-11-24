@@ -1,3 +1,4 @@
+import type { FootballContent } from '../football/types';
 import type { FameContent } from '../fame/social';
 import type { PopulationContent } from '../population/population';
 import type { FriendsContent } from '../relationships/types';
@@ -125,4 +126,6 @@ export interface GameContent {
   population: PopulationContent;
   /** Fama: marcas dos comerciais (release 0.0.4). */
   fame: FameContent;
+  /** Futebol: clubes, ligas, competições (release 0.0.4). */
+  football: FootballContent;
 }

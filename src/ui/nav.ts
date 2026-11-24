@@ -12,6 +12,7 @@ export type ScreenId =
   | 'cidade'
   | 'app-namoro'
   | 'fama'
+  | 'futebol'
   | 'atividades' | 'treino' | 'estudo' | 'saude' | 'lazer' | 'amor' | 'testamento' | 'crime' | 'ficha' | 'policia'
   | 'perfil';
 

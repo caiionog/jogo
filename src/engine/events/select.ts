@@ -1,3 +1,4 @@
+import { divisionOf } from '../football/football';
 import { crimeConditionsMet } from '../crime/plan';
 import { policeConditionsMet } from '../police/events';
 import { luckWeightMult, talentMod } from '../character/talents';
@@ -188,6 +189,20 @@ export function conditionsMet(state: GameState, event: GameEvent, content?: Game
     if (c.college.diploma && !c.college.diploma.some((d) => state.college?.diplomas.includes(d))) return false;
   }
   if (c.fame && !inRange(state.character.fame ?? 0, c.fame)) return false;
+  if (c.football) {
+    const f = state.football;
+    if (!f) return false;
+    const fc = c.football;
+    if (fc.stage && !fc.stage.includes(f.stage)) return false;
+    if (fc.position && !fc.position.includes(f.position)) return false;
+    if (fc.contracted !== undefined && !!f.contract !== fc.contracted) return false;
+    if (fc.hasOffer !== undefined && f.offers.length > 0 !== fc.hasOffer) return false;
+    if (fc.minRating !== undefined && (f.history.at(-1)?.rating ?? 0) < fc.minRating) return false;
+    if (fc.division) {
+      const div = content ? divisionOf(state, content, f.clubId) : 'D';
+      if (!fc.division.includes(div)) return false;
+    }
+  }
   if (c.love) {
     const rom = state.relationships.relations.filter((r) => r.romance);
     if (c.love.affair !== undefined && rom.some((r) => r.romance?.secret) !== c.love.affair) return false;

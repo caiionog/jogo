@@ -5,6 +5,7 @@ export * from './lifeStages';
 export * from './fame';
 export * from './population';
 export * from './civilService';
+export * from './football';
 export * from './exams/stages';
 export * from './events';
 export * from './fighting';

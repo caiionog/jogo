@@ -24,8 +24,10 @@ export function addFame(state: GameState, delta: number): GameState {
 
 /** Fama que o esporte sustenta: reputação × 0,8 enquanto a pessoa luta; metade disso depois de aposentada. */
 export function sportFame(state: GameState): number {
-  const rep = state.fighter.reputation;
-  return Math.round(rep * SPORT_FAME_SHARE * (state.fighter.retired ? 0.5 : 1));
+  const fight = state.fighter.reputation * (state.fighter.retired ? 0.5 : 1);
+  // futebol (release 0.0.4): aposentado sustenta metade
+  const foot = (state.football?.reputation ?? 0) * (state.football?.stage === 'aposentado' ? 0.5 : 1);
+  return Math.round(Math.max(fight, foot) * SPORT_FAME_SHARE);
 }
 
 /**

@@ -1,3 +1,4 @@
+import { footballYear } from '../football/football';
 import { eatingYear } from '../fighting/body';
 import { policeColleaguesYear } from '../police/colleagues';
 import { emptyCivilService } from '../civilService/civil';
@@ -133,6 +134,7 @@ export function newGame(options: NewGameOptions, content: GameContent): GameStat
     prison: null,
     population: emptyPopulation(),
     civilService: emptyCivilService(),
+    football: null,
   };
   const withFamily = generateFamily(state, rng, content, 0);
   state.relationships = withFamily.relationships;
@@ -411,6 +413,7 @@ export function advanceYear(
     next = { ...next, yearUses: {} };
     next = relationshipsYear(next, rng, content);
     next = startFightingYear(next, rng, content);
+    next = footballYear(next, rng, content);
     next = fameYear(next);
     // pista da sorte (oculta): de vez em quando, nos extremos, uma frase no log
     const hint = luckHint(next);

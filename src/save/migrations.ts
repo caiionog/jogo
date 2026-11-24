@@ -65,6 +65,7 @@ export const migrations: Record<number, (save: AnySave) => AnySave> = {
   16: migrateV16toV17,
   17: migrateV17toV18,
   18: migrateV18toV19,
+  19: migrateV19toV20,
 };
 
 export class SaveMigrationError extends Error {}
@@ -670,4 +671,14 @@ export function migrateV17toV18(save: AnySave): AnySave {
 export function migrateV18toV19(save: AnySave): AnySave {
   const s0 = save as unknown as AnyObj;
   return { ...(s0 as AnySave), version: 19, civilService: s0.civilService ?? { exams: [] } };
+}
+
+// ---------------------------------------------------------------------------
+// v19 → v20 (release 0.0.4: carreira de futebol)
+// ---------------------------------------------------------------------------
+
+/** Ninguém jogava futebol profissional antes (sem RNG). */
+export function migrateV19toV20(save: AnySave): AnySave {
+  const s0 = save as unknown as AnyObj;
+  return { ...(s0 as AnySave), version: 20, football: s0.football ?? null };
 }

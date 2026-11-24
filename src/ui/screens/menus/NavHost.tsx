@@ -1,4 +1,5 @@
 /** Renderiza o topo da pilha de navegação (um MenuScreen por nível; "Voltar" fecha o nível de cima). */
+import { FutebolScreen } from './football';
 import { FamaScreen } from './fame';
 import { AppNamoroScreen } from './dating';
 import { PessoasCidadeScreen } from './city';
@@ -44,6 +45,7 @@ function screenOf(r: ScreenRef, game: GameState): { title: string; body: ReactNo
     case 'mercado-cat': return { title: MARKET_TITLE[p.cat ?? ''] ?? 'Mercado', body: <MercadoCatScreen game={game} cat={p.cat as AssetKind | 'negocios'} /> };
     case 'financas': return { title: 'Finanças', body: <FinancasScreen game={game} /> };
     case 'app-namoro': return { title: 'App de namoro', body: <AppNamoroScreen game={game} /> };
+    case 'futebol': return { title: 'Esporte profissional', body: <FutebolScreen game={game} /> };
     case 'fama': return { title: 'Fama e redes', body: <FamaScreen game={game} /> };
     case 'cidade': return { title: 'Pessoas da cidade', body: <PessoasCidadeScreen game={game} /> };
     case 'relacoes': return { title: 'Relacionamentos', body: <RelacoesScreen game={game} /> };

@@ -1,3 +1,4 @@
+import type { FootballState } from '../football/types';
 import type { Eating } from '../fighting/body';
 import type { CivilServiceState } from '../civilService/civil';
 import type { PopulationState } from '../population/population';
@@ -215,6 +216,8 @@ export interface GameState {
   population: PopulationState;
   /** Concursos civis prestados (release 0.0.4). */
   civilService: CivilServiceState;
+  /** Carreira de futebol (release 0.0.4; null = nunca jogou). */
+  football: FootballState | null;
 }
 
-export const STATE_VERSION = 19;
+export const STATE_VERSION = 20;

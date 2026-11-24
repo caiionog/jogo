@@ -88,5 +88,24 @@
   prova de títulos dos concursos; emprego novo "Professor(a) universitário(a)" (`requires.postgrad`).
 - Telas antigas (`src/ui/components/`): 241 classes `slate-*`/`text-white` trocadas pelos tokens `--ds-*`.
 
+## Fase 6 — Futebol (concluída)
+- Clubes (`content/football/clubs.ts`): Divisão A **refeita** (20 clubes, cidades espalhadas, nenhuma combinação
+  cidade + cores de clube real, no máximo 2 por cidade), Divisão B (lista da fase 0 com cores novas e trocas onde o
+  nome evocava um clube real), C e D geradas de prefixo genérico + lugar inventado, 6 ligas estrangeiras fictícias.
+  Torneios: Campeonato Nacional, Copa Nacional, Copa Condor, Estadual, Troféu Craque do Ano, Seleção Nacional.
+- `tests/football.test.ts`: ~110 nomes e apelidos reais proibidos, cidade + cores de 40 clubes reais, 20 por divisão.
+- Motor (`engine/football/`): peneira (10–23, uma por ano, chance pela capacidade atlética, idade e clube esportivo),
+  base → primeiro contrato aos 17+ (ou dispensa aos 20), habilidades e potencial **ocultos** (pistas em palavras),
+  treino extra (1 sessão), crescimento até 24 e declínio depois dos 30, temporada anual (tabela de todas as divisões
+  com força do ano por RNG derivado, jogos, gols, assistências, nota, títulos, Seleção), salário e premiação por
+  `post('salario')`, renovação, propostas de clubes melhores e do exterior, sem clube, aposentadoria (40, ou nível
+  baixo a partir dos 33), promoção e rebaixamento de 4 por divisão. O futebol alimenta a fama (`sportFame`).
+- Condição de evento `football` e efeito `football` (prestígio e habilidades). 26 eventos `fut_*`.
+- Tela Ocupação → Carreiras → Jogador(a) de futebol ("Esporte profissional"): escudo procedural (SVG com as cores e as
+  iniciais), clube, contrato, pista, última temporada, propostas, treino e aposentadoria.
+- Balanceamento (60 vidas que tentam a peneira todo ano dos 10 aos 17): ~83% viram profissionais, ~5% jogam no
+  exterior, ~5% chegam à Seleção, nota de pico média 7,7, ~2 títulos por carreira.
+- Save v20 (`migrateV19toV20`, `football: null`), fixture `saves-v19.json`.
+
 ## Próximo
-Fase 6: futebol (clubes fictícios com a Divisão A refeita, ligas, carreira, temporada, escudos, tela central).
+Fase 7: minigames (pênalti primeiro, depois pausa para teste; depois finalização, passe, goleiro e MMA).

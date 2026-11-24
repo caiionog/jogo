@@ -91,4 +91,16 @@ describe('telas da release 0.0.4', () => {
     act(() => fireEvent.click(screen.getByTestId('post-foto')));
     expect(useGameStore.getState().game!.yearUses['redes:post']).toBe(1);
   });
+
+  it('Esporte profissional: peneira sem carreira; com carreira, escudo e pista sem números de habilidade', () => {
+    const g = adult(15, 'ui-fut');
+    open(g, ['nav-ocupacao', 'occ-careers', 'career-football']);
+    expect((screen.getByTestId('football-tryout') as HTMLButtonElement).disabled).toBe(false);
+    cleanup();
+    const pro = { ...g, football: { stage: 'pro' as const, position: 'ATA' as const, skills: { finishing: 71.3, passing: 55.2, defending: 20.1, goalkeeping: 10, pace: 66.6 }, potential: 83, reputation: 20, clubId: 'litoraneo', contract: { clubId: 'litoraneo', years: 2, salary: 300000 }, offers: [], history: [], titles: [], caps: 0, divisions: {} } };
+    open(pro, ['nav-ocupacao', 'occ-careers', 'career-football']);
+    const text = screen.getByTestId('football-card').textContent + screen.getByTestId('football-hint').textContent;
+    expect(text).toContain('Atlético Litorâneo');
+    for (const n of ['71', '55', '66', '83']) expect(document.body.textContent).not.toContain(` ${n} `);
+  });
 });

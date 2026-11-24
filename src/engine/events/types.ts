@@ -1,3 +1,4 @@
+import type { FootballDivision, FootballPosition } from '../football/types';
 import type { CrimeConditions } from '../crime/plan';
 import type { PoliceConditions } from '../police/events';
 import type { ModalityId } from '../fighting/types';
@@ -28,6 +29,8 @@ export interface EventConditions {
   /** Fama pública (release 0.0.4). */
   fame?: StatRange;
   /** Vida amorosa moderna (release 0.0.4): tem caso escondido, gravidez casual em curso, usou o app neste ano ou no anterior (flag `usou_app`). */
+  /** Futebol (release 0.0.4): fase, divisão do clube ('X' = exterior), posição, com contrato, nota da última temporada, propostas. */
+  football?: { stage?: ('base' | 'pro' | 'aposentado')[]; division?: (FootballDivision | 'X')[]; position?: FootballPosition[]; contracted?: boolean; minRating?: number; hasOffer?: boolean };
   love?: { affair?: boolean; casualPregnancy?: boolean; usedApp?: boolean; openRelationship?: boolean };
   sex?: Sex;
   stats?: Partial<Record<StatKey, StatRange>>;

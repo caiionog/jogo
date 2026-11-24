@@ -288,6 +288,7 @@ export function continueAsChild(state: GameState, personId: string, content: Gam
     // a cidade é a mesma, mas o herdeiro conhece outra gente (a lista nasce no ano de nascimento dele)
     population: emptyPopulation(),
     civilService: emptyCivilService(),
+    football: null,
   };
   const items = pickInheritedItems(state, heir.amount);
   const cash = Math.max(0, heir.amount - items.used);

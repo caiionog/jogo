@@ -87,6 +87,7 @@ export function CarreirasScreen({ game }: { game: GameState }) {
         ))}
       </ListGroup>
       <ListGroup title="Especiais">
+        <ListItem emoji="⚽" title="Jogador(a) de futebol" subtitle={game.football ? (game.football.stage === 'aposentado' ? 'Aposentado(a)' : 'Clube, temporada e propostas') : 'Peneira, base e profissional'} onClick={() => nav.push('futebol')} testId="career-football" />
         <ListItem icon={Swords} title="Carreira de lutador" subtitle="Academia, faixas, lutas amadoras e profissionais" onClick={() => nav.push('luta')} testId="career-fighter" />
         <ListItem icon={GraduationCap} title="Estudos" subtitle={game.college.current ? `Cursando ${C.college.courses.find((c) => c.id === game.college.current!.courseId)?.label}` : game.college.diplomas.length ? 'Diplomas e novo curso' : 'Exame nacional e faculdade'} onClick={() => nav.push('estudos')} testId="career-studies" />
         <ListItem icon={Store} title="Empreender" subtitle="Comprar ou abrir um negócio" disabled={age < 18} reason="Disponível a partir dos 18 anos" onClick={() => nav.push({ id: 'mercado-cat', params: { cat: 'negocios' } })} />
