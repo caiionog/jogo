@@ -172,3 +172,95 @@ describe('população da cidade (release 0.0.4)', () => {
     expect(meetResident(s, adult.id, GAME_CONTENT)).toBe(s);
   });
 });
+
+import { appCards, appLike, appLikeBlockReason, currentPartner, discoverAffairs, exFriends, interact, marry, newRomanceMode, partners, reconnectExFriend, startRomance, archivePerson, addRelation, createPerson, createRng as mkRng } from '../src/engine';
+
+function adultWithPartner(seed = 'rom', open = false): GameState {
+  let g = withAge(makeGame(seed), 28);
+  g = { ...g, relationships: { ...g.relationships, settings: { ...g.relationships.settings, adultContent: true } } };
+  const rng = mkRng(1);
+  const [s, p] = createPerson(g, rng, GAME_CONTENT, { age: 28, sex: g.character.sex === 'M' ? 'F' : 'M' });
+  return addRelation(s, p.id, 'parceiro', 70, { romance: { stage: 'namorando', since: 26, ...(open ? { open: true } : {}) } });
+}
+
+describe('vários parceiros, relação aberta e casos (release 0.0.4)', () => {
+  it('sem ninguém: livre; com parceiro fechado: caso escondido; aberto: livre; menor: bloqueado', () => {
+    expect(newRomanceMode(withAge(makeGame('a'), 25))).toBe('free');
+    expect(newRomanceMode(adultWithPartner())).toBe('secret');
+    expect(newRomanceMode(adultWithPartner('b', true))).toBe('free');
+    const teen = adultWithPartner('c');
+    expect(newRomanceMode(withAge(teen, 16))).toBe('blocked');
+    expect(startRomance(adultWithPartner())?.secret).toBe(true);
+  });
+
+  it('caso escondido não vira casamento e o casamento é exclusivo', () => {
+    let s = adultWithPartner('d');
+    const rng = mkRng(2);
+    const [s2, other] = createPerson(s, rng, GAME_CONTENT, { age: 27 });
+    s = addRelation(s2, other.id, 'parceiro', 80, { romance: { stage: 'namorando', since: 27, secret: true } });
+    expect(partners(s)).toHaveLength(2);
+    expect(currentPartner(s)!.rel.romance!.secret).toBeUndefined();
+    expect(marry(s, other.id, 'simple')).toBe(s);
+    const main = currentPartner(s)!.person.id;
+    const wed = marry(s, main, 'simple');
+    expect(wed.relationships.relations.find((r) => r.personId === main)!.type).toBe('conjuge');
+  });
+
+  it('casos escondidos acabam sendo descobertos', () => {
+    let found = 0;
+    for (let i = 0; i < 80; i++) {
+      let s = adultWithPartner(`e${i}`);
+      const rng = mkRng(i + 10);
+      const [s2, other] = createPerson(s, rng, GAME_CONTENT, { age: 27 });
+      s = addRelation(s2, other.id, 'parceiro', 60, { romance: { stage: 'ficando', since: 28, secret: true } });
+      const after = discoverAffairs(s, mkRng(i));
+      if (after.relationships.relations.find((r) => r.personId === other.id)?.type === 'ex') found++;
+    }
+    expect(found).toBeGreaterThan(5);
+    expect(found).toBeLessThan(35);
+  });
+
+  it('propor relação aberta só entre adultos', () => {
+    const s = adultWithPartner('f');
+    const pid = currentPartner(s)!.person.id;
+    let opened = false;
+    let cur = s;
+    for (let i = 0; i < 30 && !opened; i++) {
+      cur = interact({ ...cur, rngState: i * 7919 + 1 }, pid, 'propose_open', GAME_CONTENT);
+      opened = !!cur.relationships.relations.find((r) => r.personId === pid)?.romance?.open;
+    }
+    expect(opened).toBe(true);
+  });
+});
+
+describe('app de namoro e ex-amizades (release 0.0.4)', () => {
+  it('só adultos; cartões determinísticos e adultos; curtir pode dar match', () => {
+    expect(appCards(withAge(makeGame('g'), 16), GAME_CONTENT)).toEqual([]);
+    const g = withAge(makeGame('h'), 30);
+    const cards = appCards(g, GAME_CONTENT);
+    expect(cards.length).toBeGreaterThan(3);
+    expect(cards.every((c) => c.age >= 18)).toBe(true);
+    expect(appCards(g, GAME_CONTENT)).toEqual(cards);
+    expect(appLikeBlockReason(g, cards[0]!.id, GAME_CONTENT)).toBeNull();
+    let matched = 0;
+    for (let i = 0; i < 40; i++) {
+      const s = { ...withAge(makeGame(`m${i}`), 30) };
+      const c = appCards(s, GAME_CONTENT)[0]!;
+      const after = appLike(s, c.id, GAME_CONTENT);
+      if (after.relationships.people.length > s.relationships.people.length) matched++;
+      expect(appCards(after, GAME_CONTENT).some((x) => x.id === c.id)).toBe(false);
+    }
+    expect(matched).toBeGreaterThan(5);
+  });
+
+  it('amizade arquivada vira ex-amizade e pode ser reatada', () => {
+    let s = withAge(makeGame('ex'), 30);
+    const [s2, p] = createPerson(s, mkRng(3), GAME_CONTENT, { age: 30 });
+    s = archivePerson(addRelation(s2, p.id, 'amigo', 5), p.id, 'Vocês se afastaram.');
+    expect(exFriends(s).map((a) => a.person!.id)).toEqual([p.id]);
+    let back = s;
+    for (let i = 0; i < 20 && !back.relationships.people.some((x) => x.id === p.id); i++) back = reconnectExFriend({ ...s, rngState: i * 104729 + 3 }, p.id);
+    expect(back.relationships.relations.find((r) => r.personId === p.id)!.type).toBe('amigo');
+    expect(exFriends(back)).toEqual([]);
+  });
+});

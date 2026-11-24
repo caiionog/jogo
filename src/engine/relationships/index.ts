@@ -9,3 +9,5 @@ export * from './social';
 export * from './year';
 export * from './intimacy';
 export * from './group';
+export * from './initiative';
+export * from './datingApp';

@@ -2,6 +2,19 @@ import type { GameEvent } from '../../../engine';
 
 /** Namoro adolescente (14–17, sem conteúdo sexual) e romance adulto não explícito. */
 export const ROMANCE_EVENTS: readonly GameEvent[] = [
+  // ----- release 0.0.4: alguém se declara (a engine marca a pessoa com `quer_namorar`) -----
+  {
+    id: 'rel_confession',
+    trigger: 'auto',
+    cooldownYears: 1,
+    weight: 1,
+    conditions: { minAge: 14, relationship: { types: ['amigo', 'colega_treino', 'conhecido'], personFlag: 'quer_namorar' } },
+    text: '{pessoa} chamou você para conversar, ficou vermelh{o/a} de nervoso e confessou: gosta de você há um tempão.',
+    choices: [
+      { id: 'yes', label: 'Dizer que sente o mesmo', resultText: 'Vocês riram de nervoso e agora estão ficando.', effects: { stats: { happiness: 6 }, social: { startRomance: true, affection: 6, setPersonFlags: { quer_namorar: false } } } },
+      { id: 'friends', label: 'Preferir continuar amigos', resultText: 'Foi um pouco constrangedor, mas a amizade sobreviveu.', effects: { social: { affection: -6, setPersonFlags: { quer_namorar: false } } } },
+    ],
+  },
   // ----- adolescentes (14–17): só carinho, nada sexual -----
   {
     id: 'rel_teen_first_date',

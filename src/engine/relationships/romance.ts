@@ -11,7 +11,8 @@ import {
   addRelation,
   childrenOf,
   createPerson,
-  currentPartner,
+  newRomanceMode,
+  startRomance,
   firstName,
   getPerson,
   getRelation,
@@ -37,7 +38,7 @@ export function meetBlockReason(state: GameState, mode: MeetMode): MeetBlockReas
   if (state.pendingEvents.length > 0 || state.activeFight) return 'busy';
   if (!canDate(state.character.age)) return 'too-young';
   if (mode === 'app' && state.character.age < ADULT_AGE) return 'app-adult';
-  if (currentPartner(state)) return 'taken';
+  if (newRomanceMode(state) === 'blocked') return 'taken';
   return null;
 }
 
@@ -89,9 +90,10 @@ export function meetSomeone(state: GameState, mode: MeetMode, content: GameConte
   const compat = compatibility(s, person, content);
   const where = mode === 'app' ? 'num aplicativo de namoro' : rng.pick(['numa festa', 'por amigos em comum', 'na academia', 'num show']);
   if (rng.chance((0.1 + (compat / 100) * 0.75) * rep)) {
-    s = addRelation(s, person.id, 'parceiro', rng.int(40, 60), { romance: { stage: 'ficando', since: s.character.age } });
+    const romance = startRomance(s)!;
+    s = addRelation(s, person.id, 'parceiro', rng.int(40, 60), { romance });
     s = updateRelation(s, person.id, (r) => withHistory(r, `Vocês se conheceram ${where}.`));
-    return appendLog(s, `Você conheceu ${person.name} ${where} e vocês estão ficando.`);
+    return appendLog(s, `Você conheceu ${person.name} ${where} e vocês estão ficando${romance.secret ? ', escondido de quem já está com você' : ''}.`);
   }
   // não rolou: a pessoa não entra na lista
   s = { ...s, relationships: { ...s.relationships, people: s.relationships.people.filter((p) => p.id !== person.id) } };
@@ -104,16 +106,23 @@ export function setStage(state: GameState, personId: string, stage: RomanceStage
   const rel = getRelation(state, personId);
   if (!person || !rel?.romance) return state;
   if ((stage === 'noivos' || stage === 'casados') && !canMarry(state.character.age, person.age)) return state;
+  // casamento é exclusivo: ninguém casa com uma segunda pessoa, nem um caso escondido vira noivado
+  if ((stage === 'noivos' || stage === 'casados') && (rel.romance.secret || hasOtherSpouse(state, personId))) return state;
   return updateRelation(state, personId, (r) => ({
     ...r,
     type: stage === 'casados' ? 'conjuge' : 'parceiro',
-    romance: { stage, since: state.character.age },
+    romance: { ...(r.romance?.open ? { open: true } : {}), ...(r.romance?.secret ? { secret: true } : {}), stage, since: state.character.age },
   }));
+}
+
+/** Já existe outro cônjuge (o casamento é exclusivo: bigamia é crime). */
+export function hasOtherSpouse(state: GameState, personId: string): boolean {
+  return state.relationships.relations.some((r) => r.personId !== personId && r.type === 'conjuge' && r.romance?.stage === 'casados');
 }
 
 export function marry(state: GameState, personId: string, ceremony: 'simple' | 'big'): GameState {
   const person = getPerson(state, personId);
-  if (!person || !canMarry(state.character.age, person.age)) return state;
+  if (!person || !canMarry(state.character.age, person.age) || hasOtherSpouse(state, personId) || getRelation(state, personId)?.romance?.secret) return state;
   let s = setStage(state, personId, 'casados');
   const cost = WEDDING_COST[ceremony];
   s = post(s, 'compras', -cost, ceremony === 'big' ? 'Festa de casamento' : 'Cerimônia de casamento');

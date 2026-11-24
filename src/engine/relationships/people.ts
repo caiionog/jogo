@@ -87,7 +87,32 @@ export function relationsOf(state: GameState, types?: readonly RelType[], aliveO
 
 /** Parceiro(a) romântico(a) atual (ficando, namorando, noivos ou casados). */
 export function currentPartner(state: GameState): { person: Person; rel: Relation } | undefined {
-  return relationsOf(state, ['parceiro', 'conjuge']).find((x) => x.rel.romance);
+  const all = partners(state);
+  // o parceiro principal: cônjuge, depois quem não é caso escondido, depois qualquer um
+  return all.find((x) => x.rel.type === 'conjuge') ?? all.find((x) => !x.rel.romance?.secret) ?? all[0];
+}
+
+/** Todos os romances em andamento (release 0.0.4: pode haver mais de um entre adultos). */
+export function partners(state: GameState): { person: Person; rel: Relation }[] {
+  return relationsOf(state, ['parceiro', 'conjuge']).filter((x) => !!x.rel.romance);
+}
+
+/**
+ * Como começa um romance novo: livre (sem ninguém, ou todos os parceiros atuais combinaram relação aberta), como
+ * caso escondido (adulto que já tem alguém) ou bloqueado (menor de idade com parceiro).
+ */
+export function newRomanceMode(state: GameState): 'free' | 'secret' | 'blocked' {
+  const all = partners(state).filter((x) => !x.rel.romance?.secret);
+  if (!all.length) return 'free';
+  if (state.character.age < 18) return 'blocked';
+  return all.every((x) => x.rel.romance?.open) ? 'free' : 'secret';
+}
+
+/** Romance inicial ("ficando") conforme `newRomanceMode`; null se bloqueado. */
+export function startRomance(state: GameState): Relation['romance'] | null {
+  const mode = newRomanceMode(state);
+  if (mode === 'blocked') return null;
+  return { stage: 'ficando', since: state.character.age, ...(mode === 'secret' ? { secret: true } : {}) };
 }
 
 export function civilStatus(state: GameState): CivilStatus {
@@ -208,7 +233,8 @@ export function archivePerson(state: GameState, personId: string, note: string):
   const rel = getRelation(state, personId);
   if (!person || !rel) return state;
   const rs = state.relationships;
-  const entry: ArchivedPerson = { name: person.name, type: rel.type, note };
+  const friend = person.alive && (rel.type === 'amigo' || rel.type === 'colega_treino');
+  const entry: ArchivedPerson = { name: person.name, type: rel.type, note, ...(friend ? { person, endedAge: state.character.age } : {}) };
   return {
     ...state,
     relationships: {

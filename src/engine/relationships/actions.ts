@@ -7,8 +7,8 @@ import type { Rng } from '../core/rng';
 import type { GameState } from '../core/state';
 import { addStats, appendLog } from '../core/stats';
 import { adultContentAllowed, canDate, canMarry } from './guards';
-import { breakUp, canConceive, divorce, ADOPTION_COST, startPregnancy } from './romance';
-import { changeAffection, currentPartner, firstName, getPerson, getRelation, relLabel, updatePerson, updateRelation, withHistory } from './people';
+import { breakUp, canConceive, divorce, hasOtherSpouse, ADOPTION_COST, startPregnancy } from './romance';
+import { changeAffection, firstName, partners, startRomance, getPerson, getRelation, relLabel, updatePerson, updateRelation, withHistory } from './people';
 import type { InteractionKind, Person, RelType, Relation } from './types';
 import { post } from '../economy/ledger';
 import { moneyFromParent } from '../economy/family';
@@ -16,6 +16,8 @@ import { bumpUse, repeatMultiplier } from '../lifeStages/sessions';
 import { recordIntimacy } from './intimacy';
 
 export const GIFT_COST = 200;
+/** Chance de gravidez numa noite casual sem planejamento (release 0.0.4). */
+export const CASUAL_PREGNANCY_CHANCE = 0.04;
 
 export const INTERACTION_LABEL: Record<InteractionKind, string> = {
   spend_time: 'Passar tempo junto',
@@ -36,6 +38,7 @@ export const INTERACTION_LABEL: Record<InteractionKind, string> = {
   adopt: `Adotar uma criança (R$ ${ADOPTION_COST.toLocaleString('pt-BR')})`,
   flirt: 'Flertar',
   night_together: 'Passar a noite juntos',
+  propose_open: 'Propor relação aberta',
 };
 
 /** Ações que envolvem sexo: SEMPRE exigem canHaveSexualContent (os dois com 18+). */
@@ -70,7 +73,10 @@ export function applicableInteractions(state: GameState, person: Person, rel: Re
   if (stage) {
     out.push('date');
     if (stage === 'ficando') out.push('ask_out');
-    if (stage === 'namorando' && canMarry(state.character.age, person.age)) out.push('propose');
+    const secret = !!rel.romance?.secret;
+    if (stage === 'namorando' && canMarry(state.character.age, person.age) && !secret && !hasOtherSpouse(state, person.id)) out.push('propose');
+    // relação aberta: só entre adultos, com quem não é caso escondido e ainda não combinou
+    if (stage !== 'ficando' && !secret && !rel.romance?.open && state.character.age >= 18 && person.age >= 18) out.push('propose_open');
     if (stage === 'casados') out.push('divorce');
     else out.push('break_up');
     if (adultContentAllowed(state, person)) out.push('intimacy_protected', 'intimacy');
@@ -252,7 +258,18 @@ function runInteraction(state: GameState, person: Person, rel: Relation, kind: I
     case 'flirt':
       return flirt(s, person, rel, rng, m);
     case 'night_together':
-      return nightTogether(s, person, rel, rng);
+      return nightTogether(s, person, rel, rng, content);
+    case 'propose_open': {
+      const openMinded = person.traits.some((t) => t === 'aventureiro' || t === 'tranquilo');
+      const jealous = person.traits.some((t) => t === 'ciumento');
+      const chance = Math.max(0.05, Math.min(0.6, 0.15 + (rel.affection - 50) / 150 + (openMinded ? 0.2 : 0) - (jealous ? 0.25 : 0)));
+      if (rng.chance(chance)) {
+        s = updateRelation(s, person.id, (r) => withHistory({ ...r, romance: { ...r.romance!, open: true } }, 'Combinaram relação aberta.'));
+        return appendLog(s, `Você e ${n} conversaram com calma e combinaram uma relação aberta.`);
+      }
+      s = changeAffection(s, person.id, -rng.int(8, 15), 'Não quis relação aberta.');
+      return appendLog(s, `${n} não gostou da ideia de uma relação aberta. O clima pesou.`);
+    }
   }
 }
 
@@ -305,8 +322,9 @@ function flirt(state: GameState, person: Person, rel: Relation, rng: Rng, m: num
   const n = firstName(person.name);
   let s = jealousy(state, person, rng, 0.25);
   // quem já tem parceiro(a) não começa outro romance: só arrisca o ciúme
-  if (!currentPartner(s) && rng.chance(Math.min(0.7, 0.2 + rel.affection / 200) * Math.min(1.3, m))) {
-    s = updateRelation(s, person.id, (r) => ({ ...r, type: 'parceiro', romance: { stage: 'ficando', since: s.character.age } }));
+  const romance = startRomance(s);
+  if (romance && rng.chance(Math.min(0.7, 0.2 + rel.affection / 200) * Math.min(1.3, m))) {
+    s = updateRelation(s, person.id, (r) => ({ ...r, type: 'parceiro', romance }));
     s = changeAffection(s, person.id, 6, 'Rolou um clima.');
     return appendLog(s, `Você flertou com ${n} e o clima mudou entre vocês: agora estão ficando.`);
   }
@@ -320,16 +338,23 @@ function flirt(state: GameState, person: Person, rel: Relation, rng: Rng, m: num
  * virar romance ou estragar; ciúme de parceiro(a); fofoca na academia; com treinador(a) ou professor(a), problema de
  * hierarquia (instrutor afastado, expulsão da academia, problema na faculdade).
  */
-function nightTogether(state: GameState, person: Person, rel: Relation, rng: Rng): GameState {
+function nightTogether(state: GameState, person: Person, rel: Relation, rng: Rng, content: GameContent): GameState {
   if (!canHaveSexualContentWith(state, person)) return state; // defesa em profundidade
   const n = firstName(person.name);
   let s = appendLog(state, `Você e ${n} passaram a noite juntos. Na manhã seguinte, um café meio sem graça e muitos pensamentos.`);
   s = recordIntimacy(s, person);
   s = { ...s, character: { ...s.character, stats: addStats(s.character.stats, { happiness: 3 }) } };
   s = jealousy(s, person, rng, 0.5);
+  // gravidez de uma noite (release 0.0.4): canConceive exige os dois 18+ e casal M/F
+  if (canConceive(s, person) && rng.chance(CASUAL_PREGNANCY_CHANCE)) {
+    s = startPregnancy(s, person.id, content);
+    if (s.relationships.pregnancy) s = { ...s, relationships: { ...s.relationships, pregnancy: { ...s.relationships.pregnancy, casual: true } } };
+    return s;
+  }
   const roll = rng.next();
-  if (roll < 0.35 && !currentPartner(s)) {
-    s = updateRelation(s, person.id, (r) => ({ ...r, type: 'parceiro', romance: { stage: 'ficando', since: s.character.age } }));
+  const romance = startRomance(s);
+  if (roll < 0.35 && romance) {
+    s = updateRelation(s, person.id, (r) => ({ ...r, type: 'parceiro', romance }));
     s = changeAffection(s, person.id, 8, 'Viraram algo mais.');
     s = appendLog(s, `Com ${n}, o que era ${rel.type === 'amigo' ? 'amizade' : 'convivência'} virou algo mais.`);
   } else if (roll < 0.6) {
@@ -352,8 +377,8 @@ function nightTogether(state: GameState, person: Person, rel: Relation, rng: Rng
 
 /** Quem já tem parceiro(a) pode ser descoberto: o parceiro perde afeto. */
 function jealousy(state: GameState, other: Person, rng: Rng, chance: number): GameState {
-  const p = currentPartner(state);
-  if (!p || p.person.id === other.id || !rng.chance(chance)) return state;
+  const p = partners(state).find((x) => x.person.id !== other.id && !x.rel.romance?.secret && !x.rel.romance?.open);
+  if (!p || !rng.chance(chance)) return state;
   const s = changeAffection(state, p.person.id, -rng.int(12, 25), 'Ciúme.');
   return appendLog(s, `${firstName(p.person.name)} descobriu e ficou furios${p.person.sex === 'M' ? 'o' : 'a'} de ciúme.`);
 }

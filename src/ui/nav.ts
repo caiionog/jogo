@@ -10,6 +10,7 @@ export type ScreenId =
   | 'bens' | 'meus-bens' | 'bem' | 'empresa' | 'mercado' | 'mercado-cat' | 'financas'
   | 'relacoes'
   | 'cidade'
+  | 'app-namoro'
   | 'atividades' | 'treino' | 'estudo' | 'saude' | 'lazer' | 'amor' | 'testamento' | 'crime' | 'ficha' | 'policia'
   | 'perfil';
 

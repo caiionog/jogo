@@ -64,19 +64,28 @@ export interface Relation {
   interactedYear: number;
   /** Quantos traços o personagem já conhece. */
   revealed: number;
-  romance?: { stage: RomanceStage; since: number };
+  /**
+   * Romance. `open`: relação aberta combinada com esta pessoa (release 0.0.4). `secret`: caso escondido dos outros
+   * parceiros, que pode ser descoberto. Os dois só existem entre adultos.
+   */
+  romance?: { stage: RomanceStage; since: number; open?: boolean; secret?: boolean };
 }
 
 export interface ArchivedPerson {
   name: string;
   type: RelType;
   note: string;
+  /** Ex-amizade (release 0.0.4): a pessoa inteira e a idade do personagem quando se afastaram, para tentar reatar. */
+  person?: Person;
+  endedAge?: number;
 }
 
 export interface Pregnancy {
   partnerId: string;
   dueYear: number;
   adoption?: boolean;
+  /** Gravidez de uma noite, fora de um relacionamento (release 0.0.4). */
+  casual?: boolean;
 }
 
 export interface RelationshipsState {
@@ -110,7 +119,9 @@ export type InteractionKind =
   /** Flertar com amizade, colega, treinador(a) ou professor(a) (romântico; faixas de idade de `isValidPartnerAge`). */
   | 'flirt'
   /** Passar a noite juntos (sexual: SÓ com `canHaveSexualContentWith` — os dois 18+ e opção adulta ligada). */
-  | 'night_together';
+  | 'night_together'
+  /** Propor relação aberta (release 0.0.4): os dois adultos, sem caso escondido. */
+  | 'propose_open';
 
 /** Traço de personalidade (conteúdo). */
 export interface TraitDef {

@@ -14,6 +14,7 @@ import {
   changeAffection,
   createPerson,
   currentPartner,
+  startRomance,
   firstName,
   getPerson,
   getRelation,
@@ -90,6 +91,8 @@ export interface SocialEffects {
   /** Encerra a relação com o alvo (amizade acabou, afastamento). */
   endRelation?: string;
   breakUp?: boolean;
+  /** Começa um romance ("ficando") com o alvo, como `startRomance` permitir (release 0.0.4). */
+  startRomance?: boolean;
   stage?: RomanceStage;
   wedding?: 'simple' | 'big';
   divorce?: boolean;
@@ -144,6 +147,10 @@ export function applySocialEffects(state: GameState, fx: SocialEffects, rng: Rng
     if (fx.setType) {
       s = updateRelation(s, target.id, (r) => withHistory({ ...r, type: fx.setType as RelType }, 'A relação mudou.'));
       s = checkTypeShift(s, target.id);
+    }
+    if (fx.startRomance && isValidPartnerAge(s.character.age, target.age) && !getRelation(s, target.id)?.romance) {
+      const romance = startRomance(s);
+      if (romance) s = updateRelation(s, target.id, (r) => withHistory({ ...r, type: 'parceiro', romance }, 'Começaram a ficar.'));
     }
     if (fx.stage) {
       const ok = fx.stage === 'noivos' || fx.stage === 'casados' ? canMarry(s.character.age, target.age) : isValidPartnerAge(s.character.age, target.age);

@@ -1,6 +1,7 @@
 /** Atividades (treino com limite oculto; o resto sem limite, com retorno decrescente), Relacionamentos, Saúde, Testamento e Perfil. */
 import { BookOpen, Car, Dumbbell, Heart, HeartPulse, MapPin, PartyPopper, Plane, ScrollText, Siren, Trophy } from 'lucide-react';
 import { useState } from 'react';
+import { ExAmizades } from './dating';
 import { GAME_CONTENT as C } from '../../../content';
 import type { GameState, TrainingKind } from '../../../engine';
 import { behindBars, CNH_COST, TRAINING_MIN_AGE, actionBlockReason, actionUseKey, cnhBlockReason, coachAssessment, meetBlockReason, trainingBlockReason, usesThisYear } from '../../../engine';
@@ -124,10 +125,11 @@ export function AmorScreen({ game }: { game: GameState }) {
   const nav = useNav();
   return (
     <>
-      {(['social', 'app'] as const).map((m) => {
-        const r = meetBlockReason(game, m);
-        return <ListItem key={m} emoji={m === 'social' ? '💘' : '📱'} title={m === 'social' ? 'Conhecer alguém' : 'App de namoro'} subtitle={usesThisYear(game, 'conhecer') > 0 ? 'Tentar de novo no mesmo ano rende menos' : 'Conhecer gente nova'} disabled={!!r} reason={r ? MEET_REASON[r] : undefined} onClick={() => meet(m)} chevron={false} testId={`meet-${m}`} />;
-      })}
+      {(() => {
+        const r = meetBlockReason(game, 'social');
+        return <ListItem emoji="💘" title="Conhecer alguém" subtitle={usesThisYear(game, 'conhecer') > 0 ? 'Tentar de novo no mesmo ano rende menos' : 'Conhecer gente nova'} disabled={!!r} reason={r ? MEET_REASON[r] : undefined} onClick={() => meet('social')} chevron={false} testId="meet-social" />;
+      })()}
+      <ListItem emoji="📱" title="App de namoro" subtitle="Perfis do ano, filtros, curtir ou pular" disabled={game.character.age < 18} reason="Só para maiores de 18" onClick={() => nav.push('app-namoro')} testId="meet-app" />
       <ListItem emoji="❤️" title="Encontros e relações" subtitle="Abra uma pessoa em Relacionamentos para convidar para sair" onClick={() => nav.open('relacoes')} />
     </>
   );
@@ -147,6 +149,7 @@ export function RelacoesScreen({ game }: { game: GameState }) {
     <>
       <ListItem icon={MapPin} title="Pessoas da cidade" subtitle={`Vizinhos e moradores de ${game.character.city}`} onClick={() => nav.push('cidade')} testId="nav-cidade" />
       <RelationshipsPanel game={game} />
+      <ExAmizades game={game} />
       {(game.dynasty.generation > 1 || game.relationships.relations.some((r) => r.type === 'filho')) && (
         <ListGroup title="Árvore da família">
           <FamilyTree game={game} />

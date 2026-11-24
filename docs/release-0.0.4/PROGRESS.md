@@ -16,7 +16,9 @@
 
 ### Falhas conhecidas no Windows (já existiam antes)
 - `tests/fairness.test.ts`: dois casos comparam caminhos com `/` (no Windows saem com `\`).
-- `tests/ui*.test.tsx`: o módulo virtual do PWA não resolve no Windows.
+- `tests/ui*.test.tsx`: o módulo virtual do PWA não resolvia no Windows. **Corrigido na fase 3** com um stub nos
+  testes (`tests/stubs/pwa-register.ts`, alias em `vite.config.ts`). Sobra um erro de teardown (o visual carregado sob
+  demanda termina de importar depois do fim do teste); os testes de UI passam.
 - `tests/pixelAvatar.test.ts` (encaixe): passa sozinho, mas pode estourar o tempo na suíte inteira.
 
 ## Fase 2 — População e imigração (concluída, sem dados de imigração)
@@ -35,5 +37,22 @@
   immigration` está vazio e o gerador não inventa números: todo morador nasce no Brasil até alguém preencher a tabela
   `{ uf, origin, share }` com a fonte. Eventos de imigração ficaram para depois disso.
 
+## Fase 3 — Social (concluída)
+- Vários romances entre adultos: `partners`, `newRomanceMode` ('free' | 'secret' | 'blocked') e `startRomance`
+  (`relationships/people.ts`). `currentPartner` agora é o parceiro principal (cônjuge, depois quem não é caso).
+  `Relation.romance` ganhou `open?` e `secret?` (opcionais, sem migração). Menor de idade com parceiro não começa outro.
+- Casamento exclusivo: `hasOtherSpouse`; caso escondido não vira noivado nem casamento. Interação nova
+  `propose_open` (só adultos; traços pesam). Ciúme só de parceiro fechado.
+- Ciclo anual (`relationships/initiative.ts`): casos escondidos descobertos (22% ao ano; o caso termina, quem foi
+  traído perde 25–40 de afeto), amizades com afeto ≥ 65 tomam a iniciativa (até 2 por ano) e quem gosta muito de você
+  se declara (flag `quer_namorar` → evento `rel_confession`, efeito novo `social.startRomance`).
+- Ex-amizades: amizade arquivada guarda a pessoa (`ArchivedPerson.person`, `endedAge`); `reconnectExFriend` (uma
+  tentativa por ano, chance cai com o tempo). Seção "Ex-amizades" em Relações.
+- App de namoro (`relationships/datingApp.ts`): 8 perfis por ano por RNG derivado, filtros de idade e intenção, 6
+  curtidas por ano, match pela compatibilidade; "amizade" vira amigo; começa como caso se você já tem alguém fechado.
+  Só 18+. Tela em Atividades → Amor → App de namoro.
+- Gravidez casual: "Passar a noite juntos" tem 4% de chance (`canConceive`: 18+ e casal M/F); `Pregnancy.casual`.
+- Pendente: eventos de descoberta, paternidade e do app (content-writer), e a condição de evento para "tem caso".
+
 ## Próximo
-Fase 3 em sequência: `partners` e ex-amizades primeiro; depois app de namoro, descoberta e gravidez casual.
+Fase 4: motor genérico de concurso (refatorando o da polícia), os 10 cargos e os colegas de farda.

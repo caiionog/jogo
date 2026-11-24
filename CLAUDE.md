@@ -534,3 +534,6 @@ Plano em `docs/release-0.0.4/PLAN.md` e diário em `docs/release-0.0.4/PROGRESS.
 - **População da cidade** (`engine/population/`): moradores gerados por (seed, UF, cidade, `POP_VERSION`), nunca
   salvos; só `population.met` vai para o save. Mudar nomes ou fórmula do gerador exige subir `POP_VERSION`.
   `content.population.immigration` só recebe números com fonte oficial por UF e nacionalidade.
+- **Romance entre adultos** (fase 3): use `startRomance(state)` para qualquer romance novo (decide se é livre ou caso
+  escondido); casamento é exclusivo (`hasOtherSpouse`). Casos (`romance.secret`) podem ser descobertos
+  (`discoverAffairs`). App de namoro em `relationships/datingApp.ts`, só 18+.

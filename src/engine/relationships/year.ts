@@ -8,6 +8,7 @@ import { isValidPartnerAge } from './guards';
 import { archivePerson, changeAffection, currentPartner, enforcePeopleLimit, firstName, relationsOf, updatePerson, updateRelation, withHistory } from './people';
 import { breakUp, divorce, payChildExpenses, resolvePregnancy } from './romance';
 import { friendshipHappiness, partnerSupportsFighting } from './social';
+import { relationshipsInitiativeYear } from './initiative';
 import type { RelType } from './types';
 
 /** Decaimento anual do afeto sem interação. */
@@ -67,6 +68,9 @@ export function relationshipsYear(state: GameState, rng: Rng, content: GameConte
       s = archivePerson(s, person.id, 'Ex de outros tempos.');
     }
   }
+
+  // release 0.0.4: casos descobertos, iniciativa das amizades e declarações
+  s = relationshipsInitiativeYear(s, rng);
 
   // rotina: casamentos e namoros longos se desgastam mesmo com carinho (crises e divórcios acontecem)
   const cp = currentPartner(s);
