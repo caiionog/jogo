@@ -8,9 +8,9 @@ Pedido original: [`SPEC.md`](SPEC.md). Plano: [`PLAN.md`](PLAN.md). Commits na b
 - [x] **1. Skills** — `find-skills` + 7 escolhidas pelo usuário ("as que achar melhor"): web-design-guidelines,
   accessibility, vitest, react-testing-library, frontend-design, code-review, better-portuguese; seção no CLAUDE.md
 - [x] **2. Subagents** e regras de orquestração — 6 agentes em `.claude/agents/`, seção no CLAUDE.md, `tests/agents.test.ts`
-- [ ] **3. Primeiro personagem cartoon** (pausa para ver)
-- [ ] **4. Passar tempo com todos** e eventos de grupo
-- [ ] **5. Animação da cama** (`IntimacyTransition`)
+- [x] **3. Primeiro personagem cartoon** — `src/ui/avatar/vector/` (0,77 ms/avatar), `/dev/avatars?modo=lado-a-lado`; **aguardando aprovação do estilo**
+- [x] **4. Passar tempo com todos** e eventos de grupo
+- [x] **5. Animação da cama** (`IntimacyTransition`) — falta conferir no navegador no fechamento
 - [ ] **6. Cartoon completo** e grade A/B (pausa para escolher o padrão)
 - [ ] **7. Documentação e release** (tag local `v0.0.3`)
 
@@ -51,13 +51,14 @@ Pedido original: [`SPEC.md`](SPEC.md). Plano: [`PLAN.md`](PLAN.md). Commits na b
   lendo o próprio arquivo do agente.
 
 ## Próximo passo exato
-1. Receber os resultados do `avatar-artist` e do `ui-dev`, passar pelo revisor e pelos testes, e fazer o commit.
-2. Mostrar ao usuário as capturas `docs/release-0.0.3/screenshots/ab-primeiro-adulto*.png` (**pausa para aprovação
-   do estilo**).
-3. Fase 6:
-   - cartoon completo;
-   - preferência `settings.avatarStyle` no meta (META 2→3);
+1. **Esperar o usuário aprovar o estilo cartoon** (capturas `screenshots/ab-primeiro-adulto*.png`, 846 testes).
+2. Fase 6 (avatar-artist): cobertura completa no cartoon.
+   - Fases de idade, postura do idoso, roupas de banho próprias (adultas só 18+), kimono com faixa, fardas, colete,
+     algemas, presidiário e prajied.
+   - Cabelo masculino curto menos "capacete".
+3. Fase 6 (sessão principal e ui-dev):
+   - `settings.avatarStyle` no meta (META 2→3 + migração + teste);
    - Configurações → "Visual dos personagens";
-   - `PixelAvatar`, `AvatarThumb` e miniaturas escolhendo o renderizador;
-   - `IntimacyTransition` no estilo ativo;
-   - grade A/B e pausa.
+   - `PixelAvatar`, `AvatarThumb` e miniaturas escolhendo o renderizador (cache);
+   - `IntimacyTransition` com `style` do ativo;
+   - grade A/B com 5 fases + 24 NPCs e **pausa para escolher o padrão**.

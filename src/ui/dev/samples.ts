@@ -89,3 +89,26 @@ export function npcs(): AvatarDescriptor[] {
   }
   return out;
 }
+
+/** Adulto do modo lado a lado (release 0.0.3): mesmo descriptor no pixel art e no cartoon. */
+export interface AbSample {
+  label: string;
+  d: AvatarDescriptor;
+}
+
+/** 6 adultos variados: os dois sexos, pele do mais claro ao mais escuro, tipos de cabelo e físicos diferentes. */
+export function abAdults(): AbSample[] {
+  const mk = (label: string, race: Race, seed: number, sex: 'M' | 'F', age: number, genes: Partial<Appearance['genes']>, o: { style: Appearance['hairStyle']; worn: Worn; build: Build; facialHair?: Appearance['facialHair']; expression?: AvatarDescriptor['expression'] }): AbSample => {
+    const a: Appearance = { ...look(race, seed, { freckles: 0, moles: 0, ...genes }), ...(o.style ? { hairStyle: o.style } : {}) };
+    const [fat, muscle] = FB[o.build];
+    return { label, d: previewAvatar(a, sex, age, C, { worn: o.worn, fat, muscle, facialHair: o.facialHair ?? 'nenhuma', expression: o.expression ?? 'feliz' }) };
+  };
+  return [
+    mk('Homem, 30 · pele clara · liso curto · médio', 'branca', 11, 'M', 30, { skinTone: 0.04, undertone: -0.4, hairType: 'liso', hairColor: 0.45, eyeColor: 'azul', eyeShape: 'amendoado', faceShape: 'oval', noseWidth: 0.35, lipVolume: 0.3, baldness: 0 }, { style: 'curto', build: 'medio', facialHair: 'por_fazer', worn: { cima: { id: 'camiseta', color: 2 }, baixo: { id: 'calca_jeans', color: 0 }, calcado: { id: 'tenis', color: 0 } } }),
+    mk('Mulher, 27 · ondulado longo · magra', 'parda', 12, 'F', 27, { skinTone: 0.36, undertone: 0.4, hairType: 'ondulado', hairColor: 0.18, eyeColor: 'castanho', eyeShape: 'amendoado', faceShape: 'coracao', noseWidth: 0.4, lipVolume: 0.6, freckles: 0.5 }, { style: 'longo', build: 'magro', worn: { cima: { id: 'blusa', color: 0 }, baixo: { id: 'saia', color: 0 }, calcado: { id: 'tenis', color: 1 } } }),
+    mk('Homem, 42 · pele bem escura · crespo · acima do peso · barba', 'preta', 13, 'M', 42, { skinTone: 1, undertone: 0.1, hairType: 'crespo', hairColor: 0.02, eyeColor: 'castanho_escuro', eyeShape: 'redondo', faceShape: 'redondo', noseWidth: 0.8, lipVolume: 0.8, baldness: 0 }, { style: 'curto', build: 'acima', facialHair: 'barba', worn: { cima: { id: 'polo', color: 1 }, baixo: { id: 'bermuda', color: 3 }, calcado: { id: 'chinelo', color: 0 } } }),
+    mk('Mulher, 34 · pele escura · black power · atlética', 'preta', 14, 'F', 34, { skinTone: 0.8, undertone: 0.3, hairType: 'crespo', hairColor: 0.06, eyeColor: 'castanho_escuro', eyeShape: 'redondo', faceShape: 'oval', noseWidth: 0.65, lipVolume: 0.9 }, { style: 'black_power', build: 'atletico', worn: { inteira: { id: 'vestido', color: 2 }, calcado: { id: 'sapato', color: 0 } } }),
+    mk('Homem, 24 · cacheado médio · musculoso', 'parda', 15, 'M', 24, { skinTone: 0.58, undertone: 0.5, hairType: 'cacheado', hairColor: 0.12, eyeColor: 'mel', eyeShape: 'alongado', faceShape: 'quadrado', noseWidth: 0.55, lipVolume: 0.5, baldness: 0 }, { style: 'medio', build: 'musculoso', facialHair: 'cavanhaque', worn: { cima: { id: 'regata', color: 4 }, baixo: { id: 'calca_moletom', color: 1 }, calcado: { id: 'tenis', color: 2 } } }),
+    mk('Mulher, 50 · liso · coque · camisa social', 'amarela', 16, 'F', 50, { skinTone: 0.18, undertone: 0.6, hairType: 'liso', hairColor: 0.05, eyeColor: 'castanho_escuro', eyeShape: 'palpebra_lisa', faceShape: 'longo', noseWidth: 0.3, lipVolume: 0.35 }, { style: 'coque', build: 'medio', expression: 'neutro', worn: { cima: { id: 'social', color: 1 }, baixo: { id: 'calca_social', color: 1 }, calcado: { id: 'sapato', color: 0 } } }),
+  ];
+}
