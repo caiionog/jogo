@@ -48,6 +48,7 @@ function AtividadesLivre({ game }: { game: GameState }) {
       <ListItem icon={BookOpen} title="Estudo" subtitle="Estudar e se preparar para as provas" disabled={age < 5} reason="Disponível a partir dos 5 anos" onClick={() => nav.push('estudo')} testId="act-estudo" />
       <ListItem icon={HeartPulse} title="Saúde" subtitle="Check-up, médico, dieta, lesões" onClick={() => nav.push('saude')} testId="act-saude" />
       <ListItem icon={PartyPopper} title="Lazer" subtitle="Sair, festa, viagem" onClick={() => nav.push('lazer')} testId="act-lazer" />
+      <ListItem emoji="⭐" title="Fama e redes" subtitle="Seguidores, posts e comerciais" disabled={age < 13} reason="A partir dos 13 anos" onClick={() => nav.push('fama')} testId="act-fama" />
       <ListItem icon={Heart} title="Amor" subtitle="Conhecer alguém, encontros" disabled={age < 14} reason="Disponível a partir dos 14 anos" onClick={() => nav.push('amor')} testId="act-amor" />
       <ListItem icon={MapPin} title="Mudar de cidade" subtitle={`Hoje: ${game.character.city} – ${game.character.uf}`} disabled={age < 18} reason="Disponível a partir dos 18 anos" onClick={() => setMove(true)} testId="act-mudar" />
       <ListItem icon={ScrollText} title="Testamento" subtitle="Quem fica com o quê" disabled={age < 18} reason="Disponível a partir dos 18 anos" onClick={() => nav.push('testamento')} />

@@ -98,6 +98,7 @@ export function appLike(state: GameState, cardId: string, content: GameContent):
   const rng = createRng(state.rngState);
   const rep = repeatMultiplier(state, 'app:curtidas', content);
   let s = bumpUse(appSkip(state, cardId), 'app:curtidas');
+  s = { ...s, flags: { ...s.flags, usou_app: s.year } };
   const [s1, person] = createPerson(s, rng, content, { name: undefined, sex: card.sex, age: card.age, looks: card.looks, traits: card.traits });
   const named = { ...person, name: `${card.name} ${person.name.split(' ').slice(1).join(' ')}`.trim() };
   s = { ...s1, relationships: { ...s1.relationships, people: s1.relationships.people.map((p) => (p.id === person.id ? named : p)) } };

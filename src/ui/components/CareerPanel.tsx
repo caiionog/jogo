@@ -40,15 +40,15 @@ export function RecordLine({ label, r }: { label: string; r: CareerRecord }) {
   const total = r.wins + r.losses + r.draws;
   return (
     <div className="flex items-baseline justify-between text-sm">
-      <span className="text-slate-400">{label}</span>
+      <span className="text-[var(--ds-text-muted)]">{label}</span>
       <span>
         <span className="font-semibold tabular-nums">{recordText(r)}</span>
         {r.wins > 0 && (
-          <span className="ml-2 text-[11px] text-slate-500">
+          <span className="ml-2 text-[11px] text-[var(--ds-text-muted)]">
             KO {r.winsBy.KO} · FIN {r.winsBy.SUB} · DEC {r.winsBy.DEC}
           </span>
         )}
-        {total === 0 && <span className="ml-2 text-[11px] text-slate-500">sem lutas</span>}
+        {total === 0 && <span className="ml-2 text-[11px] text-[var(--ds-text-muted)]">sem lutas</span>}
       </span>
     </div>
   );
@@ -67,7 +67,7 @@ export function TrainingButtons({ game }: { game: GameState }) {
   ];
   return (
     <section>
-      <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Treinar</h2>
+      <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--ds-text-muted)]">Treinar</h2>
       <div className="grid grid-cols-4 gap-2">
         {items.map((it) => {
           const reason = trainingBlockReason(game, it.kind, C);
@@ -77,11 +77,11 @@ export function TrainingButtons({ game }: { game: GameState }) {
               disabled={reason !== null}
               onClick={() => train(it.kind)}
               data-testid={`fc-train-${it.kind}`}
-              className="flex flex-col items-center gap-1 rounded-xl border border-slate-700 bg-slate-900 px-1 py-2 active:scale-95 disabled:opacity-40"
+              className="flex flex-col items-center gap-1 rounded-xl border border-[var(--ds-border)] bg-[var(--ds-surface)] px-1 py-2 active:scale-95 disabled:opacity-40"
             >
               <span className="text-xl">{it.emoji}</span>
               <span className="text-center text-[11px] leading-tight">{it.label}</span>
-              <span className="text-[10px] text-slate-400">{reason ? BLOCK_TEXT[reason] : 'Treinar'}</span>
+              <span className="text-[10px] text-[var(--ds-text-muted)]">{reason ? BLOCK_TEXT[reason] : 'Treinar'}</span>
             </button>
           );
         })}
@@ -96,20 +96,20 @@ export function GymSection({ game }: { game: GameState }) {
   const [open, setOpen] = useState(false);
   const gym = C.fighting.gyms.find((g) => g.id === game.fighter.gymId);
   return (
-    <section className="rounded-2xl border border-slate-800 bg-slate-900/50 p-3">
+    <section className="rounded-2xl border border-[var(--ds-border)] bg-[var(--ds-surface)] p-3">
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0 text-sm">
           <div className="truncate font-semibold">🏟️ {gym ? gym.name : 'Sem academia'}</div>
           {gym ? (
-            <div className="text-[11px] text-slate-400">
+            <div className="text-[11px] text-[var(--ds-text-muted)]">
               Treinador {gym.coach} · {gymModalitiesText(gym)} · {money.format(gym.fee)}/ano
               {game.character.age < 18 ? ' (pais pagam)' : game.fighter.reputation >= 15 ? ' (bolsa de atleta)' : ''}
             </div>
           ) : (
-            <div className="text-[11px] text-slate-400">Treinar sozinho rende bem menos.</div>
+            <div className="text-[11px] text-[var(--ds-text-muted)]">Treinar sozinho rende bem menos.</div>
           )}
         </div>
-        <button onClick={() => setOpen((v) => !v)} className="shrink-0 rounded-lg border border-slate-600 px-3 py-1.5 text-xs" aria-expanded={open}>
+        <button onClick={() => setOpen((v) => !v)} className="shrink-0 rounded-lg border border-[var(--ds-border)] px-3 py-1.5 text-xs" aria-expanded={open}>
           {gym ? 'Trocar' : 'Escolher'}
         </button>
       </div>
@@ -128,21 +128,21 @@ export function GymSection({ game }: { game: GameState }) {
                       joinGym(g.id);
                       setOpen(false);
                     }}
-                    className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-2 text-left text-sm active:bg-slate-800 disabled:opacity-50"
+                    className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-2 text-left text-sm active:bg-[var(--ds-surface-2)] disabled:opacity-50"
                   >
                     <span className="min-w-0">
                       <span className="block truncate">{g.name}</span>
-                      <span className="text-[11px] text-slate-400">
+                      <span className="text-[11px] text-[var(--ds-text-muted)]">
                         Treinador {g.coach} · {gymModalitiesText(g)} · {money.format(g.fee)}/ano
                       </span>
                     </span>
-                    <span className="shrink-0 text-[11px] text-slate-400">{reason ? BLOCK_TEXT[reason] : 'Entrar'}</span>
+                    <span className="shrink-0 text-[11px] text-[var(--ds-text-muted)]">{reason ? BLOCK_TEXT[reason] : 'Entrar'}</span>
                   </button>
                 </li>
               );
             })}
           {gym && (
-            <button onClick={() => { leaveGym(); setOpen(false); }} className="mt-1 rounded-lg border border-slate-700 py-2 text-sm text-rose-300">
+            <button onClick={() => { leaveGym(); setOpen(false); }} className="mt-1 rounded-lg border border-[var(--ds-border)] py-2 text-sm text-rose-300">
               Sair da {gym.name}
             </button>
           )}
@@ -171,23 +171,23 @@ export function OfferCard({ game, offer }: { game: GameState; offer: FightOffer 
   const reason = fightBlockReason(game, offer, C);
   const rank = o.rank === 0 ? 'Campeão' : o.rank ? `#${o.rank}` : null;
   return (
-    <li className="rounded-2xl border border-slate-700 bg-slate-900 p-3" data-testid="offer">
+    <li className="rounded-2xl border border-[var(--ds-border)] bg-[var(--ds-surface)] p-3" data-testid="offer">
       <div className="flex items-start justify-between gap-2">
         <AvatarThumb d={fighterAvatar(game, o, o.rank === 0)} size={52} label={opponentFullName(o)} />
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] uppercase tracking-wide text-slate-400">
+          <p className="text-[11px] uppercase tracking-wide text-[var(--ds-text-muted)]">
             {org.short} · {offer.rounds} round{offer.rounds > 1 ? 's' : ''}
             {offer.rules === 'grappling' ? ' · regras de grappling' : ''}
           </p>
           <p className="truncate font-semibold">{opponentFullName(o)}</p>
-          <p className="text-[11px] text-slate-400">
+          <p className="text-[11px] text-[var(--ds-text-muted)]">
             {recordText(o.record)} · {STYLE_LABEL[o.style]}
             {rank && <span className="ml-1 text-amber-300">· {rank}</span>}
           </p>
         </div>
         {KIND_BADGE[offer.kind] && <span className="shrink-0 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] text-amber-300">{KIND_BADGE[offer.kind]}</span>}
       </div>
-      <div className="mt-2 flex flex-wrap gap-x-3 text-[11px] text-slate-300">
+      <div className="mt-2 flex flex-wrap gap-x-3 text-[11px] text-[var(--ds-text)]">
         {offer.purse + offer.winBonus > 0 ? (
           <span>💰 {money.format(offer.purse)} + {money.format(offer.winBonus)} se vencer</span>
         ) : (
@@ -196,7 +196,7 @@ export function OfferCard({ game, offer }: { game: GameState; offer: FightOffer 
         <span>Camp {offer.campSessions <= 2 ? 'curto' : offer.campSessions <= 4 ? 'médio' : 'longo'}</span>
       </div>
       {offer.rules === 'mma' && (
-        <label className="mt-2 flex items-center gap-2 text-[11px] text-slate-300">
+        <label className="mt-2 flex items-center gap-2 text-[11px] text-[var(--ds-text)]">
           <input type="checkbox" checked={cut} onChange={(e) => setCut(e.target.checked)} className="h-4 w-4 accent-amber-500" />
           Corte de peso agressivo (mais força, {Math.round(AGGRESSIVE_CUT_MISS_CHANCE * 100)}% de risco de não bater o peso)
         </label>
@@ -207,13 +207,13 @@ export function OfferCard({ game, offer }: { game: GameState; offer: FightOffer 
         </p>
       )}
       <div className="mt-3 grid grid-cols-2 gap-2">
-        <button onClick={() => decline(offer.id)} className="rounded-xl border border-slate-600 py-2 text-sm">
+        <button onClick={() => decline(offer.id)} className="rounded-xl border border-[var(--ds-border)] py-2 text-sm">
           Recusar
         </button>
         <button
           disabled={reason !== null}
           onClick={() => accept(offer.id, cut)}
-          className="rounded-xl bg-emerald-500 py-2 text-sm font-bold text-slate-950 disabled:opacity-40"
+          className="rounded-xl bg-emerald-500 py-2 text-sm font-bold text-[var(--ds-accent-ink)] disabled:opacity-40"
         >
           {reason ? BLOCK_TEXT[reason] : 'Aceitar luta'}
         </button>
@@ -231,23 +231,23 @@ export function RetireSection({ game }: { game: GameState }) {
   if (f.retired) {
     const why = { voluntaria: 'por decisão própria', lesao: 'por causa das lesões', medica: 'por veto médico', derrotas: 'depois de uma sequência de derrotas' }[f.retired.reason];
     return (
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4 text-sm" data-testid="retired-box">
+      <section className="rounded-2xl border border-[var(--ds-border)] bg-[var(--ds-surface)] p-4 text-sm" data-testid="retired-box">
         <p>🏁 Você se aposentou aos {f.retired.age} anos, {why}.</p>
-        <p className="mt-1 text-xs text-slate-400">A reputação cai devagar. Dá para seguir como treinador(a), comentarista ou dono(a) de academia (abas Trabalho e Empresas). Uma volta aos ringues pode aparecer como evento.</p>
+        <p className="mt-1 text-xs text-[var(--ds-text-muted)]">A reputação cai devagar. Dá para seguir como treinador(a), comentarista ou dono(a) de academia (abas Trabalho e Empresas). Uma volta aos ringues pode aparecer como evento.</p>
       </section>
     );
   }
   return (
-    <section className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
+    <section className="rounded-2xl border border-[var(--ds-border)] bg-[var(--ds-surface)] p-4">
       {!confirming ? (
-        <button data-testid="retire" disabled={reason !== null} onClick={() => setConfirming(true)} className="min-h-11 w-full rounded-xl border border-slate-600 py-2 text-sm text-slate-200 disabled:opacity-40">
+        <button data-testid="retire" disabled={reason !== null} onClick={() => setConfirming(true)} className="min-h-11 w-full rounded-xl border border-[var(--ds-border)] py-2 text-sm text-[var(--ds-text)] disabled:opacity-40">
           🏁 Aposentar da luta
         </button>
       ) : (
         <div>
           <p className="text-sm">Pendurar as luvas? Você sai dos rankings, os cinturões ficam vagos e o contrato acaba.</p>
           <div className="mt-3 grid grid-cols-2 gap-2">
-            <button onClick={() => setConfirming(false)} className="min-h-11 rounded-xl border border-slate-600 py-2 text-sm">
+            <button onClick={() => setConfirming(false)} className="min-h-11 rounded-xl border border-[var(--ds-border)] py-2 text-sm">
               Ainda não
             </button>
             <button
@@ -256,7 +256,7 @@ export function RetireSection({ game }: { game: GameState }) {
                 setConfirming(false);
                 retire();
               }}
-              className="min-h-11 rounded-xl bg-amber-500 py-2 text-sm font-bold text-slate-950"
+              className="min-h-11 rounded-xl bg-amber-500 py-2 text-sm font-bold text-[var(--ds-accent-ink)]"
             >
               Aposentar
             </button>

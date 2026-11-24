@@ -27,6 +27,8 @@ export interface EventConditions {
   maxAge?: number;
   /** Fama pública (release 0.0.4). */
   fame?: StatRange;
+  /** Vida amorosa moderna (release 0.0.4): tem caso escondido, gravidez casual em curso, usou o app neste ano ou no anterior (flag `usou_app`). */
+  love?: { affair?: boolean; casualPregnancy?: boolean; usedApp?: boolean; openRelationship?: boolean };
   sex?: Sex;
   stats?: Partial<Record<StatKey, StatRange>>;
   /** Todas estas flags precisam estar presentes (truthy). */

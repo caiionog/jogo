@@ -120,6 +120,8 @@ function reqLabel(key: RequirementKey, game: GameState, jobId: string): string {
       return def.requires?.license === 'oab' ? 'Aprovação no Exame da Ordem' : 'Registro de médico (CRM)';
     case 'record':
       return 'Ficha criminal limpa';
+    case 'postgrad':
+      return def.requires?.postgrad === 'doutorado' ? 'Doutorado' : 'Mestrado (ou doutorado)';
   }
 }
 

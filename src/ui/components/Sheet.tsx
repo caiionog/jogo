@@ -36,12 +36,12 @@ export default function Sheet({ title, onClose, children, testId, full = false }
         ref={ref}
         data-testid={testId}
         onClick={(e) => e.stopPropagation()}
-        className={`flex w-full max-w-md flex-col border-t border-slate-700 bg-slate-900 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 ${full ? 'h-[100dvh] pt-[max(0.75rem,env(safe-area-inset-top))]' : 'max-h-[88dvh] rounded-t-3xl'}`}
+        className={`flex w-full max-w-md flex-col border-t border-[var(--ds-border)] bg-[var(--ds-surface)] px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 ${full ? 'h-[100dvh] pt-[max(0.75rem,env(safe-area-inset-top))]' : 'max-h-[88dvh] rounded-t-3xl'}`}
       >
-        {!full && <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-slate-700" />}
+        {!full && <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-[var(--ds-surface-2)]" />}
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-lg font-bold">{title}</h2>
-          <button onClick={onClose} className="h-11 w-11 rounded-lg text-slate-300" aria-label="Fechar">
+          <button onClick={onClose} className="h-11 w-11 rounded-lg text-[var(--ds-text)]" aria-label="Fechar">
             ✕
           </button>
         </div>

@@ -210,6 +210,8 @@ export interface JobDef {
     license?: 'oab' | 'crm';
     /** Ficha criminal limpa (sem condenação; release 0.0.2). */
     cleanRecord?: boolean;
+    /** Pós-graduação concluída em qualquer área (release 0.0.4). */
+    postgrad?: 'mestrado' | 'doutorado';
   };
   /** Carteira assinada (padrão true). Informal paga 15% a mais, sem INSS e sem imposto retido. */
   formal?: boolean;

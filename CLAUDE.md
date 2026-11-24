@@ -306,8 +306,8 @@ tests/                    # Vitest; fixtures/saves-v1.json = saves reais da Etap
   guarda-roupa por camada). NPCs: `personAvatar`/`fighterAvatar` (`avatar/descriptors.ts`). Direção de arte em `ASSETS.md`.
 - **Finanças**: "Anos anteriores" abre cada ano arquivado por categoria (`economy.history[].totals`).
 - **Telas antigas** (`components/CareerPanel`, `FinancePanel`, `HealthPanel`, `RelationshipsPanel`, `RankingPanel`…)
-  são reaproveitadas dentro dos menus; algumas ainda usam classes `slate-*`, que o `tokens.css` remapeia para os
-  tokens. Ao mexer numa delas, prefira `var(--ds-*)` e evite `text-white`/cores fixas (contraste no tema claro).
+  são reaproveitadas dentro dos menus e já usam os tokens `var(--ds-*)` (release 0.0.4). Não volte a usar `slate-*`
+  nem `text-white`.
 
 ### Verificação (Etapa 8)
 - Testes de UI em `tests/ui.test.tsx` (jsdom + Testing Library; o save é mockado e `canvas.getContext` devolve null).
@@ -539,3 +539,6 @@ Plano em `docs/release-0.0.4/PLAN.md` e diário em `docs/release-0.0.4/PROGRESS.
   (`discoverAffairs`). App de namoro em `relationships/datingApp.ts`, só 18+.
 - **Concursos** (fase 4): o motor de etapas é `exams/stages.ts` (polícia e civis). Cargo novo = `JobDef` com
   `category: 'concurso'` e `civilExam` em `content/jobs/civil/`. Colegas de farda têm a flag `colega_farda`.
+- **Fama no dia a dia** (fase 5): redes e comerciais em `engine/fame/social.ts`; eventos com a condição `fame`.
+  Condição `love` para caso, relação aberta, gravidez casual e uso do app. Alimentação em `fighting/body.ts`
+  (`character.eating`); pós-graduação em `lifeStages/college.ts`. A imigração é uma estimativa não oficial.

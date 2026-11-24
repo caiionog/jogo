@@ -7,9 +7,9 @@ export { money };
 
 export function Section({ title, children, right }: { title: string; children: ReactNode; right?: ReactNode }) {
   return (
-    <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-3">
+    <section className="rounded-2xl border border-[var(--ds-border)] bg-[var(--ds-surface)] p-3">
       <div className="mb-2 flex items-center justify-between gap-2">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-400">{title}</h2>
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--ds-text-muted)]">{title}</h2>
         {right}
       </div>
       {children}
@@ -18,10 +18,10 @@ export function Section({ title, children, right }: { title: string; children: R
 }
 
 export function Row({ label, value, tone }: { label: ReactNode; value: ReactNode; tone?: 'pos' | 'neg' | 'muted' }) {
-  const color = tone === 'pos' ? 'text-emerald-400' : tone === 'neg' ? 'text-rose-400' : tone === 'muted' ? 'text-slate-500' : 'text-slate-100';
+  const color = tone === 'pos' ? 'text-emerald-400' : tone === 'neg' ? 'text-rose-400' : tone === 'muted' ? 'text-[var(--ds-text-muted)]' : 'text-[var(--ds-text)]';
   return (
     <div className="flex items-baseline justify-between gap-3 py-0.5 text-sm">
-      <span className="text-slate-400">{label}</span>
+      <span className="text-[var(--ds-text-muted)]">{label}</span>
       <span className={`tabular-nums ${color}`}>{value}</span>
     </div>
   );
@@ -47,7 +47,7 @@ export function Btn({
       ? 'border-emerald-600 bg-emerald-500/15 text-emerald-200'
       : tone === 'danger'
         ? 'border-rose-700 bg-rose-500/10 text-rose-200'
-        : 'border-slate-700 bg-slate-900 text-slate-100';
+        : 'border-[var(--ds-border)] bg-[var(--ds-surface)] text-[var(--ds-text)]';
   return (
     <button
       data-testid={testId}
@@ -72,13 +72,13 @@ export function AmountInput({ value, onChange, presets }: { value: number; onCha
         value={value ? value.toLocaleString('pt-BR') : ''}
         placeholder="R$ 0"
         onChange={(e) => onChange(Number(e.target.value.replace(/\D/g, '')) || 0)}
-        className="min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-base tabular-nums"
+        className="min-h-11 w-full rounded-xl border border-[var(--ds-border)] bg-[var(--ds-bg)] px-3 text-base tabular-nums"
       />
       <div className="flex flex-wrap gap-1.5">
         {presets
           .filter((p) => p.value > 0)
           .map((p) => (
-            <button key={p.label} onClick={() => onChange(p.value)} className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300">
+            <button key={p.label} onClick={() => onChange(p.value)} className="rounded-full border border-[var(--ds-border)] px-3 py-1 text-xs text-[var(--ds-text)]">
               {p.label}
             </button>
           ))}
@@ -99,19 +99,19 @@ export interface ConfirmDetails {
 export function ConfirmModal({ details, onClose }: { details: ConfirmDetails; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/70 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:items-center" role="dialog" aria-modal="true" data-testid="confirm-modal">
-      <div className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-5">
+      <div className="w-full max-w-md rounded-2xl border border-[var(--ds-border)] bg-[var(--ds-surface)] p-5">
         <p className="text-lg font-semibold">{details.title}</p>
         <div className="mt-3 divide-y divide-slate-800">
           {details.lines.map((l) => (
             <div key={l.label} className="flex items-baseline justify-between gap-3 py-1.5 text-sm">
-              <span className="text-slate-400">{l.label}</span>
+              <span className="text-[var(--ds-text-muted)]">{l.label}</span>
               <span className={`tabular-nums ${l.strong ? 'text-base font-bold text-amber-300' : ''}`}>{l.value}</span>
             </div>
           ))}
         </div>
-        {details.note && <p className="mt-2 text-xs text-slate-400">{details.note}</p>}
+        {details.note && <p className="mt-2 text-xs text-[var(--ds-text-muted)]">{details.note}</p>}
         <div className="mt-4 grid grid-cols-2 gap-2">
-          <button onClick={onClose} className="min-h-11 rounded-xl border border-slate-600 py-3">
+          <button onClick={onClose} className="min-h-11 rounded-xl border border-[var(--ds-border)] py-3">
             Cancelar
           </button>
           <button
@@ -120,7 +120,7 @@ export function ConfirmModal({ details, onClose }: { details: ConfirmDetails; on
               details.onConfirm();
               onClose();
             }}
-            className="min-h-11 rounded-xl bg-emerald-500 py-3 font-bold text-slate-950"
+            className="min-h-11 rounded-xl bg-emerald-500 py-3 font-bold text-[var(--ds-accent-ink)]"
           >
             {details.confirmLabel}
           </button>

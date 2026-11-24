@@ -33,6 +33,8 @@ export function jobReasonText(r: JobBlockReason, def: JobDef): string {
       return 'Você já tem um emprego (peça demissão para trocar)';
     case 'record':
       return 'Exige ficha criminal limpa';
+    case 'postgrad':
+      return 'Exige mestrado ou doutorado';
     case 'public-exam':
       return 'Entrada só por concurso público';
     case 'current':

@@ -69,6 +69,8 @@ export type JobBlockReason =
   | 'license'
   /** Entrada só por concurso público (polícia). */
   | 'public-exam'
+  /** Exige mestrado ou doutorado (release 0.0.4). */
+  | 'postgrad'
   /** Exige ficha criminal limpa. */
   | 'record';
 
@@ -89,6 +91,7 @@ export function jobRequirementGaps(state: GameState, def: JobDef): JobBlockReaso
   if (r?.degree && !r.degree.some((d) => state.college?.diplomas.includes(d))) gaps.push('degree');
   if (r?.license && !state.flags[r.license]) gaps.push('license');
   if (r?.cleanRecord && hasConviction(state)) gaps.push('record');
+  if (r?.postgrad && !(state.college?.postgrads ?? []).some((p) => p.startsWith(`${r.postgrad}:`) || (r.postgrad === 'mestrado' && p.startsWith('doutorado:')))) gaps.push('postgrad');
   const st = state.character.stats;
   const m = def.minStats ?? {};
   if ((m.intelligence ?? 0) > st.intelligence || (m.athletic ?? 0) > st.athletic || (m.looks ?? 0) > st.looks) gaps.push('stats');

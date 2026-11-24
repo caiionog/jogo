@@ -15,7 +15,7 @@ export function PreferencePicker({ value, onChange }: { value: PartnerPreference
           role="radio"
           aria-checked={value === p}
           onClick={() => onChange(p)}
-          className={`rounded-xl border px-2 py-2 text-sm ${value === p ? 'border-pink-500 bg-pink-500/15 text-pink-200' : 'border-slate-700 bg-slate-900'}`}
+          className={`rounded-xl border px-2 py-2 text-sm ${value === p ? 'border-pink-500 bg-pink-500/15 text-pink-200' : 'border-[var(--ds-border)] bg-[var(--ds-surface)]'}`}
         >
           {PREFERENCE_LABEL[p]}
         </button>
@@ -26,11 +26,11 @@ export function PreferencePicker({ value, onChange }: { value: PartnerPreference
 
 export function AdultToggle({ value, onChange, id }: { value: boolean; onChange: (v: boolean) => void; id: string }) {
   return (
-    <label htmlFor={id} className="flex items-start gap-3 rounded-xl border border-slate-700 bg-slate-900 p-3">
+    <label htmlFor={id} className="flex items-start gap-3 rounded-xl border border-[var(--ds-border)] bg-[var(--ds-surface)] p-3">
       <input id={id} type="checkbox" checked={value} onChange={(e) => onChange(e.target.checked)} className="mt-1 h-5 w-5 accent-pink-500" />
       <span>
         <span className="block text-sm font-semibold">Conteúdo adulto (18+)</span>
-        <span className="block text-xs text-slate-400">
+        <span className="block text-xs text-[var(--ds-text-muted)]">
           Libera eventos e ações sugestivos entre personagens adultos (sempre com 18 anos ou mais), no estilo do BitLife. Nada gráfico.
         </span>
       </span>
@@ -67,7 +67,7 @@ export default function SettingsSheet({ game, onClose }: { game: GameState | nul
           <p className="mb-2 text-sm font-semibold">Velocidade da narração das lutas</p>
           <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Velocidade da narração">
             {speeds.map(([v, label]) => (
-              <button key={v} type="button" role="radio" aria-checked={meta.settings.fightSpeed === v} onClick={() => setMeta({ fightSpeed: v })} className={`min-h-11 rounded-xl border px-2 text-sm ${meta.settings.fightSpeed === v ? 'border-emerald-500 bg-emerald-500/15 text-emerald-200' : 'border-slate-700 bg-slate-950'}`}>
+              <button key={v} type="button" role="radio" aria-checked={meta.settings.fightSpeed === v} onClick={() => setMeta({ fightSpeed: v })} className={`min-h-11 rounded-xl border px-2 text-sm ${meta.settings.fightSpeed === v ? 'border-emerald-500 bg-emerald-500/15 text-emerald-200' : 'border-[var(--ds-border)] bg-[var(--ds-bg)]'}`}>
                 {label}
               </button>
             ))}
@@ -77,7 +77,7 @@ export default function SettingsSheet({ game, onClose }: { game: GameState | nul
           <p className="mb-2 text-sm font-semibold">Visual dos personagens</p>
           <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Visual dos personagens">
             {([['cartoon', 'Cartoon'], ['pixel', 'Pixel art']] as const).map(([v, label]) => (
-              <button key={v} type="button" role="radio" aria-checked={meta.settings.avatarStyle === v} data-testid={`style-${v}`} onClick={() => setMeta({ avatarStyle: v })} className={`min-h-11 rounded-xl border px-2 text-sm ${meta.settings.avatarStyle === v ? 'border-emerald-500 bg-emerald-500/15 text-emerald-200' : 'border-slate-700 bg-slate-950'}`}>
+              <button key={v} type="button" role="radio" aria-checked={meta.settings.avatarStyle === v} data-testid={`style-${v}`} onClick={() => setMeta({ avatarStyle: v })} className={`min-h-11 rounded-xl border px-2 text-sm ${meta.settings.avatarStyle === v ? 'border-emerald-500 bg-emerald-500/15 text-emerald-200' : 'border-[var(--ds-border)] bg-[var(--ds-bg)]'}`}>
                 {label}
               </button>
             ))}
@@ -87,7 +87,7 @@ export default function SettingsSheet({ game, onClose }: { game: GameState | nul
           <p className="mb-2 text-sm font-semibold">Tamanho do texto</p>
           <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Tamanho do texto">
             {(['normal', 'grande'] as const).map((v) => (
-              <button key={v} type="button" role="radio" aria-checked={meta.settings.fontScale === v} onClick={() => setMeta({ fontScale: v })} className={`min-h-11 rounded-xl border px-2 text-sm ${meta.settings.fontScale === v ? 'border-emerald-500 bg-emerald-500/15 text-emerald-200' : 'border-slate-700 bg-slate-950'}`}>
+              <button key={v} type="button" role="radio" aria-checked={meta.settings.fontScale === v} onClick={() => setMeta({ fontScale: v })} className={`min-h-11 rounded-xl border px-2 text-sm ${meta.settings.fontScale === v ? 'border-emerald-500 bg-emerald-500/15 text-emerald-200' : 'border-[var(--ds-border)] bg-[var(--ds-bg)]'}`}>
                 {v === 'normal' ? 'Normal' : 'Grande'}
               </button>
             ))}
@@ -95,14 +95,14 @@ export default function SettingsSheet({ game, onClose }: { game: GameState | nul
         </div>
         <div className="rounded-xl border border-rose-900 p-3">
           <p className="text-sm font-semibold text-rose-200">Apagar dados</p>
-          <p className="text-xs text-slate-400">Apaga as 3 vidas salvas, as conquistas e o Hall da Fama deste aparelho. Não dá para desfazer.</p>
+          <p className="text-xs text-[var(--ds-text-muted)]">Apaga as 3 vidas salvas, as conquistas e o Hall da Fama deste aparelho. Não dá para desfazer.</p>
           {!erasing ? (
             <button onClick={() => setErasing(true)} className="mt-2 min-h-11 w-full rounded-xl border border-rose-700 text-sm text-rose-200">
               Apagar tudo…
             </button>
           ) : (
             <div className="mt-2 grid grid-cols-2 gap-2">
-              <button onClick={() => setErasing(false)} className="min-h-11 rounded-xl border border-slate-600 text-sm">
+              <button onClick={() => setErasing(false)} className="min-h-11 rounded-xl border border-[var(--ds-border)] text-sm">
                 Cancelar
               </button>
               <button
@@ -111,7 +111,7 @@ export default function SettingsSheet({ game, onClose }: { game: GameState | nul
                   void eraseAll();
                   onClose();
                 }}
-                className="min-h-11 rounded-xl bg-rose-500 text-sm font-bold text-slate-950"
+                className="min-h-11 rounded-xl bg-rose-500 text-sm font-bold text-[var(--ds-accent-ink)]"
               >
                 Apagar tudo
               </button>

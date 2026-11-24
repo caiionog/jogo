@@ -1,3 +1,7 @@
+import { FAME_EVENTS } from './events/fame';
+import { MODERN_LOVE_EVENTS } from './events/relationships/modern';
+import { POPULATION_EVENTS } from './events/population';
+import { FAME } from './fame';
 import { POPULATION } from './population';
 import { JOB_EVENTS } from './events/jobs';
 import { COACH_LINES } from './fightText/coach';
@@ -57,8 +61,9 @@ export const GAME_CONTENT: GameContent = {
   crime: CRIME,
   friends: FRIENDS,
   population: POPULATION,
+  fame: FAME,
   actions: ACTIONS,
-  events: [...CHILDHOOD_EVENTS, ...SCHOOL_EVENTS, ...FIGHTING_EVENTS, ...RELATIONSHIP_EVENTS, ...ECONOMY_EVENTS, ...JOB_EVENTS, ...HEALTH_EVENTS, ...LEGACY_EVENTS, ...TALENT_EVENTS, ...COLLEGE_EVENTS, ...CLUB_EXCHANGE_EVENTS, ...NIGHTLIFE_EVENTS, ...RANDOM_EVENTS, ...POLICE_EVENTS, ...CRIME_EVENTS, ...PRISON_EVENTS, ...FRIEND_GROUP_EVENTS],
+  events: [...CHILDHOOD_EVENTS, ...SCHOOL_EVENTS, ...FIGHTING_EVENTS, ...RELATIONSHIP_EVENTS, ...ECONOMY_EVENTS, ...JOB_EVENTS, ...HEALTH_EVENTS, ...LEGACY_EVENTS, ...TALENT_EVENTS, ...COLLEGE_EVENTS, ...CLUB_EXCHANGE_EVENTS, ...NIGHTLIFE_EVENTS, ...RANDOM_EVENTS, ...POLICE_EVENTS, ...CRIME_EVENTS, ...PRISON_EVENTS, ...FRIEND_GROUP_EVENTS, ...FAME_EVENTS, ...MODERN_LOVE_EVENTS, ...POPULATION_EVENTS],
   geo: GEO_CONTENT,
   clubs: CLUBS,
   names: NAMES,

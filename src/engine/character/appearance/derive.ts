@@ -314,7 +314,7 @@ export function deriveAvatar(state: GameState, content: GameContent, context: Av
   const load = state.fighter.trainingLoad ?? 0;
   const muscle = clamp01((st.athletic / 100) * 0.95 + load * 0.35 - 0.2) * growthAt(age);
   // gordura: IMC (Capacidade atlética, biotipo, idade), genes, padrão de vida, saúde
-  const bmi = bmiAt(age, st, c.build);
+  const bmi = bmiAt(age, st, c.build, c.eating);
   let fat = age < 18 ? 0.3 + c.build * 0.07 + (g.weightGain - 0.5) * 0.25 + (st.athletic < 30 ? 0.08 : 0) : (bmi - 19.5) / 12 - muscle * 0.3;
   fat += (g.weightGain - 0.5) * 0.25 + (50 - st.athletic) / 250 - load * 0.08;
   if (age >= 18) fat += state.economy.standard === 'luxo' ? 0.08 : state.economy.standard === 'confortavel' ? 0.03 : 0;

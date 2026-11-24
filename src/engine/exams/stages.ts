@@ -28,9 +28,10 @@ export function studyBonus(state: GameState): number {
   return Math.min(18, n * 6);
 }
 
-/** Pontos da prova de títulos: 3 por diploma, no máximo 6. */
+/** Pontos da prova de títulos: 3 por diploma (até 6) e 2/3/4 por especialização, mestrado e doutorado (até 9 no total). */
 export function titlesBonus(state: GameState): number {
-  return Math.min(6, (state.college?.diplomas.length ?? 0) * 3);
+  const pg = (state.college?.postgrads ?? []).reduce((t, p) => t + (p.startsWith('doutorado') ? 4 : p.startsWith('mestrado') ? 3 : 2), 0);
+  return Math.min(9, Math.min(6, (state.college?.diplomas.length ?? 0) * 3) + pg);
 }
 
 /** Nota da prova (0–100+): inteligência, estudo, sorte (limitada a ±5), títulos e ruído. */

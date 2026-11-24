@@ -21,12 +21,12 @@ export default function MoveSheet({ onClose }: { onClose: () => void }) {
   return (
     <Sheet title="Mudar de cidade" onClose={onClose} testId="move-sheet">
       <h2 className="mb-1 text-lg font-bold">Mudar de cidade</h2>
-      <p className="mb-3 text-sm text-slate-400">
+      <p className="mb-3 text-sm text-[var(--ds-text-muted)]">
         Hoje: {game.character.city} – {game.character.uf}. Custo de vida, salários e imóveis mudam com a cidade; academias locais ficam para trás.
       </p>
       <label className="mb-2 flex flex-col gap-1 text-sm">
         Estado
-        <select value={uf} onChange={(e) => { const u = GAME_CONTENT.geo.ufs.find((x) => x.sigla === e.target.value)!; setUf(u.sigla); setCity(u.capital); }} className="min-h-11 rounded-xl border border-slate-700 bg-slate-950 px-3">
+        <select value={uf} onChange={(e) => { const u = GAME_CONTENT.geo.ufs.find((x) => x.sigla === e.target.value)!; setUf(u.sigla); setCity(u.capital); }} className="min-h-11 rounded-xl border border-[var(--ds-border)] bg-[var(--ds-bg)] px-3">
           {GAME_CONTENT.geo.ufs.map((u) => (
             <option key={u.sigla} value={u.sigla}>{u.nome} ({u.sigla})</option>
           ))}
@@ -34,17 +34,17 @@ export default function MoveSheet({ onClose }: { onClose: () => void }) {
       </label>
       <label className="mb-3 flex flex-col gap-1 text-sm">
         Cidade
-        <select value={city} onChange={(e) => setCity(e.target.value)} className="min-h-11 rounded-xl border border-slate-700 bg-slate-950 px-3">
+        <select value={city} onChange={(e) => setCity(e.target.value)} className="min-h-11 rounded-xl border border-[var(--ds-border)] bg-[var(--ds-bg)] px-3">
           {ufd.cities.map((c) => (
             <option key={c.name} value={c.name}>{c.name}{c.name === ufd.capital ? ' (capital)' : ''}</option>
           ))}
         </select>
       </label>
-      <p className="mb-3 text-sm text-slate-300">
+      <p className="mb-3 text-sm text-[var(--ds-text)]">
         Mudança: {money.format(cost)} · custo de vida ×{cityCost.toFixed(2).replace('.', ',')}
       </p>
       {block && <p className="mb-2 text-sm text-amber-300">{REASON[block]}</p>}
-      <button disabled={!!block} onClick={() => { moveCity(uf, city); onClose(); }} className="min-h-12 rounded-xl bg-emerald-500 font-bold text-slate-950 disabled:opacity-40" data-testid="move-confirm">
+      <button disabled={!!block} onClick={() => { moveCity(uf, city); onClose(); }} className="min-h-12 rounded-xl bg-emerald-500 font-bold text-[var(--ds-accent-ink)] disabled:opacity-40" data-testid="move-confirm">
         Mudar para {city}
       </button>
     </Sheet>

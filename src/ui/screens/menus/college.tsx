@@ -5,7 +5,7 @@
 import { useState } from 'react';
 import { GAME_CONTENT as C } from '../../../content';
 import type { CollegeType, GameState } from '../../../engine';
-import { actionBlockReason, barExamBlockReason, courseDef, earnsScholarship, enrollBlockReason, examBlockReason, tuitionOf, usesThisYear } from '../../../engine';
+import { actionBlockReason, barExamBlockReason, courseDef, postgradBlockReason, postgradTuition, earnsScholarship, enrollBlockReason, examBlockReason, tuitionOf, usesThisYear } from '../../../engine';
 import { BottomSheet, ListGroup, ListItem } from '../../design/components';
 import { money } from '../../components/ecoUi';
 import { useGameStore } from '../../store';
@@ -106,6 +106,8 @@ export function FaculdadeScreen({ game }: { game: GameState }) {
         </ListGroup>
       )}
 
+      {col.diplomas.length > 0 && <PostgradGroup game={game} />}
+
       {col.diplomas.length > 0 && (
         <ListGroup title="Diplomas">
           <ul className="text-sm" data-testid="diplomas">
@@ -136,5 +138,54 @@ function EnrollSheet({ game, courseId, onClose, onEnroll }: { game: GameState; c
         {!bolsa && <ListItem emoji="🏦" title={`Particular pelo ${C.college.loanName}`} subtitle="Não paga durante o curso; vira um empréstimo depois" disabled={!!pri} reason={pri ? ENROLL_REASON[pri] : undefined} onClick={() => onEnroll('particular', true)} chevron={false} testId="enroll-financiamento" />}
       </div>
     </BottomSheet>
+  );
+}
+
+const PG_REASON: Record<string, string> = {
+  busy: 'Indisponível agora',
+  studying: 'Você já está estudando',
+  done: 'Você já tem este título nesta área',
+  requires: 'Exige mestrado na mesma área',
+  stats: 'Inteligência insuficiente',
+  'no-money': 'Dinheiro insuficiente para o primeiro ano',
+};
+
+/** Pós-graduação (release 0.0.4): especialização, mestrado e doutorado por área de diploma. */
+function PostgradGroup({ game }: { game: GameState }) {
+  const start = useGameStore((s) => s.startPostgrad);
+  const pg = game.college.postgrad;
+  const label = (id: string) => courseDef(C, id)?.label ?? id;
+  return (
+    <ListGroup title="Pós-graduação">
+      {pg ? (
+        <p className="text-sm" data-testid="postgrad-current">
+          {C.college.postgrad.find((d) => d.id === pg.kind)?.label} em {label(pg.field)} · falta{pg.yearsLeft > 1 ? 'm' : ''} {pg.yearsLeft} {pg.yearsLeft === 1 ? 'ano' : 'anos'}
+        </p>
+      ) : (
+        game.college.diplomas.flatMap((field) =>
+          C.college.postgrad.map((def) => {
+            const r = postgradBlockReason(game, def.id, field, C);
+            if (r === 'done') return null;
+            const fee = postgradTuition(game, def, C);
+            return (
+              <ListItem
+                key={`${def.id}:${field}`}
+                emoji="📚"
+                title={`${def.label} em ${label(field)}`}
+                subtitle={`${def.years} ${def.years === 1 ? 'ano' : 'anos'} · ${fee ? `${money.format(fee)}/ano` : 'com bolsa'}`}
+                disabled={!!r}
+                reason={r ? PG_REASON[r] : undefined}
+                onClick={() => start(def.id, field)}
+                chevron={false}
+                testId={`postgrad-${def.id}-${field}`}
+              />
+            );
+          }),
+        )
+      )}
+      {(game.college.postgrads ?? []).length > 0 && (
+        <p className="text-xs text-[var(--ds-text-muted)]">Títulos: {(game.college.postgrads ?? []).map((p) => { const [k, f] = p.split(':'); return `${C.college.postgrad.find((d) => d.id === k)?.label} em ${label(f ?? '')}`; }).join(' · ')}</p>
+      )}
+    </ListGroup>
   );
 }

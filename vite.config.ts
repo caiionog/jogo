@@ -54,6 +54,8 @@ export default defineConfig({
   test: {
     include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx'],
     environment: 'node',
+    // varreduras pesadas (encaixe de roupa do pixel art) passam de 5 s com a suíte inteira em paralelo
+    testTimeout: 30_000,
     // o módulo virtual do PWA não resolve no Windows durante os testes: um stub basta (o SW não roda no jsdom)
     alias: { 'virtual:pwa-register': fileURLToPath(new URL('./tests/stubs/pwa-register.ts', import.meta.url)) },
   },

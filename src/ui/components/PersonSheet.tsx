@@ -31,24 +31,24 @@ export default function PersonSheet({ game, person, rel, traits, onClose }: { ga
   return (
     <div className="fixed inset-0 z-30 flex items-end justify-center bg-black/60" role="dialog" aria-modal="true" aria-label={person.name} onClick={onClose}>
       <div
-        className="max-h-[85dvh] w-full max-w-md overflow-y-auto rounded-t-3xl border-t border-slate-700 bg-slate-900 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3"
+        className="max-h-[85dvh] w-full max-w-md overflow-y-auto rounded-t-3xl border-t border-[var(--ds-border)] bg-[var(--ds-surface)] px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3"
         onClick={(e) => e.stopPropagation()}
         data-testid="person-sheet"
       >
-        <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-slate-700" />
+        <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-[var(--ds-surface-2)]" />
         <div className="flex items-start justify-between gap-2">
           <button type="button" onClick={() => setProfile(true)} aria-label={`Ver o perfil de ${person.name}`} className="shrink-0 rounded-2xl" data-testid="person-avatar">
             <AvatarThumb d={personAvatar(person, rel.affection)} size={72} dim={!person.alive} label={person.name} className="rounded-2xl" />
           </button>
           <div className="min-w-0 flex-1">
             <h2 className="truncate text-lg font-bold">{person.name}</h2>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-[var(--ds-text-muted)]">
               {relLabel(rel.type, person.sex)}
               {rel.romance ? ` · ${STAGE_LABEL[rel.romance.stage]}` : ''} · {person.alive ? `${person.age} ${person.age === 1 ? 'ano' : 'anos'}` : `faleceu aos ${person.deathAge ?? person.age} anos`}
               {person.job ? ` · ${person.job}` : ''}
             </p>
           </div>
-          <button onClick={onClose} className="shrink-0 rounded-lg px-2 py-1 text-slate-400" aria-label="Fechar">
+          <button onClick={onClose} className="shrink-0 rounded-lg px-2 py-1 text-[var(--ds-text-muted)]" aria-label="Fechar">
             ✕
           </button>
         </div>
@@ -60,7 +60,7 @@ export default function PersonSheet({ game, person, rel, traits, onClose }: { ga
 
         {person.alive && (
           <div className="mt-3">
-            <div className="mb-1 flex justify-between text-xs text-slate-300">
+            <div className="mb-1 flex justify-between text-xs text-[var(--ds-text)]">
               <span>Afeto</span>
               <span className="tabular-nums">{rel.affection}</span>
             </div>
@@ -70,16 +70,16 @@ export default function PersonSheet({ game, person, rel, traits, onClose }: { ga
 
         <div className="mt-3 flex flex-wrap gap-1.5 text-[11px]">
           {known.map((t) => (
-            <span key={t} className="rounded-full bg-slate-800 px-2 py-0.5 text-slate-200">
+            <span key={t} className="rounded-full bg-[var(--ds-surface-2)] px-2 py-0.5 text-[var(--ds-text)]">
               {t}
             </span>
           ))}
-          {hidden > 0 && <span className="rounded-full border border-dashed border-slate-600 px-2 py-0.5 text-slate-500">+{hidden} traço(s) — converse para descobrir</span>}
+          {hidden > 0 && <span className="rounded-full border border-dashed border-[var(--ds-border)] px-2 py-0.5 text-[var(--ds-text-muted)]">+{hidden} traço(s) — converse para descobrir</span>}
           {person.flags.interesse_luta && <span className="rounded-full bg-rose-500/15 px-2 py-0.5 text-rose-300">🥊 quer lutar</span>}
         </div>
 
         {rel.history.length > 0 && (
-          <ul className="mt-3 flex flex-col gap-0.5 text-xs text-slate-400">
+          <ul className="mt-3 flex flex-col gap-0.5 text-xs text-[var(--ds-text-muted)]">
             {rel.history.map((h, i) => (
               <li key={i}>• {h}</li>
             ))}
@@ -96,11 +96,11 @@ export default function PersonSheet({ game, person, rel, traits, onClose }: { ga
                   disabled={reason !== null}
                   onClick={() => interact(person.id, kind)}
                   className={`flex flex-col items-start rounded-xl border px-3 py-2 text-left text-sm active:scale-[0.98] disabled:opacity-40 ${
-                    DANGER.includes(kind) ? 'border-rose-800 bg-rose-500/5 text-rose-200' : 'border-slate-700 bg-slate-800/60'
+                    DANGER.includes(kind) ? 'border-rose-800 bg-rose-500/5 text-rose-200' : 'border-[var(--ds-border)] bg-[var(--ds-surface-2)]'
                   }`}
                 >
                   <span className="leading-tight">{INTERACTION_LABEL[kind]}</span>
-                  <span className="text-[10px] text-slate-400">{reason ? REASON[reason] : 'repetir no ano rende menos'}</span>
+                  <span className="text-[10px] text-[var(--ds-text-muted)]">{reason ? REASON[reason] : 'repetir no ano rende menos'}</span>
                 </button>
               );
             })}

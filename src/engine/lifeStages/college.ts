@@ -39,6 +39,8 @@ export interface CollegeContent {
   courses: readonly CourseDef[];
   /** Release 0.0.4: Exame da Ordem (fictício), uma inscrição por ano para quem tem diploma de Direito. */
   barExam: { name: string; fee: number; cut: number; degree: string };
+  /** Release 0.0.4: especialização, mestrado e doutorado. */
+  postgrad: readonly PostgradDef[];
 }
 
 export type CollegeType = 'publica' | 'particular';
@@ -64,6 +66,23 @@ export interface CollegeState {
   diplomas: string[];
   examScore: number | null;
   examYear: number | null;
+  /** Pós-graduação em andamento (release 0.0.4; opcional). */
+  postgrad?: { kind: PostgradKind; field: string; yearsLeft: number } | null;
+  /** Pós-graduações concluídas, como `mestrado:direito`. */
+  postgrads?: string[];
+}
+
+export type PostgradKind = 'especializacao' | 'mestrado' | 'doutorado';
+
+export interface PostgradDef {
+  id: PostgradKind;
+  label: string;
+  years: number;
+  /** Mensalidade em salários mínimos/mês (0 = com bolsa). */
+  tuitionMW: number;
+  minIntelligence: number;
+  /** Pós exigida antes, na mesma área (doutorado exige mestrado). */
+  requires?: PostgradKind;
 }
 
 export const SALARIO_MINIMO_REF = 1518;
@@ -282,4 +301,59 @@ export function takeBarExam(state: GameState, content: GameContent): GameState {
     s = appendLog(s, `Reprovad${o} no ${ex.name}: ${score} pontos, o corte era ${ex.cut}. Dá para tentar de novo no ano que vem.`);
   }
   return { ...s, rngState: rng.state };
+}
+
+// ---------------------------------------------------------------------------
+// Pós-graduação (release 0.0.4)
+// ---------------------------------------------------------------------------
+
+export type PostgradBlockReason = 'busy' | 'no-degree' | 'studying' | 'done' | 'requires' | 'stats' | 'no-money';
+
+export function hasPostgrad(state: GameState, kind: PostgradKind, field?: string): boolean {
+  return (state.college.postgrads ?? []).some((p) => p.startsWith(`${kind}:`) && (!field || p === `${kind}:${field}`));
+}
+
+export function postgradTuition(state: GameState, def: PostgradDef, content: GameContent): number {
+  return toMoney(def.tuitionMW * SALARIO_MINIMO_REF * 12 * cityMultOf(state, content));
+}
+
+/** Pode começar: diploma na área, sem curso em andamento (graduação ou pós), pré-requisito, inteligência e 1º ano pago. */
+export function postgradBlockReason(state: GameState, kind: PostgradKind, field: string, content: GameContent): PostgradBlockReason | null {
+  const def = content.college.postgrad.find((p) => p.id === kind);
+  if (!def || !state.alive || state.pendingEvents.length || state.activeFight || state.prison) return 'busy';
+  if (!state.college.diplomas.includes(field)) return 'no-degree';
+  if (state.college.current || state.college.postgrad) return 'studying';
+  if (hasPostgrad(state, kind, field)) return 'done';
+  if (def.requires && !hasPostgrad(state, def.requires, field)) return 'requires';
+  if (state.character.stats.intelligence < def.minIntelligence) return 'stats';
+  if (state.money < postgradTuition(state, def, content)) return 'no-money';
+  return null;
+}
+
+export function startPostgrad(state: GameState, kind: PostgradKind, field: string, content: GameContent): GameState {
+  if (postgradBlockReason(state, kind, field, content) !== null) return state;
+  const def = content.college.postgrad.find((p) => p.id === kind)!;
+  const s: GameState = { ...state, college: { ...state.college, postgrad: { kind, field, yearsLeft: def.years } } };
+  const area = content.college.courses.find((c) => c.id === field)?.label ?? field;
+  return appendLog(s, `Você começou ${kind === 'especializacao' ? 'uma especialização' : `o ${def.label.toLowerCase()}`} em ${area}${def.tuitionMW ? '' : ', com bolsa'}.`);
+}
+
+/** Virada do ano: paga a mensalidade, +2 de inteligência e, no último ano, o título. Sem dinheiro, tranca (sai). */
+export function postgradYear(state: GameState, content: GameContent): GameState {
+  const pg = state.college.postgrad;
+  if (!pg) return state;
+  const def = content.college.postgrad.find((p) => p.id === pg.kind);
+  if (!def) return { ...state, college: { ...state.college, postgrad: null } };
+  const fee = postgradTuition(state, def, content);
+  if (fee > 0 && state.money < fee) return appendLog({ ...state, college: { ...state.college, postgrad: null } }, `Sem dinheiro para a mensalidade, você largou o ${def.label.toLowerCase()}.`);
+  let s = fee > 0 ? post(state, 'educacao', -fee, `Mensalidade: ${def.label}`) : state;
+  s = { ...s, character: { ...s.character, stats: addStats(s.character.stats, { intelligence: 2 }) } };
+  const left = pg.yearsLeft - 1;
+  if (left > 0) return { ...s, college: { ...s.college, postgrad: { ...pg, yearsLeft: left } } };
+  const titulo = `${pg.kind}:${pg.field}`;
+  s = { ...s, college: { ...s.college, postgrad: null, postgrads: [...(s.college.postgrads ?? []), titulo] } };
+  s = { ...s, character: { ...s.character, stats: addStats(s.character.stats, { happiness: 5 }) } };
+  if (s.economy.job) s = { ...s, economy: { ...s.economy, job: { ...s.economy.job, performance: Math.min(100, s.economy.job.performance + 15) } } };
+  const area = content.college.courses.find((c) => c.id === pg.field)?.label ?? pg.field;
+  return appendLog(s, `Você concluiu ${pg.kind === 'especializacao' ? 'a especialização' : `o ${def.label.toLowerCase()}`} em ${area}!`);
 }

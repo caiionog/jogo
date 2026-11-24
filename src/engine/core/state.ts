@@ -1,3 +1,4 @@
+import type { Eating } from '../fighting/body';
 import type { CivilServiceState } from '../civilService/civil';
 import type { PopulationState } from '../population/population';
 import type { PoliceState } from '../police/types';
@@ -36,6 +37,8 @@ export interface Character {
   luck: number;
   /** Fama pública 0–100 (release 0.0.4): o atributo único de fama, dentro e fora do esporte. */
   fame: number;
+  /** Alimentação escolhida (release 0.0.4; ausente = normal). */
+  eating?: Eating;
   name: string;
   sex: Sex;
   age: number;

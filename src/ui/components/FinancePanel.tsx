@@ -38,18 +38,18 @@ function Ledger({ game }: { game: GameState }) {
   return (
     <Section title={`Extrato de ${game.year}`}>
       <Row label="Saldo no início do ano" value={money.format(opening)} />
-      {income.length + spend.length === 0 && <p className="py-1 text-xs text-slate-500">Nenhuma movimentação este ano.</p>}
+      {income.length + spend.length === 0 && <p className="py-1 text-xs text-[var(--ds-text-muted)]">Nenhuma movimentação este ano.</p>}
       {income.map(([k, v]) => (
         <Row key={k} label={CATEGORY_LABEL[k]} value={signed(v)} tone="pos" />
       ))}
       {spend.map(([k, v]) => (
         <Row key={k} label={CATEGORY_LABEL[k]} value={signed(v)} tone="neg" />
       ))}
-      <div className="mt-1 border-t border-slate-800 pt-1" data-testid="ledger-total">
+      <div className="mt-1 border-t border-[var(--ds-border)] pt-1" data-testid="ledger-total">
         <Row label="Total do ano" value={signed(sum)} tone={sum >= 0 ? 'pos' : 'neg'} />
         <Row label="Saldo atual" value={money.format(game.money)} />
       </div>
-      <p className="mt-1 text-[11px] text-slate-500">
+      <p className="mt-1 text-[11px] text-[var(--ds-text-muted)]">
         Custos automáticos (moradia, padrão de vida, filhos, parcelas, impostos) entram ao avançar o ano.
       </p>
     </Section>
@@ -66,7 +66,7 @@ function History({ game }: { game: GameState }) {
       title="Anos anteriores"
       right={
         game.economy.history.length > 5 ? (
-          <button className="text-xs text-slate-400 underline" onClick={() => setOpen((v) => !v)}>
+          <button className="text-xs text-[var(--ds-text-muted)] underline" onClick={() => setOpen((v) => !v)}>
             {open ? 'menos' : 'mais'}
           </button>
         ) : undefined
@@ -80,17 +80,17 @@ function History({ game }: { game: GameState }) {
           return (
             <li key={h.year} className="py-1 text-xs">
               <button type="button" aria-expanded={shown} onClick={() => setExpanded(shown ? null : h.year)} className="flex min-h-9 w-full items-baseline justify-between gap-2 text-left" data-testid="history-year">
-                <span className="text-slate-400">
+                <span className="text-[var(--ds-text-muted)]">
                   {shown ? '▾' : '▸'} {h.year} · {h.age} anos
                 </span>
                 <span className={`tabular-nums ${net >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{signed(net)}</span>
-                <span className="tabular-nums text-slate-300">patrimônio {money.format(h.netWorth)}</span>
+                <span className="tabular-nums text-[var(--ds-text)]">patrimônio {money.format(h.netWorth)}</span>
               </button>
               {shown && (
                 <ul className="mb-1 ml-4 flex flex-col gap-0.5" data-testid="history-detail">
                   {cats.map(([c, v]) => (
                     <li key={c} className="flex justify-between gap-2">
-                      <span className="text-slate-400">{CATEGORY_LABEL[c] ?? c}</span>
+                      <span className="text-[var(--ds-text-muted)]">{CATEGORY_LABEL[c] ?? c}</span>
                       <span className={`tabular-nums ${(v ?? 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{signed(v ?? 0)}</span>
                     </li>
                   ))}
@@ -117,12 +117,12 @@ function Bank({ game }: { game: GameState }) {
     <Section title="Banco Aurora">
       <Row label="Poupança" value={money.format(e.savings)} />
       <Row label={INDEX_NAME} value={money.format(e.investments)} />
-      <p className="mb-2 text-[11px] text-slate-500">
+      <p className="mb-2 text-[11px] text-[var(--ds-text-muted)]">
         {ECON_LABEL[m.kind]}: poupança rende {pct(m.savingsRate)} este ano; o índice varia com o mercado (resgate com taxa de {pct(INDEX_WITHDRAW_FEE)}).
       </p>
-      <div className="mb-2 grid grid-cols-2 gap-1 rounded-xl bg-slate-950 p-1 text-sm">
+      <div className="mb-2 grid grid-cols-2 gap-1 rounded-xl bg-[var(--ds-bg)] p-1 text-sm">
         {(['savings', 'investments'] as const).map((w) => (
-          <button key={w} onClick={() => setWhere(w)} className={`rounded-lg py-2 ${where === w ? 'bg-slate-800 font-semibold' : 'text-slate-400'}`}>
+          <button key={w} onClick={() => setWhere(w)} className={`rounded-lg py-2 ${where === w ? 'bg-[var(--ds-surface-2)] font-semibold' : 'text-[var(--ds-text-muted)]'}`}>
             {w === 'savings' ? 'Poupança' : 'Índice'}
           </button>
         ))}
@@ -187,14 +187,14 @@ function Credit({ game }: { game: GameState }) {
           </Btn>
         </div>
       ) : (
-        <p className="mb-2 text-xs text-slate-500">Sem dívidas no cheque especial.</p>
+        <p className="mb-2 text-xs text-[var(--ds-text-muted)]">Sem dívidas no cheque especial.</p>
       )}
       {e.loans.length > 0 && (
         <ul className="mb-2 flex flex-col gap-2">
           {e.loans.map((l) => (
-            <li key={l.id} className="rounded-xl bg-slate-950 p-2">
+            <li key={l.id} className="rounded-xl bg-[var(--ds-bg)] p-2">
               <Row label={l.label} value={money.format(l.balance)} />
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-[var(--ds-text-muted)]">
                 {money.format(l.installment)}/ano · faltam {l.yearsLeft} parcela(s) · {pct(l.rate)} a.a.
               </p>
               <Btn className="mt-1 w-full" disabled={!ok || game.money < l.balance} onClick={() => payOffLoan(l.id)}>
@@ -206,7 +206,7 @@ function Credit({ game }: { game: GameState }) {
       )}
       {game.character.age >= 18 && (
         <div className="flex flex-col gap-2">
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-[var(--ds-text-muted)]">
             Empréstimo pessoal ({pct(t.rate)} a.a.) · limite {money.format(limit)}
           </p>
           <AmountInput
@@ -219,9 +219,9 @@ function Credit({ game }: { game: GameState }) {
             ]}
           />
           <div className="flex items-center gap-2 text-sm">
-            <span className="text-slate-400">Prazo</span>
+            <span className="text-[var(--ds-text-muted)]">Prazo</span>
             {[1, 3, 5].map((y) => (
-              <button key={y} onClick={() => setYears(y)} className={`rounded-full border px-3 py-1 ${years === y ? 'border-emerald-500 text-emerald-300' : 'border-slate-700 text-slate-400'}`}>
+              <button key={y} onClick={() => setYears(y)} className={`rounded-full border px-3 py-1 ${years === y ? 'border-emerald-500 text-emerald-300' : 'border-[var(--ds-border)] text-[var(--ds-text-muted)]'}`}>
                 {y} {y === 1 ? 'ano' : 'anos'}
               </button>
             ))}
@@ -246,7 +246,7 @@ function Living({ game }: { game: GameState }) {
   if (game.character.age < 18) {
     return (
       <Section title="Custo de vida">
-        <p className="text-xs text-slate-400">Até os 18 anos, sua família paga as despesas básicas. Mesada e presentes saem do patrimônio dos seus pais.</p>
+        <p className="text-xs text-[var(--ds-text-muted)]">Até os 18 anos, sua família paga as despesas básicas. Mesada e presentes saem do patrimônio dos seus pais.</p>
       </Section>
     );
   }
@@ -254,21 +254,21 @@ function Living({ game }: { game: GameState }) {
     <Section title="Custo de vida">
       <Row label="Padrão de vida (ano)" value={money.format(cost.standard)} tone="neg" />
       <Row label="Aluguel (ano)" value={money.format(cost.rent)} tone={cost.rent ? 'neg' : 'muted'} />
-      <p className="mt-2 text-xs text-slate-400">Padrão de vida</p>
+      <p className="mt-2 text-xs text-[var(--ds-text-muted)]">Padrão de vida</p>
       <div className="mt-1 grid grid-cols-3 gap-1">
         {(Object.keys(STANDARD) as LivingStandard[]).map((k) => (
           <button
             key={k}
             disabled={!ok}
             onClick={() => setStandard(k)}
-            className={`min-h-11 rounded-xl border px-1 text-xs ${e.standard === k ? 'border-emerald-500 bg-emerald-500/10 font-semibold' : 'border-slate-700'}`}
+            className={`min-h-11 rounded-xl border px-1 text-xs ${e.standard === k ? 'border-emerald-500 bg-emerald-500/10 font-semibold' : 'border-[var(--ds-border)]'}`}
           >
             {STANDARD[k].label}
-            <span className="block text-[10px] text-slate-400">{STANDARD[k].happiness ? `+${STANDARD[k].happiness} felicidade` : 'básico'}</span>
+            <span className="block text-[10px] text-[var(--ds-text-muted)]">{STANDARD[k].happiness ? `+${STANDARD[k].happiness} felicidade` : 'básico'}</span>
           </button>
         ))}
       </div>
-      <p className="mt-2 text-xs text-slate-400">Moradia</p>
+      <p className="mt-2 text-xs text-[var(--ds-text-muted)]">Moradia</p>
       <div className="mt-1 grid grid-cols-3 gap-1">
         {(Object.keys(HOUSING_LABEL) as Housing[]).map((k) => {
           const can = k === 'pais' ? parents : k === 'propria' ? hasHome : true;
@@ -277,14 +277,14 @@ function Living({ game }: { game: GameState }) {
               key={k}
               disabled={!ok || !can}
               onClick={() => setHousing(k)}
-              className={`min-h-11 rounded-xl border px-1 text-xs disabled:opacity-40 ${e.housing === k ? 'border-emerald-500 bg-emerald-500/10 font-semibold' : 'border-slate-700'}`}
+              className={`min-h-11 rounded-xl border px-1 text-xs disabled:opacity-40 ${e.housing === k ? 'border-emerald-500 bg-emerald-500/10 font-semibold' : 'border-[var(--ds-border)]'}`}
             >
               {HOUSING_LABEL[k]}
             </button>
           );
         })}
       </div>
-      {e.housing === 'propria' || !hasHome ? null : <p className="mt-1 text-[11px] text-slate-500">Para morar no seu imóvel, use "Morar aqui" na aba Bens.</p>}
+      {e.housing === 'propria' || !hasHome ? null : <p className="mt-1 text-[11px] text-[var(--ds-text-muted)]">Para morar no seu imóvel, use "Morar aqui" na aba Bens.</p>}
     </Section>
   );
 }
@@ -304,29 +304,29 @@ export function WillSection({ game }: { game: GameState }) {
   const est = Math.max(0, netWorth(game)) * (1 - C.legacy.inheritanceTax);
   const bump = (id: string, d: number) => setDraft({ ...shares, [id]: Math.max(0, Math.min(100, (shares[id] ?? 0) + d)) });
   return (
-    <Section title="Testamento" right={<span className="text-[11px] text-slate-400">{game.economy.will ? `registrado em ${game.economy.will.year}` : 'sem testamento'}</span>}>
+    <Section title="Testamento" right={<span className="text-[11px] text-[var(--ds-text-muted)]">{game.economy.will ? `registrado em ${game.economy.will.year}` : 'sem testamento'}</span>}>
       {heirs.length === 0 ? (
-        <p className="text-sm text-slate-400">Sem herdeiros vivos (cônjuge, filhos, irmãos ou pais).</p>
+        <p className="text-sm text-[var(--ds-text-muted)]">Sem herdeiros vivos (cônjuge, filhos, irmãos ou pais).</p>
       ) : (
         <>
-          <p className="mb-2 text-[11px] text-slate-400">
+          <p className="mb-2 text-[11px] text-[var(--ds-text-muted)]">
             {game.economy.will ? 'Sua partilha está registrada.' : 'Sem testamento vale a divisão padrão: cônjuge 50% e filhos dividem o resto; sem filhos, cônjuge; depois irmãos e pais.'} Imposto de herança: {pct(C.legacy.inheritanceTax)}.
           </p>
           <ul className="flex flex-col gap-1.5" data-testid="will-list">
             {heirs.map(({ person, type }) => (
-              <li key={person.id} className="flex items-center justify-between gap-2 rounded-xl bg-slate-950 px-3 py-2">
+              <li key={person.id} className="flex items-center justify-between gap-2 rounded-xl bg-[var(--ds-bg)] px-3 py-2">
                 <div className="min-w-0">
                   <p className="truncate text-sm">{person.name.split(' ')[0]}</p>
-                  <p className="text-[11px] text-slate-400">
+                  <p className="text-[11px] text-[var(--ds-text-muted)]">
                     {(REL_NAME[type] ?? [type, type])[person.sex === 'M' ? 0 : 1]} · {person.age} anos · ~{money.format((est * (shares[person.id] ?? 0)) / 100)}
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-1">
-                  <button aria-label={`Menos para ${person.name}`} onClick={() => bump(person.id, -10)} className="h-11 w-11 rounded-lg border border-slate-700">
+                  <button aria-label={`Menos para ${person.name}`} onClick={() => bump(person.id, -10)} className="h-11 w-11 rounded-lg border border-[var(--ds-border)]">
                     −
                   </button>
                   <span className="w-11 text-center text-sm tabular-nums">{shares[person.id] ?? 0}%</span>
-                  <button aria-label={`Mais para ${person.name}`} onClick={() => bump(person.id, 10)} className="h-11 w-11 rounded-lg border border-slate-700">
+                  <button aria-label={`Mais para ${person.name}`} onClick={() => bump(person.id, 10)} className="h-11 w-11 rounded-lg border border-[var(--ds-border)]">
                     +
                   </button>
                 </div>
@@ -354,7 +354,7 @@ export default function FinancePanel({ game }: { game: GameState }) {
   const m = currentMarket(game);
   return (
     <div className="flex flex-col gap-3" data-testid="finance-panel">
-      <Section title="Resumo" right={<span className={`text-[11px] ${m.kind === 'crise' ? 'text-rose-400' : m.kind === 'boom' ? 'text-emerald-400' : 'text-slate-400'}`}>{ECON_LABEL[m.kind]}</span>}>
+      <Section title="Resumo" right={<span className={`text-[11px] ${m.kind === 'crise' ? 'text-rose-400' : m.kind === 'boom' ? 'text-emerald-400' : 'text-[var(--ds-text-muted)]'}`}>{ECON_LABEL[m.kind]}</span>}>
         <Row label="Dinheiro" value={money.format(game.money)} />
         <Row label="Patrimônio líquido" value={<b data-testid="net-worth">{money.format(nw)}</b>} tone={nw >= 0 ? 'pos' : 'neg'} />
         {e.debt > 0 && <Row label="Dívida" value={money.format(e.debt)} tone="neg" />}

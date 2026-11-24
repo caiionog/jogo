@@ -335,3 +335,56 @@ describe('concursos públicos civis (release 0.0.4)', () => {
     expect(policeColleaguesYear(s, mkRng(1), GAME_CONTENT)).toBe(s);
   });
 });
+
+import { bodyFor, commercialBlockReason, doCommercial, eatingYear, followersOf, jobRequirementGaps, postOnSocial, postgradBlockReason, postgradYear, setEating, startPostgrad, titlesBonus } from '../src/engine';
+
+describe('fase 5: fama, imigração, alimentação e pós (release 0.0.4)', () => {
+  it('imigração: Roraima tem bem mais moradores nascidos fora que o Piauí, com nomes do idioma de origem', () => {
+    const base = withAge(makeGame('imig'), 30);
+    const rr = { ...base, character: { ...base.character, uf: 'RR', city: GAME_CONTENT.geo.ufs.find((u) => u.sigla === 'RR')!.cities[0]!.name } };
+    const pi = { ...base, character: { ...base.character, uf: 'PI', city: GAME_CONTENT.geo.ufs.find((u) => u.sigla === 'PI')!.cities[0]!.name } };
+    const share = (s: GameState) => { const r = generateResidents(s, GAME_CONTENT); return r.filter((x) => x.origin !== 'Brasil').length / r.length; };
+    expect(share(rr)).toBeGreaterThan(0.03);
+    expect(share(pi)).toBeLessThan(0.02);
+    const ven = generateResidents(rr, GAME_CONTENT).find((x) => x.origin === 'Venezuela');
+    if (ven) expect(GAME_CONTENT.population.foreignNames!.es!.surnames.some((n) => ven.name.endsWith(n))).toBe(true);
+  });
+
+  it('redes e comerciais: postar sobe a fama, comercial exige fama 30 e paga', () => {
+    const g = withAge(makeGame('redes'), 20);
+    const after = postOnSocial(g, 'foto', GAME_CONTENT);
+    expect(after.character.fame).toBeGreaterThanOrEqual(g.character.fame);
+    expect(followersOf(0)).toBe(40);
+    expect(followersOf(100)).toBeGreaterThan(1_000_000);
+    expect(commercialBlockReason(g, GAME_CONTENT)).toBe('fame');
+    const famous = addFame(g, 50);
+    const c = doCommercial(famous, GAME_CONTENT);
+    expect(c.money).toBeGreaterThan(famous.money);
+    expect(commercialBlockReason(c, GAME_CONTENT)).toBe('done');
+  });
+
+  it('alimentação mexe no peso e na saúde; criança não escolhe', () => {
+    const kid = withAge(makeGame('ali'), 8);
+    expect(setEating(kid, 'besteira')).toBe(kid);
+    const g = withAge(makeGame('ali2'), 25);
+    const normal = bodyFor(25, g.character).weightKg;
+    const junk = setEating(g, 'besteira');
+    expect(junk.character.weightKg).toBeGreaterThan(normal);
+    expect(bodyFor(25, { ...g.character, eating: 'restrita' }).weightKg).toBeLessThan(normal);
+    expect(eatingYear(setEating(g, 'saudavel')).character.stats.health).toBeGreaterThanOrEqual(g.character.stats.health);
+  });
+
+  it('pós-graduação: mestrado com bolsa, doutorado exige mestrado; título vale na prova e para professor universitário', () => {
+    const g = civilCandidate('pos', 26, 80, ['direito']);
+    expect(postgradBlockReason(g, 'doutorado', 'direito', GAME_CONTENT)).toBe('requires');
+    let s = startPostgrad(g, 'mestrado', 'direito', GAME_CONTENT);
+    expect(s.college.postgrad?.yearsLeft).toBe(2);
+    s = postgradYear(postgradYear(s, GAME_CONTENT), GAME_CONTENT);
+    expect(s.college.postgrads).toEqual(['mestrado:direito']);
+    expect(titlesBonus(s)).toBe(6);
+    const prof = GAME_CONTENT.economy.jobs.find((j) => j.id === 'professor_universitario')!;
+    expect(jobRequirementGaps(g, prof)).toContain('postgrad');
+    expect(jobRequirementGaps({ ...s, character: { ...s.character, age: 27 } }, prof)).not.toContain('postgrad');
+    expect(postgradBlockReason(s, 'doutorado', 'direito', GAME_CONTENT)).toBeNull();
+  });
+});

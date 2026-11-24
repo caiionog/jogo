@@ -1,7 +1,9 @@
+import { eatingYear } from '../fighting/body';
 import { policeColleaguesYear } from '../police/colleagues';
 import { emptyCivilService } from '../civilService/civil';
 import { emptyPopulation } from '../population/population';
 import { fameYear } from '../fame/fame';
+import { postgradYear } from '../lifeStages/college';
 import { prisonYear } from '../crime/justice';
 import { crimeYear } from '../crime/crimes';
 import { policeYear } from '../police/career';
@@ -373,6 +375,7 @@ export function advanceYear(
     // no intercâmbio, o ano letivo da escola fica em pausa (sem nota e sem reprovar)
     let next = onExchange(s) ? s : endSchoolYear(s, rng, content);
     next = collegeYear(next, rng, content);
+    next = postgradYear(next, content);
     next = sportsClubYear(next, content);
     next = exchangeYear(next, rng, content);
     next = endFightingYear(next, content);
@@ -397,6 +400,7 @@ export function advanceYear(
     next = appendLog(next, `Você fez ${next.character.age} ${next.character.age === 1 ? 'ano' : 'anos'}.`);
     // doenças, dano cerebral na velhice e hábitos
     next = healthYear(next, rng, content);
+    next = eatingYear(next);
     next = updateBody(next);
 
     const cause = deathCheck(next, rng, content);

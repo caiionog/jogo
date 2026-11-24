@@ -1,3 +1,4 @@
+import type { FameContent } from '../fame/social';
 import type { PopulationContent } from '../population/population';
 import type { FriendsContent } from '../relationships/types';
 import type { CrimeContent } from '../crime/types';
@@ -122,4 +123,6 @@ export interface GameContent {
   friends: FriendsContent;
   /** Moradores da cidade: bairros, ocupações e imigração (release 0.0.4). */
   population: PopulationContent;
+  /** Fama: marcas dos comerciais (release 0.0.4). */
+  fame: FameContent;
 }

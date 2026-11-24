@@ -188,6 +188,13 @@ export function conditionsMet(state: GameState, event: GameEvent, content?: Game
     if (c.college.diploma && !c.college.diploma.some((d) => state.college?.diplomas.includes(d))) return false;
   }
   if (c.fame && !inRange(state.character.fame ?? 0, c.fame)) return false;
+  if (c.love) {
+    const rom = state.relationships.relations.filter((r) => r.romance);
+    if (c.love.affair !== undefined && rom.some((r) => r.romance?.secret) !== c.love.affair) return false;
+    if (c.love.openRelationship !== undefined && rom.some((r) => r.romance?.open) !== c.love.openRelationship) return false;
+    if (c.love.casualPregnancy !== undefined && !!state.relationships.pregnancy?.casual !== c.love.casualPregnancy) return false;
+    if (c.love.usedApp !== undefined && (Number(state.flags.usou_app ?? -99) >= state.year - 1) !== c.love.usedApp) return false;
+  }
   if (c.talent) {
     const t = state.character.talents?.find((x) => x.id === c.talent!.id);
     if (!t || (c.talent.revealed !== undefined && t.revealed !== c.talent.revealed)) return false;

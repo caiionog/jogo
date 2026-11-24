@@ -83,4 +83,12 @@ describe('telas da release 0.0.4', () => {
     act(() => fireEvent.click(btn));
     expect(useGameStore.getState().game!.civilService.exams).toHaveLength(1);
   });
+
+  it('Fama e redes: barra de fama, postar e comercial bloqueado sem fama', () => {
+    open(adult(22, 'ui-fama'), ['nav-atividades', 'act-fama']);
+    expect(screen.getByTestId('fame-card').textContent).toContain('seguidores');
+    expect((screen.getByTestId('do-commercial') as HTMLButtonElement).disabled).toBe(true);
+    act(() => fireEvent.click(screen.getByTestId('post-foto')));
+    expect(useGameStore.getState().game!.yearUses['redes:post']).toBe(1);
+  });
 });

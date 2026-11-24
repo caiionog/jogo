@@ -19,7 +19,7 @@
 - `tests/ui*.test.tsx`: o módulo virtual do PWA não resolvia no Windows. **Corrigido na fase 3** com um stub nos
   testes (`tests/stubs/pwa-register.ts`, alias em `vite.config.ts`). Sobra um erro de teardown (o visual carregado sob
   demanda termina de importar depois do fim do teste); os testes de UI passam.
-- `tests/pixelAvatar.test.ts` (encaixe): passa sozinho, mas pode estourar o tempo na suíte inteira.
+- `tests/pixelAvatar.test.ts` (encaixe): estourava o tempo na suíte inteira. **Corrigido na fase 5** (`testTimeout: 30_000`).
 
 ## Fase 2 — População e imigração (concluída, sem dados de imigração)
 - `engine/population/`: moradores gerados sob demanda por (seed, UF, cidade, `POP_VERSION`), de 60 a 400 conforme a
@@ -68,5 +68,25 @@
   eventos `pol_colega_*` e 3 de servidor público (`job_servidor_*`).
 - Save v19 (`migrateV18toV19`, `civilService`), fixture `saves-v18.json`.
 
+## Fase 5 — Fama, e as pendências (concluída)
+- Fama no dia a dia (`engine/fame/social.ts`): seguidores calculados da fama (`followersOf`, só vitrine), rótulo
+  (`fameLabel`), postar nas redes (13+, foto/treino/opinião, retorno decrescente; opinião tem 20% de polêmica) e
+  comercial (16+, fama 30+, uma vez por ano, cachê = fama² × 20, marcas fictícias em `content/fame`).
+- Tela Atividades → Fama e redes, com barra de fama (0–100), seguidores, posts e comercial.
+- 21 eventos de fama (`content/events/fame/`): reconhecimento, podcast, talk show, reality, prêmio, paparazzi,
+  escândalos, notícia falsa, golpe com perfil falso, haters e fãs na porta.
+- Pendências da fase 3: condição nova `love` (`affair`, `openRelationship`, `casualPregnancy`, `usedApp` pela flag
+  `usou_app`) e 8 eventos (`events/relationships/modern.ts`): caso quase descoberto, amigo que sabe, regras da relação
+  aberta, gravidez casual e paternidade, golpe e encontros do app.
+- Imigração (fase 2): **estimativa não oficial** em `content/population/immigration.ts` (parte de moradores nascidos
+  fora por UF × mistura de origens por região; fontes no cabeçalho), com nomes por idioma de origem. `POP_VERSION`
+  subiu para 2. 7 eventos de vizinhança e imigração (`events/population/`), sem mecânica por origem.
+- Alimentação (pendência antiga): `character.eating` (normal, saudável, besteira, restrita; opcional, sem migração),
+  12+, mexe no IMC (`bmiAt`) e na saúde do ano (`eatingYear`). Seção "Alimentação" em Saúde.
+- Pós-graduação (pendência antiga): especialização (1 ano, paga), mestrado (2, bolsa) e doutorado (4, bolsa, exige
+  mestrado) por área de diploma (`startPostgrad`/`postgradYear`, campos opcionais em `college`). Títulos contam na
+  prova de títulos dos concursos; emprego novo "Professor(a) universitário(a)" (`requires.postgrad`).
+- Telas antigas (`src/ui/components/`): 241 classes `slate-*`/`text-white` trocadas pelos tokens `--ds-*`.
+
 ## Próximo
-Fase 5: conteúdo de fama (escândalos, redes sociais, comerciais, 20+ eventos, barra de fama).
+Fase 6: futebol (clubes fictícios com a Divisão A refeita, ligas, carreira, temporada, escudos, tela central).

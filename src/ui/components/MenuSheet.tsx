@@ -47,21 +47,21 @@ export default function MenuSheet({ onClose, open }: { onClose: () => void; open
     if (fileRef.current) fileRef.current.value = '';
   };
 
-  const item = 'flex min-h-12 w-full items-center gap-3 rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-left text-sm';
+  const item = 'flex min-h-12 w-full items-center gap-3 rounded-xl border border-[var(--ds-border)] bg-[var(--ds-bg)] px-3 py-2 text-left text-sm';
   return (
     <Sheet title="Menu" onClose={onClose} testId="menu-sheet">
       <div className="flex flex-col gap-2">
         <button className={item} onClick={() => open('achievements')} data-testid="menu-achievements">
           <span className="text-xl" aria-hidden>🏅</span>
           <span className="flex-1">Conquistas</span>
-          <span className="text-xs text-slate-400">
+          <span className="text-xs text-[var(--ds-text-muted)]">
             {done}/{GAME_CONTENT.achievements.length}
           </span>
         </button>
         <button className={item} onClick={() => open('hall')} data-testid="menu-hall">
           <span className="text-xl" aria-hidden>🏛️</span>
           <span className="flex-1">Hall da Fama</span>
-          <span className="text-xs text-slate-400">{meta.hallOfFame.length}</span>
+          <span className="text-xs text-[var(--ds-text-muted)]">{meta.hallOfFame.length}</span>
         </button>
         <button className={item} onClick={() => open('settings')} data-testid="menu-settings">
           <span className="text-xl" aria-hidden>⚙️</span>
@@ -77,29 +77,29 @@ export default function MenuSheet({ onClose, open }: { onClose: () => void; open
         {confirmNew && game && (
           <div className="rounded-xl border border-rose-800 p-3 text-sm" role="alertdialog" aria-label="Começar uma nova vida?">
             <p className="font-semibold">Começar uma nova vida?</p>
-            <p className="text-xs text-slate-400">{game.alive ? `A vida de ${game.character.name} neste slot será perdida.` : 'A vida atual já terminou.'}</p>
+            <p className="text-xs text-[var(--ds-text-muted)]">{game.alive ? `A vida de ${game.character.name} neste slot será perdida.` : 'A vida atual já terminou.'}</p>
             <div className="mt-2 grid grid-cols-2 gap-2">
-              <button className="min-h-11 rounded-xl border border-slate-700" onClick={() => setConfirmNew(false)}>Cancelar</button>
-              <button className="min-h-11 rounded-xl bg-rose-600 font-semibold text-white" data-testid="menu-new-life-yes" onClick={() => { setConfirmNew(false); onClose(); void newLife(); }}>Nova vida</button>
+              <button className="min-h-11 rounded-xl border border-[var(--ds-border)]" onClick={() => setConfirmNew(false)}>Cancelar</button>
+              <button className="min-h-11 rounded-xl bg-rose-600 font-semibold text-[var(--ds-text)]" data-testid="menu-new-life-yes" onClick={() => { setConfirmNew(false); onClose(); void newLife(); }}>Nova vida</button>
             </div>
           </div>
         )}
-        <h3 className="mt-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Vidas salvas</h3>
+        <h3 className="mt-3 text-xs font-semibold uppercase tracking-wide text-[var(--ds-text-muted)]">Vidas salvas</h3>
         <ul className="flex flex-col gap-2" data-testid="slots">
           {slots.map((s) => (
-            <li key={s.slot} className={`rounded-xl border p-3 ${s.slot === slot ? 'border-emerald-600 bg-emerald-500/10' : 'border-slate-800 bg-slate-950'}`}>
+            <li key={s.slot} className={`rounded-xl border p-3 ${s.slot === slot ? 'border-emerald-600 bg-emerald-500/10' : 'border-[var(--ds-border)] bg-[var(--ds-bg)]'}`}>
               <div className="flex items-center justify-between gap-2">
                 <div className="min-w-0">
                   <p className="text-sm font-semibold">
                     Slot {s.slot}
                     {s.slot === slot ? ' · atual' : ''}
                   </p>
-                  <p className="truncate text-xs text-slate-400">
+                  <p className="truncate text-xs text-[var(--ds-text-muted)]">
                     {s.empty ? 'Vazio' : s.broken ? 'Save ilegível' : `${s.name}, ${s.age} anos · ${s.generation}ª geração${s.alive ? '' : ' · falecido(a)'}`}
                   </p>
                 </div>
                 {s.slot !== slot && (
-                  <button data-testid={`slot-open-${s.slot}`} onClick={() => void switchSlot(s.slot).then(onClose)} className="min-h-11 shrink-0 rounded-xl border border-slate-600 px-3 text-sm">
+                  <button data-testid={`slot-open-${s.slot}`} onClick={() => void switchSlot(s.slot).then(onClose)} className="min-h-11 shrink-0 rounded-xl border border-[var(--ds-border)] px-3 text-sm">
                     {s.empty ? 'Nova vida' : 'Jogar'}
                   </button>
                 )}
@@ -108,7 +108,7 @@ export default function MenuSheet({ onClose, open }: { onClose: () => void; open
                 <div className="mt-2">
                   {confirmDel === s.slot ? (
                     <div className="grid grid-cols-2 gap-2">
-                      <button onClick={() => setConfirmDel(null)} className="min-h-11 rounded-lg border border-slate-600 text-xs">
+                      <button onClick={() => setConfirmDel(null)} className="min-h-11 rounded-lg border border-[var(--ds-border)] text-xs">
                         Cancelar
                       </button>
                       <button
@@ -116,13 +116,13 @@ export default function MenuSheet({ onClose, open }: { onClose: () => void; open
                           setConfirmDel(null);
                           void deleteSlot(s.slot);
                         }}
-                        className="min-h-11 rounded-lg bg-rose-500 text-xs font-bold text-slate-950"
+                        className="min-h-11 rounded-lg bg-rose-500 text-xs font-bold text-[var(--ds-accent-ink)]"
                       >
                         Apagar slot {s.slot}
                       </button>
                     </div>
                   ) : (
-                    <button onClick={() => setConfirmDel(s.slot)} className="min-h-11 text-xs text-slate-400 underline">
+                    <button onClick={() => setConfirmDel(s.slot)} className="min-h-11 text-xs text-[var(--ds-text-muted)] underline">
                       Apagar este slot
                     </button>
                   )}
@@ -132,17 +132,17 @@ export default function MenuSheet({ onClose, open }: { onClose: () => void; open
           ))}
         </ul>
 
-        <h3 className="mt-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Backup do save</h3>
+        <h3 className="mt-3 text-xs font-semibold uppercase tracking-wide text-[var(--ds-text-muted)]">Backup do save</h3>
         <div className="grid grid-cols-2 gap-2">
-          <button className="min-h-11 rounded-xl border border-slate-700 bg-slate-950 text-sm disabled:opacity-40" disabled={!game} onClick={doExport} data-testid="export-save">
+          <button className="min-h-11 rounded-xl border border-[var(--ds-border)] bg-[var(--ds-bg)] text-sm disabled:opacity-40" disabled={!game} onClick={doExport} data-testid="export-save">
             ⬇️ Exportar
           </button>
-          <button className="min-h-11 rounded-xl border border-slate-700 bg-slate-950 text-sm" onClick={() => fileRef.current?.click()} data-testid="import-save">
+          <button className="min-h-11 rounded-xl border border-[var(--ds-border)] bg-[var(--ds-bg)] text-sm" onClick={() => fileRef.current?.click()} data-testid="import-save">
             ⬆️ Importar
           </button>
         </div>
         <input ref={fileRef} type="file" accept="application/json,.json" className="hidden" data-testid="import-input" onChange={(e) => void doImport(e.target.files?.[0])} />
-        <p className="text-[11px] text-slate-400">O arquivo .json leva a vida do slot atual para outro aparelho. Importar substitui o slot atual.</p>
+        <p className="text-[11px] text-[var(--ds-text-muted)]">O arquivo .json leva a vida do slot atual para outro aparelho. Importar substitui o slot atual.</p>
         {msg && (
           <p role="status" className={`rounded-lg px-3 py-2 text-xs ${msg.ok ? 'bg-emerald-500/10 text-emerald-200' : 'bg-rose-500/10 text-rose-200'}`} data-testid="transfer-msg">
             {msg.text}
@@ -151,13 +151,13 @@ export default function MenuSheet({ onClose, open }: { onClose: () => void; open
 
         {!isStandalone() && (
           <>
-            <h3 className="mt-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Instalar no celular</h3>
+            <h3 className="mt-3 text-xs font-semibold uppercase tracking-wide text-[var(--ds-text-muted)]">Instalar no celular</h3>
             {installable ? (
-              <button data-testid="install-app" onClick={() => void promptInstall()} className="min-h-11 rounded-xl bg-emerald-500 text-sm font-bold text-slate-950">
+              <button data-testid="install-app" onClick={() => void promptInstall()} className="min-h-11 rounded-xl bg-emerald-500 text-sm font-bold text-[var(--ds-accent-ink)]">
                 📲 Instalar app
               </button>
             ) : (
-              <p className="text-xs text-slate-400" data-testid="install-hint">
+              <p className="text-xs text-[var(--ds-text-muted)]" data-testid="install-hint">
                 {isIos() ? 'No iPhone: toque em Compartilhar (⬆️) e depois em "Adicionar à Tela de Início".' : 'No Android/Chrome: menu ⋮ → "Instalar app" (ou "Adicionar à tela inicial"). Depois de instalado, o jogo funciona offline.'}
               </p>
             )}

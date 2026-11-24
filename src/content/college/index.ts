@@ -11,6 +11,11 @@ export const COLLEGE: CollegeContent = {
   loanRate: 0.04,
   scholarshipMargin: 160,
   barExam: { name: 'Exame da Ordem', fee: 300, cut: 60, degree: 'direito' },
+  postgrad: [
+    { id: 'especializacao', label: 'Especialização', years: 1, tuitionMW: 0.8, minIntelligence: 40 },
+    { id: 'mestrado', label: 'Mestrado', years: 2, tuitionMW: 0, minIntelligence: 60 },
+    { id: 'doutorado', label: 'Doutorado', years: 4, tuitionMW: 0, minIntelligence: 70, requires: 'mestrado' },
+  ],
   publicNames: ['Universidade Federal do Cerrado', 'Universidade Estadual Ipê', 'Universidade Federal Atlântica', 'Instituto Federal Jequitibá'],
   privateNames: ['Centro Universitário Horizonte', 'Faculdade Saber Mais', 'Universidade Particular Aurora', 'Faculdade Nova Era'],
   courses: [

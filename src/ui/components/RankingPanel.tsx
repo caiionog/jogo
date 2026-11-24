@@ -23,19 +23,19 @@ export default function RankingPanel({ game }: { game: GameState }) {
     return (
       <li
         key={id}
-        className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm ${isMe ? 'border border-emerald-500 bg-emerald-500/15' : 'bg-slate-900/60'}`}
+        className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm ${isMe ? 'border border-emerald-500 bg-emerald-500/15' : 'bg-[var(--ds-surface)]'}`}
         data-testid={isMe ? 'ranking-me' : undefined}
       >
-        <span className="w-8 shrink-0 text-center font-bold text-slate-400">{pos}</span>
+        <span className="w-8 shrink-0 text-center font-bold text-[var(--ds-text-muted)]">{pos}</span>
         {n ? <AvatarThumb d={fighterAvatar(game, n, pos === 'C' || pos === '🏆')} size={36} label={opponentFullName(n)} /> : isMe ? <AvatarThumb d={deriveAvatar(game, C)} size={36} /> : null}
         <span className="min-w-0 flex-1">
           <span className="block truncate">{isMe ? `${game.character.name} (você)` : n ? opponentFullName(n) : id}</span>
           {n && (
-            <span className="text-[11px] text-slate-500">
+            <span className="text-[11px] text-[var(--ds-text-muted)]">
               {recordText(n.record)} · {STYLE_LABEL[n.style]} · {n.age} anos
             </span>
           )}
-          {isMe && <span className="text-[11px] text-slate-400">{recordText(game.fighter.pro)} profissional</span>}
+          {isMe && <span className="text-[11px] text-[var(--ds-text-muted)]">{recordText(game.fighter.pro)} profissional</span>}
         </span>
       </li>
     );
@@ -47,7 +47,7 @@ export default function RankingPanel({ game }: { game: GameState }) {
           <button
             key={o.id}
             onClick={() => setOrgId(o.id)}
-            className={`shrink-0 rounded-full px-3 py-1.5 text-xs ${o.id === orgId ? 'bg-emerald-500 font-bold text-slate-950' : 'border border-slate-700 text-slate-300'}`}
+            className={`shrink-0 rounded-full px-3 py-1.5 text-xs ${o.id === orgId ? 'bg-emerald-500 font-bold text-[var(--ds-accent-ink)]' : 'border border-[var(--ds-border)] text-[var(--ds-text)]'}`}
           >
             {o.short}
           </button>
@@ -55,7 +55,7 @@ export default function RankingPanel({ game }: { game: GameState }) {
       </div>
       <div>
         <h2 className="font-bold">{org.name}</h2>
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-[var(--ds-text-muted)]">
           {div.label} (até {div.limitKg} kg) · top {org.rankingSize}
           {!game.world.rosters[`${org.id}:${div.id}`] && ' · prévia (o elenco ganha vida quando você chegar lá)'}
         </p>

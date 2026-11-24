@@ -20,12 +20,12 @@ export default function Toasts() {
   return (
     <div className="pointer-events-none fixed inset-x-0 top-[max(0.5rem,env(safe-area-inset-top))] z-50 mx-auto flex w-full max-w-md flex-col gap-2 px-4" aria-live="polite">
       {update && (
-        <div className="pointer-events-auto flex items-center gap-3 rounded-2xl border border-sky-600 bg-slate-900 p-3 shadow-lg" data-testid="update-toast">
+        <div className="pointer-events-auto flex items-center gap-3 rounded-2xl border border-sky-600 bg-[var(--ds-surface)] p-3 shadow-lg" data-testid="update-toast">
           <span className="text-2xl" aria-hidden>
             ✨
           </span>
           <p className="flex-1 text-sm">Nova versão disponível.</p>
-          <button onClick={applyUpdate} className="min-h-11 rounded-xl bg-sky-500 px-3 text-sm font-bold text-slate-950">
+          <button onClick={applyUpdate} className="min-h-11 rounded-xl bg-sky-500 px-3 text-sm font-bold text-[var(--ds-accent-ink)]">
             Atualizar
           </button>
         </div>
@@ -34,7 +34,7 @@ export default function Toasts() {
         <button
           key={t.id}
           onClick={() => dismiss(t.id)}
-          className="pointer-events-auto flex items-center gap-3 rounded-2xl border border-amber-500/50 bg-slate-900 p-3 text-left shadow-lg"
+          className="pointer-events-auto flex items-center gap-3 rounded-2xl border border-amber-500/50 bg-[var(--ds-surface)] p-3 text-left shadow-lg"
           data-testid="achievement-toast"
         >
           <span className="text-2xl" aria-hidden>

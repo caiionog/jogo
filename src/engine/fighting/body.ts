@@ -16,8 +16,12 @@ export function heightAt(age: number, adultHeightCm: number): number {
   return Math.round(adultHeightCm * (GROWTH[age] ?? 1));
 }
 
-/** IMC por idade, Capacidade atlética e biotipo (sedentário engorda; atleta fica mais seco). */
-export function bmiAt(age: number, stats: Pick<Stats, 'athletic'>, build: number): number {
+/** Alimentação (release 0.0.4): mexe no IMC a partir dos 12 anos e na saúde do ano (`eatingYear`). */
+export type Eating = 'normal' | 'saudavel' | 'besteira' | 'restrita';
+export const EATING_BMI: Record<Eating, number> = { normal: 0, saudavel: -0.7, besteira: 1.8, restrita: -1.6 };
+
+/** IMC por idade, Capacidade atlética, biotipo e alimentação (sedentário engorda; atleta fica mais seco). */
+export function bmiAt(age: number, stats: Pick<Stats, 'athletic'>, build: number, eating: Eating = 'normal'): number {
   let bmi: number;
   if (age <= 12) bmi = 16 + age * 0.1;
   else if (age < 18) bmi = 17.2 + (age - 12) * 0.75;
@@ -25,12 +29,12 @@ export function bmiAt(age: number, stats: Pick<Stats, 'athletic'>, build: number
     bmi = 22.4 + (stats.athletic < 40 ? (40 - stats.athletic) / 11 : -(stats.athletic - 40) / 70);
     if (age > 30) bmi += (age - 30) * 0.08;
   }
-  return Math.min(34, Math.max(14, bmi + build * 0.8));
+  return Math.min(34, Math.max(14, bmi + build * 0.8 + (age >= 12 ? EATING_BMI[eating] : 0)));
 }
 
-export function bodyFor(age: number, c: Pick<Character, 'adultHeightCm' | 'build' | 'stats'>): { heightCm: number; weightKg: number } {
+export function bodyFor(age: number, c: Pick<Character, 'adultHeightCm' | 'build' | 'stats'> & { eating?: Eating }): { heightCm: number; weightKg: number } {
   const heightCm = heightAt(age, c.adultHeightCm);
-  const weightKg = Math.round(bmiAt(age, c.stats, c.build) * (heightCm / 100) ** 2 * 10) / 10;
+  const weightKg = Math.round(bmiAt(age, c.stats, c.build, c.eating) * (heightCm / 100) ** 2 * 10) / 10;
   return { heightCm, weightKg };
 }
 
@@ -44,4 +48,29 @@ export function naturalDivision(sex: Sex, weightKg: number, divisions: readonly 
   const mine = divisions.filter((d) => d.sex === sex).sort((a, b) => a.limitKg - b.limitKg);
   if (mine.length === 0) throw new Error(`Sem categorias para o sexo ${sex}`);
   return mine.find((d) => d.limitKg >= weightKg * 0.92) ?? (mine[mine.length - 1] as DivisionDef);
+}
+
+export type EatingBlockReason = 'busy' | 'too-young';
+
+/** A partir dos 12 anos o personagem escolhe a alimentação (antes, come o que a família põe na mesa). */
+export function eatingBlockReason(state: GameState): EatingBlockReason | null {
+  if (!state.alive || state.pendingEvents.length || state.activeFight) return 'busy';
+  if (state.character.age < 12) return 'too-young';
+  return null;
+}
+
+export function setEating(state: GameState, eating: Eating): GameState {
+  if (eatingBlockReason(state) !== null || (state.character.eating ?? 'normal') === eating) return state;
+  return updateBody({ ...state, character: { ...state.character, eating } });
+}
+
+/** Efeito anual da alimentação: saudável +1 saúde; besteira −1 saúde e +1 felicidade; restrita −1 felicidade (e −2 saúde se a saúde já estiver baixa). */
+export function eatingYear(state: GameState): GameState {
+  const e = state.character.eating ?? 'normal';
+  if (e === 'normal' || state.character.age < 12) return state;
+  const st = state.character.stats;
+  const d = e === 'saudavel' ? { health: 1 } : e === 'besteira' ? { health: -1, happiness: 1 } : { happiness: -1, ...(st.health < 50 ? { health: -2 } : {}) };
+  const stats = { ...st };
+  for (const [k, v] of Object.entries(d)) stats[k as keyof Stats] = Math.max(0, Math.min(100, stats[k as keyof Stats] + v));
+  return { ...state, character: { ...state.character, stats } };
 }

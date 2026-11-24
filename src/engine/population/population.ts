@@ -15,7 +15,7 @@ import { cityDef, ufDef } from '../geo';
 import { addRelation, createPerson, enforcePeopleLimit, updateRelation, withHistory } from '../relationships/people';
 
 /** Versão do gerador: mudar as listas de nomes ou a fórmula exige subir a versão (as pessoas já conhecidas ficam). */
-export const POP_VERSION = 1;
+export const POP_VERSION = 2;
 export const POP_MIN = 60;
 export const POP_MAX = 400;
 
@@ -36,6 +36,9 @@ export interface PopulationContent {
    * nacionalidade (OBMigra/SISMIGRA); o gerador não inventa números.
    */
   immigration: readonly { uf: string; origin: string; share: number }[];
+  /** Idioma dos nomes por país e o banco de nomes por idioma (moradores nascidos fora). */
+  originNames?: Record<string, string>;
+  foreignNames?: Record<string, { M: readonly string[]; F: readonly string[]; surnames: readonly string[] }>;
 }
 
 export interface Resident {
@@ -102,7 +105,10 @@ export function generateResidents(state: GameState, content: GameContent, uf = s
     const sex: Sex = rng.chance(0.5) ? 'M' : 'F';
     const birthYear = base - rng.int(0, 85);
     const first = pickFirstName(rng, content.names, sex, birthYear, regiao);
-    const name = composeName(first, rng.pick(content.names.surnames), rng.pick(content.names.surnames));
+    let name = composeName(first, rng.pick(content.names.surnames), rng.pick(content.names.surnames));
+    const origin = pickOrigin(rng, content, uf);
+    const pool = origin !== 'Brasil' ? content.population.foreignNames?.[content.population.originNames?.[origin] ?? ''] : undefined;
+    if (pool) name = `${rng.pick(pool[sex])} ${rng.pick(pool.surnames)}`;
     out.push({
       id: `${uf}:${city}:${i}`,
       name,
@@ -111,7 +117,7 @@ export function generateResidents(state: GameState, content: GameContent, uf = s
       lifespan: rng.int(62, 98),
       neighborhood: rng.pick(hoods),
       occupation: rng.pick(content.population.occupations),
-      origin: pickOrigin(rng, content, uf),
+      origin,
     });
   }
   return out;

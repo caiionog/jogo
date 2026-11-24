@@ -1,9 +1,9 @@
 import type { PopulationContent } from '../../engine';
+import { FOREIGN_NAMES, IMMIGRATION, ORIGIN_NAMES } from './immigration';
 
 /**
  * Moradores da cidade (release 0.0.4). Bairros fictícios e genéricos (prefixo + nome) e ocupações de fachada para a
- * lista. `immigration` fica vazio até haver dados oficiais por UF e nacionalidade (OBMigra/SISMIGRA): não inventamos
- * percentuais.
+ * lista. `immigration` é uma estimativa não oficial (fontes em `immigration.ts`).
  */
 export const POPULATION: PopulationContent = {
   neighborhoodPrefixes: ['Jardim', 'Vila', 'Parque', 'Conjunto', 'Residencial', 'Alto', 'Recanto', 'Morada', 'Bairro'],
@@ -19,5 +19,7 @@ export const POPULATION: PopulationContent = {
     'auxiliar de limpeza', 'entregador(a)', 'advogado(a)', 'médico(a)', 'servidor(a) público(a)', 'atendente',
     'costureiro(a)', 'eletricista', 'feirante', 'programador(a)', 'segurança', 'artesão(ã)', 'músico(a)',
   ],
-  immigration: [],
+  immigration: IMMIGRATION,
+  originNames: ORIGIN_NAMES,
+  foreignNames: FOREIGN_NAMES,
 };
