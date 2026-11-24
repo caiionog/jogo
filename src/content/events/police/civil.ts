@@ -3,11 +3,13 @@ import type { GameEvent } from '../../../engine';
 /**
  * Polícia Civil (release 0.0.2): quatro investigações encadeadas. A 1ª etapa abre o caso (`caseStart`), as
  * seguintes somam pistas (`caseScore`) e a última fecha (`caseEnd`): resolvido, arquivado ou suspeito errado
- * (placar oculto + sorte limitada). As etapas seguem com `followUps` de `delayYears: 0` e só valem com o caso aberto.
+ * (placar oculto + sorte limitada). A passagem da 1ª para a 2ª etapa leva um ano (`delayYears: 1`: o inquérito amadurece); as demais seguem no
+ * mesmo ano (`delayYears: 0`). Todas só valem com o caso aberto (`inCase`): se a pessoa sai da polícia, o agendamento cai.
  */
 const CIVIL = { force: ['civil' as const], stage: ['probatorio' as const, 'efetivo' as const] };
 const step = (id: string) => ({ minAge: 18, police: { force: ['civil' as const], inCase: id } });
 const next = (eventId: string) => [{ eventId, delayYears: 0 }];
+const nextYear = (eventId: string) => [{ eventId, delayYears: 1 }];
 
 export const CIVIL_EVENTS: readonly GameEvent[] = [
   // --- furto de carga (3 etapas) ---
@@ -17,9 +19,9 @@ export const CIVIL_EVENTS: readonly GameEvent[] = [
     weight: 5,
     text: 'Um caminhão de eletrônicos sumiu na rodovia. O caso caiu na sua mesa.',
     choices: [
-      { id: 'cameras', label: 'Puxar as câmeras do posto de pedágio', effects: { police: { caseStart: 'carga', caseScore: 2 }, followUps: next('pol_caso_carga_2') }, resultText: 'As imagens mostram um carro acompanhando o caminhão.' },
-      { id: 'motorista', label: 'Ouvir o motorista de novo', effects: { police: { caseStart: 'carga', caseScore: 1 }, followUps: next('pol_caso_carga_2') }, resultText: 'O motorista se contradisse em dois detalhes.' },
-      { id: 'esperar', label: 'Esperar uma denúncia anônima', effects: { police: { caseStart: 'carga', caseScore: -1 }, followUps: next('pol_caso_carga_2') }, resultText: 'Dias passaram sem nada de novo.' },
+      { id: 'cameras', label: 'Puxar as câmeras do posto de pedágio', effects: { police: { caseStart: 'carga', caseScore: 2 }, followUps: nextYear('pol_caso_carga_2') }, resultText: 'As imagens mostram um carro acompanhando o caminhão.' },
+      { id: 'motorista', label: 'Ouvir o motorista de novo', effects: { police: { caseStart: 'carga', caseScore: 1 }, followUps: nextYear('pol_caso_carga_2') }, resultText: 'O motorista se contradisse em dois detalhes.' },
+      { id: 'esperar', label: 'Esperar uma denúncia anônima', effects: { police: { caseStart: 'carga', caseScore: -1 }, followUps: nextYear('pol_caso_carga_2') }, resultText: 'Dias passaram sem nada de novo.' },
     ],
   },
   {
@@ -54,9 +56,9 @@ export const CIVIL_EVENTS: readonly GameEvent[] = [
     weight: 4,
     text: 'Um comerciante do bairro foi encontrado sem vida na loja. A família cobra respostas.',
     choices: [
-      { id: 'pericia', label: 'Esperar o laudo da perícia', effects: { police: { caseStart: 'homicidio', caseScore: 2 }, followUps: next('pol_caso_homicidio_2') }, resultText: 'O laudo aponta uma discussão antes do crime.' },
-      { id: 'vizinhos', label: 'Ouvir os vizinhos', effects: { police: { caseStart: 'homicidio', caseScore: 1 }, followUps: next('pol_caso_homicidio_2') }, resultText: 'Uma vizinha viu alguém sair às pressas.' },
-      { id: 'suspeito', label: 'Ir atrás do primeiro suspeito óbvio', effects: { police: { caseStart: 'homicidio', caseScore: -2 }, followUps: next('pol_caso_homicidio_2') }, resultText: 'O "óbvio" tinha um álibi razoável.' },
+      { id: 'pericia', label: 'Esperar o laudo da perícia', effects: { police: { caseStart: 'homicidio', caseScore: 2 }, followUps: nextYear('pol_caso_homicidio_2') }, resultText: 'O laudo aponta uma discussão antes do crime.' },
+      { id: 'vizinhos', label: 'Ouvir os vizinhos', effects: { police: { caseStart: 'homicidio', caseScore: 1 }, followUps: nextYear('pol_caso_homicidio_2') }, resultText: 'Uma vizinha viu alguém sair às pressas.' },
+      { id: 'suspeito', label: 'Ir atrás do primeiro suspeito óbvio', effects: { police: { caseStart: 'homicidio', caseScore: -2 }, followUps: nextYear('pol_caso_homicidio_2') }, resultText: 'O "óbvio" tinha um álibi razoável.' },
     ],
   },
   {
@@ -102,8 +104,8 @@ export const CIVIL_EVENTS: readonly GameEvent[] = [
     weight: 3,
     text: 'Uma associação de moradores denuncia que o dinheiro de uma obra sumiu.',
     choices: [
-      { id: 'contas', label: 'Analisar as contas com calma', effects: { police: { caseStart: 'desvio', caseScore: 2 }, stats: { intelligence: 1 }, followUps: next('pol_caso_desvio_2') }, resultText: 'Notas fiscais de uma empresa que não existe.' },
-      { id: 'tesoureiro', label: 'Chamar o tesoureiro para depor', effects: { police: { caseStart: 'desvio', caseScore: 0 }, followUps: next('pol_caso_desvio_2') }, resultText: 'Ele trouxe um advogado caro.' },
+      { id: 'contas', label: 'Analisar as contas com calma', effects: { police: { caseStart: 'desvio', caseScore: 2 }, stats: { intelligence: 1 }, followUps: nextYear('pol_caso_desvio_2') }, resultText: 'Notas fiscais de uma empresa que não existe.' },
+      { id: 'tesoureiro', label: 'Chamar o tesoureiro para depor', effects: { police: { caseStart: 'desvio', caseScore: 0 }, followUps: nextYear('pol_caso_desvio_2') }, resultText: 'Ele trouxe um advogado caro.' },
     ],
   },
   {
@@ -136,8 +138,8 @@ export const CIVIL_EVENTS: readonly GameEvent[] = [
     weight: 3,
     text: 'Você foi escalad{o/a} para investigar o braço de uma facção que domina a venda de drogas num bairro.',
     choices: [
-      { id: 'mapa', label: 'Mapear quem é quem', effects: { police: { caseStart: 'faccao', caseScore: 2 }, followUps: next('pol_caso_faccao_2') }, resultText: 'O organograma começou a ganhar forma.' },
-      { id: 'informante', label: 'Recrutar um informante', effects: { police: { caseStart: 'faccao', caseScore: 1 }, followUps: next('pol_caso_faccao_2') }, risk: { chance: 0.2, effects: { police: { caseStart: 'faccao', caseScore: -1 }, stats: { happiness: -3 }, followUps: next('pol_caso_faccao_2') }, resultText: 'O informante sumiu depois da primeira conversa.' }, resultText: 'Ele aceitou falar em troca de proteção.' },
+      { id: 'mapa', label: 'Mapear quem é quem', effects: { police: { caseStart: 'faccao', caseScore: 2 }, followUps: nextYear('pol_caso_faccao_2') }, resultText: 'O organograma começou a ganhar forma.' },
+      { id: 'informante', label: 'Recrutar um informante', effects: { police: { caseStart: 'faccao', caseScore: 1 }, followUps: nextYear('pol_caso_faccao_2') }, risk: { chance: 0.2, effects: { police: { caseStart: 'faccao', caseScore: -1 }, stats: { happiness: -3 }, followUps: nextYear('pol_caso_faccao_2') }, resultText: 'O informante sumiu depois da primeira conversa.' }, resultText: 'Ele aceitou falar em troca de proteção.' },
     ],
   },
   {

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { GAME_CONTENT as C } from '../src/content';
 import { POLICE_EVENTS } from '../src/content/events/police';
 import {
+  advanceYear,
   applyPoliceEffects,
   caseSolveChance,
   createRng,
@@ -94,12 +95,19 @@ describe('troca de tiro', () => {
   });
 });
 
+/** Conteúdo só com os eventos de caso (o ano avança sem sortear eventos aleatórios). */
+const CASE_ONLY = { ...C, events: C.events.filter((e) => e.id.startsWith('pol_caso_') && e.trigger === 'followUp') };
+
 describe('investigação encadeada', () => {
   const play = (seed: string, choices: string[]): GameState => {
     let s: GameState = { ...cop('civil', {}, seed), pendingEvents: [{ eventId: 'pol_caso_carga_1', source: 'random' }] };
     for (const ch of choices) {
-      const ev = s.pendingEvents[0]!;
-      s = resolveEvent(s, ev.eventId, ch, C);
+      // a 2ª etapa do caso vem no ano seguinte (agendada): avança o ano só com os eventos do caso
+      if (!s.pendingEvents.some((p) => p.eventId.startsWith('pol_caso_carga'))) s = advanceYear({ ...s, pendingEvents: [] }, CASE_ONLY);
+      // morte natural na virada do ano (rara): a vida acabou, o caso não segue
+      if (!s.alive) return s;
+      const ev = s.pendingEvents.find((p) => p.eventId.startsWith('pol_caso_carga'))!;
+      s = resolveEvent({ ...s, pendingEvents: [ev] }, ev.eventId, ch, C);
     }
     return s;
   };

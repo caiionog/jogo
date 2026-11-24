@@ -47,7 +47,8 @@ export function validateContent(content: GameContent): string[] {
     if (pe?.caseStart && !content.police.cases.some((c) => c.id === pe.caseStart)) errors.push(`${where}: caso policial inexistente "${pe.caseStart}"`);
     if (pe?.shootout && !['avancar', 'abrigar', 'negociar', 'recuar'].includes(pe.shootout)) errors.push(`${where}: tática inexistente "${pe.shootout}"`);
     if (fx.crime?.joinFaction && fx.crime.joinFaction !== 'local' && !content.crime.factions.some((f) => f.id === fx.crime!.joinFaction)) errors.push(`${where}: facção inexistente "${fx.crime.joinFaction}"`);
-    if (fx.crime?.arrest && !['investigacao', 'trafico'].includes(fx.crime.arrest) && !crimeIds.has(fx.crime.arrest)) errors.push(`${where}: delito inexistente "${fx.crime.arrest}"`);
+    // prisão por evento: delito do catálogo ou motivo com faixa de pena (investigacao, trafico, fuga, corrupcao…)
+    if (fx.crime?.arrest && !(fx.crime.arrest in content.crime.sentences) && !crimeIds.has(fx.crime.arrest)) errors.push(`${where}: delito inexistente "${fx.crime.arrest}"`);
     const he = fx.health;
     if (he?.injury && he.injury !== 'random' && !content.health.injuries.some((d) => d.id === he.injury)) errors.push(`${where}: lesão inexistente "${he.injury}"`);
     if (he?.condition && !content.health.conditions.some((d) => d.id === he.condition)) errors.push(`${where}: doença inexistente "${he.condition}"`);
