@@ -1,3 +1,4 @@
+import { addFame } from '../fame/fame';
 import { applyCrimeEffects } from '../crime/plan';
 import type { CrimeEffects } from '../crime/plan';
 import { applyPoliceEffects } from '../police/events';
@@ -52,6 +53,8 @@ export interface Effects {
   revealTalent?: string;
   /** Muda a sorte oculta (limitado por `luck.maxEventChange`). */
   luck?: number;
+  /** Fama pública (release 0.0.4), soma ou tira pontos de `character.fame` (0–100). */
+  fame?: number;
   /** Faculdade: fazer o exame nacional agora. */
   college?: { exam?: boolean };
   /** Cena do ano: praia ou piscina (o avatar veste roupa de banho da idade). */
@@ -105,6 +108,7 @@ export function applyEffects(state: GameState, effects: Effects | undefined, ctx
   };  // talentos e sorte (release 0.0.1)
   if (effects.revealTalent && ctx) next = revealTalent(next, effects.revealTalent, ctx.content);
   if (effects.luck && ctx) next = changeLuck(next, effects.luck, ctx.content);
+  if (effects.fame) next = addFame(next, effects.fame);
   if (effects.scene) next = { ...next, scene: { kind: effects.scene, year: next.year } };
   if (effects.college?.exam && ctx && examBlockReason(next) !== 'too-young') next = takeExamWith(next, ctx.rng, ctx.content);
 

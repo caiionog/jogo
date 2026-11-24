@@ -5,7 +5,7 @@
 import { useState } from 'react';
 import { GAME_CONTENT as C } from '../../../content';
 import type { CollegeType, GameState } from '../../../engine';
-import { actionBlockReason, courseDef, earnsScholarship, enrollBlockReason, examBlockReason, tuitionOf, usesThisYear } from '../../../engine';
+import { actionBlockReason, barExamBlockReason, courseDef, earnsScholarship, enrollBlockReason, examBlockReason, tuitionOf, usesThisYear } from '../../../engine';
 import { BottomSheet, ListGroup, ListItem } from '../../design/components';
 import { money } from '../../components/ecoUi';
 import { useGameStore } from '../../store';
@@ -15,6 +15,14 @@ const EXAM_REASON: Record<string, string> = {
   'too-young': 'A partir dos 16 anos',
   'no-highschool': 'No 3º ano do ensino médio ou depois de terminar a escola',
   done: 'Você já fez a prova este ano',
+};
+const BAR_REASON: Record<string, string> = {
+  busy: 'Resolva o acontecimento pendente',
+  prison: 'Indisponível na prisão',
+  'no-degree': 'Exige diploma de Direito',
+  licensed: 'Você já foi aprovado(a)',
+  tried: 'Você já fez o exame este ano',
+  'no-money': 'Dinheiro insuficiente para a taxa',
 };
 const ENROLL_REASON: Record<string, string> = {
   busy: 'Resolva o acontecimento pendente',
@@ -65,6 +73,17 @@ export function FaculdadeScreen({ game }: { game: GameState }) {
         <p className="text-sm" data-testid="exam-score">{col.examScore === null ? 'Você ainda não fez a prova.' : `Sua melhor nota: ${col.examScore} de 1000.`}</p>
         <ListItem emoji="📝" title="Fazer a prova" subtitle="Uma vez por ano. Estudar no ano ajuda." disabled={!!exam} reason={exam ? EXAM_REASON[exam] : undefined} onClick={st.takeExam} chevron={false} testId="take-exam" />
       </ListGroup>
+
+      {col.diplomas.includes(C.college.barExam.degree) && (() => {
+        const bar = barExamBlockReason(game, C);
+        const ex = C.college.barExam;
+        return (
+          <ListGroup title={ex.name}>
+            <p className="text-sm" data-testid="bar-status">{game.flags.oab ? 'Aprovado(a): você pode advogar.' : 'Sem a aprovação, você não pode advogar. Estudar no ano ajuda.'}</p>
+            {!game.flags.oab && <ListItem emoji="⚖️" title={`Inscrever-se no ${ex.name}`} subtitle={`Taxa de ${money.format(ex.fee)} · uma vez por ano`} disabled={!!bar} reason={bar ? BAR_REASON[bar] : undefined} onClick={st.takeBarExam} chevron={false} testId="take-bar-exam" />}
+          </ListGroup>
+        );
+      })()}
 
       {!cur && (
         <ListGroup title="Cursos">

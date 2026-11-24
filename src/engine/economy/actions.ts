@@ -1,4 +1,5 @@
 /** Ações econômicas prontas para a UI (calculam o ano econômico e o patrimônio quando preciso). */
+import { fameAsRep } from '../fame/fame';
 import type { GameContent } from '../core/content';
 import type { GameState } from '../core/state';
 import { createRng } from '../core/rng';
@@ -56,7 +57,7 @@ export function seekSponsor(state: GameState, content: GameContent): GameState {
     ...state,
     flags: { ...state.flags, buscou_patrocinio: state.year },
   };
-  const chance = Math.min(0.85, 0.35 + state.fighter.reputation / 150);
+  const chance = Math.min(0.85, 0.35 + fameAsRep(state) / 150);
   if (rng.chance(chance)) {
     const options = eligibleSponsors(s, content);
     const def = options[rng.int(0, Math.min(1, options.length - 1))];

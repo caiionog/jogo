@@ -3,6 +3,7 @@
  * (oculta), dinheiro sujo, consequências socioeducativas para 12–17 e planejamento abstrato dos graves.
  * Nenhum detalhe real: só escolhas, chances e consequências.
  */
+import { addFame } from '../fame/fame';
 import { factionYear, traffickingYear } from './faction';
 import type { GameContent } from '../core/content';
 import { createRng } from '../core/rng';
@@ -107,7 +108,7 @@ export function runCrime(state: GameState, def: CrimeDef, rng: Rng, content: Gam
     s = { ...s, character: { ...s.character, stats: addStats(s.character.stats, { happiness: def.tier === 'grave' ? -1 : 1 }) } };
     // lutador profissional brigando na rua: a imagem sofre (fase 8)
     if ((def.id === 'briga_rua' || def.id === 'agressao') && s.fighter.pro.wins + s.fighter.pro.losses > 0) {
-      s = appendLog({ ...s, fighter: { ...s.fighter, reputation: Math.max(0, s.fighter.reputation - 3) } }, 'O vídeo da briga circulou: "lutador profissional briga na rua". Sua imagem no esporte sofreu.');
+      s = appendLog(addFame({ ...s, fighter: { ...s.fighter, reputation: Math.max(0, s.fighter.reputation - 3) } }, -3), 'O vídeo da briga circulou: "lutador profissional briga na rua". Sua imagem no esporte sofreu.');
     }
     return s;
   }

@@ -1,3 +1,4 @@
+import { fameAsRep } from '../fame/fame';
 import { inheritAppearance, lookRng } from '../character/appearance/inherit';
 /** Namoro, casamento, divórcio, gravidez e filhos. Toda regra de idade passa por guards.ts. */
 import type { GameContent } from '../core/content';
@@ -71,7 +72,7 @@ export function compatibility(state: GameState, person: Person, content: GameCon
   score -= Math.abs(c.stats.looks - person.looks) / 4;
   score += (c.stats.happiness - 50) / 8;
   if (c.age >= ADULT_AGE) score += Math.min(8, Math.log10(Math.max(1, state.money)) * 1.5);
-  score += state.fighter.reputation / 8;
+  score += fameAsRep(state) / 8;
   return clamp(score);
 }
 

@@ -1,3 +1,4 @@
+import { addFame } from '../fame/fame';
 import { cityDef, cityMultOf, ufDef } from '../geo';
 /**
  * Bens: imóveis, veículos e luxo. O mercado do ano é calculado pelo seed (não ocupa o save).
@@ -300,7 +301,7 @@ export function assetsYear(state: GameState, rng: Rng, content: GameContent, mar
     },
   };
   if (happiness) s = { ...s, character: { ...s.character, stats: addStats(s.character.stats, { happiness: Math.min(8, happiness) }) } };
-  if (reputation) s = { ...s, fighter: { ...s.fighter, reputation: Math.min(100, s.fighter.reputation + Math.min(3, reputation)) } };
+  if (reputation) s = addFame(s, Math.min(3, reputation));
   return s;
 }
 

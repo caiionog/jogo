@@ -1,3 +1,4 @@
+import { addFame } from '../fame/fame';
 import { cityMultOf } from '../geo';
 /** Custo de vida, moradia, mesada e dívida (cheque especial, falência). */
 import type { GameContent } from '../core/content';
@@ -75,7 +76,7 @@ export function livingYear(state: GameState, content: GameContent): GameState {
   const delta: { happiness: number; looks?: number } = { happiness: happy };
   if (s.economy.standard === 'luxo') delta.looks = 1;
   s = { ...s, character: { ...s.character, stats: addStats(s.character.stats, delta) } };
-  if (s.economy.standard === 'luxo') s = { ...s, fighter: { ...s.fighter, reputation: Math.min(100, s.fighter.reputation + 1) } };
+  if (s.economy.standard === 'luxo') s = addFame(s, 1);
   return s;
 }
 
@@ -133,8 +134,8 @@ function bankruptcy(state: GameState, liquidate: (s: GameState) => GameState): G
     ...s,
     economy: { ...s.economy, debt: remaining, debtYears: 0 },
     flags: { ...s.flags, falencia: (Number(s.flags.falencia) || 0) + 1 },
-    fighter: { ...s.fighter, reputation: Math.max(0, s.fighter.reputation - 5) },
     character: { ...s.character, stats: addStats(s.character.stats, { happiness: -15 }) },
   };
+  s = addFame(s, -5);
   return appendLog(s, 'Falência pessoal: seus bens foram vendidos para pagar as dívidas e o resto foi renegociado.');
 }

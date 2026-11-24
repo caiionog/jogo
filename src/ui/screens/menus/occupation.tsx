@@ -162,6 +162,7 @@ export function CarreiraScreen({ game, jobId }: { game: GameState; jobId: string
   const askRaise = useGameStore((s) => s.askRaise);
   const talk = useGameStore((s) => s.talkToColleagues);
   const [confirm, setConfirm] = useState<'swap' | 'quit' | null>(null);
+  const nav = useNav();
   if (!card) return null;
   const { def } = card;
   if (def.publicExam) return <PolicePanel game={game} def={def} />;
@@ -209,6 +210,9 @@ export function CarreiraScreen({ game, jobId }: { game: GameState; jobId: string
       ) : (
         <>
           {blocked && blocked !== 'employed' && <p className="text-sm text-[var(--ds-danger)]">{jobReasonText(blocked, def)}</p>}
+          {blocked === 'license' && def.requires?.license === 'oab' && game.college.diplomas.includes(C.college.barExam.degree) && (
+            <DsButton full testId="go-bar-exam" onClick={() => nav.push('estudos')}>Abrir a inscrição no {C.college.barExam.name}</DsButton>
+          )}
           <DsButton tone="primary" full testId="apply-job" disabled={!!blocked && blocked !== 'employed'} onClick={() => (currentDef ? setConfirm('swap') : applyJob(def.id))}>
             Candidatar-se {currentDef ? `(sai de ${currentDef.title.toLowerCase()})` : ''}
           </DsButton>

@@ -25,6 +25,8 @@ export interface EventConditions {
   talent?: { id: string; revealed?: boolean };
   minAge?: number;
   maxAge?: number;
+  /** Fama pública (release 0.0.4). */
+  fame?: StatRange;
   sex?: Sex;
   stats?: Partial<Record<StatKey, StatRange>>;
   /** Todas estas flags precisam estar presentes (truthy). */

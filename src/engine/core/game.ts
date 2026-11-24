@@ -1,3 +1,4 @@
+import { fameYear } from '../fame/fame';
 import { prisonYear } from '../crime/justice';
 import { crimeYear } from '../crime/crimes';
 import { policeYear } from '../police/career';
@@ -400,6 +401,7 @@ export function advanceYear(
     next = { ...next, yearUses: {} };
     next = relationshipsYear(next, rng, content);
     next = startFightingYear(next, rng, content);
+    next = fameYear(next);
     // pista da sorte (oculta): de vez em quando, nos extremos, uma frase no log
     const hint = luckHint(next);
     if (hint && next.character.age >= 8 && next.character.age % 7 === 1) next = appendLog(next, hint);

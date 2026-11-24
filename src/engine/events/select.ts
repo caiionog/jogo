@@ -187,6 +187,7 @@ export function conditionsMet(state: GameState, event: GameEvent, content?: Game
     if (c.college.courses && !(cur && c.college.courses.includes(cur.courseId))) return false;
     if (c.college.diploma && !c.college.diploma.some((d) => state.college?.diplomas.includes(d))) return false;
   }
+  if (c.fame && !inRange(state.character.fame ?? 0, c.fame)) return false;
   if (c.talent) {
     const t = state.character.talents?.find((x) => x.id === c.talent!.id);
     if (!t || (c.talent.revealed !== undefined && t.revealed !== c.talent.revealed)) return false;
@@ -253,7 +254,17 @@ export function eligibleEvents(state: GameState, events: readonly GameEvent[], c
 
 /** Eventos 'auto' que devem entrar neste ano. */
 export function autoEvents(state: GameState, events: readonly GameEvent[], content?: GameContent): GameEvent[] {
-  return events.filter((e) => e.trigger === 'auto' && conditionsMet(state, e, content));
+  return events.filter((e) => e.trigger === 'auto' && !autoOnCooldown(state, e) && conditionsMet(state, e, content));
+}
+
+/**
+ * Release 0.0.4: um evento 'auto' com `cooldownYears` não volta antes desse intervalo (sem o campo, não há intervalo:
+ * o evento precisa se limitar por `once`, `schoolResult` ou por uma flag que todas as escolhas resolvem).
+ */
+export function autoOnCooldown(state: GameState, event: GameEvent): boolean {
+  if (!event.cooldownYears) return false;
+  const last = state.eventLastAge?.[event.id];
+  return last !== undefined && state.character.age - last < event.cooldownYears;
 }
 
 /**

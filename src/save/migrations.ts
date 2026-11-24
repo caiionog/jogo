@@ -62,6 +62,7 @@ export const migrations: Record<number, (save: AnySave) => AnySave> = {
   13: migrateV13toV14,
   14: migrateV14toV15,
   15: migrateV15toV16,
+  16: migrateV16toV17,
 };
 
 export class SaveMigrationError extends Error {}
@@ -633,4 +634,18 @@ export function migrateV15toV16(save: AnySave): AnySave {
   const s0 = save as unknown as AnyObj;
   const rel = (s0.relationships ?? {}) as AnyObj;
   return { ...(s0 as AnySave), version: 16, relationships: { ...rel, lastGroup: rel.lastGroup ?? null } };
+}
+
+// ---------------------------------------------------------------------------
+// v16 → v17 (release 0.0.4: fama pública `character.fame`)
+// ---------------------------------------------------------------------------
+
+/** A fama nasce da reputação de lutador (× 0,8; metade disso para quem já se aposentou). Sem RNG. */
+export function migrateV16toV17(save: AnySave): AnySave {
+  const s0 = save as unknown as AnyObj;
+  const ch = (s0.character ?? {}) as AnyObj;
+  const f = (s0.fighter ?? {}) as AnyObj;
+  const rep = typeof f.reputation === 'number' ? f.reputation : 0;
+  const fame = typeof ch.fame === 'number' ? ch.fame : Math.max(0, Math.min(100, Math.round(rep * 0.8 * (f.retired ? 0.5 : 1))));
+  return { ...(s0 as AnySave), version: 17, character: { ...ch, fame } };
 }

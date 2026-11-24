@@ -40,7 +40,8 @@ Antes de commitar: `npm run lint && npm test && npm run build`.
    detalhado abaixo) e são validados por `validateContent` (`engine/events/validate.ts`) nos testes.
 4. **`GameState` é JSON puro** com campo `version`. Ao mudar o formato: incremente `STATE_VERSION`
    (`engine/core/state.ts`) e adicione a migração `n → n+1` em `src/save/migrations.ts` + teste.
-   Versão atual: **16** (release 0.0.3: v15→v16 amplia `scene` com `{ kind: 'intimo', variant, seq }` e cria
+   Versão atual: **17** (release 0.0.4: v16→v17 cria `character.fame` a partir de `fighter.reputation` × 0,8, metade
+   para aposentados; fixture `saves-v16.json`). Release 0.0.3 (v16: v15→v16 amplia `scene` com `{ kind: 'intimo', variant, seq }` e cria
    `relationships.lastGroup`; fixture `saves-v15.json`; meta v3 com `settings.avatarStyle`). Release 0.0.2: v14→v15 cria `police`, `crime` e `prison: null`; a flag antiga `preso`
    vira passagem leve na ficha; campos opcionais `police.case`, `crime.plan/case/committed/earned`; fixture
    `saves-v14.json`). Release 0.0.1: v8→v9 `energy` sai, entra `yearUses` e ofertas com `campSessions`; v9→v10
@@ -191,8 +192,9 @@ tests/                    # Vitest; fixtures/saves-v1.json = saves reais da Etap
   choices: [{ id, label, resultText, effects?, risk?: { chance, effects?, resultText } }],  // 2–3 escolhas
 }
 ```
-- **`trigger`**: `'auto'` entra sempre que as condições batem (marcos como formatura e reprovação; use com `once` ou
-  `schoolResult`). `'followUp'` nunca é sorteado e só acontece quando outra escolha o agenda.
+- **`trigger`**: `'auto'` entra sempre que as condições batem (marcos como formatura e reprovação). Desde a 0.0.4 ele
+  respeita `cooldownYears` (sem padrão) e `tests/release004.test.ts` exige que todo `auto` se limite: `once`,
+  `cooldownYears`, `schoolResult` ou uma flag de parada que todas as escolhas resolvem. `'followUp'` nunca é sorteado e só acontece quando outra escolha o agenda.
 - **Efeitos** (`Effects`, `engine/core/effects.ts`): `stats`, `money`, `setFlags`, `clearFlags`,
   `school: { average, discipline, popularity, absences, suspend, expel, changeSchool: { type? }, joinClub, leaveClub }`
   (ignorado fora da escola), `fighter: { skills: { jiujitsu, trocacao, athletic, chin } (SkillDelta), reputation, joinGym: 'local'|'best'|id, leaveGym, signWith: orgId,
@@ -521,3 +523,11 @@ eventos de aposentadoria), `egresso`, `portas_abertas`, `recomecou`, `foragido`,
 - Use **somente organizações, ligas, academias, eventos e lutadores fictícios** (ex.: "Circuito Titã", "ARC").
   Nada de UFC, Bellator, ONE, PFL, IBJJF, marcas, bancos ou empresas reais, nem nomes de pessoas reais (`tests/content.test.ts` barra os nomes de ligas).
 - Textos em pt-BR, segunda pessoa ("Você...").
+
+## Release 0.0.4 — fama, cidade, social, concursos e futebol
+Plano em `docs/release-0.0.4/PLAN.md` e diário em `docs/release-0.0.4/PROGRESS.md`.
+- **Fama** (`engine/fame/`): `character.fame` (0–100) é o atributo único de fama. `fighter.reputation` é só prestígio
+  no esporte. Patrocínios, vagas com `minReputation` e romance leem `fameAsRep` (fama na escala da reputação).
+  O esporte sustenta a fama (`fameYear`); sem ele, cai 4% ao ano. Efeito `fame` e condição `fame` nos eventos.
+- **Exame da Ordem**: ação anual em Ocupação → Estudos (`takeBarExam`, `content.college.barExam`); o evento
+  `oab_exam` virou um aviso único, com a opção "Não tenho interesse em advogar" (`sem_interesse_oab`).

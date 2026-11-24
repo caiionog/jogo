@@ -143,7 +143,7 @@ describe('relacionamentos × economia', () => {
 });
 
 describe('patrocínios', () => {
-  const rep = (s: GameState, r: number) => ({ ...s, fighter: { ...s.fighter, reputation: r } });
+  const rep = (s: GameState, r: number) => ({ ...s, character: { ...s.character, fame: Math.round(r * 0.8) }, fighter: { ...s.fighter, reputation: r } });
   it('cancelado pela cláusula de derrotas seguidas', () => {
     let s = signSponsor(rep(adult(25), 45), C);
     expect(s.economy.sponsors).toHaveLength(1);

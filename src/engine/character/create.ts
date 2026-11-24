@@ -36,6 +36,7 @@ export function createCharacter(
     // talentos e sorte vêm depois, por RNG derivado (newGame)
     talents: [],
     luck: 50,
+    fame: 0,
     name,
     sex: input.sex,
     age: 0,

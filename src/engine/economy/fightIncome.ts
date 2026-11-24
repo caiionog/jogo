@@ -1,4 +1,5 @@
 /** Renda da luta: empresário, contrato com a liga e patrocínios (com cláusulas). */
+import { fameAsRep } from '../fame/fame';
 import type { GameContent } from '../core/content';
 import type { Rng } from '../core/rng';
 import type { GameState } from '../core/state';
@@ -59,7 +60,7 @@ export function sponsorDef(content: GameContent, id: string): SponsorDef | undef
 /** Patrocinadores disponíveis para a reputação atual (que ainda não patrocinam). */
 export function eligibleSponsors(state: GameState, content: GameContent): SponsorDef[] {
   const have = new Set(state.economy.sponsors.map((x) => x.sponsorId));
-  return content.economy.sponsors.filter((x) => x.minReputation <= state.fighter.reputation && !have.has(x.id)).sort((a, b) => b.amount - a.amount);
+  return content.economy.sponsors.filter((x) => x.minReputation <= fameAsRep(state) && !have.has(x.id)).sort((a, b) => b.amount - a.amount);
 }
 
 export function signSponsor(state: GameState, content: GameContent, id?: string): GameState {

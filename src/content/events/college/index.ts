@@ -60,20 +60,16 @@ export const COLLEGE_EVENTS: readonly GameEvent[] = [
     ],
   },
   {
+    // release 0.0.4: o exame virou ação anual em Estudos; este aviso aparece uma vez, logo depois da formatura
     id: 'oab_exam',
     trigger: 'auto',
-    conditions: { minAge: 22, college: { diploma: ['direito'] }, flagsNone: ['oab'] },
+    once: true,
+    conditions: { minAge: 21, college: { diploma: ['direito'] }, flagsNone: ['oab'] },
     weight: 1,
-    text: 'As inscrições do Exame da Ordem (fictício) abriram. Sem ele, você não pode advogar.',
+    text: 'Diploma de Direito na mão! Para advogar, falta o Exame da Ordem (fictício). A inscrição fica em Ocupação → Estudos, uma vez por ano.',
     choices: [
-      {
-        id: 'take',
-        label: 'Fazer o exame',
-        resultText: 'Aprovad{o/a}! Você já pode advogar.',
-        effects: { setFlags: { oab: true }, stats: { happiness: 6 } },
-        risk: { chance: 0.45, resultText: 'Reprovad{o/a} por poucos pontos. Dá para tentar de novo no ano que vem.', effects: { stats: { happiness: -4 } } },
-      },
-      { id: 'later', label: 'Deixar para o ano que vem', resultText: 'Você vai estudar mais antes.' },
+      { id: 'plan', label: 'Vou me inscrever', resultText: 'Você separou os livros e marcou a data no calendário.', effects: { stats: { happiness: 2 } } },
+      { id: 'no_interest', label: 'Não tenho interesse em advogar', resultText: 'Você prefere usar o diploma de outro jeito. Se mudar de ideia, a inscrição continua aberta.', effects: { setFlags: { sem_interesse_oab: true } } },
     ],
   },
 ];

@@ -5,6 +5,7 @@ export const FIGHT_PRO_EVENTS: readonly GameEvent[] = [
   {
     id: 'fight_offer_lfm',
     trigger: 'auto',
+    cooldownYears: 2,
     conditions: { fighting: { orgEligible: 'lfm', tiers: ['none'] } },
     weight: 1,
     text: 'A Liga Fronteira MMA ofereceu seu primeiro contrato profissional: 4 lutas, bolsa modesta e muita estrada.',
@@ -16,6 +17,7 @@ export const FIGHT_PRO_EVENTS: readonly GameEvent[] = [
   {
     id: 'fight_offer_arc',
     trigger: 'auto',
+    cooldownYears: 2,
     conditions: { fighting: { orgEligible: 'arc', tiers: ['none'] } },
     weight: 1,
     text: 'A Arena Regional de Combate, a maior liga da região, quer você no próximo card.',
@@ -27,6 +29,7 @@ export const FIGHT_PRO_EVENTS: readonly GameEvent[] = [
   {
     id: 'fight_offer_titan',
     trigger: 'auto',
+    cooldownYears: 2,
     conditions: { fighting: { orgEligible: 'titan' } },
     weight: 1,
     text: 'O telefone toca: é o matchmaker do Circuito Titã. A liga principal do mundo quer você!',

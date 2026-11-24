@@ -1,3 +1,4 @@
+import { fameAsRep } from '../fame/fame';
 import { bjjRank } from '../fighting/belts';
 import { bumpUse, repeatMultiplier, scaleGain, usesThisYear } from '../lifeStages/sessions';
 import { cityMultOf } from '../geo';
@@ -90,7 +91,7 @@ export function jobRequirementGaps(state: GameState, def: JobDef): JobBlockReaso
   const st = state.character.stats;
   const m = def.minStats ?? {};
   if ((m.intelligence ?? 0) > st.intelligence || (m.athletic ?? 0) > st.athletic || (m.looks ?? 0) > st.looks) gaps.push('stats');
-  if ((def.minReputation ?? 0) > state.fighter.reputation) gaps.push('reputation');
+  if ((def.minReputation ?? 0) > fameAsRep(state)) gaps.push('reputation');
   if (def.fightReq) {
     const okBelt = def.fightReq.minBelt !== undefined && bjjRank(state) >= def.fightReq.minBelt;
     const okWins = def.fightReq.minProWins !== undefined && state.fighter.pro.wins >= def.fightReq.minProWins;

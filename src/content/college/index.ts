@@ -10,6 +10,7 @@ export const COLLEGE: CollegeContent = {
   loanName: 'Crédito Estudantil Futuro',
   loanRate: 0.04,
   scholarshipMargin: 160,
+  barExam: { name: 'Exame da Ordem', fee: 300, cut: 60, degree: 'direito' },
   publicNames: ['Universidade Federal do Cerrado', 'Universidade Estadual Ipê', 'Universidade Federal Atlântica', 'Instituto Federal Jequitibá'],
   privateNames: ['Centro Universitário Horizonte', 'Faculdade Saber Mais', 'Universidade Particular Aurora', 'Faculdade Nova Era'],
   courses: [

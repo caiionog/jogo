@@ -12,7 +12,7 @@ import { luckFactor, talentMod } from '../character/talents';
 import { post, toMoney } from '../economy/ledger';
 import { newLoan } from '../economy/bank';
 import { cityMultOf } from '../geo';
-import { usesThisYear } from './sessions';
+import { bumpUse, usesThisYear } from './sessions';
 import { addRelation, createPerson } from '../relationships/people';
 
 export interface CourseDef {
@@ -37,6 +37,8 @@ export interface CollegeContent {
   publicNames: readonly string[];
   privateNames: readonly string[];
   courses: readonly CourseDef[];
+  /** Release 0.0.4: Exame da Ordem (fictício), uma inscrição por ano para quem tem diploma de Direito. */
+  barExam: { name: string; fee: number; cut: number; degree: string };
 }
 
 export type CollegeType = 'publica' | 'particular';
@@ -239,4 +241,45 @@ function graduate(state: GameState, cur: CollegeEnrollment, c: CourseDef, conten
   };
   s = appendLog(s, `🎓 Você se formou em ${c.label}!${c.id === 'medicina' ? ' Com o diploma, o registro de médico(a) saiu.' : ''}`);
   return financedToLoan(s, cur, content);
+}
+
+// ---------------------------------------------------------------------------
+// Exame da Ordem (release 0.0.4)
+// ---------------------------------------------------------------------------
+
+export type BarExamBlockReason = 'busy' | 'no-degree' | 'licensed' | 'tried' | 'no-money' | 'prison';
+
+/** Pode se inscrever: diploma de Direito, ainda sem a flag `oab`, uma vez por ano, com a taxa. */
+export function barExamBlockReason(state: GameState, content: GameContent): BarExamBlockReason | null {
+  if (!state.alive || state.pendingEvents.length || state.activeFight) return 'busy';
+  if (state.prison) return 'prison';
+  if (!state.college.diplomas.includes(content.college.barExam.degree)) return 'no-degree';
+  if (state.flags.oab) return 'licensed';
+  if (usesThisYear(state, 'oab:exame')) return 'tried';
+  if (state.money < content.college.barExam.fee) return 'no-money';
+  return null;
+}
+
+/** Nota do Exame da Ordem (0–100): inteligência, estudo do ano (até 3 vezes), sorte (±5) e ruído. */
+export function barExamScore(state: GameState, rng: Rng): number {
+  const study = Math.min(3, usesThisYear(state, 'acao:study') + usesThisYear(state, 'acao:study_exams') + usesThisYear(state, 'acao:college_study'));
+  return state.character.stats.intelligence * 0.7 + study * 6 + luckFactor(state) * 5 + rng.int(-10, 12);
+}
+
+/** Inscreve-se e faz a prova. Aprovado: flag `oab` (pode advogar). Desistir de advogar não impede a inscrição. */
+export function takeBarExam(state: GameState, content: GameContent): GameState {
+  if (barExamBlockReason(state, content) !== null) return state;
+  const ex = content.college.barExam;
+  const rng = createRng(state.rngState);
+  let s = bumpUse(post(state, 'educacao', -ex.fee, `Inscrição: ${ex.name}`), 'oab:exame');
+  const score = Math.round(barExamScore(s, rng));
+  const o = s.character.sex === 'M' ? 'o' : 'a';
+  if (score >= ex.cut) {
+    s = { ...s, flags: { ...s.flags, oab: true, sem_interesse_oab: false }, character: { ...s.character, stats: addStats(s.character.stats, { happiness: 6 }) } };
+    s = appendLog(s, `Aprovad${o} no ${ex.name} com ${score} pontos! Agora você pode advogar.`);
+  } else {
+    s = { ...s, character: { ...s.character, stats: addStats(s.character.stats, { happiness: -3 }) } };
+    s = appendLog(s, `Reprovad${o} no ${ex.name}: ${score} pontos, o corte era ${ex.cut}. Dá para tentar de novo no ano que vem.`);
+  }
+  return { ...s, rngState: rng.state };
 }

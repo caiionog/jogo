@@ -32,6 +32,8 @@ export interface Character {
   talents: CharacterTalent[];
   /** Sorte oculta 0–100 (nunca exibida como número). */
   luck: number;
+  /** Fama pública 0–100 (release 0.0.4): o atributo único de fama, dentro e fora do esporte. */
+  fame: number;
   name: string;
   sex: Sex;
   age: number;
@@ -206,4 +208,4 @@ export interface GameState {
   prison: PrisonState | null;
 }
 
-export const STATE_VERSION = 16;
+export const STATE_VERSION = 17;

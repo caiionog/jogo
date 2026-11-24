@@ -27,6 +27,7 @@ export const FIGHT_BASE_EVENTS: readonly GameEvent[] = [
   {
     id: 'fight_belt_exam',
     trigger: 'auto',
+    cooldownYears: 2,
     conditions: { fighting: { gradeReady: 'jiujitsu' } },
     weight: 1,
     text: 'Seu professor de jiu-jitsu marcou seu exame de faixa. Toda a academia vai assistir.',
@@ -38,6 +39,7 @@ export const FIGHT_BASE_EVENTS: readonly GameEvent[] = [
   {
     id: 'fight_judo_exam',
     trigger: 'auto',
+    cooldownYears: 2,
     conditions: { fighting: { gradeReady: 'judo' } },
     weight: 1,
     text: 'O sensei chamou você para o exame de faixa do judô: quedas, rolamentos e os nomes dos golpes em japonês.',
@@ -49,6 +51,7 @@ export const FIGHT_BASE_EVENTS: readonly GameEvent[] = [
   {
     id: 'fight_muaythai_exam',
     trigger: 'auto',
+    cooldownYears: 2,
     conditions: { fighting: { gradeReady: 'muaythai' } },
     weight: 1,
     text: 'Dia de graduação no muay thai: o kru vai avaliar sua base, os chutes e o wai kru.',

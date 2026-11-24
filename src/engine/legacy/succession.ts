@@ -164,6 +164,8 @@ export function continueAsChild(state: GameState, personId: string, content: Gam
     // o herdeiro já nasceu com os talentos dele (ocultos de novo para o jogador) e uma sorte própria
     talents: (child.talents ?? []).map((id) => ({ id, revealed: false })),
     luck: rollLuck(talentRng(state.seed, `sorte:${child.id}`)),
+    // filho de gente famosa já nasce um pouco conhecido
+    fame: Math.round((state.character.fame ?? 0) * 0.3),
     name: child.name,
     age,
     birthYear: state.year - age,

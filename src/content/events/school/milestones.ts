@@ -21,6 +21,7 @@ export const MILESTONE_EVENTS: readonly GameEvent[] = [
   {
     id: 'school_honors',
     trigger: 'auto',
+    once: true,
     conditions: { schoolResult: ['honors'], schoolType: 'publica', flagsNone: ['bolsista'] },
     weight: 1,
     text: 'Suas notas foram as melhores {da_escola}! Um colégio particular oferece uma bolsa integral.',
