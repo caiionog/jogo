@@ -3,7 +3,8 @@ import type { StatKey } from '../core/state';
 import type { SkillDelta } from '../fighting/types';
 
 export type InjuryZone = 'cabeca' | 'mao' | 'tronco' | 'joelho' | 'ombro' | 'coluna' | 'pele' | 'perna';
-export type InjurySource = 'luta' | 'sparring' | 'treino' | 'evento';
+/** `tiro`: só troca de tiro (polícia); nunca sorteada em luta, treino ou eventos comuns. */
+export type InjurySource = 'luta' | 'sparring' | 'treino' | 'evento' | 'tiro';
 export type Treatment = 'none' | 'repouso' | 'fisio' | 'cirurgia';
 
 /** Lesão do catálogo (conteúdo). */

@@ -41,7 +41,10 @@ export function juvenileMeasure(state: GameState, crimeId: string, rng: Rng, con
 export function arrest(state: GameState, crimeId: string, rng: Rng, content: GameContent, source: ArrestSource): GameState {
   if (state.character.age < 18) return juvenileMeasure(state, crimeId, rng, content);
   const entry: RecordEntry = { age: state.character.age, year: state.year, crime: crimeId, kind: 'passagem' };
-  let s: GameState = { ...state, crime: { ...state.crime, record: [...state.crime.record, entry], wanted: Math.max(0, state.crime.wanted - 30) }, feats: { ...state.feats, arrested: (state.feats.arrested ?? 0) + 1 } };
+  // foi pego: deixa de ser foragido
+  const { foragido: _f, ...flags } = state.flags;
+  void _f;
+  let s: GameState = { ...state, flags, crime: { ...state.crime, record: [...state.crime.record, entry], wanted: Math.max(0, state.crime.wanted - 30) }, feats: { ...state.feats, arrested: (state.feats.arrested ?? 0) + 1 } };
   s = parentsUpset(s, -8);
   s = { ...s, character: { ...s.character, stats: addStats(s.character.stats, { happiness: -6 }) } };
   const how = source === 'investigacao' ? 'A polícia chegou à sua porta com um mandado.' : 'Você foi pres' + g(s, 'o', 'a') + ' em flagrante.';

@@ -91,8 +91,9 @@ export function applyShootout(state: GameState, tactic: ShootoutTactic, rng: Rng
   if (outcome === 'preso') s = addNotable(s, 'Prendeu um suspeito numa troca de tiro');
   if (outcome === 'colega_ferido') s = { ...s, character: { ...s.character, stats: addStats(s.character.stats, { happiness: -4 }) } };
   if (outcome === 'ferido') {
-    const def = pickInjury(rng, content, 'evento');
-    if (def) s = addInjury(s, rng, content, def, 'evento');
+    // lesão própria da troca de tiro (raspão ou ferimento grave), nunca do catálogo genérico
+    const def = pickInjury(rng, content, 'tiro');
+    if (def) s = addInjury(s, rng, content, def, 'tiro');
     s = addNotable(s, `Ferid${oa(s)} em serviço`);
   }
   // morte: o `resolveEvent` chama `killCharacter` ao ver a flag

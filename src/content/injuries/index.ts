@@ -16,6 +16,9 @@ export const INJURY_CATALOG: readonly InjuryDef[] = [
   { id: 'lca', name: 'ruptura do ligamento cruzado do joelho', severity: 4, months: [10, 14], cost: { fisio: 8000, cirurgia: 45000 }, effects: { skills: { grappling: -6.8, trocacao: -3.5, athletic: -10 } }, surgery: { successChance: 0.85, monthsFactor: 0.75 }, sequelaChance: 0.35, sequelaId: 'joelho_instavel', sources: ['luta', 'sparring', 'treino'], zone: 'joelho', weight: 0.35 },
   { id: 'ombro', name: 'luxação do ombro', severity: 3, months: [5, 9], cost: { fisio: 6000, cirurgia: 35000 }, effects: { skills: { grappling: -6.6, trocacao: -4.2 } }, surgery: { successChance: 0.87, monthsFactor: 0.7 }, sequelaChance: 0.25, sequelaId: 'ombro_fragil', sources: ['luta', 'sparring'], zone: 'ombro', weight: 0.5 },
   { id: 'hernia', name: 'hérnia de disco', severity: 3, months: [6, 12], cost: { fisio: 7000, cirurgia: 40000 }, effects: { skills: { grappling: -8.9 }, stats: { athletic: -3 } }, surgery: { successChance: 0.8, monthsFactor: 0.6 }, sequelaChance: 0.3, sequelaId: 'coluna_cronica', sources: ['luta', 'sparring', 'treino', 'evento'], zone: 'coluna', weight: 0.4 },
+  // troca de tiro (release 0.0.3): nomes sóbrios, sem detalhe
+  { id: 'tiro_raspao', name: 'ferimento de raspão em serviço', severity: 2, months: [1, 3], cost: { fisio: 2500 }, effects: { skills: { athletic: -3 } }, sequelaChance: 0.05, sequelaId: 'cicatriz', sources: ['tiro'], zone: 'ombro', weight: 1.6 },
+  { id: 'tiro_grave', name: 'ferimento grave em serviço', severity: 3, months: [5, 10], cost: { fisio: 6000, cirurgia: 30000 }, effects: { skills: { athletic: -8, grappling: -2 } }, surgery: { successChance: 0.9, monthsFactor: 0.7 }, sequelaChance: 0.2, sources: ['tiro'], zone: 'tronco', weight: 0.6 },
 ];
 
 export const SEQUELAE: readonly SequelaDef[] = [
