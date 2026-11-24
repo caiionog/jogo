@@ -115,4 +115,26 @@ describe('telas da release 0.0.4', () => {
     expect(useGameStore.getState().game!.minigame).toBeNull();
     expect(screen.queryByTestId('penalty-game')).toBeNull();
   });
+
+  it('Minigames de finalização e passe: tutorial, Simular e Continuar; MMA com três trocas', () => {
+    const g = adult(20, 'ui-mg');
+    const pro = { ...g, fighter: { ...g.fighter, gymId: 'x' }, football: { stage: 'pro' as const, position: 'MEI' as const, skills: { finishing: 70, passing: 75, defending: 30, goalkeeping: 10, pace: 60 }, potential: 83, reputation: 20, clubId: 'litoraneo', contract: { clubId: 'litoraneo', years: 2, salary: 300000 }, offers: [], history: [], titles: [], caps: 0, divisions: {} } };
+    for (const k of ['shot', 'pass'] as const) {
+      cleanup();
+      open(k === 'shot' ? pro : useGameStore.getState().game!, []);
+      act(() => useGameStore.getState().practice(k));
+      expect(screen.getByTestId('minigame-tutorial').textContent!.length).toBeGreaterThan(20);
+      act(() => fireEvent.click(screen.getByTestId('minigame-simulate')));
+      expect(screen.getByTestId('minigame-result')).toBeTruthy();
+      act(() => fireEvent.click(screen.getByTestId('minigame-ok')));
+      expect(useGameStore.getState().game!.minigame).toBeNull();
+    }
+    cleanup();
+    open({ ...useGameStore.getState().game!, pendingEvents: [] }, []);
+    act(() => useGameStore.getState().practice('mma'));
+    for (let i = 0; i < 3; i++) act(() => fireEvent.click(screen.getByTestId('mma-esquiva')));
+    expect(screen.getByTestId('mma-rounds').textContent).toContain('Troca 3');
+    act(() => fireEvent.click(screen.getByTestId('minigame-ok')));
+    expect(useGameStore.getState().game!.minigame).toBeNull();
+  });
 });

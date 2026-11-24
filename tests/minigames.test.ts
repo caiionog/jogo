@@ -4,7 +4,7 @@ import { GAME_CONTENT } from '../src/content';
 import { PENALTY, advanceYear, finishMinigame, practiceBlockReason, startMinigame, startPenaltyPractice, zoneOf } from '../src/engine';
 import { makeGame, withAge } from './helpers';
 
-const setup = (seed: string, skill = 70, pressure = 0.5) => PENALTY.setup(seed, { skill, pressure, keeperSkill: 50 });
+const setup = (seed: string, skill = 70, pressure = 0.5) => PENALTY.setup(seed, { skill, pressure, opponent: 50 });
 
 describe('pênalti', () => {
   it('zonas 3 × 2', () => {
@@ -69,5 +69,59 @@ describe('minigame no jogo', () => {
   it('o evento do pênalti abre o minigame', () => {
     const ev = GAME_CONTENT.events.find((e) => e.id === 'fut_penalti_jogo')!;
     expect(ev.choices[0]!.effects?.minigame).toEqual({ kind: 'penalty', context: 'jogo' });
+  });
+});
+
+import { GOALIE, MMA, MMA_COUNTER, PASS, SHOT, MINIGAMES, minigamePreview, startPractice } from '../src/engine';
+import type { MinigameKind } from '../src/engine';
+
+const ctx = (skill: number) => ({ skill, pressure: 0.5, opponent: 50 });
+
+describe('finalização, passe, goleiro e MMA', () => {
+  it('finalização: parar no centro da brecha marca; longe dela, não', () => {
+    for (let i = 0; i < 50; i++) {
+      const s = SHOT.setup(`f${i}`, ctx(70));
+      expect(SHOT.resolve(s, { at: s.gap - s.noise * s.spread }).success).toBe(true);
+      expect(SHOT.resolve(s, { at: s.gap > 0.5 ? 0.05 : 0.95 }).success).toBe(false);
+    }
+  });
+
+  it('passe: força errada nunca chega; força certa chega na maioria', () => {
+    let ok = 0;
+    for (let i = 0; i < 100; i++) {
+      const s = PASS.setup(`p${i}`, ctx(70));
+      expect(PASS.resolve(s, { lane: 0, power: s.lanes[0]!.distance + 0.5 }).outcome).toBe('forte');
+      expect(PASS.resolve(s, { lane: 0, power: Math.max(0, s.lanes[0]!.distance - 0.5) }).outcome).toBe('fraco');
+      const best = s.lanes.map((l, j) => ({ j, r: l.marker })).sort((a, b) => a.r - b.r)[0]!.j;
+      if (PASS.resolve(s, { lane: best, power: s.lanes[best]!.distance }).success) ok++;
+    }
+    expect(ok).toBeGreaterThan(55);
+  });
+
+  it('goleiro: pular no canto certo defende bem mais que no oposto', () => {
+    let right = 0;
+    let wrong = 0;
+    for (let i = 0; i < 200; i++) {
+      const s = GOALIE.setup(`g${i}`, ctx(70));
+      if (GOALIE.resolve(s, { zone: s.shotZone }).success) right++;
+      if (GOALIE.resolve(s, { zone: (s.shotZone + 1) % 3 + (s.shotZone >= 3 ? 0 : 3) }).success) wrong++;
+    }
+    expect(right).toBeGreaterThan(wrong * 3);
+  });
+
+  it('MMA: respostas certas vencem as 3 trocas', () => {
+    const s = MMA.setup('m', ctx(60));
+    const r = MMA.resolve(s, { answers: s.attacks.map((a) => MMA_COUNTER[a]) as never });
+    expect(r).toEqual({ success: true, won: 3, rounds: [true, true, true] });
+  });
+
+  it.each(Object.keys(MINIGAMES) as MinigameKind[])('%s: abre, simula e fecha pelo jogo', (kind) => {
+    let s = withAge(makeGame(`mg-${kind}`), 20);
+    if (kind === 'mma') s = { ...s, fighter: { ...s.fighter, gymId: GAME_CONTENT.fighting.gyms[0]!.id } };
+    s = startPractice(s, kind);
+    expect(s.minigame?.kind).toBe(kind);
+    expect(minigamePreview(s, null)).toEqual(minigamePreview(s, null));
+    s = finishMinigame(s, null);
+    expect(s.minigame).toBeNull();
   });
 });

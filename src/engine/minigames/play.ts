@@ -6,74 +6,124 @@
 import type { GameState } from '../core/state';
 import { addStats, appendLog } from '../core/stats';
 import { addFame } from '../fame/fame';
+import { applySkillDelta } from '../fighting/profile';
+import type { FootballSkill } from '../football/types';
 import { bumpUse } from '../lifeStages/sessions';
+import { GOALIE, MMA, PASS, SHOT } from './others';
 import { PENALTY } from './penalty';
-import type { ActiveMinigame, MinigameContext, MinigameKind, PenaltyInput, PenaltyResult } from './types';
+import type { ActiveMinigame, MinigameContext, MinigameDef, MinigameInput, MinigameKind, MinigameResult } from './types';
 
-export type MinigameBlockReason = 'busy' | 'open' | 'tried';
+// os defs têm tipos próprios; aqui só importa a forma comum
+type AnyDef = MinigameDef<unknown, unknown, { success: boolean }>;
+export const MINIGAMES: Record<MinigameKind, AnyDef> = {
+  penalty: PENALTY as unknown as AnyDef,
+  shot: SHOT as unknown as AnyDef,
+  pass: PASS as unknown as AnyDef,
+  goalie: GOALIE as unknown as AnyDef,
+  mma: MMA as unknown as AnyDef,
+};
 
-/** Treino de pênaltis: até 3 por ano, para quem joga futebol (ou qualquer um com 8+ anos, no clube ou na rua). */
-export const PENALTY_PRACTICE_PER_YEAR = 3;
+/** Treinos por tipo e por ano. */
+export const PRACTICE_PER_YEAR = 3;
+/** Compatibilidade com a parte 1 (pênalti). */
+export const PENALTY_PRACTICE_PER_YEAR = PRACTICE_PER_YEAR;
 
-export function practiceBlockReason(state: GameState): MinigameBlockReason | null {
-  if (!state.alive || state.pendingEvents.length || state.activeFight || state.character.age < 8) return 'busy';
-  if (state.minigame) return 'open';
-  if ((state.yearUses['minigame:penalti'] ?? 0) >= PENALTY_PRACTICE_PER_YEAR) return 'tried';
-  return null;
+/** Habilidade oculta usada em cada minigame. Sem carreira no esporte, metade da capacidade atlética. */
+export function minigameSkill(state: GameState, kind: MinigameKind): number {
+  const f = state.football;
+  const half = state.character.stats.athletic / 2;
+  switch (kind) {
+    case 'penalty':
+    case 'shot':
+      return f?.skills.finishing ?? half;
+    case 'pass':
+      return f?.skills.passing ?? half;
+    case 'goalie':
+      return f?.skills.goalkeeping ?? half;
+    case 'mma':
+      return Math.round((state.fighter.skills.trocacao + state.fighter.skills.grappling) / 2);
+  }
 }
 
-/** Habilidade usada no minigame: finalização no futebol; sem carreira, metade da capacidade atlética. */
+/** Compatibilidade com a parte 1. */
 export function penaltySkill(state: GameState): number {
-  return state.football?.skills.finishing ?? state.character.stats.athletic / 2;
+  return minigameSkill(state, 'penalty');
+}
+
+export type MinigameBlockReason = 'busy' | 'open' | 'tried' | 'no-gym';
+
+export function practiceBlockReason(state: GameState, kind: MinigameKind = 'penalty'): MinigameBlockReason | null {
+  if (!state.alive || state.pendingEvents.length || state.activeFight || state.character.age < 8) return 'busy';
+  if (state.minigame) return 'open';
+  if (kind === 'mma' && !state.fighter.gymId) return 'no-gym';
+  if ((state.yearUses[`minigame:${kind === 'penalty' ? 'penalti' : kind}`] ?? 0) >= PRACTICE_PER_YEAR) return 'tried';
+  return null;
 }
 
 export function startMinigame(state: GameState, kind: MinigameKind, context: MinigameContext): GameState {
   if (state.minigame || !state.alive) return state;
   const n = state.yearUses[`minigame:${kind}:${context}`] ?? 0;
-  const setup = PENALTY.setup(`${state.seed}:${state.year}:${context}:${n}`, {
-    skill: penaltySkill(state),
+  const setup = MINIGAMES[kind].setup(`${state.seed}:${state.year}:${context}:${n}`, {
+    skill: minigameSkill(state, kind),
     pressure: context === 'jogo' ? 0.75 : 0.15,
-    keeperSkill: context === 'jogo' ? 60 : 40,
+    opponent: context === 'jogo' ? 60 : 40,
   });
-  const active: ActiveMinigame = { kind, context, setup };
+  const active = { kind, context, setup } as ActiveMinigame;
   return { ...bumpUse(state, `minigame:${kind}:${context}`), minigame: active };
 }
 
-/** Treino de pênaltis (ação): abre o minigame no contexto de treino. */
-export function startPenaltyPractice(state: GameState): GameState {
-  if (practiceBlockReason(state) !== null) return state;
-  return startMinigame(bumpUse(state, 'minigame:penalti'), 'penalty', 'treino');
+/** Treino (ação): abre o minigame no contexto de treino. */
+export function startPractice(state: GameState, kind: MinigameKind): GameState {
+  if (practiceBlockReason(state, kind) !== null) return state;
+  return startMinigame(bumpUse(state, `minigame:${kind === 'penalty' ? 'penalti' : kind}`), kind, 'treino');
 }
 
-const TEXT: Record<PenaltyResult['outcome'], string> = {
-  gol: 'GOL! Bola de um lado, goleiro do outro.',
-  defesa: 'O goleiro defendeu.',
-  fora: 'Por cima do gol! A bola foi parar na arquibancada.',
-  trave: 'Na trave! O estalo ecoou pelo estádio.',
-};
+export function startPenaltyPractice(state: GameState): GameState {
+  return startPractice(state, 'penalty');
+}
 
-export function minigamePreview(state: GameState, input: PenaltyInput | null): PenaltyResult | null {
+/** Resultado que a entrada daria (o mesmo que `finishMinigame` aplica). */
+export function minigamePreview<R extends MinigameResult = MinigameResult>(state: GameState, input: MinigameInput | null): R | null {
   const mg = state.minigame;
   if (!mg) return null;
-  return PENALTY.resolve(mg.setup, input ?? PENALTY.simulate(mg.setup));
+  const def = MINIGAMES[mg.kind];
+  return def.resolve(mg.setup, input ?? def.simulate(mg.setup)) as unknown as R;
 }
 
-/** Termina o minigame: com `input = null`, simula pela habilidade. Consequências pelo contexto. */
-export function finishMinigame(state: GameState, input: PenaltyInput | null): GameState {
+const LABEL: Record<MinigameKind, [string, string]> = {
+  penalty: ['GOL! Bola de um lado, goleiro do outro.', 'Não entrou.'],
+  shot: ['Chute no canto, sem chance para o goleiro!', 'O chute saiu torto.'],
+  pass: ['Passe na medida: o companheiro saiu cara a cara.', 'O passe não chegou.'],
+  goalie: ['Você pegou!', 'A bola entrou.'],
+  mma: ['Você venceu as trocas.', 'O parceiro levou a melhor nas trocas.'],
+};
+const NAME: Record<MinigameKind, string> = { penalty: 'Pênalti', shot: 'Finalização', pass: 'Passe', goalie: 'Pênalti contra você', mma: 'Sparring' };
+const TRAIN_SKILL: Partial<Record<MinigameKind, FootballSkill>> = { penalty: 'finishing', shot: 'finishing', pass: 'passing', goalie: 'goalkeeping' };
+
+/** Termina o minigame: com `input = null`, simula pela habilidade. Consequências pelo tipo e pelo contexto. */
+export function finishMinigame(state: GameState, input: MinigameInput | null): GameState {
   const mg = state.minigame;
   if (!mg) return state;
-  const res = PENALTY.resolve(mg.setup, input ?? PENALTY.simulate(mg.setup));
+  const res = minigamePreview(state, input)!;
   let s: GameState = { ...state, minigame: null };
-  const scored = res.outcome === 'gol';
+  const ok = res.success;
   const sim = input ? '' : ' (simulado)';
-  if (mg.context === 'jogo') {
-    if (s.football) s = { ...s, football: { ...s.football, reputation: Math.max(0, Math.min(100, s.football.reputation + (scored ? 3 : -2))) } };
-    if (scored) s = addFame(s, 2);
-    s = { ...s, character: { ...s.character, stats: addStats(s.character.stats, { happiness: scored ? 5 : -4 }) } };
-    s = appendLog(s, `Pênalti no jogo${sim}: ${TEXT[res.outcome]}`);
-  } else {
-    if (scored && s.football) s = { ...s, football: { ...s.football, skills: { ...s.football.skills, finishing: Math.min(100, Math.round((s.football.skills.finishing + 0.4) * 10) / 10) } } };
-    s = appendLog(s, `Treino de pênalti${sim}: ${TEXT[res.outcome]}`);
+  const text = 'outcome' in res && mg.kind === 'penalty' && !ok && res.outcome === 'fora' ? 'Por cima do gol! A bola foi parar na arquibancada.' : LABEL[mg.kind][ok ? 0 : 1];
+  if (mg.kind === 'mma') {
+    // sparring: ganho pequeno nas duas áreas, maior quando vence
+    s = applySkillDelta(s, { trocacao: ok ? 0.6 : 0.2, grappling: ok ? 0.6 : 0.2 });
+    s = { ...s, character: { ...s.character, stats: addStats(s.character.stats, { happiness: ok ? 2 : -1 }) } };
+    // sparring valendo vaga: vencer dá nome na academia
+    if (mg.context === 'jogo' && ok) s = { ...s, fighter: { ...s.fighter, reputation: Math.min(100, s.fighter.reputation + 2) } };
+    return appendLog(s, `${NAME.mma}${sim}: ${text} (${(res as { won: number }).won} de 3).`);
   }
-  return s;
+  if (mg.context === 'jogo') {
+    if (s.football) s = { ...s, football: { ...s.football, reputation: Math.max(0, Math.min(100, s.football.reputation + (ok ? 3 : -2))) } };
+    if (ok) s = addFame(s, 2);
+    s = { ...s, character: { ...s.character, stats: addStats(s.character.stats, { happiness: ok ? 5 : -4 }) } };
+    return appendLog(s, `${NAME[mg.kind]} no jogo${sim}: ${text}`);
+  }
+  const k = TRAIN_SKILL[mg.kind];
+  if (ok && k && s.football) s = { ...s, football: { ...s.football, skills: { ...s.football.skills, [k]: Math.min(100, Math.round((s.football.skills[k] + 0.4) * 10) / 10) } } };
+  return appendLog(s, `Treino de ${NAME[mg.kind].toLowerCase()}${sim}: ${text}`);
 }

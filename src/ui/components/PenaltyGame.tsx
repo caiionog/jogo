@@ -54,7 +54,7 @@ export default function PenaltyGame({ game }: { game: GameState }) {
     };
   }, [phase, reduced]);
 
-  const result = input !== undefined ? minigamePreview(game, input) : null;
+  const result = input !== undefined ? minigamePreview<PenaltyResult>(game, input) : null;
 
   const shoot = (inp: PenaltyInput | null) => {
     setInput(inp);

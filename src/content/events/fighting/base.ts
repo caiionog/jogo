@@ -25,6 +25,17 @@ export const FIGHT_BASE_EVENTS: readonly GameEvent[] = [
     ],
   },
   {
+    id: 'fight_sparring_desafio',
+    weight: 4,
+    cooldownYears: 3,
+    conditions: { minAge: 14, fighting: { hasGym: true } },
+    text: 'O professor junta todo mundo: "Sparring valendo a vaga no próximo campeonato. Quem se habilita?"',
+    choices: [
+      { id: 'encarar', label: 'Entrar no sparring', resultText: 'Você calçou as luvas e foi para o centro do tatame.', effects: { minigame: { kind: 'mma', context: 'jogo' } } },
+      { id: 'assistir', label: 'Assistir e aprender', resultText: 'Você anotou cada detalhe.', effects: { fighter: { skills: { trocacao: 0.5 } } } },
+    ],
+  },
+  {
     id: 'fight_belt_exam',
     trigger: 'auto',
     cooldownYears: 2,

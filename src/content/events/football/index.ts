@@ -30,6 +30,21 @@ export const FOOTBALL_EVENTS: readonly GameEvent[] = [
       { id: 'coletivo', label: 'Jogar para o time', resultText: 'O técnico anotou seu nome: "Esse entende de jogo."', effects: { football: { reputation: 2, skills: { passing: 1 } } } },
     ] },
   // ----- profissional: vestiário e jogo -----
+  { id: 'fut_finalizacao_jogo', weight: 7, conditions: { minAge: 16, football: { ...PRO, position: ['ATA', 'MEI'] } }, text: 'Lançamento perfeito: você sai cara a cara com o goleiro.',
+    choices: [
+      { id: 'chutar', label: 'Bater no canto', resultText: 'Você ajeitou o corpo para finalizar.', effects: { minigame: { kind: 'shot', context: 'jogo' } } },
+      { id: 'rolar', label: 'Rolar para o companheiro', resultText: 'O companheiro empurrou para o gol. Assistência sua!', effects: { football: { reputation: 1 } } },
+    ] },
+  { id: 'fut_passe_decisivo', weight: 6, conditions: { minAge: 16, football: { ...PRO, position: ['MEI', 'VOL', 'LAT'] } }, text: 'Contra-ataque no fim do jogo. Três companheiros correndo, e a bola está no seu pé.',
+    choices: [
+      { id: 'passar', label: 'Escolher o passe', resultText: 'Você levantou a cabeça.', effects: { minigame: { kind: 'pass', context: 'jogo' } } },
+      { id: 'segurar', label: 'Segurar a bola e gastar o tempo', resultText: 'O juiz apitou o fim. Resultado mantido.', effects: {} },
+    ] },
+  { id: 'fut_goleiro_penalti', weight: 8, conditions: { minAge: 16, football: { ...PRO, position: ['GOL'] } }, text: 'Pênalti contra o seu time no último minuto. O batedor ajeita a bola e te encara.',
+    choices: [
+      { id: 'defender', label: 'Ler o batedor e pular', resultText: 'Você se agachou na linha.', effects: { minigame: { kind: 'goalie', context: 'jogo' } } },
+      { id: 'catimba', label: 'Fazer catimba antes da cobrança', resultText: 'Cartão amarelo. O batedor errou mesmo assim: por cima!', effects: { football: { reputation: 1 } }, risk: { chance: 0.6, resultText: 'Cartão amarelo e gol do adversário.', effects: { football: { reputation: -1 } } } },
+    ] },
   { id: 'fut_penalti_jogo', weight: 8, conditions: { minAge: 16, football: { ...PRO, position: ['ATA', 'MEI', 'VOL', 'LAT', 'ZAG'] } }, text: 'Pênalti para o seu time aos 44 do segundo tempo, jogo empatado. O técnico olha para você.',
     choices: [
       { id: 'cobrar', label: 'Pegar a bola e cobrar', resultText: 'Você ajeitou a bola na marca e respirou fundo.', effects: { minigame: { kind: 'penalty', context: 'jogo' } } },

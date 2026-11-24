@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { ExAmizades } from './dating';
 import { GAME_CONTENT as C } from '../../../content';
 import type { GameState, TrainingKind } from '../../../engine';
-import { behindBars, CNH_COST, TRAINING_MIN_AGE, actionBlockReason, actionUseKey, cnhBlockReason, coachAssessment, meetBlockReason, trainingBlockReason, usesThisYear } from '../../../engine';
+import { behindBars, CNH_COST, TRAINING_MIN_AGE, actionBlockReason, actionUseKey, cnhBlockReason, coachAssessment, meetBlockReason, practiceBlockReason, trainingBlockReason, usesThisYear } from '../../../engine';
 import { gymModalitiesText } from '../../text/fight';
 import { ListGroup, ListItem } from '../../design/components';
 import { useNav } from '../../nav';
@@ -61,6 +61,7 @@ function AtividadesLivre({ game }: { game: GameState }) {
 
 export function TreinoScreen({ game }: { game: GameState }) {
   const train = useGameStore((s) => s.train);
+  const practice = useGameStore((s) => s.practice);
   const gym = C.fighting.gyms.find((g) => g.id === game.fighter.gymId);
   return (
     <>
@@ -80,6 +81,10 @@ export function TreinoScreen({ game }: { game: GameState }) {
           />
         );
       })}
+      {(() => {
+        const mr = practiceBlockReason(game, 'mma');
+        return <ListItem emoji="🥋" title="Sparring interativo" subtitle="Minigame: leia o golpe e responda (até 3 por ano)" disabled={!!mr || game.character.age < 14} reason={game.character.age < 14 ? 'A partir dos 14 anos' : mr === 'no-gym' ? 'Precisa de academia' : mr === 'tried' ? 'Você já fez 3 sparrings interativos este ano' : 'Indisponível agora'} onClick={() => practice('mma')} chevron={false} testId="train-mma-minigame" />;
+      })()}
       <p className="text-sm text-[var(--ds-text-muted)]">{gym ? `Treinando na ${gym.name} (${gymModalitiesText(gym)}).` : 'Sem academia, só dá para fazer o treino físico. Escolha uma academia em Ocupação → Carreira de luta.'}</p>
       {game.character.age >= 6 && (
         <p className="text-sm" data-testid="coach-words">

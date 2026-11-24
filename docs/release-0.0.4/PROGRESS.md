@@ -118,4 +118,20 @@
 - Tela `components/PenaltyGame.tsx`: toque para mirar, barra de força oscilando (toque para parar), "Chutar",
   "Simular", tutorial curto, goleiro e bola animados; com movimento reduzido, a força vira um controle deslizante e
   nada anima. Testado no navegador (dev server): mirar, força, resultado e fechar, console sem erros.
-- **Próximos minigames só depois do teste do pênalti pelo usuário**: finalização, passe, goleiro e MMA.
+- Pênalti aprovado pelo usuário.
+
+## Fase 7 — Minigames: finalização, passe, goleiro e MMA (concluída)
+- `minigames/types.ts` virou uma união por tipo (`ActiveMinigame`), com `success` em todo resultado. `others.ts`:
+  - finalização: marcador que vai e volta; parar dentro da brecha (largura pela finalização e pelo goleiro);
+  - passe: três companheiros com distância e marcação; escolher e acertar a força (tolerância pelo passe);
+  - goleiro: o batedor dá uma dica (às vezes falsa); pular no canto certo defende pelo alcance;
+  - MMA: três trocas; o parceiro telegrafa o golpe (nem sempre de verdade); esquiva/bloqueio/sprawl; vence 2 de 3.
+- `play.ts`: registro `MINIGAMES`, habilidade oculta por tipo (finalização, passe, goleiro, média da luta),
+  `startPractice(kind)` (3 por ano cada; MMA exige academia), consequências por tipo e contexto.
+- Treinos na tela de futebol (defesas só para goleiro) e "Sparring interativo" em Atividades → Treino (14+).
+  Eventos: `fut_finalizacao_jogo`, `fut_passe_decisivo`, `fut_goleiro_penalti`, `fight_sparring_desafio`.
+- Telas em `components/MinigameModal.tsx`, todas com tutorial, "Simular" e versão sem animação. Cobertas pelos
+  testes de UI; a verificação no navegador desta parte ficou de fora porque a aba do dev server tinha um save em uso.
+
+## Próximo
+Fases 8–10: eventos restantes, métricas novas no `npm run sim`, balanceamento, GDD/CHANGELOG/HANDOFF e tag `v0.0.4`.

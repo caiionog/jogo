@@ -26,7 +26,7 @@ export const PENALTY: MinigameDef<PenaltySetup, PenaltyInput, PenaltyResult> = {
     const skill = clamp(ctx.skill, 0, 100);
     return {
       keeperZone,
-      keeperReach: clamp(0.35 + ctx.keeperSkill / 200, 0.3, 0.85),
+      keeperReach: clamp(0.35 + ctx.opponent / 200, 0.3, 0.85),
       spread: clamp(0.08 + ctx.pressure * 0.12 - skill / 1000, 0.03, 0.3),
       noise: [rng.next() * 2 - 1, rng.next() * 2 - 1],
       saveRoll: rng.next(),
@@ -39,18 +39,18 @@ export const PENALTY: MinigameDef<PenaltySetup, PenaltyInput, PenaltyResult> = {
     const sx = clamp(input.x, -1.2, 1.2) + setup.noise[0] * setup.spread;
     const sy = clamp(input.y, 0, 1.2) + setup.noise[1] * setup.spread + (power > 0.75 ? (power - 0.75) * 0.6 : 0);
     const shot = { x: Math.round(sx * 100) / 100, y: Math.round(sy * 100) / 100 };
-    if (power > 0.9 || sy > 1.05 || Math.abs(sx) > 1.05) return { outcome: 'fora', shot, keeperZone: setup.keeperZone };
-    if (sy > 0.97 || Math.abs(sx) > 0.97) return { outcome: 'trave', shot, keeperZone: setup.keeperZone };
+    if (power > 0.9 || sy > 1.05 || Math.abs(sx) > 1.05) return { success: false, outcome: 'fora', shot, keeperZone: setup.keeperZone };
+    if (sy > 0.97 || Math.abs(sx) > 0.97) return { success: false, outcome: 'trave', shot, keeperZone: setup.keeperZone };
     const zone = zoneOf(sx, sy);
-    if (power < 0.25) return { outcome: 'defesa', shot, keeperZone: zone };
+    if (power < 0.25) return { success: false, outcome: 'defesa', shot, keeperZone: zone };
     if (setup.keeperZone === zone || (setup.keeperZone === -1 && zone % 3 === 1)) {
       // canto (longe do centro) e alto dificultam; força boa também
       const corner = Math.abs(sx) > 0.7 ? 0.25 : 0;
       const high = sy > 0.75 ? 0.15 : 0;
       const reach = clamp(setup.keeperReach - corner - high - (power - 0.5) * 0.3, 0.05, 0.95);
-      if (setup.saveRoll < reach) return { outcome: 'defesa', shot, keeperZone: setup.keeperZone };
+      if (setup.saveRoll < reach) return { success: false, outcome: 'defesa', shot, keeperZone: setup.keeperZone };
     }
-    return { outcome: 'gol', shot, keeperZone: setup.keeperZone };
+    return { success: true, outcome: 'gol', shot, keeperZone: setup.keeperZone };
   },
   simulate(setup) {
     // a habilidade escolhe um canto e uma força razoável; quem finaliza mal erra a força com mais frequência

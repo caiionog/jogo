@@ -61,7 +61,6 @@ export function FutebolScreen({ game }: { game: GameState }) {
   const league = leagueOf(C, f.clubId);
   const last = f.history.at(-1);
   const tr = footballTrainBlockReason(game, C);
-  const pr = practiceBlockReason(game);
   return (
     <>
       <div className="flex items-center gap-3 rounded-[var(--ds-radius)] bg-[var(--ds-surface)] p-3" data-testid="football-card">
@@ -101,7 +100,10 @@ export function FutebolScreen({ game }: { game: GameState }) {
       )}
       {f.stage !== 'aposentado' && (
         <ListGroup title="Rotina">
-          <ListItem emoji="🥅" title="Treinar pênaltis" subtitle="Minigame: mire e acerte a força (até 3 por ano)" disabled={!!pr} reason={pr === 'tried' ? 'Você já treinou pênaltis 3 vezes este ano' : 'Indisponível agora'} onClick={st.practicePenalty} chevron={false} testId="football-penalty" />
+          {([['penalty', '🥅', 'Treinar pênaltis', 'Mire e acerte a força'], ['shot', '🎯', 'Treinar finalização', 'Pare o marcador na brecha'], ['pass', '🦶', 'Treinar passe', 'Escolha o companheiro e a força'], ['goalie', '🧤', 'Treinar defesas', 'Leia o batedor e pule no canto']] as const).filter(([k]) => k !== 'goalie' || f.position === 'GOL').map(([k, emoji, title, sub]) => {
+            const pr = practiceBlockReason(game, k);
+            return <ListItem key={k} emoji={emoji} title={title} subtitle={`Minigame: ${sub.toLowerCase()} (até 3 por ano)`} disabled={!!pr} reason={pr === 'tried' ? 'Você já treinou isso 3 vezes este ano' : 'Indisponível agora'} onClick={() => st.practice(k)} chevron={false} testId={k === 'penalty' ? 'football-penalty' : `football-practice-${k}`} />;
+          })}
           <ListItem emoji="🏃" title="Treino extra" subtitle="Gasta 1 sessão de treino do ano; rende menos a cada repetição" disabled={!!tr} reason={tr === 'sessions' ? 'Sem sessões de treino livres este ano' : 'Indisponível agora'} onClick={st.trainFootball} chevron={false} testId="football-train" />
           {f.stage === 'pro' && <DsButton tone="danger" full testId="football-retire" onClick={st.retireFootball}>Pendurar as chuteiras</DsButton>}
         </ListGroup>

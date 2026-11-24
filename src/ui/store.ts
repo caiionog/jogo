@@ -97,6 +97,7 @@ import {
   retireFootball,
   finishMinigame,
   startPenaltyPractice,
+  startPractice,
   doCommercial,
   enrollCollege,
   lockCollege,
@@ -111,7 +112,7 @@ import {
   goOut,
   hangOutAll,
 } from '../engine';
-import type { Eating, FootballPosition, PenaltyInput, PostgradKind, PostKind } from '../engine';
+import type { Eating, FootballPosition, MinigameInput, MinigameKind, PostgradKind, PostKind } from '../engine';
 import type { CollegeType, PoliceTrackId, PrisonAction, SportId, TraffickingLevel } from '../engine';
 import type {
   AchievementDef,
@@ -295,8 +296,9 @@ interface GameStore {
   trainFootball(): void;
   acceptFootballOffer(clubId: string): void;
   retireFootball(): void;
-  finishMinigame(input: PenaltyInput | null): void;
+  finishMinigame(input: MinigameInput | null): void;
   practicePenalty(): void;
+  practice(kind: MinigameKind): void;
   doCommercial(): void;
   /** Vida noturna (release 0.0.1): sai e o evento do local abre como pop-up. */
   goOut(venueId: string): void;
@@ -579,6 +581,7 @@ export const useGameStore = create<GameStore>((setState, getState) => {
     retireFootball: () => act((g) => retireFootball(g)),
     finishMinigame: (input) => act((g) => finishMinigame(g, input)),
     practicePenalty: () => act((g) => startPenaltyPractice(g)),
+    practice: (kind) => act((g) => startPractice(g, kind)),
     doCommercial: () => act((g) => doCommercial(g, GAME_CONTENT)),
     goOut: (id) => update((g) => goOut(g, id, GAME_CONTENT)),
     joinSportsClub: (id, sport) => update((g) => joinSportsClub(g, id, sport, GAME_CONTENT)),
