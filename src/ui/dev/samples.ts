@@ -1,6 +1,6 @@
 /** Amostras da pixel art para /dev/avatars e para scripts/pixel-sheet.ts (mesmos descriptors da engine). */
 import { GAME_CONTENT as C } from '../../content';
-import type { Appearance, AvatarDescriptor, Build, Race, Worn } from '../../engine';
+import type { Appearance, AvatarDescriptor, Build, OutfitPiece, Race, Worn } from '../../engine';
 import { BUILDS, HAIR_STYLES, createRng, deriveNpcAvatar, generateNpc, genesForRace, previewAvatar, randomAppearance, ufOrDefault } from '../../engine';
 
 const look = (race: Race, seed: number, patch: Partial<Appearance['genes']> = {}): Appearance => ({ genes: { ...genesForRace(createRng(seed), race), ...patch }, race, facialHair: 'nenhuma' });
@@ -110,5 +110,138 @@ export function abAdults(): AbSample[] {
     mk('Mulher, 34 · pele escura · black power · atlética', 'preta', 14, 'F', 34, { skinTone: 0.8, undertone: 0.3, hairType: 'crespo', hairColor: 0.06, eyeColor: 'castanho_escuro', eyeShape: 'redondo', faceShape: 'oval', noseWidth: 0.65, lipVolume: 0.9 }, { style: 'black_power', build: 'atletico', worn: { inteira: { id: 'vestido', color: 2 }, calcado: { id: 'sapato', color: 0 } } }),
     mk('Homem, 24 · cacheado médio · musculoso', 'parda', 15, 'M', 24, { skinTone: 0.58, undertone: 0.5, hairType: 'cacheado', hairColor: 0.12, eyeColor: 'mel', eyeShape: 'alongado', faceShape: 'quadrado', noseWidth: 0.55, lipVolume: 0.5, baldness: 0 }, { style: 'medio', build: 'musculoso', facialHair: 'cavanhaque', worn: { cima: { id: 'regata', color: 4 }, baixo: { id: 'calca_moletom', color: 1 }, calcado: { id: 'tenis', color: 2 } } }),
     mk('Mulher, 50 · liso · coque · camisa social', 'amarela', 16, 'F', 50, { skinTone: 0.18, undertone: 0.6, hairType: 'liso', hairColor: 0.05, eyeColor: 'castanho_escuro', eyeShape: 'palpebra_lisa', faceShape: 'longo', noseWidth: 0.3, lipVolume: 0.35 }, { style: 'coque', build: 'medio', expression: 'neutro', worn: { cima: { id: 'social', color: 1 }, baixo: { id: 'calca_social', color: 1 }, calcado: { id: 'sapato', color: 0 } } }),
+  ];
+}
+
+// ——— release 0.0.3: cartoon como visual padrão (seções da /dev/avatars) ———
+
+export interface Labeled {
+  label: string;
+  d: AvatarDescriptor;
+}
+
+/** Peça do catálogo (cor pelo índice). */
+function pc(id: string, color = 0, accent?: string): OutfitPiece {
+  if (id === 'prajied') return { id, color: ['#f1f1ee', '#c2413a', '#2f5fb3', '#1b1b1b'][color] ?? '#c2413a', pattern: 'liso', ...(accent ? { accent } : {}) };
+  const o = C.outfits.find((x) => x.id === id)!;
+  return { id, color: o.colors[Math.min(color, o.colors.length - 1)]!, pattern: o.pattern ?? 'liso', ...(accent ? { accent } : {}) };
+}
+
+const PHASE_LOOK: Appearance = { ...look('parda', 21, { hairType: 'ondulado', skinTone: 0.42, hairColor: 0.15, freckles: 0.2, moles: 0.3, eyeColor: 'castanho' }), hairStyle: 'curto' };
+const PHASE_LOOK_F: Appearance = { ...look('parda', 22, { hairType: 'ondulado', skinTone: 0.42, hairColor: 0.15, freckles: 0.2, moles: 0.3, eyeColor: 'castanho' }), hairStyle: 'longo' };
+
+/** O mesmo personagem nas 5 fases (1, 8, 15, 30 e 72 anos), menino/homem e menina/mulher. */
+export function phases(sex: 'M' | 'F'): Labeled[] {
+  const a = sex === 'M' ? PHASE_LOOK : PHASE_LOOK_F;
+  return STAGE_AGES.map((age) => ({ label: `${age} ${age === 1 ? 'ano' : 'anos'}`, d: previewAvatar(a, sex, age, C, { worn: WORN, facialHair: age >= 30 && sex === 'M' ? 'por_fazer' : 'nenhuma', expression: 'feliz' }) }));
+}
+
+/** Os 5 tipos físicos de um adulto (roupa do dia a dia ou de treino). */
+export function physiques(sex: 'M' | 'F', kind: 'dia' | 'treino'): Labeled[] {
+  const worn: Worn = kind === 'dia'
+    ? { cima: { id: 'camiseta', color: sex === 'M' ? 2 : 7 }, baixo: { id: 'bermuda', color: 0 }, calcado: { id: 'tenis', color: 0 } }
+    : { cima: { id: 'regata_treino', color: 0 }, baixo: { id: 'shorts_luta', color: 2 }, calcado: { id: 'descalco', color: 0 } };
+  const a: Appearance = { ...look(sex === 'M' ? 'preta' : 'branca', sex === 'M' ? 31 : 32, { hairType: sex === 'M' ? 'crespo' : 'liso', skinTone: sex === 'M' ? 0.7 : 0.15, hairColor: 0.1, freckles: 0, moles: 0 }), hairStyle: sex === 'M' ? 'curto' : 'rabo' };
+  return BUILDS.map((b) => ({ label: b, d: previewAvatar(a, sex, 28, C, { worn, fat: FB[b][0], muscle: FB[b][1], expression: 'neutro' }) }));
+}
+
+/** Rampa de pele do mais claro ao mais escuro (cartoon). */
+export function skinRampLabeled(): Labeled[] {
+  return skinRamp().map((d, i) => ({ label: `tom ${(i / 10).toFixed(1)}`, d }));
+}
+
+/** Todos os estilos × tipos de cabelo. */
+export function hairGrid(): Labeled[] {
+  const out: Labeled[] = [];
+  for (const st of HAIR_STYLES)
+    for (const [type, color, sex] of [['liso', 0.05, 'M'], ['ondulado', 0.4, 'F'], ['cacheado', 0.3, 'F'], ['crespo', 0.08, 'M']] as const)
+      out.push({ label: `${st} · ${type}`, d: previewAvatar({ ...BASE, hairStyle: st, genes: { ...BASE.genes, hairType: type, hairColor: color, skinTone: type === 'crespo' ? 0.8 : 0.4 } }, sex, 26, C, { worn: WORN, expression: 'neutro' }) });
+  return out;
+}
+
+/** Barbas, expressões, olhos, formatos de rosto, sardas/pintas, marcas da luta, idoso calvo. */
+export function faceGrid(): Labeled[] {
+  const out: Labeled[] = [];
+  for (const f of ['nenhuma', 'por_fazer', 'rala', 'barba', 'bigode', 'cavanhaque'] as const) out.push({ label: `barba: ${f}`, d: pv(BASE, 'M', 40, { facialHair: f, expression: 'neutro' }) });
+  for (const ex of ['feliz', 'neutro', 'triste', 'cansado', 'bravo', 'machucado'] as const) out.push({ label: ex, d: pv(BASE, 'F', 30, { expression: ex }) });
+  for (const shape of ['amendoado', 'redondo', 'alongado', 'palpebra_lisa'] as const) out.push({ label: `olho ${shape}`, d: pv({ ...BASE, genes: { ...BASE.genes, eyeShape: shape, freckles: 0.8, moles: 0.6 } }, 'F', 24) });
+  for (const fs of ['oval', 'redondo', 'quadrado', 'coracao', 'longo'] as const) out.push({ label: `rosto ${fs}`, d: pv({ ...BASE, genes: { ...BASE.genes, faceShape: fs, noseWidth: fs === 'quadrado' ? 0.9 : 0.3, lipVolume: fs === 'coracao' ? 0.9 : 0.3 } }, 'M', 32, { expression: 'neutro' }) });
+  const m = pv(BASE, 'M', 28, { muscle: 0.7, fat: 0.2 });
+  out.push({ label: 'marcas da luta', d: { ...m, marks: { scar: true, brokenNose: true, cauliflowerEar: true, blackEye: true }, expression: 'machucado' } });
+  out.push({ label: 'idoso calvo', d: { ...pv({ ...BASE, genes: { ...BASE.genes, baldness: 1 } }, 'M', 82, { facialHair: 'bigode' }), wrinkles: 0.9 } });
+  out.push({ label: 'idosa', d: pv({ ...BASE, hairStyle: 'coque' }, 'F', 78) });
+  return out;
+}
+
+/** Todas as peças do catálogo (e o prajied), cada uma num personagem coerente com a idade da peça. */
+export function outfitGallery(): Labeled[] {
+  const out: Labeled[] = [];
+  const femOnly = new Set(['vestido', 'vestido_festa', 'biquini', 'maio', 'saia', 'saida_praia', 'blusa', 'cropped', 'maio_infantil']);
+  let i = 0;
+  for (const o of C.outfits) {
+    const age = o.maxAge <= 2 ? 1 : o.maxAge <= 17 ? 8 : o.maxAge <= 25 ? 18 : Math.max(30, o.minAge);
+    const sex: 'M' | 'F' = femOnly.has(o.id) ? 'F' : i++ % 2 ? 'F' : 'M';
+    const base = previewAvatar({ ...BASE, hairStyle: sex === 'F' ? 'medio' : 'curto' }, sex, age, C, { expression: 'neutro', fat: 0.3, muscle: 0.4 });
+    const kid = age < 18;
+    const set = (patch: Partial<Record<string, OutfitPiece>>) => ({ ...base, outfit: { cima: pc('camiseta', 2), baixo: pc(kid ? 'bermuda' : 'calca_jeans', 0), calcado: pc('tenis', 0), ...patch } as AvatarDescriptor['outfit'] });
+    let d: AvatarDescriptor;
+    const p = pc(o.id, 0);
+    switch (o.layer) {
+      case 'inteira':
+        d = { ...base, outfit: { inteira: p, calcado: o.id === 'body' ? pc('meia', 1) : o.context === 'praia' ? pc('chinelo', 0) : o.id === 'kimono' ? pc('descalco') : pc('tenis', 1), ...(o.id === 'kimono' ? { acessorio: pc('faixa', 2) } : {}) } };
+        break;
+      case 'calcado':
+        d = o.id === 'meia' ? { ...base, outfit: { inteira: pc('body', 1), calcado: p } } : set({ calcado: p, baixo: pc('shorts', 1) });
+        break;
+      case 'cima':
+        d = set({ cima: p, ...(o.context === 'praia' ? { baixo: pc('bermuda_infantil', 0), calcado: pc('chinelo') } : {}), ...(o.context === 'luta' ? { baixo: pc('shorts_luta', 1), calcado: pc('descalco') } : {}) });
+        break;
+      case 'baixo':
+        d = set({ baixo: p, cima: pc(o.context === 'farda' ? 'farda_pm' : o.context === 'praia' ? 'camiseta' : 'camiseta', o.context === 'praia' ? 0 : 3), ...(o.context === 'praia' ? { calcado: pc('chinelo') } : {}) });
+        break;
+      case 'agasalho':
+        d = set({ agasalho: p, ...(o.id === 'terno' || o.id === 'cronos_terno' ? { cima: pc('social'), baixo: pc('calca_social') , calcado: pc('sapato') } : {}), ...(o.id === 'colete_pm' ? { cima: pc('farda_pm'), baixo: pc('calca_farda'), calcado: pc('coturno') } : {}), ...(o.id === 'colete_civil' ? { cima: pc('camisa_civil'), baixo: pc('calca_farda', 1), calcado: pc('coturno') } : {}), ...(o.id === 'saida_praia' ? { cima: undefined, baixo: undefined, inteira: pc('biquini', 1), calcado: pc('chinelo') } : {}), ...(o.id === 'roupao' ? { cima: pc('regata_treino'), baixo: pc('shorts_luta'), calcado: pc('descalco') } : {}) });
+        break;
+      default:
+        d = o.id === 'faixa' ? { ...base, outfit: { inteira: pc('kimono'), acessorio: p, calcado: pc('descalco') } } : set({ acessorio: p, ...(o.id === 'bone_pm' || o.id === 'capacete' ? { cima: pc(o.id === 'capacete' ? 'farda_tatica' : 'farda_pm'), baixo: pc('calca_farda'), calcado: pc('coturno') } : {}), ...(o.id === 'algemas' ? { cima: undefined, baixo: undefined, inteira: pc('uniforme_presidiario'), calcado: pc('chinelo') } : {}) });
+    }
+    for (const k of Object.keys(d.outfit) as (keyof AvatarDescriptor['outfit'])[]) if (!d.outfit[k]) delete d.outfit[k];
+    out.push({ label: o.name, d });
+  }
+  const m = previewAvatar(BASE, 'M', 26, C, { expression: 'neutro', fat: 0.2, muscle: 0.7 });
+  out.push({ label: 'Prajied (muay thai)', d: { ...m, outfit: { cima: pc('regata_treino', 2), baixo: pc('shorts_luta', 1), calcado: pc('descalco'), acessorio: pc('prajied', 1, '#e3a72f') } } });
+  return out;
+}
+
+/** Fardas, prisão, praia (adultos e crianças) e luta. */
+export function uniformsBeach(): Labeled[] {
+  const M = previewAvatar({ ...BASE, hairStyle: 'curto' }, 'M', 32, C, { expression: 'neutro', fat: 0.3, muscle: 0.55 });
+  const F = previewAvatar({ ...look('preta', 41, { hairType: 'crespo', skinTone: 0.85, freckles: 0, moles: 0 }), hairStyle: 'rabo' }, 'F', 29, C, { expression: 'neutro', fat: 0.3, muscle: 0.5 });
+  const F2 = previewAvatar({ ...look('branca', 42, { hairType: 'ondulado', skinTone: 0.1, hairColor: 0.6, freckles: 0.6 }), hairStyle: 'longo' }, 'F', 33, C, { expression: 'feliz', fat: 0.35, muscle: 0.3 });
+  const M2 = previewAvatar({ ...look('preta', 43, { hairType: 'crespo', skinTone: 1, freckles: 0 }), hairStyle: 'raspado' }, 'M', 36, C, { expression: 'feliz', fat: 0.6, muscle: 0.3 });
+  const kidF = previewAvatar({ ...BASE, hairStyle: 'rabo' }, 'F', 8, C, { expression: 'feliz' });
+  const kidM = previewAvatar({ ...BASE, hairStyle: 'curto' }, 'M', 6, C, { expression: 'feliz' });
+  const teen = previewAvatar({ ...look('amarela', 44, { hairType: 'liso', skinTone: 0.25 }), hairStyle: 'franja' }, 'F', 15, C, { expression: 'neutro' });
+  const kidJ = previewAvatar({ ...BASE, hairStyle: 'curto' }, 'M', 10, C, { expression: 'feliz' });
+  const W = (d: AvatarDescriptor, outfit: AvatarDescriptor['outfit']): AvatarDescriptor => ({ ...d, outfit });
+  return [
+    { label: 'PM (farda, colete, boné)', d: W(M, { cima: pc('farda_pm'), agasalho: pc('colete_pm'), baixo: pc('calca_farda', 0), calcado: pc('coturno'), acessorio: pc('bone_pm') }) },
+    { label: 'PM (policial)', d: W(F, { cima: pc('farda_pm'), agasalho: pc('colete_pm'), baixo: pc('calca_farda', 0), calcado: pc('coturno'), acessorio: pc('bone_pm') }) },
+    { label: 'Civil (colete com distintivo)', d: W(M2, { cima: pc('camisa_civil'), agasalho: pc('colete_civil'), baixo: pc('calca_farda', 1), calcado: pc('coturno') }) },
+    { label: 'Força especial', d: W(M, { cima: pc('farda_tatica'), agasalho: pc('colete_pm'), baixo: pc('calca_farda', 2), calcado: pc('coturno'), acessorio: pc('capacete') }) },
+    { label: 'Presídio + algemas', d: W(M2, { inteira: pc('uniforme_presidiario'), calcado: pc('chinelo'), acessorio: pc('algemas') }) },
+    { label: 'Presídio', d: W(F, { inteira: pc('uniforme_presidiario'), calcado: pc('chinelo') }) },
+    { label: 'Biquíni (18+)', d: W(F2, { inteira: pc('biquini', 1), calcado: pc('chinelo', 1) }) },
+    { label: 'Maiô + saída (18+)', d: W(F, { inteira: pc('maio', 1), agasalho: pc('saida_praia', 0), calcado: pc('chinelo') }) },
+    { label: 'Sunga (18+, camiseta de reserva)', d: W(M, { baixo: pc('sunga', 1), calcado: pc('chinelo') }) },
+    { label: 'Bermuda de praia (18+)', d: W(M2, { baixo: pc('bermuda_praia', 1), calcado: pc('chinelo', 2) }) },
+    { label: 'Maiô infantil', d: W(kidF, { inteira: pc('maio_infantil', 0), calcado: pc('chinelo', 1) }) },
+    { label: 'Camiseta UV + bermuda infantil', d: W(kidM, { cima: pc('camiseta_uv', 0), baixo: pc('bermuda_infantil', 2), calcado: pc('chinelo') }) },
+    { label: 'Adolescente na praia', d: W(teen, { cima: pc('camiseta_uv', 1), baixo: pc('bermuda_infantil', 1), calcado: pc('chinelo', 2) }) },
+    { label: 'Kimono faixa preta', d: W(M, { inteira: pc('kimono'), acessorio: pc('faixa', 4), calcado: pc('descalco') }) },
+    { label: 'Kimono infantil (cinza c/ listra)', d: W(kidJ, { inteira: pc('kimono'), acessorio: { id: 'faixa', color: '#8f949c', pattern: 'liso', accent: '#f1f1ee' }, calcado: pc('descalco') }) },
+    { label: 'Kimono azul (faixa roxa)', d: W(F, { inteira: pc('kimono', 1), acessorio: pc('faixa', 2), calcado: pc('descalco') }) },
+    { label: 'Muay thai + prajied', d: W(M2, { cima: pc('regata_treino', 1), baixo: pc('shorts_luta', 1), calcado: pc('descalco'), acessorio: pc('prajied', 2, '#e3a72f') }) },
+    { label: 'Rashguard + roupão', d: W(M, { cima: pc('rashguard', 0), baixo: pc('shorts_luta', 0), calcado: pc('descalco'), agasalho: pc('roupao', 0) }) },
   ];
 }

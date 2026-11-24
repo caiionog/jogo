@@ -9,6 +9,7 @@ import type { Fig, Head } from './body';
 import { clamp, ellipse, lerp, n, smooth } from './geom';
 import type { Pt } from './geom';
 import type { Ramp } from './palette';
+import { strokeEl } from './svg';
 import type { Doc } from './svg';
 import { faceOf, headPt } from './head';
 
@@ -32,10 +33,14 @@ function texture(pts: Pt[], type: HairType, cx: number, cy: number, amp: number)
       push(p[0], p[1], i % 2 ? amp * 0.55 : -amp * 0.25);
       continue;
     }
-    // cacheado/crespo: base em quina (entre cachos) e um cacho arredondado entre cada par
+    // cacheado/crespo: base em quina (entre cachos) e um cacho arredondado (dois pontos) entre cada par
     push(p[0], p[1], -amp * 0.2, i > 0 && i < pts.length - 1);
     const q = pts[i + 1];
-    if (q) push((p[0] + q[0]) / 2, (p[1] + q[1]) / 2, amp * (type === 'crespo' ? 0.85 : 1));
+    const k = amp * (type === 'crespo' ? 0.85 : 1);
+    if (q) {
+      push(lerp(p[0], q[0], 0.28), lerp(p[1], q[1], 0.28), k * 0.92);
+      push(lerp(p[0], q[0], 0.72), lerp(p[1], q[1], 0.72), k * 0.92);
+    }
   }
   return out;
 }
@@ -187,6 +192,8 @@ function braids(doc: Doc, h: Head, f: Fig, hair: Ramp, thick: boolean, yEnd: num
 }
 
 export interface HairPlan {
+  /** y do topo do cabelo (para boné e capacete). */
+  top: number;
   back(doc: Doc): void;
   mid(doc: Doc): void;
   locks(doc: Doc): void;
@@ -196,12 +203,13 @@ export interface HairPlan {
 export function hairPlan(d: AvatarDescriptor, f: Fig, hair: Ramp): HairPlan {
   const h = f.head;
   const type = d.hair.type;
-  const st = d.hair.style;
+  // bebê (até 2 anos): só um tufinho, qualquer que seja o estilo (como na pixel art)
+  const st = d.age <= 2 && d.hair.style !== 'careca' ? 'curto' : d.hair.style;
   const female = d.sex === 'F';
   const v = VOL[type];
   const bald = clamp(d.hair.baldness, 0, 1);
   const none = () => {};
-  const plan: HairPlan = { back: none, mid: none, locks: none, front: none };
+  const plan: HairPlan = { top: h.crown, back: none, mid: none, locks: none, front: none };
   const cap = (vol: number, line: Hairline, thS = 1.74, opts: { flat?: boolean; opacity?: number; outlineInnerOnly?: boolean } = {}) => (doc: Doc) => {
     if (bald > 0.62 && line !== 'fringe') {
       // só as laterais e a nuca
@@ -222,6 +230,8 @@ export function hairPlan(d: AvatarDescriptor, f: Fig, hair: Ramp): HairPlan {
     } else doc.region(c.d, hair, { shift: [-3, -3.5], sw: opts.flat ? 0 : 1.8, ...(opts.flat ? { flat: true } : {}), ...(opts.opacity ? { opacity: opts.opacity } : {}) });
     if (!opts.flat && !opts.outlineInnerOnly) sheen(doc, h, vol, hair, type);
   };
+  const tops: Partial<Record<typeof st, number>> = { raspado: 1.4, medio: 5.2 * v, longo: 5.6 * v, franja: 5.4 * v, black_power: 17 * (v / 2) + 4, coque: 22 + v * 4, rabo: 3.4, moicano: 8 + v * 6, trancas: 3, dreads: 4.2 };
+  plan.top = h.crown - (tops[st] ?? 0) * h.s;
   switch (st) {
     case 'careca':
       plan.front = (doc) => {
@@ -233,8 +243,14 @@ export function hairPlan(d: AvatarDescriptor, f: Fig, hair: Ramp): HairPlan {
       plan.front = cap(1.4, 'straight', 1.7, { flat: true, opacity: 0.62 });
       break;
     case 'curto':
-      plan.front = cap((female ? 5 : 4.6) * v, female ? 'side' : 'side', type === 'crespo' || type === 'cacheado' ? 1.68 : 1.76);
-      if (female) plan.locks = (doc) => { for (const s of [-1, 1] as const) doc.region(lockPath(h, f, s, type, 4 * v, h.cy + 18), hair, { shift: [-2, -2], sw: 1.6 }); };
+      if (female && d.age > 2) {
+        plan.front = cap(5 * v, 'side', type === 'crespo' || type === 'cacheado' ? 1.68 : 1.76);
+        plan.locks = (doc) => { for (const s of [-1, 1] as const) doc.region(lockPath(h, f, s, type, 4 * v, h.cy + 18), hair, { shift: [-2, -2], sw: 1.6 }); };
+      } else {
+        const vol = d.age <= 2 ? 2.2 : (type === 'liso' ? 5.4 : 4.4) * v;
+        plan.top = h.crown - vol * h.s;
+        plan.front = (doc) => (bald > 0.62 ? cap(vol, 'straight')(doc) : tuftCap(doc, h, d, type, vol, hair));
+      }
       break;
     case 'medio': {
       const end = female ? h.chin + 8 : h.chin - 6;
@@ -287,12 +303,14 @@ export function hairPlan(d: AvatarDescriptor, f: Fig, hair: Ramp): HairPlan {
       plan.front = cap(3.2 * Math.min(v, 1.4), 'back', 1.64);
       break;
     case 'rabo':
-      plan.mid = (doc) => {
-        const x0 = h.cx + h.W * 0.55;
-        const tip = f.yChest + 8;
-        const w = (6 + v * 2.5) * h.s;
-        const pts: Pt[] = [[x0, h.cy - 4], [h.cx + h.W + w + 2, h.chin - 8], [h.cx + h.W + w * 0.9 + 4, f.yNeck + 8], [h.cx + f.shoulder * 0.82, tip, 1], [h.cx + h.W + 2, f.yNeck + 6], [h.cx + h.W - 2, h.chin]];
+      // rabo de cavalo atrás da cabeça: aparece entre o pescoço e o ombro, por trás do corpo
+      plan.back = (doc) => {
+        const x0 = h.cx + h.W * 0.3;
+        const tip = f.yArmpit + 6 * f.bs;
+        const w = (6.5 + v * 2.5) * h.s;
+        const pts: Pt[] = [[x0, h.cy - h.Ht * 0.5], [h.cx + h.W + w * 0.8, h.cy + 4], [h.cx + h.W + w * 0.75, h.chin + 6], [h.cx + h.W + w * 0.2 + 3, tip, 1], [h.cx + h.W - w * 0.4, h.chin + 4], [h.cx + h.W * 0.4, h.cy + 6]];
         doc.region(smooth(type === 'liso' ? pts : pts.map((p, i): Pt => (i === 1 || i === 2 ? [p[0] + 1.5 * v, p[1]] : p))), hair, { shift: [-2.5, -2], sw: 1.7 });
+        doc.stroke(`M${n(h.cx + h.W + w * 0.2)} ${n(h.chin)}q2 ${n(10 * f.bs)} 1 ${n(20 * f.bs)}`, hair.line, 1, 0.45);
       };
       plan.front = (doc) => {
         cap(3.4 * Math.min(v, 1.4), 'back', 1.64)(doc);
@@ -333,3 +351,88 @@ export function hairPlan(d: AvatarDescriptor, f: Fig, hair: Ramp): HairPlan {
   return plan;
 }
 
+
+/**
+ * Corte curto com mechas (o "capacete" virou cabelo): volume no alto com recortes na borda, franja em pontas varrida
+ * para um lado, costeletas e fios desenhados por dentro. Cacheado/crespo usam a borda de cachos.
+ */
+function tuftCap(doc: Doc, h: Head, d: AvatarDescriptor, type: HairType, vol: number, hair: Ramp): void {
+  const s = h.s;
+  const baby = d.age <= 2;
+  const thS = baby ? 1.5 : 1.74;
+  const N = 16;
+  const outer: Pt[] = [];
+  const curly = type === 'cacheado' || type === 'crespo';
+  for (let i = 0; i <= N; i++) {
+    const th = lerp(-thS, thS, i / N);
+    const e = vol * (0.3 + 0.7 * Math.max(0, Math.cos(th)));
+    outer.push(headPt(h, (th + Math.PI * 2) % (Math.PI * 2), e));
+  }
+  let edge: Pt[];
+  if (curly) edge = texture(outer, type, h.cx, h.cy + 6, clamp(vol * 0.42, 1.4, 4.2) * s);
+  else {
+    // recortes: pontas de mecha saindo do contorno no alto (luz à esquerda: varridas para a direita)
+    edge = [];
+    const tips = new Set(baby ? [8] : [4, 7, 10, 12]);
+    for (let i = 0; i < outer.length; i++) {
+      const p = outer[i]!;
+      edge.push(p);
+      const q = outer[i + 1];
+      if (q && tips.has(i)) {
+        const mx = (p[0] + q[0]) / 2;
+        const my = (p[1] + q[1]) / 2;
+        const dx = mx - h.cx;
+        const dy = my - (h.cy + 4);
+        const l = Math.hypot(dx, dy) || 1;
+        const amp = (type === 'ondulado' ? 2 : 1.6) * s;
+        edge.push([mx + (dx / l) * amp + 1.4 * s, my + (dy / l) * amp]);
+      }
+    }
+  }
+  const hl = hairlineY(h, d, 'side') + (baby ? 6 * s : 0);
+  const W = h.W;
+  const bald = clamp(d.hair.baldness, 0, 1);
+  const L = (baby ? 0.5 : curly ? 0.35 : 1) * (1 - bald * 1.2);
+  const lock = (u0: number, u1: number, depth: number): Pt[] => {
+    // mecha: base em u0 → ponta (deslocada para a esquerda) → base em u1
+    const tip: Pt = [h.cx + W * lerp(u0, u1, 0.62), hl + Math.max(0.6, depth * L) * s, 1];
+    return [[h.cx + W * u0, hl + 0.8 * s], tip];
+  };
+  const fringe: Pt[] = [
+    [h.cx + W * 0.7, hl + 4.5 * s],
+    ...lock(0.56, 0.3, 7),
+    ...lock(0.3, 0.04, 8.5),
+    ...lock(0.04, -0.22, 7.5),
+    ...lock(-0.22, -0.46, 5.5),
+    [h.cx - W * 0.5, hl + 1.2 * s],
+    [h.cx - W * 0.66, hl + 3.2 * s],
+  ];
+  const sideR: Pt[] = [];
+  for (let i = 0; i <= 3; i++) sideR.push(headPt(h, lerp(thS - 0.02, 1.12, i / 3), -1.2));
+  const sideL = sideR.map((p): Pt => [2 * h.cx - p[0], p[1]]).reverse();
+  const endR = headPt(h, thS, -0.6);
+  const endL: Pt = [2 * h.cx - endR[0], endR[1], 1];
+  const tR = headPt(h, 1.02, -1.4);
+  const tL: Pt = [2 * h.cx - tR[0], tR[1]];
+  const innerPts: Pt[] = [[endR[0], endR[1], 1], ...sideR, tR, ...fringe, tL, ...sideL, endL];
+  const dPath = smooth([...edge.slice(1, -1), ...innerPts]);
+  // fios: do redemoinho até as pontas da franja, e brilho no alto à esquerda
+  const crown: Pt = [h.cx - W * 0.18, h.crown + 4 * s];
+  let inner = '';
+  if (!curly) {
+    for (const u of [0.42, 0.17, -0.09, -0.34]) {
+      const end: Pt = [h.cx + W * u - 1.5 * s, hl + 3 * s];
+      inner += strokeEl(`M${n(crown[0] + u * 6)} ${n(crown[1])}Q${n(h.cx + W * u + 4 * s)} ${n(lerp(crown[1], end[1], 0.45))} ${n(end[0])} ${n(end[1])}`, hair.shade, 1.5 * s, 0.9);
+    }
+    const a = headPt(h, Math.PI * 2 - 0.95, vol * 0.5);
+    const b = headPt(h, Math.PI * 2 - 0.35, vol * 0.8);
+    inner += strokeEl(`M${n(a[0] + 3)} ${n(a[1] + 3)}Q${n(lerp(a[0], b[0], 0.5) + 2)} ${n(Math.min(a[1], b[1]) + 1)} ${n(b[0] + 1)} ${n(b[1] + 3.5)}`, hair.light, 2.4 * s, 0.6);
+  } else {
+    for (let i = 0; i < 7; i++) {
+      const p = headPt(h, (Math.PI * 2 - 1.1 + i * 0.36) % (Math.PI * 2), vol * 0.15 - 2.5 * s);
+      inner += strokeEl(`M${n(p[0] - 1.6 * s)} ${n(p[1] + 2 * s)}q${n(1.6 * s)} ${n(-2.4 * s)} ${n(3.2 * s)} 0`, hair.shade, 1.2 * s, 0.85);
+    }
+  }
+  doc.region(dPath, hair, { shift: [-3, -3.5], sw: 1.8, inner });
+  if (baby) doc.stroke(`M${n(h.cx - 1)} ${n(h.crown - vol * s + 1)}q${n(5 * s)} ${n(-5 * s)} ${n(6 * s)} ${n(1 * s)}q${n(-1 * s)} ${n(3 * s)} ${n(-3.5 * s)} ${n(1.5 * s)}`, hair.line, 1.4, 0.9);
+}

@@ -110,3 +110,58 @@ export function limb(axis: Node[], t0: number, t1: number, grow = 0, opts: { cap
   pts.push(...startCap, ...aa, ...endCap, ...[...bb].reverse());
   return { left: a, right: b, d: smooth(pts) };
 }
+
+/** Comprimento acumulado (0–1) de cada nó do eixo. */
+export function axisT(axis: Node[]): number[] {
+  const acc = [0];
+  let total = 0;
+  for (let i = 1; i < axis.length; i++) {
+    total += Math.hypot(axis[i]!.x - axis[i - 1]!.x, axis[i]!.y - axis[i - 1]!.y);
+    acc.push(total);
+  }
+  return acc.map((v) => (total ? v / total : 0));
+}
+
+/** Eixo com folga: `ease` constante + `flare` crescendo até a ponta (mangas largas). */
+export function growAxis(axis: Node[], ease: number, flare = 0, flareFrom = 0.3): Node[] {
+  const ts = axisT(axis);
+  return axis.map((p, i) => ({ ...p, r: p.r + ease + flare * clamp((ts[i]! - flareFrom) / (1 - flareFrom), 0, 1) }));
+}
+
+/**
+ * Ponto deslocado da linha do eixo em t: `u` em raios, positivo para a direita da imagem (para um membro que desce).
+ */
+export function offsetAt(axis: Node[], t: number, u: number, grow = 0): [number, number] {
+  const p = along(axis, t);
+  const r = (p.r + grow) * u;
+  return [p.x + p.dy * r, p.y - p.dx * r];
+}
+
+/** x de uma polilinha (ordenada por y) na altura y; `undefined` fora do intervalo. */
+export function xAtY(pts: Pt[], y: number): number | undefined {
+  for (let i = 1; i < pts.length; i++) {
+    const a = pts[i - 1]!;
+    const b = pts[i]!;
+    if ((y >= a[1] && y <= b[1]) || (y <= a[1] && y >= b[1])) {
+      const u = b[1] === a[1] ? 0 : (y - a[1]) / (b[1] - a[1]);
+      return lerp(a[0], b[0], u);
+    }
+  }
+  return undefined;
+}
+
+/** Quadrilátero além da linha perpendicular ao eixo em t (recorte do contorno do antebraço da frente). */
+export function beyond(axis: Node[], t: number, reach = 70): string {
+  const p = along(axis, t);
+  const nx = p.dy;
+  const ny = -p.dx;
+  const a: Pt = [p.x + nx * reach, p.y + ny * reach];
+  const b: Pt = [p.x - nx * reach, p.y - ny * reach];
+  const far = 260;
+  return poly([a, b, [b[0] + p.dx * far, b[1] + p.dy * far], [a[0] + p.dx * far, a[1] + p.dy * far]]);
+}
+
+/** Caminho aberto e suave por uma polilinha. */
+export function openSmooth(pts: Pt[]): string {
+  return smooth(pts, false);
+}

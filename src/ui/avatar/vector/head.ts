@@ -57,7 +57,16 @@ export interface Face {
 
 export function faceOf(h: Head): Face {
   const s = h.s;
-  return { eyeY: h.cy + 5 * s, eyeDx: (12.6 + (h.W - 29) * 0.35) * s, browY: h.cy - 5.4 * s, noseY: h.cy + 17.5 * s, mouthY: h.cy + 26.5 * s, earY: h.cy + 8 * s, s };
+  const b = h.baby;
+  return {
+    eyeY: h.cy + (5 + b * 4) * s,
+    eyeDx: (12.6 + (h.W / s - 29) * 0.35 + b * 0.6) * s,
+    browY: h.cy - (5.4 - b * 3.2) * s,
+    noseY: h.cy + h.Hb * 0.44 + b * 1.5 * s,
+    mouthY: h.cy + h.Hb * 0.66 + b * 1 * s,
+    earY: h.cy + (8 + b * 2) * s,
+    s,
+  };
 }
 
 export function drawEars(doc: Doc, h: Head, fc: Face, skin: Ramp, cauliflower: boolean): void {
@@ -95,7 +104,7 @@ type Exp = AvatarDescriptor['expression'];
 /** Sobrancelhas: grossas no homem, finas e arqueadas na mulher; a expressão inclina. */
 function brows(doc: Doc, d: AvatarDescriptor, fc: Face, h: Head, color: string): void {
   const female = d.sex === 'F';
-  const t = (female ? 2.1 : 3.3) * fc.s;
+  const t = (female ? 2.1 : 3.3) * fc.s * (1 - h.baby * 0.45) * (d.age < 12 ? 0.8 : 1);
   const ex = d.expression;
   for (const side of [-1, 1] as const) {
     const xi = h.cx + side * 5 * fc.s;
@@ -116,7 +125,8 @@ function brows(doc: Doc, d: AvatarDescriptor, fc: Face, h: Head, color: string):
   }
 }
 
-function eyeShape(shape: AvatarDescriptor['eyes']['shape'], s: number) {
+function eyeShape(shape: AvatarDescriptor['eyes']['shape'], s0: number, baby = 0) {
+  const s = s0 * (1 + baby * 0.16);
   switch (shape) {
     case 'redondo':
       return { ex: 6.1 * s, up: 6.3 * s, lo: 5.4 * s, flat: false };
@@ -131,7 +141,7 @@ function eyeShape(shape: AvatarDescriptor['eyes']['shape'], s: number) {
 
 function eyes(doc: Doc, d: AvatarDescriptor, fc: Face, h: Head, skin: Ramp, blink: boolean): void {
   const female = d.sex === 'F';
-  const g = eyeShape(d.eyes.shape, fc.s);
+  const g = eyeShape(d.eyes.shape, fc.s, h.baby);
   const ex: Exp = d.expression;
   const lash = mix(skin.line, '#1a1012', 0.6);
   const iris = ramp(d.eyes.color, 'cloth');
@@ -156,7 +166,7 @@ function eyes(doc: Doc, d: AvatarDescriptor, fc: Face, h: Head, skin: Ramp, blin
     const lower = `C${n(lerp(x, xo, 0.5))} ${n(y + g.lo + 0.4)} ${n(lerp(xi, x, 0.5))} ${n(y + g.lo + 0.6)} ${n(xi)} ${n(y + 0.3)}`;
     const eyeD = `${upper}${lower}Z`;
     const id = doc.clip(eyeD);
-    const ir = (g.flat ? 4.1 : 4.5) * fc.s;
+    const ir = (g.flat ? 4.1 : 4.5) * fc.s * (1 + h.baby * 0.2);
     const ix = x - side * 0.3;
     const iy = y + 0.4;
     let inner = `<path d="${eyeD}" fill="#fbf8f2"/>`;
@@ -188,7 +198,7 @@ function eyes(doc: Doc, d: AvatarDescriptor, fc: Face, h: Head, skin: Ramp, blin
 }
 
 function nose(doc: Doc, d: AvatarDescriptor, fc: Face, h: Head, skin: Ramp): void {
-  const w = (3.6 + d.noseWidth * 3.4) * fc.s * (d.sex === 'F' ? 0.92 : 1);
+  const w = (3.6 + d.noseWidth * 3.4) * fc.s * (d.sex === 'F' ? 0.92 : 1) * (1 - h.baby * 0.3);
   const y = fc.noseY;
   const x = h.cx + (d.marks.brokenNose ? 0.8 : 0);
   // sombra do lado direito do nariz (luz da esquerda)
@@ -200,7 +210,7 @@ function nose(doc: Doc, d: AvatarDescriptor, fc: Face, h: Head, skin: Ramp): voi
 function mouth(doc: Doc, d: AvatarDescriptor, fc: Face, h: Head, skin: Ramp): void {
   const female = d.sex === 'F';
   const lv = clamp(d.lipVolume, 0, 1);
-  const w = (8.2 + lv * 1.6 - (female ? 0.4 : 0)) * fc.s;
+  const w = (8.2 + lv * 1.6 - (female ? 0.4 : 0)) * fc.s * (1 - h.baby * 0.3);
   const x = h.cx;
   const y = fc.mouthY;
   const lip = female ? darken(mix(skin.base, '#c4545e', 0.42), 0.94) : mix(skin.base, skin.shade, 0.55);
@@ -272,6 +282,15 @@ function skinDetails(doc: Doc, d: AvatarDescriptor, fc: Face, h: Head, skin: Ram
     }
     if (wr > 0.42) doc.stroke(`M${n(h.cx - 9)} ${n(fc.browY - 7)}q9 -2 18 0M${n(h.cx - 6)} ${n(fc.browY - 3.6)}q6 -1.4 12 0`, skin.line, 0.8, o * 0.8);
   }
+  // idoso: bolsas sob os olhos e sulcos; gordura: papada discreta
+  if (d.elder > 0.15) {
+    const o = clamp(d.elder * 0.8, 0, 0.55);
+    for (const side of [-1, 1] as const) {
+      const x = h.cx + side * fc.eyeDx;
+      doc.stroke(`M${n(x - 5 * fc.s)} ${n(fc.eyeY + 6.5 * fc.s)}Q${n(x)} ${n(fc.eyeY + 9.2 * fc.s)} ${n(x + 5 * fc.s)} ${n(fc.eyeY + 6.5 * fc.s)}`, skin.line, 0.9, o);
+    }
+  }
+  if (d.fat > 0.66 && h.baby < 0.3) doc.stroke(`M${n(h.cx - h.W * 0.42)} ${n(h.chin - 0.5)}Q${n(h.cx)} ${n(h.chin + 7)} ${n(h.cx + h.W * 0.42)} ${n(h.chin - 0.5)}`, skin.line, 1.2, 0.45);
   if (d.marks.scar) doc.stroke(`M${n(h.cx + fc.eyeDx + 1)} ${n(fc.browY - 4)}l-2.4 7.5`, mix(skin.base, '#f2c4c0', 0.6), 1.5, 0.95);
 }
 

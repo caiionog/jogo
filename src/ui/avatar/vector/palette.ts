@@ -3,7 +3,7 @@
  * mais saturada, com o matiz puxado para o vermelho/roxo) e o contorno (bem mais escuro e colorido, nunca preto puro).
  * A mesma regra funciona do tom de pele mais claro ao mais escuro.
  */
-import { clamp } from './geom';
+import { clamp, lerp } from './geom';
 
 type Hsl = [number, number, number];
 
@@ -93,8 +93,16 @@ export function ramp(hex: string, kind: 'skin' | 'hair' | 'cloth' = 'cloth'): Ra
   // sombra: escurece por multiplicação, mas garante um degrau mínimo para cores muito escuras
   const shadeL = clamp(Math.min(l * (kind === 'skin' ? 0.86 : 0.83), l - 0.045), 0.03, 1);
   const shade = fromHsl([towardShadow(h, kind === 'skin' ? 5 : 7), clamp(s + (s > 0.04 ? 0.07 : 0.02), 0, 0.85), shadeL]);
-  const lineL = clamp(l * 0.42, 0.09, kind === 'cloth' ? 0.3 : 0.27);
-  const line = fromHsl([towardShadow(h, 10), clamp(Math.max(s, 0.12) + 0.12, 0, 0.7), Math.min(lineL, Math.max(0.09, l - 0.12))]);
+  let line: string;
+  if (kind === 'skin') {
+    // pele: contorno marrom-escuro e colorido (nunca preto puro); nas peles médias e escuras desce até ~7% de luz para
+    // manter o contraste com a pele (≥ 3:1 até o tom 0,75 da rampa; no tom mais escuro, o limite físico é o preto)
+    const lineL = l >= 0.62 ? clamp(l * 0.42, 0.09, 0.27) : lerp(0.068, 0.26, clamp((l - 0.4) / 0.22, 0, 1));
+    line = fromHsl([towardShadow(h, 10), clamp(Math.max(s, 0.3) + 0.12, 0, 0.72), lineL]);
+  } else {
+    const lineL = clamp(l * 0.42, 0.09, kind === 'cloth' ? 0.3 : 0.27);
+    line = fromHsl([towardShadow(h, 10), clamp(Math.max(s, 0.12) + 0.12, 0, 0.7), Math.min(lineL, Math.max(0.09, l - 0.12))]);
+  }
   const light = fromHsl([h >= 20 && h < 200 ? h + 4 : h, s, clamp(l + (1 - l) * 0.28 + (l < 0.2 ? 0.1 : 0), 0, 1)]);
   const r: Ramp = { base: hex, shade, line, light };
   cache.set(key, r);
@@ -104,4 +112,18 @@ export function ramp(hex: string, kind: 'skin' | 'hair' | 'cloth' = 'cloth'): Ra
 /** Cor de contraste para listras e estampas. */
 export function contrast(hex: string): string {
   return luminance(hex) > 0.35 ? darken(hex, 0.62, 0.05, 4) : mix(hex, '#f7f3ea', 0.78);
+}
+
+/** Razão de contraste WCAG entre duas cores. */
+export function contrastRatio(a: string, b: string): number {
+  const x = luminance(a);
+  const y = luminance(b);
+  return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+}
+
+/** Pele com a idade: um pouco mais opaca (menos saturada) no idoso. */
+export function agedSkin(hex: string, elder: number): string {
+  if (elder <= 0) return hex;
+  const [h, s, l] = toHsl(hex);
+  return fromHsl([h, s * (1 - 0.28 * clamp(elder, 0, 1)), l * (1 - 0.03 * elder)]);
 }
