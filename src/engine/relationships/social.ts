@@ -105,6 +105,14 @@ export interface SocialEffects {
   adopt?: boolean;
   /** Afeto de todos os pais vivos. */
   parentsAffection?: number;
+  /** Eventos de grupo (release 0.0.3): {pessoa} e {pessoa2} viram amigos ou rivais entre si. */
+  pairFriends?: 'amizade' | 'rivalidade';
+  /** Eventos de grupo: {pessoa} e {pessoa2} começam a namorar (NPC × NPC, ambos com a mesma faixa de idade). */
+  npcCouple?: boolean;
+  /** Afeto de todos os amigos presentes na última saída em grupo. */
+  groupAffection?: number;
+  /** Momento íntimo com o alvo: grava a cena `intimo` SÓ se `canHaveSexualContent` + "Conteúdo adulto" (release 0.0.3). */
+  intimacy?: boolean;
 }
 
 export function applySocialEffects(state: GameState, fx: SocialEffects, rng: Rng, content: GameContent, vars?: EventVars): GameState {

@@ -61,6 +61,7 @@ export const migrations: Record<number, (save: AnySave) => AnySave> = {
   12: migrateV12toV13,
   13: migrateV13toV14,
   14: migrateV14toV15,
+  15: migrateV15toV16,
 };
 
 export class SaveMigrationError extends Error {}
@@ -621,4 +622,15 @@ export function migrateV14toV15(save: AnySave): AnySave {
     crime: s0.crime ?? { wanted: 0, rep: 0, dirty: 0, record, juvenile: [], faction: null, trafficking: null },
     prison: s0.prison ?? null,
   };
+}
+
+// ---------------------------------------------------------------------------
+// v15 → v16 (release 0.0.3: cena íntima `scene.kind = 'intimo'` e `relationships.lastGroup`)
+// ---------------------------------------------------------------------------
+
+/** Só amplia tipos: a cena antiga continua válida e ninguém saiu em grupo ainda (sem RNG). */
+export function migrateV15toV16(save: AnySave): AnySave {
+  const s0 = save as unknown as AnyObj;
+  const rel = (s0.relationships ?? {}) as AnyObj;
+  return { ...(s0 as AnySave), version: 16, relationships: { ...rel, lastGroup: rel.lastGroup ?? null } };
 }

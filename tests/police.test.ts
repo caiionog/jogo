@@ -19,6 +19,7 @@ import {
 } from '../src/engine';
 import type { GameState, PoliceTrackId } from '../src/engine';
 import { migrate } from '../src/save/migrations';
+import { STATE_VERSION } from '../src/engine';
 import fixturesV14 from '../src/save/__fixtures__/saves-v14.json';
 
 const NO_EV = { ...C, events: [] };
@@ -191,7 +192,7 @@ describe('migração v14 → v15', () => {
     const v14 = fixturesV14 as unknown as Record<string, Record<string, unknown>>;
     for (const k of Object.keys(v14)) {
       const m = migrate(structuredClone(v14[k]));
-      expect(m.version).toBe(15);
+      expect(m.version).toBe(STATE_VERSION);
       expect(m.police).toEqual({ shooting: 0, career: null, exams: [], past: [] });
       expect(m.prison).toBeNull();
       expect(m.crime.wanted).toBe(0);

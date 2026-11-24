@@ -86,6 +86,8 @@ export interface RelationshipsState {
   nextPersonId: number;
   settings: { adultContent: boolean; preference: PartnerPreference };
   pregnancy: Pregnancy | null;
+  /** Último "passar tempo com todos" (release 0.0.3): quem foi, para os eventos de grupo. Opcional na v16. */
+  lastGroup?: { year: number; activityId: string; present: string[] } | null;
 }
 
 export type InteractionKind =
@@ -123,6 +125,34 @@ export interface TraitDef {
   /** Traços com que combina / não combina (compatibilidade). */
   likes?: TraitId[];
   dislikes?: TraitId[];
+}
+
+/** Atividade em grupo com todos os amigos (release 0.0.3). */
+export interface GroupActivityDef {
+  id: string;
+  label: string;
+  emoji: string;
+  /** Faixa de idade do personagem. */
+  minAge: number;
+  maxAge: number;
+  /** Custo em R$ para o personagem (0 = de graça; criança não paga). */
+  cost: number;
+  /** Felicidade do personagem (antes do retorno decrescente). */
+  happiness: number;
+  /** Afeto base com cada amigo presente (os mais próximos ganham mais). */
+  affection: number;
+  /** Conta como sessão de treino ("treinar juntos"). */
+  training?: boolean;
+  /** Texto do log (`{n}` = quantos foram). */
+  text: string;
+}
+
+export interface FriendsContent {
+  activities: readonly GroupActivityDef[];
+  /** Eventos de grupo (trigger 'followUp') sorteados depois de uma saída em grupo; usam {pessoa} e {pessoa2}. */
+  groupEvents: readonly string[];
+  /** Chance de um evento de grupo depois da saída. */
+  groupEventChance: number;
 }
 
 export interface RelationshipsContent {

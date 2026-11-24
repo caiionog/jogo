@@ -1,3 +1,4 @@
+import type { FriendsContent } from '../relationships/types';
 import type { CrimeContent } from '../crime/types';
 import type { PoliceContent } from '../police/types';
 import type { VenueDef } from '../lifeStages/nightlife';
@@ -116,4 +117,6 @@ export interface GameContent {
   police: PoliceContent;
   /** Delitos, planejamento e instituições fictícias (release 0.0.2). */
   crime: CrimeContent;
+  /** Passar tempo com todos os amigos: atividades e eventos de grupo (release 0.0.3). */
+  friends: FriendsContent;
 }

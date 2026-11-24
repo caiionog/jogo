@@ -2,6 +2,7 @@ import { JOB_EVENTS } from './events/jobs';
 import { COACH_LINES } from './fightText/coach';
 import { POLICE } from './careers/police';
 import { CRIME } from './crime';
+import { FRIENDS } from './friends';
 import { CRIME_EVENTS } from './events/crime';
 import { PRISON_EVENTS } from './events/prison';
 import { POLICE_EVENTS } from './events/police';
@@ -52,6 +53,7 @@ export const GAME_CONTENT: GameContent = {
   venues: VENUES,
   police: POLICE,
   crime: CRIME,
+  friends: FRIENDS,
   actions: ACTIONS,
   events: [...CHILDHOOD_EVENTS, ...SCHOOL_EVENTS, ...FIGHTING_EVENTS, ...RELATIONSHIP_EVENTS, ...ECONOMY_EVENTS, ...JOB_EVENTS, ...HEALTH_EVENTS, ...LEGACY_EVENTS, ...TALENT_EVENTS, ...COLLEGE_EVENTS, ...CLUB_EXCHANGE_EVENTS, ...NIGHTLIFE_EVENTS, ...RANDOM_EVENTS, ...POLICE_EVENTS, ...CRIME_EVENTS, ...PRISON_EVENTS],
   geo: GEO_CONTENT,

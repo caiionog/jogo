@@ -67,6 +67,9 @@ export interface LogYear {
 /** Variáveis de texto de um evento ({colega}, {professor}...), sorteadas na seleção. */
 export type EventVars = Record<string, string>;
 
+/** Cenário da transição íntima (só cenário; nenhum detalhe dos personagens). */
+export type IntimacyVariant = 'casa' | 'hotel' | 'simples' | 'casal';
+
 export type EventSource = 'random' | 'auto' | 'followUp' | 'action';
 
 export interface PendingEvent {
@@ -158,7 +161,12 @@ export interface GameState {
   /** Intercâmbio de artes marciais em andamento (release 0.0.1). */
   exchange: ExchangeState | null;
   /** Cena do ano (praia/piscina): o avatar usa roupa de banho da idade (release 0.0.1). */
-  scene: { kind: 'praia' | 'piscina'; year: number } | null;
+  /**
+   * Cena do ano. `intimo` (release 0.0.3): um momento íntimo entre adultos acabou de acontecer — a UI toca a transição
+   * discreta da cama (`IntimacyTransition`); só é gravada depois de `canHaveSexualContent` + "Conteúdo adulto".
+   * `seq` muda a cada cena para a UI saber que é nova.
+   */
+  scene: { kind: 'praia' | 'piscina'; year: number } | { kind: 'intimo'; year: number; variant: IntimacyVariant; seq: number } | null;
   /** Idade em que cada evento aconteceu pela última vez (intervalo de repetição; release 0.0.1). */
   eventLastAge: Record<string, number>;
   flags: Record<string, FlagValue>;
@@ -198,4 +206,4 @@ export interface GameState {
   prison: PrisonState | null;
 }
 
-export const STATE_VERSION = 15;
+export const STATE_VERSION = 16;

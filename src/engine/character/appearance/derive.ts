@@ -291,7 +291,7 @@ export function playerOutfit(state: GameState, content: GameContent, context: Av
   }
   // farda (release 0.0.2): na tela da polícia
   if (context === 'policia' && state.police.career) return policeOutfit(state, content);
-  if (context === 'principal' && state.scene && state.scene.year === state.year) return swimOutfit(content, age, state.character.sex, state.character.birthYear);
+  if (context === 'principal' && state.scene && state.scene.kind !== 'intimo' && state.scene.year === state.year) return swimOutfit(content, age, state.character.sex, state.character.birthYear);
   const worn = wornToOutfit(content, state.wardrobe.worn ?? {}, age);
   if (state.education.current && age >= 6 && age <= 17) {
     // dia de escola: uniforme por cima, resto do guarda-roupa
