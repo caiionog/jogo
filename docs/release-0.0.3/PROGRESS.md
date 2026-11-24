@@ -7,7 +7,7 @@ Pedido original: [`SPEC.md`](SPEC.md). Plano: [`PLAN.md`](PLAN.md). Commits na b
 - [x] **0. Plano** aprovado ("comece o próximo")
 - [x] **1. Skills** — `find-skills` + 7 escolhidas pelo usuário ("as que achar melhor"): web-design-guidelines,
   accessibility, vitest, react-testing-library, frontend-design, code-review, better-portuguese; seção no CLAUDE.md
-- [ ] **2. Subagents** e regras de orquestração
+- [x] **2. Subagents** e regras de orquestração — 6 agentes em `.claude/agents/`, seção no CLAUDE.md, `tests/agents.test.ts`
 - [ ] **3. Primeiro personagem cartoon** (pausa para ver)
 - [ ] **4. Passar tempo com todos** e eventos de grupo
 - [ ] **5. Animação da cama** (`IntimacyTransition`)
@@ -25,8 +25,7 @@ Pedido original: [`SPEC.md`](SPEC.md). Plano: [`PLAN.md`](PLAN.md). Commits na b
     externas.
 
 ## Próximo passo exato
-**Fase 2 — Subagents** em `.claude/agents/`:
-- os seis agentes (`engine-dev`, `ui-dev`, `content-writer`, `avatar-artist`, `test-runner`, `reviewer`), com
-  frontmatter `name`, `description`, `tools` e `model`;
-- seção "Subagents e orquestração" no CLAUDE.md;
-- `tests/agents.test.ts`, que faz o parse do frontmatter.
+**Fase 3 — primeiro personagem cartoon.** Antes de delegar ao `avatar-artist`, a sessão principal generaliza a
+interface `AvatarRenderer` (`src/ui/avatar/renderer.ts`): `kind: 'pixel' | 'vector'` e `render` devolvendo imagem ou
+SVG. Depois o avatar-artist cria `src/ui/avatar/vector/` (`VectorAvatarRenderer`, um adulto completo) e o modo lado a
+lado em `/dev/avatars`, com capturas. **Pausa para o usuário ver.** Em paralelo seguem as fases 4 e 5.

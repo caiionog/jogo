@@ -452,6 +452,30 @@ scripts dela; nada de origem duvidosa, binários ou acesso amplo.
 | `code-review` | Revisão de um diff contra os padrões do repositório e o pedido | Antes de cada commit de fase (o subagente `reviewer` se apoia nela) |
 | `better-portuguese` | Revisão de texto em PT-BR | Eventos, textos de UI, CHANGELOG e documentação |
 
+## Subagents e orquestração (release 0.0.3)
+Agentes do projeto em `.claude/agents/`, com frontmatter validado por `tests/agents.test.ts`:
+
+| Agente | Escopo | Ferramentas |
+|---|---|---|
+| `engine-dev` | `src/engine/`, `tests/` (nunca `src/ui/`) | Read, Edit, Write, Bash, Grep, Glob |
+| `ui-dev` | `src/ui/` (nunca regra de jogo) | Read, Edit, Write, Bash, Grep, Glob |
+| `content-writer` | `src/content/`; roda os testes de conteúdo antes de terminar | Read, Edit, Write, Bash, Grep, Glob |
+| `avatar-artist` | `src/ui/avatar/`, `src/content/sprites/`, `src/ui/dev/`; capturas de `/dev/avatars` | Read, Edit, Write, Bash, Grep, Glob |
+| `test-runner` | tsc, lint, testes, build → resumo e falhas (modelo leve) | Read, Bash, Grep |
+| `reviewer` | revisa o diff contra este arquivo e devolve problemas, sem editar | Read, Grep, Glob, Bash |
+
+Regras:
+- **Papéis.** A sessão principal planeja, divide o trabalho, integra e decide. Os subagents executam tarefas com
+  escopo fechado.
+- **Arquivos.** Cada tarefa delegada diz exatamente quais arquivos e pastas o subagent pode alterar. Dois subagents
+  nunca alteram os mesmos arquivos ao mesmo tempo.
+- **Paralelismo.** Tarefas independentes rodam em paralelo. Quando houver risco de conflito, use isolamento por git
+  worktree (`isolation: "worktree"`) e faça o merge na sessão principal.
+- **Tipos compartilhados primeiro.** Mudanças em `GameState`, no schema de eventos (`GameEvent`, `Effects`) ou em
+  `AvatarDescriptor` são feitas antes de delegar o resto, na sessão principal, junto com a migração de save.
+- **Verificação.** Todo resultado de subagent passa pelo `test-runner` e pelo `reviewer` antes do commit.
+- **Retorno.** Os subagents devolvem um resumo curto (o que mudou, arquivos, testes), não o código inteiro.
+
 ## Flags importantes (ganchos entre etapas)
 `interesse_luta`, `brigou_na_escola`, `medalha_interescolar`, `caminho_18` ('faculdade' | 'trabalho' | 'luta'),
 `gostaDeLuta`, `artesMarciais`, `sonhaSerLutador`, `formado`, `repetente`, `expulso`, `suspenso`, `bolsista`,
