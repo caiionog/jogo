@@ -18,6 +18,42 @@ versões em [SemVer](https://semver.org/lang/pt-BR/).
   escolhido. Chunk principal: ~323 KB gzip (antes ~371).
 - O validador aceita prisão por evento com qualquer motivo que tenha faixa de pena (fuga, corrupção…).
 
+## [0.0.4] — 2026-11-24
+
+Fama, cidade viva, vida amorosa moderna, concursos, futebol e minigames. Save **v20** (meta continua **v3**): saves
+da 0.0.3 migram sozinhos (fixtures `saves-v16` a `saves-v19.json`).
+
+### Adicionado
+- **Fama pública** (0–100): redes sociais (foto, treino, opinião com risco de polêmica), comerciais com marcas
+  fictícias, seguidores, tela "Fama e redes" e 21 eventos (podcast, talk show, reality, prêmio, paparazzi,
+  escândalos, notícia falsa, haters).
+- **Pessoas da cidade:** 60 a 400 moradores por cidade, bairros fictícios, vizinhos; puxar conversa vira amizade.
+  Imigração por UF (estimativa não oficial, fontes no código) com nomes do idioma de origem; 7 eventos de
+  vizinhança e imigração.
+- **Vida amorosa:** vários parceiros entre adultos, casos escondidos que podem ser descobertos, relação aberta,
+  voltar com ex, declarações de amigos, ex-amizades que podem ser reatadas, app de namoro (cartões, filtros, 6
+  curtidas por ano) e gravidez casual; 8 eventos e 2 de ex.
+- **Concursos públicos:** 10 cargos (tribunal, prefeitura, fazenda, bombeiros, perícia…) com motor de etapas comum à
+  polícia, estabilidade contra a crise e colegas de farda com 10 eventos.
+- **Exame da Ordem** como ação anual; **pós-graduação** (especialização, mestrado, doutorado) e professor
+  universitário; **alimentação** que mexe no peso e na saúde.
+- **Futebol:** 80 clubes nacionais e 6 ligas estrangeiras fictícias, peneira, base, temporadas com tabela,
+  promoção e rebaixamento, títulos, Seleção, propostas e exterior; 29 eventos; tela "Esporte profissional".
+- **Minigames:** pênalti, finalização, passe, goleiro e sparring de MMA, todos com tutorial e "Simular".
+- **40 acontecimentos do dia a dia** em todas as idades.
+
+### Alterado
+- Eventos automáticos respeitam `cooldownYears` (provas de faixa e propostas a cada 2 anos).
+- Lutador com contrato numa organização não acumula emprego comum, concurso, polícia nem futebol; assinar encerra
+  essas carreiras.
+- Telas antigas passaram para os tokens `--ds-*`.
+- Patrocínios, vagas e romance passam a ler a fama (a reputação de lutador vale só dentro do esporte).
+
+### Corrigido
+- Preso em regime fechado ou semiaberto não continua empregado (nem recebe salário) e perde o contrato de futebol.
+- Eventos automáticos que se repetiam todo ano (Exame da Ordem, provas de faixa, propostas de organização, bolsa).
+- Testes no Windows (módulo do PWA, caminhos e tempo das varreduras).
+
 ## [0.0.3] — 2026-11-24
 
 Visual cartoon, amigos em grupo, transição discreta nos momentos íntimos, subagents e skills. Save **v16** e meta

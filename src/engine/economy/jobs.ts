@@ -69,6 +69,8 @@ export type JobBlockReason =
   | 'license'
   /** Entrada só por concurso público (polícia). */
   | 'public-exam'
+  /** Lutador profissional com contrato (release 0.0.4). */
+  | 'fighter'
   /** Exige mestrado ou doutorado (release 0.0.4). */
   | 'postgrad'
   /** Exige ficha criminal limpa. */
@@ -120,6 +122,8 @@ export function jobBlockReason(state: GameState, def: JobDef, content?: GameCont
   if (state.pendingEvents.length > 0 || state.activeFight) return 'busy';
   if (state.economy.job?.jobId === def.id) return 'current';
   if (def.publicExam || def.civilExam) return 'public-exam';
+  // lutador profissional só aceita trabalho ligado à luta (release 0.0.4)
+  if (state.fighter.orgId && !state.fighter.retired && def.category !== 'luta') return 'fighter';
   // preso em regime fechado ou semiaberto não se candidata
   if (state.prison && state.prison.regime !== 'aberto') return 'busy';
   const gap = jobRequirementGaps(state, def)[0];
@@ -255,6 +259,8 @@ export function jobYear(state: GameState, rng: Rng, content: GameContent, market
   const job = state.economy.job;
   const def = jobDef(content, job?.jobId);
   if (!job || !def) return state;
+  // preso em regime fechado ou semiaberto não tem como trabalhar: o emprego acaba (release 0.0.4)
+  if (state.prison && state.prison.regime !== 'aberto') return appendLog({ ...state, economy: { ...state.economy, job: null } }, `Preso, você perdeu o emprego (${jobTitle(def, job.level).toLowerCase()}).`);
   // licença não remunerada (intercâmbio): o emprego fica, o salário não vem
   if (state.flags.licenca === state.year) return appendLog(state, `Licença do trabalho (${jobTitle(def, job.level).toLowerCase()}): sem salário este ano.`);
   if (def.publicExam) {

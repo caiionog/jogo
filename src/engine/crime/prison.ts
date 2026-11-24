@@ -99,7 +99,9 @@ export function attemptEscape(state: GameState, rng: Rng, content: GameContent):
   }
   const [lo, hi] = content.crime.sentences.fuga ?? [1, 3];
   const extra = rng.int(lo, hi);
-  const s = patchPrison(state, (x) => ({ ...x, sentence: x.sentence + extra, behavior: clamp100(x.behavior - 35), regime: 'fechado', facility: x.wing === 'especial' ? content.crime.facilities.especial : content.crime.facilities.fechado }));
+  let s = patchPrison(state, (x) => ({ ...x, sentence: x.sentence + extra, behavior: clamp100(x.behavior - 35), regime: 'fechado', facility: x.wing === 'especial' ? content.crime.facilities.especial : content.crime.facilities.fechado }));
+  // regressão para o fechado: quem trabalhava no aberto perde o emprego (release 0.0.4)
+  if (s.economy.job) s = { ...s, economy: { ...s.economy, job: null } };
   return appendLog({ ...s, crime: { ...s.crime, record: [...s.crime.record, { age: s.character.age, year: s.year, crime: 'fuga', kind: 'condenacao', years: extra }] } }, `A fuga falhou. Você voltou para o regime fechado com mais ${extra} ${extra === 1 ? 'ano' : 'anos'} de pena.`);
 }
 

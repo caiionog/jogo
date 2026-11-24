@@ -1,3 +1,4 @@
+import { leaveOtherCareersForFighting } from '../careers/exclusive';
 import { luckFightMult, talentMod } from '../character/talents';
 import { sessionsLeft, useSessions } from '../lifeStages/sessions';
 /**
@@ -507,7 +508,7 @@ export function applyFighterEffects(state: GameState, fx: FighterEffects, rng: R
     const gym = pickGym(s, fx.joinGym, content);
     if (gym) s = enterGym(s, gym.id, content);
   }
-  if (fx.signWith) s = signWith(s, fx.signWith, content);
+  if (fx.signWith) s = signWith(leaveOtherCareersForFighting(s, content), fx.signWith, content);
   if (fx.promoteBelt) s = promoteGrade(s, 'jiujitsu', content);
   if (fx.promoteGrade) s = promoteGrade(s, fx.promoteGrade, content);
   if (fx.offer) s = effectOffer(s, fx.offer.kind, rng, content, vars);

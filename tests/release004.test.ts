@@ -310,9 +310,9 @@ describe('concursos públicos civis (release 0.0.4)', () => {
     let easy = 0;
     let hard = 0;
     for (let i = 0; i < 60; i++) {
-      const a = takeCivilExam(civilCandidate(`e${i}`, 26, 70, ['contabeis']), 'agente_administrativo', GAME_CONTENT);
+      const a = takeCivilExam(civilCandidate(`e${i}`, 26, 80, ['contabeis']), 'agente_administrativo', GAME_CONTENT);
       if (a.economy.job?.jobId === 'agente_administrativo') easy++;
-      const b = takeCivilExam(civilCandidate(`h${i}`, 26, 70, ['contabeis']), 'auditor_fiscal', GAME_CONTENT);
+      const b = takeCivilExam(civilCandidate(`h${i}`, 26, 80, ['contabeis']), 'auditor_fiscal', GAME_CONTENT);
       if (b.economy.job?.jobId === 'auditor_fiscal') hard++;
     }
     expect(easy).toBeGreaterThan(30);
@@ -386,5 +386,47 @@ describe('fase 5: fama, imigração, alimentação e pós (release 0.0.4)', () =
     expect(jobRequirementGaps(g, prof)).toContain('postgrad');
     expect(jobRequirementGaps({ ...s, character: { ...s.character, age: 27 } }, prof)).not.toContain('postgrad');
     expect(postgradBlockReason(s, 'doutorado', 'direito', GAME_CONTENT)).toBeNull();
+  });
+});
+
+import { applyEffects, imprison, interact as interact2, isProFighter, jobBlockReason, leaveOtherCareersForFighting } from '../src/engine';
+
+describe('correções finais: prisão, luta exclusiva e voltar com ex', () => {
+  it('preso no fechado perde o emprego na hora e, se escapar disso, no fechamento do ano', () => {
+    const s = civilCandidate('preso', 30, 60);
+    const employed = { ...s, economy: { ...s.economy, job: { jobId: 'agente_administrativo', level: 1, performance: 50, years: 1 } } };
+    const jailed = imprison(employed, 6, GAME_CONTENT);
+    expect(jailed.economy.job).toBeNull();
+    // save antigo com emprego e prisão ao mesmo tempo: o ano tira o emprego, sem salário
+    const legacy = { ...employed, prison: jailed.prison };
+    const after = jobYear(legacy, mkRng(1), GAME_CONTENT, { kind: 'normal', layoffRisk: 0 } as never);
+    expect(after.economy.job).toBeNull();
+    expect(after.money).toBe(legacy.money);
+  });
+
+  it('lutador com contrato não pega emprego comum; assinar encerra emprego e futebol', () => {
+    const s = civilCandidate('luta', 25, 60);
+    const fighter = { ...s, fighter: { ...s.fighter, orgId: 'lfm' } };
+    expect(isProFighter(fighter)).toBe(true);
+    const job = GAME_CONTENT.economy.jobs.find((j) => j.category === 'formal')!;
+    expect(jobBlockReason(fighter, job)).toBe('fighter');
+    expect(civilExamBlockReason(fighter, 'agente_administrativo', GAME_CONTENT)).toBe('fighter');
+    const busy = { ...s, economy: { ...s.economy, job: { jobId: job.id, level: 1, performance: 50, years: 1 } }, football: { stage: 'pro' as const, position: 'ATA' as const, skills: { finishing: 50, passing: 50, defending: 50, goalkeeping: 10, pace: 50 }, potential: 70, reputation: 5, clubId: 'litoraneo', contract: { clubId: 'litoraneo', years: 2, salary: 1000 }, offers: [], history: [], titles: [], caps: 0, divisions: {} } };
+    const left = leaveOtherCareersForFighting(busy, GAME_CONTENT);
+    expect(left.economy.job).toBeNull();
+    expect(left.football!.stage).toBe('aposentado');
+    const signed = applyEffects(busy, { fighter: { signWith: 'lfm' } }, { rng: mkRng(1), content: GAME_CONTENT } as never);
+    expect(signed.economy.job).toBeNull();
+  });
+
+  it('dá para tentar voltar com ex', () => {
+    let s = withAge(makeGame('ex2'), 28);
+    const [s2, p] = createPerson(s, mkRng(9), GAME_CONTENT, { age: 28, traits: ['leal'] });
+    s = addRelation(s2, p.id, 'ex', 80);
+    let back = s;
+    for (let i = 0; i < 30 && back.relationships.relations.find((r) => r.personId === p.id)?.type === 'ex'; i++) back = interact2({ ...s, rngState: i * 7717 + 5 }, p.id, 'reconcile', GAME_CONTENT);
+    const rel = back.relationships.relations.find((r) => r.personId === p.id)!;
+    expect(rel.type).toBe('parceiro');
+    expect(rel.romance?.stage).toBe('ficando');
   });
 });

@@ -180,11 +180,12 @@ function signContract(state: GameState, clubId: string, years: number, salary: n
   return s;
 }
 
-export type FootballOfferBlockReason = 'busy' | 'none' | 'unknown';
+export type FootballOfferBlockReason = 'busy' | 'none' | 'unknown' | 'fighter';
 
 export function footballOfferBlockReason(state: GameState, clubId: string): FootballOfferBlockReason | null {
   if (!state.alive || state.pendingEvents.length || state.activeFight) return 'busy';
   if (!state.football) return 'none';
+  if (state.fighter.orgId && !state.fighter.retired) return 'fighter';
   if (!state.football.offers.some((o) => o.clubId === clubId)) return 'unknown';
   return null;
 }

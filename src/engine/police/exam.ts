@@ -18,7 +18,7 @@ import { startAcademy } from './career';
 import { trackDef } from './defs';
 
 
-export type PoliceExamBlockReason = 'dead' | 'busy' | 'age' | 'education' | 'degree' | 'record' | 'prison' | 'tried' | 'already' | 'internal' | 'no-money';
+export type PoliceExamBlockReason = 'dead' | 'busy' | 'fighter' | 'age' | 'education' | 'degree' | 'record' | 'prison' | 'tried' | 'already' | 'internal' | 'no-money';
 
 /** Requisitos de perfil (para os cartões ✓/✗): idade, escolaridade, diploma, ficha. */
 export function policeExamGaps(state: GameState, def: PoliceTrackDef): PoliceExamBlockReason[] {
@@ -36,6 +36,7 @@ export function policeExamBlockReason(state: GameState, trackId: PoliceTrackId, 
   if (!def || !state.alive) return 'dead';
   if (state.pendingEvents.length || state.activeFight) return 'busy';
   if (state.prison) return 'prison';
+  if (state.fighter.orgId && !state.fighter.retired) return 'fighter';
   const career = state.police.career;
   if (def.entry === 'interno') {
     // CFO: só praça da PM já efetivada

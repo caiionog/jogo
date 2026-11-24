@@ -133,5 +133,16 @@
 - Telas em `components/MinigameModal.tsx`, todas com tutorial, "Simular" e versão sem animação. Cobertas pelos
   testes de UI; a verificação no navegador desta parte ficou de fora porque a aba do dev server tinha um save em uso.
 
-## Próximo
-Fases 8–10: eventos restantes, métricas novas no `npm run sim`, balanceamento, GDD/CHANGELOG/HANDOFF e tag `v0.0.4`.
+## Fases 8–10 — Pedidos do usuário, eventos, balanceamento e release (concluídas)
+- **Prisão:** preso no fechado/semiaberto perde o emprego na hora (já era assim em `imprison`), mas a regressão
+  para o fechado e saves antigos deixavam o emprego. Agora `jobYear` e a regressão também tiram; o clube de futebol
+  rescinde o contrato.
+- **Luta exclusiva:** `careers/exclusive.ts` (`isProFighter`, `leaveOtherCareersForFighting`); bloqueios em vagas
+  comuns (`'fighter'`), concursos, polícia e propostas de futebol; assinar com organização encerra as outras.
+- **Voltar com ex:** interação `reconcile` ("Tentar voltar"), dentro de `isValidPartnerAge`; volta como "ficando"
+  (ou caso escondido). Eventos `d_adult_ex_mensagem` e `d_adult_reencontro_ex`.
+- **40 acontecimentos do dia a dia** (`events/random/daily.ts`), da infância à velhice.
+- **Balanceamento:** `scripts/sim004.ts` (no fim do `npm run sim`). Com 40 vidas: futebol 80% profissionais,
+  exterior e Seleção raros, nota de pico ~8; concurso de agente administrativo 73% (quase todos na 1ª tentativa,
+  pela inteligência); app de namoro 17% de match. Cortes dos concursos de nível médio subiram (50→58, 45→52, 50→56).
+- Docs: CHANGELOG `[0.0.4]`, GDD §10e, HANDOFF, CLAUDE.md; `package.json` 0.0.4; tag local `v0.0.4`.

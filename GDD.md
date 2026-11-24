@@ -1134,6 +1134,21 @@ como dinheiro ilícito (delitos, tráfico, facção, propina).
 regras de orquestração no CLAUDE.md. Nesta release, conteúdo, engine, UI e avatar foram feitos em paralelo e passaram
 por revisão. A revisão pegou um caso de casal NPC menor × adulto antes do commit.
 
+## 10e. Release 0.0.4 — fama, cidade, social, concursos, futebol e minigames
+- **Fama** (`character.fame`, 0–100) é única; a reputação de lutador e o prestígio do futebol a sustentam (× 0,8,
+  metade depois de aposentado) e ela cai 4% ao ano sem sustentação. Comercial: fama² × 20 por ano (fama 30+).
+- **Cidade:** moradores gerados (não salvos) por seed, UF e cidade; só quem é conhecido vai para o save.
+- **Romance adulto:** `startRomance` decide se o romance novo é livre (sem parceiro ou relação aberta) ou caso
+  escondido (22% de descoberta por ano). Casamento é exclusivo.
+- **Concursos:** prova (inteligência × 0,75 + estudo até +18 + sorte ±5 + títulos até +9 + ruído −8..+12) contra a
+  nota de corte; depois TAF, saúde, psicológico e investigação social conforme o edital.
+- **Futebol:** nível geral pela posição; força dos clubes por RNG derivado do ano; titular se o nível passa da força
+  do clube − 6. Metas (`npm run sim`): ~80% de quem tenta todo ano vira profissional, exterior e Seleção raros
+  (≤ 5%), nota de pico ~7,7–8.
+- **Minigames:** funções puras (`setup`/`resolve`/`simulate`); o resultado do "Simular" depende da habilidade
+  oculta. Se o ano virar com um minigame aberto, ele é simulado.
+- **Carreiras exclusivas:** luta profissional com contrato é tempo integral.
+
 ## 11. Ideias futuras
 - **Outras carreiras**: boxe olímpico, wrestling universitário, árbitro, treinador de seleção, empresário de lutadores.
 - **Faculdade**: vestibular, cursos e vida universitária (a partir de `caminho_18 = 'faculdade'`).

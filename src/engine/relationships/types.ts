@@ -121,7 +121,9 @@ export type InteractionKind =
   /** Passar a noite juntos (sexual: SÓ com `canHaveSexualContentWith` — os dois 18+ e opção adulta ligada). */
   | 'night_together'
   /** Propor relação aberta (release 0.0.4): os dois adultos, sem caso escondido. */
-  | 'propose_open';
+  | 'propose_open'
+  /** Tentar voltar com ex (release 0.0.4): faixas de idade de `isValidPartnerAge`; começa a ficar de novo. */
+  | 'reconcile';
 
 /** Traço de personalidade (conteúdo). */
 export interface TraitDef {

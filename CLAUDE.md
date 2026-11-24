@@ -1,4 +1,4 @@
-# CLAUDE.md — Vida Real (release 0.0.3)
+# CLAUDE.md — Vida Real (release 0.0.4)
 
 Simulador de vida no navegador, estilo BitLife: escola, faculdade, trabalho, empresas, esporte, carreira de luta
 (destaque), família, dinheiro e legado. Nome provisório "Vida Real" (o formato do save continua `vida-de-lutador`).
@@ -548,3 +548,6 @@ Plano em `docs/release-0.0.4/PLAN.md` e diário em `docs/release-0.0.4/PROGRESS.
 - **Minigames** (fase 7): `engine/minigames/` (`MinigameDef` puro: `setup`/`resolve`/`simulate`); o estado só guarda
   `state.minigame`. Abra por efeito de evento `minigame: { kind, context }` ou por ação; a UI é um modal em
   `components/` e sempre oferece "Simular".
+- **Carreiras exclusivas:** lutador com contrato (`isProFighter`) não acumula emprego comum, concurso, polícia nem
+  futebol; `leaveOtherCareersForFighting` roda ao assinar. Preso no fechado/semiaberto perde o emprego (`jobYear`).
+- **Balanceamento 0.0.4:** `scripts/sim004.ts` (chamado no fim do `npm run sim`; `SIM004_N` vidas).

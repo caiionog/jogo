@@ -55,6 +55,7 @@ export function civilExamBlockReason(state: GameState, jobId: string, content: G
   if (state.pendingEvents.length || state.activeFight) return 'busy';
   if (state.prison && state.prison.regime !== 'aberto') return 'prison';
   if (state.economy.job?.jobId === jobId) return 'current';
+  if (state.fighter.orgId && !state.fighter.retired) return 'fighter';
   const gap = jobRequirementGaps(state, def)[0];
   if (gap) return gap;
   if (def.civilExam.maxAge !== undefined && state.character.age > def.civilExam.maxAge) return 'max-age';

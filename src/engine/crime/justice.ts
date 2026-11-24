@@ -139,6 +139,8 @@ export function imprison(state: GameState, years: number, content: GameContent, 
     s = { ...s, fighter: { ...s.fighter, orgId: null, offers: [], reputation: Math.max(0, s.fighter.reputation - 10) }, economy: { ...s.economy, contract: null, sponsors: [] } };
     if (had) s = appendLog(s, 'A organização rompeu seu contrato e os patrocinadores cancelaram tudo.');
   }
+  // futebol: o clube rescinde o contrato (release 0.0.4)
+  if (s.football?.contract) s = appendLog({ ...s, football: { ...s.football, contract: null, offers: [] } }, 'O clube rescindiu seu contrato.');
   // faculdade trancada enquanto preso
   if (regime !== 'aberto' && s.college?.current?.status === 'cursando') s = { ...s, college: { ...s.college, current: { ...s.college.current, status: 'trancado' } } };
   s = { ...s, prison, crime: { ...s.crime, trafficking: null, plan: null }, character: { ...s.character, stats: addStats(s.character.stats, { happiness: -15 }) } };

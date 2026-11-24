@@ -92,7 +92,7 @@ export function FutebolScreen({ game }: { game: GameState }) {
             const lg = leagueOf(C, o.clubId);
             const r = footballOfferBlockReason(game, o.clubId);
             return (
-              <ListItem key={o.clubId} right={<Crest club={c} size={26} />} title={c?.name ?? o.clubId} subtitle={`${lg ? lg.name : DIV_LABEL(divisionOf(game, C, o.clubId))} · ${o.years} ${o.years === 1 ? 'ano' : 'anos'} · ${money.format(o.salary)}/ano`} disabled={!!r} reason="Resolva o acontecimento pendente" onClick={() => st.acceptFootballOffer(o.clubId)} chevron={false} testId="football-offer" />
+              <ListItem key={o.clubId} right={<Crest club={c} size={26} />} title={c?.name ?? o.clubId} subtitle={`${lg ? lg.name : DIV_LABEL(divisionOf(game, C, o.clubId))} · ${o.years} ${o.years === 1 ? 'ano' : 'anos'} · ${money.format(o.salary)}/ano`} disabled={!!r} reason={r === 'fighter' ? 'Você tem contrato como lutador(a)' : 'Resolva o acontecimento pendente'} onClick={() => st.acceptFootballOffer(o.clubId)} chevron={false} testId="football-offer" />
             );
           })}
           <p className="text-xs text-[var(--ds-text-muted)]">As propostas vencem na virada do ano.</p>

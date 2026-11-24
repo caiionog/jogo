@@ -8,7 +8,7 @@ import type { GameState } from '../core/state';
 import { addStats, appendLog } from '../core/stats';
 import { adultContentAllowed, canDate, canMarry } from './guards';
 import { breakUp, canConceive, divorce, hasOtherSpouse, ADOPTION_COST, startPregnancy } from './romance';
-import { changeAffection, firstName, partners, startRomance, getPerson, getRelation, relLabel, updatePerson, updateRelation, withHistory } from './people';
+import { changeAffection, firstName, newRomanceMode, partners, startRomance, getPerson, getRelation, relLabel, updatePerson, updateRelation, withHistory } from './people';
 import type { InteractionKind, Person, RelType, Relation } from './types';
 import { post } from '../economy/ledger';
 import { moneyFromParent } from '../economy/family';
@@ -39,6 +39,7 @@ export const INTERACTION_LABEL: Record<InteractionKind, string> = {
   flirt: 'Flertar',
   night_together: 'Passar a noite juntos',
   propose_open: 'Propor relação aberta',
+  reconcile: 'Tentar voltar',
 };
 
 /** Ações que envolvem sexo: SEMPRE exigem canHaveSexualContent (os dois com 18+). */
@@ -65,6 +66,8 @@ export function applicableInteractions(state: GameState, person: Person, rel: Re
   if (rel.type === 'pai' || rel.type === 'mae') out.push('ask_money');
   if (rel.type === 'filho' && person.age >= 4) out.push('teach_fight');
   const stage = rel.romance?.stage;
+  // ex: dá para tentar voltar (mesmas faixas de idade do namoro; menor com parceiro, não)
+  if (rel.type === 'ex' && isValidPartnerAge(state.character.age, person.age) && !isSchoolTeacher(person) && newRomanceMode(state) !== 'blocked') out.push('reconcile');
   // amizade, colega de treino, treinador(a) e professor(a): flerte (faixas de idade) e noite juntos (só 18+ e opção adulta)
   if (!stage && FLIRT_TYPES.includes(rel.type) && !isSchoolTeacher(person)) {
     if (isValidPartnerAge(state.character.age, person.age)) out.push('flirt');
@@ -259,6 +262,18 @@ function runInteraction(state: GameState, person: Person, rel: Relation, kind: I
       return flirt(s, person, rel, rng, m);
     case 'night_together':
       return nightTogether(s, person, rel, rng, content);
+    case 'reconcile': {
+      const romance = startRomance(s);
+      const chance = Math.max(0.05, Math.min(0.7, 0.08 + rel.affection / 140 + (hasTrait(person, 'leal') ? 0.08 : 0) - (hasTrait(person, 'orgulhoso') ? 0.1 : 0)));
+      if (romance && rng.chance(chance)) {
+        s = updateRelation(s, person.id, (r) => withHistory({ ...r, type: 'parceiro', romance, affection: Math.min(100, r.affection + 15) }, 'Voltaram.'));
+        happy(5);
+        return appendLog(s, `Você e ${n} conversaram sobre o que deu errado e resolveram tentar de novo.${romance.secret ? ' Escondido de quem está com você.' : ''}`);
+      }
+      s = changeAffection(s, person.id, -rng.int(4, 9), 'Não quis voltar.');
+      happy(-3);
+      return appendLog(s, `${n} disse que o que passou, passou.`);
+    }
     case 'propose_open': {
       const openMinded = person.traits.some((t) => t === 'aventureiro' || t === 'tranquilo');
       const jealous = person.traits.some((t) => t === 'ciumento');

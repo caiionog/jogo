@@ -35,6 +35,8 @@ export function jobReasonText(r: JobBlockReason, def: JobDef): string {
       return 'Exige ficha criminal limpa';
     case 'postgrad':
       return 'Exige mestrado ou doutorado';
+    case 'fighter':
+      return 'Lutador(a) com contrato só pode ter trabalho ligado à luta';
     case 'public-exam':
       return 'Entrada só por concurso público';
     case 'current':

@@ -681,3 +681,6 @@ console.log(rows.map(([id, n]) => `${id} ${((n / achLives) * 100).toFixed(0)}%`)
 
 // release 0.0.2: polícia e crime (6º argumento = vidas por perfil, padrão 150)
 await import('./simCrime');
+
+// release 0.0.4: futebol, fama, concursos e app (SIM004_N vidas, padrão 60)
+await import('./sim004');

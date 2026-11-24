@@ -38,6 +38,8 @@ function examReason(r: PoliceExamBlockReason, track: PoliceTrackId): string {
       return `Inscrição: R$ ${def.fee}`;
     case 'busy':
       return 'Resolva o acontecimento pendente';
+    case 'fighter':
+      return 'Lutador(a) com contrato não pode entrar na polícia';
     default:
       return '—';
   }
