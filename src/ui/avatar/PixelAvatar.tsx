@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { AvatarDescriptor } from '../../engine';
 import PixelCanvas from './pixel/PixelCanvas';
 import { PixelAvatarRenderer as R } from './renderer';
+import { renderAvatar } from './pixel/render';
 
 function reducedMotion(): boolean {
   try {
@@ -35,7 +36,8 @@ export default function PixelAvatar({ d, scale, bust = false, animate = false, l
       clearTimeout(t);
     };
   }, [animate]);
-  const img = useMemo(() => R.render(d, { frame, blink }), [d, frame, blink]);
+  // o renderizador de pixel art sempre devolve `kind: 'pixel'`
+  const img = useMemo(() => renderAvatar(d, { frame, blink }), [d, frame, blink]);
   const crop = bust ? R.bust(d) : undefined;
   return <PixelCanvas img={img} scale={scale} label={label ?? 'Avatar'} className={className} {...(crop ? { crop } : {})} />;
 }

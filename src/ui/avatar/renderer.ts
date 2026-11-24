@@ -13,12 +13,22 @@ export interface Crop {
   h: number;
 }
 
+/**
+ * Saída de um renderizador (release 0.0.3): buffer RGBA de pixel art ou um SVG completo (string), com a moldura do
+ * corpo inteiro em unidades do próprio renderizador.
+ */
+export type AvatarImage = { kind: 'pixel'; img: PixelImage } | { kind: 'svg'; svg: string; w: number; h: number };
+
+/** Visual dos personagens (preferência do jogador; teste A/B da release 0.0.3). */
+export type AvatarStyle = 'pixel' | 'cartoon';
+
 export interface AvatarRenderer {
-  /** Corpo inteiro (32×64) como buffer RGBA. */
-  render(d: AvatarDescriptor, opts?: RenderOptions): PixelImage;
-  /** Recorte do busto (cabeça e ombros). */
+  kind: 'pixel' | 'vector';
+  /** Corpo inteiro. `opts.frame`/`opts.blink`: respiração e piscar (animação leve). */
+  render(d: AvatarDescriptor, opts?: RenderOptions): AvatarImage;
+  /** Recorte do busto (cabeça e ombros), nas unidades da imagem de `render`. */
   bust(d: AvatarDescriptor): Crop;
-  /** Imagem estática (dataURL PNG) do busto, para miniaturas em cache; '' sem canvas. */
+  /** Imagem estática do busto (dataURL PNG ou SVG), para miniaturas em cache; '' quando não dá para gerar. */
   snapshot(d: AvatarDescriptor): string;
 }
 
@@ -34,7 +44,8 @@ function toDataUrl(img: PixelImage, crop: Crop): string {
 }
 
 export const PixelAvatarRenderer: AvatarRenderer = {
-  render: (d, opts) => renderAvatar(d, opts),
+  kind: 'pixel',
+  render: (d, opts) => ({ kind: 'pixel', img: renderAvatar(d, opts) }),
   bust: (d) => bustCrop(d),
   snapshot: (d) => toDataUrl(renderAvatar(d), bustCrop(d)),
 };
