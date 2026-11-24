@@ -2,7 +2,6 @@
 import { Building2, Car, Gem, Home, Landmark, Store, Wallet } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { GAME_CONTENT as C } from '../../../content';
-import { ICON_FOR, MARKET_ICONS } from '../../../content/sprites/market';
 import type { AssetKind, BusinessOffer, GameState, Offer } from '../../../engine';
 import {
   dedicateBlockReason, MIN_DOWN_PAYMENT, RENT_YIELD, businessDef, businessOffers, businessValue, buyBlockReason, buyBusinessBlockReason, buyCost,
@@ -11,8 +10,7 @@ import {
 import { BottomSheet, DsButton, ListGroup, ListItem } from '../../design/components';
 import { useNav } from '../../nav';
 import { useGameStore } from '../../store';
-import PixelCanvas from '../../avatar/pixel/PixelCanvas';
-import { renderIcon } from '../../avatar/pixel/icon';
+import { GameIcon } from '../../icons/GameIcon';
 import FinancePanel from '../../components/FinancePanel';
 import { money } from '../../components/ecoUi';
 
@@ -39,8 +37,7 @@ function trendText(t: number | undefined): string {
 }
 
 export function Icon({ id, size = 3 }: { id: string; size?: number }) {
-  const sprite = MARKET_ICONS[ICON_FOR[id] ?? 'loja'] ?? MARKET_ICONS.loja!;
-  return <PixelCanvas img={renderIcon(sprite)} scale={size} label="" className="shrink-0" />;
+  return <GameIcon set="market" id={id} size={size * 16} />;
 }
 
 export function BensScreen({ game }: { game: GameState }) {

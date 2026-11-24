@@ -8,13 +8,10 @@ import type { CrimeBlockReason, CrimeTier, GameState } from '../../../engine';
 import { TRAFFICKING, crimeBlockReason, crimeRepHint, crimeRiskLabel, factionDef, factionRankTitle, launderBlockReason, traffickingBlockReason, wantedHint } from '../../../engine';
 import type { TraffickingLevel } from '../../../engine';
 import { ListGroup, ListItem } from '../../design/components';
-import { CRIME_ICONS, factionIcon } from '../../../content/sprites/crimeIcons';
-import type { IconSprite } from '../../../content/sprites/market';
-import PixelCanvas from '../../avatar/pixel/PixelCanvas';
-import { renderIcon } from '../../avatar/pixel/icon';
+import { GameIcon } from '../../icons/GameIcon';
 
-function SpriteIcon({ sprite, size = 2 }: { sprite: IconSprite | undefined; size?: number }) {
-  return sprite ? <PixelCanvas img={renderIcon(sprite)} scale={size} label="" className="shrink-0" /> : null;
+function SpriteIcon({ set, id, colors, size = 2 }: { set: 'crime' | 'faction'; id: string; colors?: readonly [string, string]; size?: number }) {
+  return <GameIcon set={set} id={id} colors={colors} size={size * 16} />;
 }
 import { useGameStore } from '../../store';
 import { useNav } from '../../nav';
@@ -60,7 +57,7 @@ export function CrimeScreen({ game }: { game: GameState }) {
               return (
                 <ListItem
                   key={c.id}
-                  leading={<SpriteIcon sprite={CRIME_ICONS[c.id]} />}
+                  leading={<SpriteIcon set="crime" id={c.id} />}
                   title={c.label}
                   subtitle={`Risco: ${crimeRiskLabel(c)}${c.plan ? ' · planejamento em etapas' : ''}`}
                   disabled={!!r}
@@ -79,7 +76,7 @@ export function CrimeScreen({ game }: { game: GameState }) {
           <ListGroup title="Facção">
             <div className="rounded-[var(--ds-radius)] bg-[var(--ds-surface)] p-3 text-sm" data-testid="crime-faction">
               <p className="flex items-center gap-2 font-semibold">
-                <SpriteIcon sprite={factionIcon(f.id, f.colors)} />
+                <SpriteIcon set="faction" id={f.id} colors={f.colors} />
                 {f.name} · {factionRankTitle(game, C)}
               </p>
               <p className="text-xs text-[var(--ds-text-muted)]">Símbolo: {f.symbol}. Regras: {f.rules.join(' ')}</p>
@@ -95,7 +92,7 @@ export function CrimeScreen({ game }: { game: GameState }) {
             const r = traffickingBlockReason(game, lv);
             const label = { pequeno: 'Pequeno envolvimento', medio: 'Envolvimento médio', grande: 'Esquema grande' }[lv];
             return (
-              <ListItem key={lv} leading={<SpriteIcon sprite={CRIME_ICONS.trafico} />} title={label} subtitle={`Lucro anual alto · risco ${lv === 'pequeno' ? 'alto' : 'muito alto'} de apreensão, prisão e morte`} disabled={!!r} reason={r === 'already' ? 'É o seu nível atual' : r === 'rep' ? 'Ninguém te leva a sério para isso ainda' : 'Indisponível agora'} onClick={() => st.setTrafficking(lv)} chevron={false} testId={`crime-trafico-${lv}`} />
+              <ListItem key={lv} leading={<SpriteIcon set="crime" id="trafico" />} title={label} subtitle={`Lucro anual alto · risco ${lv === 'pequeno' ? 'alto' : 'muito alto'} de apreensão, prisão e morte`} disabled={!!r} reason={r === 'already' ? 'É o seu nível atual' : r === 'rep' ? 'Ninguém te leva a sério para isso ainda' : 'Indisponível agora'} onClick={() => st.setTrafficking(lv)} chevron={false} testId={`crime-trafico-${lv}`} />
             );
           })}
           {game.crime.trafficking && <ListItem emoji="✋" title="Largar o tráfico" onClick={() => st.setTrafficking(null)} chevron={false} testId="crime-trafico-stop" />}

@@ -5,10 +5,8 @@
  */
 import { useMemo } from 'react';
 import { GAME_CONTENT as C } from '../../../content';
-import { UNIFORM_ICONS } from '../../../content/sprites/crimeIcons';
 import PixelAvatar from '../../avatar/PixelAvatar';
-import PixelCanvas from '../../avatar/pixel/PixelCanvas';
-import { renderIcon } from '../../avatar/pixel/icon';
+import { GameIcon } from '../../icons/GameIcon';
 import type { GameState, JobDef, PoliceExamBlockReason, PoliceTrackId } from '../../../engine';
 import { EDUCATION_LABEL, deriveAvatar, nextRankGap, policeActionBlock, policeAssessment, policeExamBlockReason, rankTitle, shootingHint, specialBlockReason, specialDef, trackDef } from '../../../engine';
 import type { SpecialBlockReason } from '../../../engine';
@@ -79,7 +77,7 @@ export function PolicePanel({ game, def }: { game: GameState; def: JobDef }) {
   const tracks = C.police.tracks.filter((t) => t.force === force && (t.entry === 'concurso' || (mine && c.track === 'pm_praca')));
   const gap = mine ? nextRankGap(game, C) : null;
   const desc = useMemo(() => deriveAvatar(game, C, 'policia'), [game]);
-  const uniform = mine ? UNIFORM_ICONS[c.unit === 'especial' ? 'especial' : c.force] : undefined;
+  const uniformId = mine ? (c.unit === 'especial' ? 'especial' : c.force) : undefined;
   const nextText = !mine ? null : c.stage === 'formacao' ? `Concluir o ${trackDef(C, c.track)?.course ?? 'curso de formação'}` : c.stage === 'probatorio' ? 'Passar no estágio probatório (cuidado com a corregedoria)' : gap ? `${gap.title}: ${[gap.years > 0 && `mais ${gap.years} ${gap.years === 1 ? 'ano' : 'anos'}`, gap.merit && 'mais mérito'].filter(Boolean).join(' e ') || 'falta pouco'}` : 'Topo da carreira';
   return (
     <>
@@ -92,7 +90,7 @@ export function PolicePanel({ game, def }: { game: GameState; def: JobDef }) {
             </div>
             <div className="min-w-0">
               <p className="flex items-center gap-2 font-semibold">
-                {uniform && <PixelCanvas img={renderIcon(uniform)} scale={2} label="" className="shrink-0" />}
+                {uniformId && <GameIcon set="uniform" id={uniformId} size={32} />}
                 {def.title} · {c.posting}
               </p>
               <p>
