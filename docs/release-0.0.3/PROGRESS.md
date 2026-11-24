@@ -24,8 +24,40 @@ Pedido original: [`SPEC.md`](SPEC.md). Plano: [`PLAN.md`](PLAN.md). Commits na b
   - Descartadas as de pixel art, game balance e "character design sheet": poucas instalações ou chamam APIs
     externas.
 
+## Notas das fases 3–5 (em andamento)
+- **Tipos compartilhados** (sessão principal):
+  - `AvatarRenderer` generalizado (`kind`, `AvatarImage` pixel|svg, `AvatarStyle`);
+  - save **v16** (`scene.kind 'intimo'` com `variant` e `seq`, `relationships.lastGroup`; fixture `saves-v15.json`);
+  - `FriendsContent`/`GroupActivityDef`; efeitos `social.pairFriends/npcCouple/groupAffection/intimacy`;
+  - a cena íntima não aciona roupa de praia.
+- **content-writer:**
+  - 14 atividades em `content/friends/` (criança, adolescente e adulto);
+  - 21 eventos `grupo_*` em `content/events/friends/`;
+  - `intimacy: true` em `adult_night_with_partner` (safe e unsafe) e em `adult_forgot_condom/go`.
+- **engine-dev:**
+  - `engine/relationships/group.ts` (`groupActivities`, `groupAvailability` com RNG derivado, `groupBlockReason`,
+    `hangOutAll`, `groupEventVars` com `pessoa*`/`pessoa2*`);
+  - `intimacy.ts` (`intimacyVariant`, `recordIntimacy` via `canHaveSexualContentWith`);
+  - interações sexuais gravam a cena.
+- **Revisão** (subagente revisor), corrigida na sessão principal:
+  - `groupEventFits`: casal NPC só para par com `isValidPartnerAge`; evento `adult` exige as duas pessoas;
+  - custo no extrato em `familia`;
+  - testes novos dessas guardas;
+  - `adultSafety` (1000 vidas) também passa tempo com todos e confere os casais NPC.
+- Em andamento:
+  - `avatar-artist`: `src/ui/avatar/vector/` e o modo lado a lado em `/dev/avatars`;
+  - `ui-dev`: botão, sheet e `IntimacyTransition`.
+- Os agentes de `.claude/agents/` só são carregados em sessões novas; nesta sessão eles rodam como `general-purpose`
+  lendo o próprio arquivo do agente.
+
 ## Próximo passo exato
-**Fase 3 — primeiro personagem cartoon.** Antes de delegar ao `avatar-artist`, a sessão principal generaliza a
-interface `AvatarRenderer` (`src/ui/avatar/renderer.ts`): `kind: 'pixel' | 'vector'` e `render` devolvendo imagem ou
-SVG. Depois o avatar-artist cria `src/ui/avatar/vector/` (`VectorAvatarRenderer`, um adulto completo) e o modo lado a
-lado em `/dev/avatars`, com capturas. **Pausa para o usuário ver.** Em paralelo seguem as fases 4 e 5.
+1. Receber os resultados do `avatar-artist` e do `ui-dev`, passar pelo revisor e pelos testes, e fazer o commit.
+2. Mostrar ao usuário as capturas `docs/release-0.0.3/screenshots/ab-primeiro-adulto*.png` (**pausa para aprovação
+   do estilo**).
+3. Fase 6:
+   - cartoon completo;
+   - preferência `settings.avatarStyle` no meta (META 2→3);
+   - Configurações → "Visual dos personagens";
+   - `PixelAvatar`, `AvatarThumb` e miniaturas escolhendo o renderizador;
+   - `IntimacyTransition` no estilo ativo;
+   - grade A/B e pausa.
