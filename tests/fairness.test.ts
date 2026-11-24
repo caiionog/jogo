@@ -72,7 +72,7 @@ describe('não discriminação: código', () => {
    */
   const ALLOWED = new Set(['legacy/succession.ts', 'events/validate.ts']);
 
-  it.each(mechanicFiles.map((f) => relative(engine, f)))('%s não usa cor/raça nem genes', (rel) => {
+  it.each(mechanicFiles.map((f) => relative(engine, f).replaceAll('\\', '/')))('%s não usa cor/raça nem genes', (rel) => {
     const src = readFileSync(join(engine, rel), 'utf8');
     if (ALLOWED.has(rel)) {
       // mesmo nas exceções, cor/raça não decide nada: só passa adiante para a herança ou valida a soma

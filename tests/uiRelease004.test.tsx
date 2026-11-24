@@ -72,4 +72,15 @@ describe('telas da release 0.0.4', () => {
     act(() => fireEvent.click(btn));
     expect(useGameStore.getState().game!.yearUses['oab:exame']).toBe(1);
   });
+
+  it('Concursos públicos: categoria lista os cargos e o Delegado; prestar registra a tentativa', () => {
+    const g = adult(26, 'ui-concurso');
+    open({ ...g, education: { ...g.education, graduated: true, current: null } }, ['nav-ocupacao', 'occ-careers', 'career-cat-concursos']);
+    expect(screen.getByTestId('career-delegado')).toBeTruthy();
+    act(() => fireEvent.click(screen.getByTestId('career-agente_administrativo')));
+    const btn = screen.getByTestId('take-civil-exam') as HTMLButtonElement;
+    expect(btn.disabled).toBe(false);
+    act(() => fireEvent.click(btn));
+    expect(useGameStore.getState().game!.civilService.exams).toHaveLength(1);
+  });
 });

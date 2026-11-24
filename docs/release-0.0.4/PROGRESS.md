@@ -15,7 +15,7 @@
 - Clone em Windows: use `git config core.autocrlf false`. Com CRLF, `tests/agents.test.ts` falha.
 
 ### Falhas conhecidas no Windows (já existiam antes)
-- `tests/fairness.test.ts`: dois casos comparam caminhos com `/` (no Windows saem com `\`).
+- `tests/fairness.test.ts`: dois casos comparavam caminhos com `/`. **Corrigido na fase 4** (normaliza `\`).
 - `tests/ui*.test.tsx`: o módulo virtual do PWA não resolvia no Windows. **Corrigido na fase 3** com um stub nos
   testes (`tests/stubs/pwa-register.ts`, alias em `vite.config.ts`). Sobra um erro de teardown (o visual carregado sob
   demanda termina de importar depois do fim do teste); os testes de UI passam.
@@ -54,5 +54,19 @@
 - Gravidez casual: "Passar a noite juntos" tem 4% de chance (`canConceive`: 18+ e casal M/F); `Pregnancy.casual`.
 - Pendente: eventos de descoberta, paternidade e do app (content-writer), e a condição de evento para "tem caso".
 
+## Fase 4 — Concursos e colegas (concluída)
+- Motor comum de etapas em `engine/exams/stages.ts` (`runExamStages`, `publicExamScore`, `studyBonus`,
+  `titlesBonus`): prova, títulos, TAF, saúde, psicológico e investigação social completa, só de condenação ou nenhuma.
+  A polícia passou a usá-lo (mesma sequência de RNG; os testes da polícia não mudaram).
+- Concursos civis (`engine/civilService/`): `JobDef.civilExam` (órgão, taxa, idade máxima, etapas, estabilidade),
+  `civilExamBlockReason`/`takeCivilExam` (uma tentativa por ano e cargo; posse no nível 1). Cargo público não é
+  demitido pela crise (carteiro: 30% do risco) e só raramente por desempenho baixo.
+- 10 cargos em `content/jobs/civil/` (tabela da fase 0; professor aceita Pedagogia e Educação Física, os cursos de
+  licenciatura que o jogo tem). Categoria "Concursos públicos" em Carreiras, com o Delegado apontando para a Polícia
+  Civil. Cartão do edital com etapas, taxa, idade máxima e a última tentativa.
+- Colegas de farda (`police/colleagues.ts`): pessoas com a flag `colega_farda`, até 3, chegando no ciclo anual. 10
+  eventos `pol_colega_*` e 3 de servidor público (`job_servidor_*`).
+- Save v19 (`migrateV18toV19`, `civilService`), fixture `saves-v18.json`.
+
 ## Próximo
-Fase 4: motor genérico de concurso (refatorando o da polícia), os 10 cargos e os colegas de farda.
+Fase 5: conteúdo de fama (escândalos, redes sociais, comerciais, 20+ eventos, barra de fama).

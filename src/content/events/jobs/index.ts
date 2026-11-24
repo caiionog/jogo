@@ -8,6 +8,41 @@ const PESADO = ['servente', 'frentista', 'entregador', 'motorista_app', 'reposit
 const INFORMAL = ['entregador', 'servente', 'cuidador', 'motorista_app', 'professor_particular'];
 
 export const JOB_EVENTS: readonly GameEvent[] = [
+  // ----- release 0.0.4: servidores públicos (concursos civis) -----
+  {
+    id: 'job_servidor_posse',
+    once: true,
+    weight: 8,
+    tone: 'good',
+    conditions: { minAge: 18, economy: { jobCategory: ['concurso'] } },
+    text: 'Primeiro mês no cargo público: crachá novo, sala com ar-condicionado barulhento e uma pilha de processos esperando.',
+    choices: [
+      { id: 'mergulhar', label: 'Mergulhar no serviço', effects: { stats: { intelligence: 1, happiness: 2 } }, resultText: 'Em pouco tempo você já sabia onde ficava cada carimbo.' },
+      { id: 'devagar', label: 'Ir com calma', effects: { stats: { happiness: 3 } }, resultText: 'Estabilidade tem dessas: dá para respirar.' },
+    ],
+  },
+  {
+    id: 'job_servidor_greve',
+    weight: 3,
+    cooldownYears: 6,
+    conditions: { minAge: 18, economy: { jobCategory: ['concurso'] } },
+    text: 'O sindicato da categoria convocou greve por reajuste. A assembleia está cheia e dividida.',
+    choices: [
+      { id: 'aderir', label: 'Aderir à greve', effects: { stats: { happiness: 1 }, money: -800 }, resultText: 'Depois de três semanas saiu um reajuste pequeno, e o ponto foi descontado.' },
+      { id: 'trabalhar', label: 'Continuar trabalhando', effects: { stats: { happiness: -2 } }, resultText: 'Alguns colegas pararam de falar com você.' },
+    ],
+  },
+  {
+    id: 'job_servidor_concurso_novo',
+    weight: 3,
+    cooldownYears: 5,
+    conditions: { minAge: 20, economy: { jobCategory: ['concurso'] } },
+    text: 'Abriu um concurso para um cargo maior e um colega de sala jura que dá para passar estudando de madrugada.',
+    choices: [
+      { id: 'estudar', label: 'Montar um cronograma de estudo', effects: { stats: { intelligence: 2, happiness: -2 } }, resultText: 'Apostilas na mesa de jantar outra vez. Os concursos ficam em Ocupação → Carreiras.' },
+      { id: 'ficar', label: 'Ficar onde está', effects: { stats: { happiness: 1 } }, resultText: 'Você gosta do que tem.' },
+    ],
+  },
   {
     id: 'job_rude_customer',
     conditions: { minAge: 16, economy: { jobs: ATENDIMENTO } },

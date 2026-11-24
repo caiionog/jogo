@@ -2,7 +2,8 @@
 import { Briefcase, GraduationCap, School, Store, Swords, UserRound } from 'lucide-react';
 import { useState } from 'react';
 import { GAME_CONTENT as C } from '../../../content';
-import type { CareerCategory, GameState, RequirementKey } from '../../../engine';
+import type { CareerCategory, GameState, JobBlockReason, JobDef, RequirementKey } from '../../../engine';
+import { civilExamBlockReason } from '../../../engine';
 import {
   BELTS, actionBlockReason, careerCard, careersIn, cityMultOf, fighterNextStep, jobDef, jobTitle, salaryOf,
 } from '../../../engine';
@@ -35,6 +36,7 @@ const CAT_LABEL: Record<CareerCategory, { title: string; sub: string; minAge: nu
   meio_periodo: { title: 'Meio período', sub: 'A partir dos 16 anos', minAge: 16 },
   integral: { title: 'Tempo integral', sub: 'A partir dos 18 anos', minAge: 18 },
   seguranca: { title: 'Segurança pública', sub: 'Polícia Militar e Polícia Civil · concurso público', minAge: 18 },
+  concursos: { title: 'Concursos públicos', sub: 'Tribunal, prefeitura, fazenda, bombeiros, perícia e mais', minAge: 18 },
 };
 
 const STAGE_LABEL = { sem_academia: 'Sem academia', aluno: 'Aluno(a) de academia', amador: 'Lutador(a) amador(a)', pro_regional: 'Profissional regional', liga_principal: 'Liga principal', aposentado: 'Aposentado(a)' } as const;
@@ -150,6 +152,9 @@ export function CarreirasCatScreen({ game, cat }: { game: GameState; cat: Career
           />
         );
       })}
+      {cat === 'concursos' && (
+        <ListItem emoji="🕵️" title="Delegado(a) de polícia" subtitle="Concurso da Polícia Civil · exige Direito · 21 a 45 anos" onClick={() => nav.push({ id: 'carreira', params: { job: C.police.jobIds.civil } })} testId="career-delegado" />
+      )}
     </>
   );
 }
@@ -209,13 +214,14 @@ export function CarreiraScreen({ game, jobId }: { game: GameState; jobId: string
         </ListGroup>
       ) : (
         <>
-          {blocked && blocked !== 'employed' && <p className="text-sm text-[var(--ds-danger)]">{jobReasonText(blocked, def)}</p>}
+          {def.civilExam ? <CivilExamBox game={game} def={def} /> : null}
+          {!def.civilExam && blocked && blocked !== 'employed' && <p className="text-sm text-[var(--ds-danger)]">{jobReasonText(blocked, def)}</p>}
           {blocked === 'license' && def.requires?.license === 'oab' && game.college.diplomas.includes(C.college.barExam.degree) && (
             <DsButton full testId="go-bar-exam" onClick={() => nav.push('estudos')}>Abrir a inscrição no {C.college.barExam.name}</DsButton>
           )}
-          <DsButton tone="primary" full testId="apply-job" disabled={!!blocked && blocked !== 'employed'} onClick={() => (currentDef ? setConfirm('swap') : applyJob(def.id))}>
+          {!def.civilExam && <DsButton tone="primary" full testId="apply-job" disabled={!!blocked && blocked !== 'employed'} onClick={() => (currentDef ? setConfirm('swap') : applyJob(def.id))}>
             Candidatar-se {currentDef ? `(sai de ${currentDef.title.toLowerCase()})` : ''}
-          </DsButton>
+          </DsButton>}
         </>
       )}
       {confirm && (
@@ -260,3 +266,33 @@ export function EscolaScreen({ game }: { game: GameState }) {
   );
 }
 
+
+const CIVIL_REASON: Record<string, string> = {
+  busy: 'Resolva o acontecimento pendente',
+  prison: 'Indisponível na prisão',
+  'max-age': 'Passou da idade máxima do edital',
+  tried: 'Você já prestou este concurso este ano',
+  'no-money': 'Dinheiro insuficiente para a taxa',
+};
+const STAGE_NAME: Record<string, string> = { prova: 'prova escrita', taf: 'teste físico', saude: 'exame de saúde', psico: 'avaliação psicológica', social: 'investigação social' };
+
+/** Concurso civil (release 0.0.4): edital resumido, última tentativa e o botão de prestar. */
+function CivilExamBox({ game, def }: { game: GameState; def: JobDef }) {
+  const take = useGameStore((s) => s.takeCivilExam);
+  const ex = def.civilExam!;
+  const r = civilExamBlockReason(game, def.id, C);
+  const last = [...(game.civilService?.exams ?? [])].reverse().find((e) => e.jobId === def.id);
+  const stages = ['prova escrita', ex.titles && 'títulos', ex.cut.taf !== undefined && 'teste físico', ex.health && 'exame de saúde', ex.cut.psico !== undefined && 'avaliação psicológica', ex.social === 'full' ? 'investigação social' : ex.social === 'conviction' ? 'certidão de antecedentes' : null].filter(Boolean).join(' · ');
+  const reason = r ? CIVIL_REASON[r] ?? jobReasonText(r as JobBlockReason, def) : undefined;
+  return (
+    <div className="flex flex-col gap-2" data-testid="civil-exam">
+      <p className="text-sm">
+        <b>{ex.agency}</b> · etapas: {stages} · taxa {money.format(ex.fee)}{ex.maxAge ? ` · até ${ex.maxAge} anos` : ''}
+        {ex.stability === 'parcial' ? ' · estabilidade parcial' : ' · estabilidade'}
+      </p>
+      {last && <p className="text-xs text-[var(--ds-text-muted)]">Última tentativa ({last.age} anos): {last.passed ? 'aprovado(a)' : `reprovado(a) na ${STAGE_NAME[last.failedAt ?? 'prova']}`}.</p>}
+      {reason && <p className="text-sm text-[var(--ds-danger)]">{reason}</p>}
+      <DsButton tone="primary" full testId="take-civil-exam" disabled={!!r} onClick={() => take(def.id)}>Prestar o concurso</DsButton>
+    </div>
+  );
+}

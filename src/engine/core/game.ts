@@ -1,3 +1,5 @@
+import { policeColleaguesYear } from '../police/colleagues';
+import { emptyCivilService } from '../civilService/civil';
 import { emptyPopulation } from '../population/population';
 import { fameYear } from '../fame/fame';
 import { prisonYear } from '../crime/justice';
@@ -128,6 +130,7 @@ export function newGame(options: NewGameOptions, content: GameContent): GameStat
     crime: emptyCrime(),
     prison: null,
     population: emptyPopulation(),
+    civilService: emptyCivilService(),
   };
   const withFamily = generateFamily(state, rng, content, 0);
   state.relationships = withFamily.relationships;
@@ -384,6 +387,7 @@ export function advanceYear(
     next = closeEconomicYear(next, rng, content);
     // carreira policial: formação, estágio, promoção, aposentadoria (release 0.0.2)
     next = policeYear(next, rng, content);
+    next = policeColleaguesYear(next, rng, content);
     next = {
       ...next,
       year: next.year + 1,

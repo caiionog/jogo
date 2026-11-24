@@ -1,3 +1,4 @@
+import type { CivilExamSpec } from '../civilService/civil';
 /** Economia (Etapa 5). Dinheiro SEMPRE em inteiros (R$ 1 = unidade mínima). Tudo JSON puro. */
 
 export type LedgerCategory =
@@ -59,7 +60,7 @@ export type LivingStandard = 'simples' | 'confortavel' | 'luxo';
 export type EconYearKind = 'normal' | 'crise' | 'boom';
 export type EducationLevel = 'nenhuma' | 'fundamental' | 'medio' | 'superior';
 /** aprendiz = jovem aprendiz/estágio (14+/16+); meio_periodo; formal e luta = tempo integral. */
-export type JobCategory = 'aprendiz' | 'meio_periodo' | 'formal' | 'luta' | 'seguranca';
+export type JobCategory = 'aprendiz' | 'meio_periodo' | 'formal' | 'luta' | 'seguranca' | 'concurso';
 export type LoanKind = 'pessoal' | 'imobiliario' | 'veiculo';
 export type Regime = 'parcial' | 'separacao';
 
@@ -221,6 +222,8 @@ export interface JobDef {
   description?: string;
   /** Entrada só por concurso público (polícia; release 0.0.2): não aceita candidatura comum, sem demissão por crise. */
   publicExam?: boolean;
+  /** Concurso público civil (release 0.0.4): etapas, corte, idade máxima, taxa e órgão. */
+  civilExam?: CivilExamSpec;
 }
 
 export interface AssetDef {

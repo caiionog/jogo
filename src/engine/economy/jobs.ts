@@ -1,3 +1,4 @@
+import { civilLayoffFactor } from '../civilService/civil';
 import { fameAsRep } from '../fame/fame';
 import { bjjRank } from '../fighting/belts';
 import { bumpUse, repeatMultiplier, scaleGain, usesThisYear } from '../lifeStages/sessions';
@@ -115,7 +116,7 @@ export function jobBlockReason(state: GameState, def: JobDef, content?: GameCont
   if (!state.alive) return 'dead';
   if (state.pendingEvents.length > 0 || state.activeFight) return 'busy';
   if (state.economy.job?.jobId === def.id) return 'current';
-  if (def.publicExam) return 'public-exam';
+  if (def.publicExam || def.civilExam) return 'public-exam';
   // preso em regime fechado ou semiaberto não se candidata
   if (state.prison && state.prison.regime !== 'aberto') return 'busy';
   const gap = jobRequirementGaps(state, def)[0];
@@ -267,7 +268,8 @@ export function jobYear(state: GameState, rng: Rng, content: GameContent, market
     const title = jobTitle(def, next.level);
     s = appendLog(s, title !== jobTitle(def, job.level) ? `Você foi promovid${s.character.sex === 'M' ? 'o' : 'a'} a ${title.toLowerCase()}!` : `Você ganhou um aumento (${def.title}, nível ${next.level}).`);
   }
-  const fired = (next.performance < 25 && rng.chance(0.5)) || rng.chance(market.layoffRisk);
+  // cargo público (release 0.0.4): estabilidade contra a crise
+  const fired = (next.performance < 25 && rng.chance(def.civilExam ? 0.2 : 0.5)) || rng.chance(market.layoffRisk * civilLayoffFactor(def));
   if (fired) {
     s = { ...s, economy: { ...s.economy, job: null } };
     return appendLog(s, market.kind === 'crise' && next.performance >= 25 ? `A crise chegou: você foi demitid${s.character.sex === 'M' ? 'o' : 'a'} num corte em massa.` : `Você foi demitid${s.character.sex === 'M' ? 'o' : 'a'} por baixo desempenho.`);

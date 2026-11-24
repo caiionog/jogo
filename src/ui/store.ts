@@ -87,6 +87,7 @@ import {
   appLike,
   appSkip,
   reconnectExFriend,
+  takeCivilExam,
   enrollCollege,
   lockCollege,
   unlockCollege,
@@ -275,6 +276,7 @@ interface GameStore {
   appLike(cardId: string): void;
   appSkip(cardId: string): void;
   reconnectExFriend(personId: string): void;
+  takeCivilExam(jobId: string): void;
   /** Vida noturna (release 0.0.1): sai e o evento do local abre como pop-up. */
   goOut(venueId: string): void;
   /** Clube esportivo e intercâmbio (release 0.0.1). */
@@ -546,6 +548,7 @@ export const useGameStore = create<GameStore>((setState, getState) => {
     appLike: (id) => act((g) => appLike(g, id, GAME_CONTENT)),
     appSkip: (id) => act((g) => appSkip(g, id)),
     reconnectExFriend: (id) => act((g) => reconnectExFriend(g, id)),
+    takeCivilExam: (id) => act((g) => takeCivilExam(g, id, GAME_CONTENT)),
     goOut: (id) => update((g) => goOut(g, id, GAME_CONTENT)),
     joinSportsClub: (id, sport) => update((g) => joinSportsClub(g, id, sport, GAME_CONTENT)),
     leaveSportsClub: () => update((g) => leaveSportsClub(g, GAME_CONTENT)),

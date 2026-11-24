@@ -264,3 +264,74 @@ describe('app de namoro e ex-amizades (release 0.0.4)', () => {
     expect(exFriends(back)).toEqual([]);
   });
 });
+
+import fixturesV18 from '../src/save/__fixtures__/saves-v18.json';
+import { civilExamBlockReason, civilExamJobs, jobYear, policeColleagues, policeColleaguesYear, takeCivilExam } from '../src/engine';
+
+function civilCandidate(seed: string, age: number, intelligence: number, diplomas: string[] = [], athletic = 60): GameState {
+  const g = withAge(makeGame(seed), age);
+  return {
+    ...g,
+    money: 5000,
+    economy: { ...g.economy, ledger: { ...g.economy.ledger, opening: 5000 - (g.money - g.economy.ledger.opening) } },
+    education: { ...g.education, graduated: true, current: null },
+    college: { ...g.college, diplomas },
+    character: { ...g.character, stats: { ...g.character.stats, intelligence, athletic, health: 90, happiness: 70 } },
+  };
+}
+
+describe('concursos públicos civis (release 0.0.4)', () => {
+  it('migração v18 → v19 cria civilService vazio', () => {
+    const v18 = fixturesV18 as unknown as Record<string, unknown>;
+    for (const k of Object.keys(v18)) {
+      const m = migrate(structuredClone(v18[k]) as never);
+      expect(m.version).toBe(STATE_VERSION);
+      expect(m.civilService).toEqual({ exams: [] });
+    }
+  });
+
+  it('10 cargos civis, todos com órgão genérico e entrada só pelo concurso', () => {
+    const jobs = civilExamJobs(GAME_CONTENT);
+    expect(jobs).toHaveLength(10);
+    expect(jobs.every((j) => j.category === 'concurso' && j.civilExam!.fee > 0)).toBe(true);
+  });
+
+  it('requisitos: diploma, idade máxima, uma tentativa por ano', () => {
+    expect(civilExamBlockReason(civilCandidate('c1', 25, 80, ['medicina']), 'analista_tribunal', GAME_CONTENT)).toBe('degree');
+    expect(civilExamBlockReason(civilCandidate('c2', 33, 80), 'bombeiro_militar', GAME_CONTENT)).toBe('max-age');
+    const s = civilCandidate('c3', 25, 80);
+    expect(civilExamBlockReason(s, 'agente_administrativo', GAME_CONTENT)).toBeNull();
+    const after = takeCivilExam(s, 'agente_administrativo', GAME_CONTENT);
+    expect(after.civilService.exams).toHaveLength(1);
+    expect(civilExamBlockReason(after, 'agente_administrativo', GAME_CONTENT)).toBe(after.civilService.exams[0]!.passed ? 'current' : 'tried');
+  });
+
+  it('aprovado toma posse; auditor fiscal é bem mais difícil que agente administrativo', () => {
+    let easy = 0;
+    let hard = 0;
+    for (let i = 0; i < 60; i++) {
+      const a = takeCivilExam(civilCandidate(`e${i}`, 26, 70, ['contabeis']), 'agente_administrativo', GAME_CONTENT);
+      if (a.economy.job?.jobId === 'agente_administrativo') easy++;
+      const b = takeCivilExam(civilCandidate(`h${i}`, 26, 70, ['contabeis']), 'auditor_fiscal', GAME_CONTENT);
+      if (b.economy.job?.jobId === 'auditor_fiscal') hard++;
+    }
+    expect(easy).toBeGreaterThan(30);
+    expect(hard).toBeLessThan(easy / 3);
+  });
+
+  it('servidor estável não é demitido pela crise', () => {
+    const s = civilCandidate('st', 30, 70);
+    const job = { ...s, economy: { ...s.economy, job: { jobId: 'agente_administrativo', level: 1, performance: 60, years: 2 } } };
+    const crisis = { kind: 'crise' as const, layoffRisk: 1 } as never;
+    for (let i = 0; i < 20; i++) expect(jobYear(job, mkRng(i), GAME_CONTENT, crisis).economy.job).not.toBeNull();
+  });
+
+  it('colegas de farda chegam para quem está na polícia (até 3)', () => {
+    const s = civilCandidate('pol', 25, 70);
+    const cop = { ...s, police: { ...s.police, career: { force: 'pm', track: 'pm_praca', rank: 0, stage: 'efetivo', stageYears: 2, serviceYears: 2, rankYears: 2, merit: 0, unit: 'regular', posting: 'x', notable: [], corregedoria: 0, specialTries: 0, startAge: 22 } } } as unknown as GameState;
+    let cur = cop;
+    for (let i = 0; i < 20; i++) cur = policeColleaguesYear(cur, mkRng(i + 50), GAME_CONTENT);
+    expect(policeColleagues(cur)).toHaveLength(3);
+    expect(policeColleaguesYear(s, mkRng(1), GAME_CONTENT)).toBe(s);
+  });
+});

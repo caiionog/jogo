@@ -87,7 +87,8 @@ export interface PoliceContent {
   specialText: { fail: readonly string[]; pass: string };
 }
 
-export type ExamStage = 'prova' | 'taf' | 'saude' | 'psico' | 'social';
+export type { ExamStage } from '../exams/stages';
+import type { ExamStage } from '../exams/stages';
 
 export interface ExamResult {
   year: number;

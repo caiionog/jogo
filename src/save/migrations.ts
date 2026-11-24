@@ -64,6 +64,7 @@ export const migrations: Record<number, (save: AnySave) => AnySave> = {
   15: migrateV15toV16,
   16: migrateV16toV17,
   17: migrateV17toV18,
+  18: migrateV18toV19,
 };
 
 export class SaveMigrationError extends Error {}
@@ -659,4 +660,14 @@ export function migrateV16toV17(save: AnySave): AnySave {
 export function migrateV17toV18(save: AnySave): AnySave {
   const s0 = save as unknown as AnyObj;
   return { ...(s0 as AnySave), version: 18, population: s0.population ?? { version: 1, met: {} } };
+}
+
+// ---------------------------------------------------------------------------
+// v18 → v19 (release 0.0.4: concursos civis)
+// ---------------------------------------------------------------------------
+
+/** Nenhum concurso civil prestado ainda (sem RNG). */
+export function migrateV18toV19(save: AnySave): AnySave {
+  const s0 = save as unknown as AnyObj;
+  return { ...(s0 as AnySave), version: 19, civilService: s0.civilService ?? { exams: [] } };
 }

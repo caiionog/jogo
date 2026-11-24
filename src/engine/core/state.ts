@@ -1,3 +1,4 @@
+import type { CivilServiceState } from '../civilService/civil';
 import type { PopulationState } from '../population/population';
 import type { PoliceState } from '../police/types';
 import type { CrimeState, PrisonState } from '../crime/types';
@@ -209,6 +210,8 @@ export interface GameState {
   prison: PrisonState | null;
   /** Moradores da cidade que viraram pessoas do save (release 0.0.4). */
   population: PopulationState;
+  /** Concursos civis prestados (release 0.0.4). */
+  civilService: CivilServiceState;
 }
 
-export const STATE_VERSION = 18;
+export const STATE_VERSION = 19;

@@ -40,7 +40,7 @@ Antes de commitar: `npm run lint && npm test && npm run build`.
    detalhado abaixo) e são validados por `validateContent` (`engine/events/validate.ts`) nos testes.
 4. **`GameState` é JSON puro** com campo `version`. Ao mudar o formato: incremente `STATE_VERSION`
    (`engine/core/state.ts`) e adicione a migração `n → n+1` em `src/save/migrations.ts` + teste.
-   Versão atual: **18** (release 0.0.4: v17→v18 cria `population` vazia, fixture `saves-v17.json`; v16→v17 cria `character.fame` a partir de `fighter.reputation` × 0,8, metade
+   Versão atual: **19** (release 0.0.4: v18→v19 cria `civilService`, fixture `saves-v18.json`; v17→v18 cria `population` vazia, fixture `saves-v17.json`; v16→v17 cria `character.fame` a partir de `fighter.reputation` × 0,8, metade
    para aposentados; fixture `saves-v16.json`). Release 0.0.3 (v16: v15→v16 amplia `scene` com `{ kind: 'intimo', variant, seq }` e cria
    `relationships.lastGroup`; fixture `saves-v15.json`; meta v3 com `settings.avatarStyle`). Release 0.0.2: v14→v15 cria `police`, `crime` e `prison: null`; a flag antiga `preso`
    vira passagem leve na ficha; campos opcionais `police.case`, `crime.plan/case/committed/earned`; fixture
@@ -537,3 +537,5 @@ Plano em `docs/release-0.0.4/PLAN.md` e diário em `docs/release-0.0.4/PROGRESS.
 - **Romance entre adultos** (fase 3): use `startRomance(state)` para qualquer romance novo (decide se é livre ou caso
   escondido); casamento é exclusivo (`hasOtherSpouse`). Casos (`romance.secret`) podem ser descobertos
   (`discoverAffairs`). App de namoro em `relationships/datingApp.ts`, só 18+.
+- **Concursos** (fase 4): o motor de etapas é `exams/stages.ts` (polícia e civis). Cargo novo = `JobDef` com
+  `category: 'concurso'` e `civilExam` em `content/jobs/civil/`. Colegas de farda têm a flag `colega_farda`.
